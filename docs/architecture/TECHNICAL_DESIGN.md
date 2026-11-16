@@ -18,7 +18,7 @@ Modules、ADR、Research、TDD、Vertical Slices）
 
 ## 已确认的架构与产品决策（2026-11-16）
 
-以下三项已由用户明确确认，后续设计和代码不得擅自改变：
+以下决策已由用户明确确认，后续设计和代码不得擅自改变：
 
 1. **Windows Toast：** 默认保持纯 D 盘便携模式。只有用户主动开启完整 Windows 通知时，才创建必要的开始菜单快捷方式；创建前说明路径和用途，不得静默写入。
 2. **整日跳过复盘：** 只将复盘标记为跳过，不自动放弃或改变任何工作事项状态。放弃工作必须是独立操作。
@@ -89,35 +89,24 @@ V0.2
 
 ------------------------------------------------------------------------
 
-## 1. 开源项目研究与复用决策
+## 1. 开源项目研究与参考决策
 
-复用优先级不是"找一个最像的软件整体复制"，而是按能力寻找成熟实现：业务模型、存储、Windows
-原生能力、复盘逻辑、拖动排序和测试方法分别评估。
+研究参考不是"找一个最像的软件整体复制"，而是按能力分析成熟实现：业务模型、存储、Windows 原生能力、复盘逻辑、拖动排序和测试方法分别研究。
 
 ### 1.1 项目对比
 
-  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  项目                                                                         技术与能力                                                        许可证                 对 WorkManager 的价值                              复用结论
-  ---------------------------------------------------------------------------- ----------------------------------------------------------------- ---------------------- -------------------------------------------------- ----------------------------------------------
-  [PomeTodo](https://github.com/ShiliuX-Team/pometodo)                         Tauri                                                             GPL-3.0-only           与 Windows 本地工作管理场景最接近；Rust Core       只研究架构与逻辑；完全自研，不复制或移植源代码（
-                                                                               2、Rust、React、SQLite；本地待办、附件、备份、托盘、提醒、DPAPI                          分层、数据校验、备份、附件安全处理值得研究         GPL-3.0 许可证义务，但本项目不复制代码）
+| 项目 | 技术与能力 | 许可证 | WorkManager 的研究用途 |
+|---|---|---|---|
+| [PomeTodo](https://github.com/ShiliuX-Team/pometodo) | Tauri 2、Rust、React、SQLite；本地待办、附件、备份、托盘、提醒、DPAPI | GPL-3.0-only | 研究 Rust Core 分层、校验、附件安全、备份和 DPAPI 思路；不复制源代码 |
+| [Super Productivity](https://github.com/super-productivity/super-productivity) | Angular；任务计划、工作日志、时间统计、每日/每周总结 | MIT | 研究日报/周报、统计口径和日期边界；不复制源代码 |
+| [Chiri](https://github.com/chiriapp/chiri) | Tauri 2、Rust、React；任务、拖动排序、托盘、开机启动 | zlib | 研究 Tauri 2 Windows 集成和排序交互；不复制源代码 |
+| [Todofy](https://github.com/salarzeidanlou/todofy) | Tauri 2、Rust、Preact、SQLite；今日/未来/待安排、置顶、提醒、计时 | Source-Available License | 只研究产品行为；不复制或移植代码 |
+| [Tauri-SvelteKit-SQLite](https://github.com/Lmedmo/Tauri-SvelteKit-SQLite) | Tauri 1、SvelteKit、SQLx、SQLite | 未确认明确复用许可证 | 只参考通信思路；不复制代码，且 Tauri 1 不是本项目目标版本 |
+| [todo-sqlite-sqlx](https://github.com/tauritutorials/todo-sqlite-sqlx) | Tauri 2、SQLx、SQLite 小型示例 | 未确认明确复用许可证 | 仅作学习参考，不作为正式代码来源 |
 
-  [Super                                                                       Angular、任务计划、工作日志、时间统计、每日/每周总结              MIT                    日报、周报、工作日志、统计口径和日期边界逻辑       只研究产品行为；即使 MIT 允许复用，本项目也不复制或移植源代码；原建议为
-  Productivity](https://github.com/super-productivity/super-productivity)                                                                                                                                                  不采用源代码复用
+WorkManager 已明确选择**完全自研**。上表只用于研究架构、产品行为和公开技术思路，不代表允许复制、移植或改写任何项目源代码。第三方依赖库另行进行许可证与供应链审查。
 
-  [Chiri](https://github.com/chiriapp/chiri)                                   Tauri 2、Rust、React；任务、子任务、拖动排序、托盘、开机启动      zlib                   Tauri 2 的托盘、开机启动、通知和任务排序实践       只研究技术方案；不复制或移植源代码
-
-  [Todofy](https://github.com/salarzeidanlou/todofy)                           Tauri 2、Rust、Preact、SQLite；今日/未来/待安排、置顶、提醒、计时 自定义                 今日工作视图、手动排序、提醒调度和持久化计时逻辑   只作为产品行为参考；不将其代码纳入可分发产品
-                                                                                                                                                 Source-Available                                                          
-                                                                                                                                                 License                                                                   
-
-  [Tauri-SvelteKit-SQLite](https://github.com/Lmedmo/Tauri-SvelteKit-SQLite)   Tauri 1 + SvelteKit + SQLx + SQLite                               未确认明确复用许可证   Svelte 与 Rust 数据通信入门参考                    只参考思路；Tauri 1
-                                                                                                                                                                                                                           已不是本项目目标版本，不直接复制
-
-  [todo-sqlite-sqlx](https://github.com/tauritutorials/todo-sqlite-sqlx)       Tauri 2 + SQLx + SQLite 的小型示例                                未确认明确复用许可证   SQLx 基础数据库调用                                仅作学习参考，不作为正式代码来源
-  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-### 1.2 重点复用内容
+### 1.2 重点研究内容
 
 **PomeTodo：**
 
