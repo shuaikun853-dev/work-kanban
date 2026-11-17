@@ -3,7 +3,7 @@
 **更新日期：** 2026-11-17  
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **当前任务：** T1-01 正式工程骨架与 SQLite 基础设施  
-**总体状态：** 阶段 0 已按用户最新决策放行；阶段 1 已启动。T1-01 独立审计提出的 2 项 P1、3 项 P2 与 1 项可选 CSP 加固问题**已全部修复并完成回归与 Release 运行时复验**（修复提交 `abf3e5a`），**当前等待重新独立审计**；分支 `task/T1-01-sqlite-foundation`，PR #1 保持打开、不合并。任务未标记验收完成。
+**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 第二轮独立审计未通过，发现 3 项 P1 存储/并发边界问题及 1 项 P2 文档/证据同步问题，当前返工中；最新审计基准 PR #1 HEAD `892b25f`；分支 `task/T1-01-sqlite-foundation`，PR #1 保持打开、不合并。任务未标记验收完成。
 
 ## 最新产品决策
 
@@ -38,7 +38,7 @@
 
 | 任务 | 内容 | 状态 |
 |---|---|---|
-| T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | 待审计（审计问题修复完成；修复提交 `abf3e5a`、返工前基线 `682ba04`；PR #1） |
+| T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | 返工中（第二轮独立审计发现 3 项 P1、1 项 P2；最新 HEAD `892b25f`；PR #1） |
 | T1-02 | 项目创建、编辑、归档 | 未开始 |
 | T1-03 | 工作事项快速创建和待安排区域 | 未开始 |
 | T1-04 | 多项目独立副本创建 | 未开始 |
@@ -46,7 +46,7 @@
 | T1-06 | 六位数字应用密码与锁屏 | 取消 |
 | T1-07 | 首次初始化与 SQLite 异常保护 | 未开始 |
 
-**当前交付物：** [T1-01 开发任务说明与 DeepSeek 提示词](development/tasks/T1-01-SQLite-Foundation.md)、[T1-01 原始测试报告](testing/reports/T1-01-REPORT.md)、[T1-01 独立审计问题修复报告](testing/reports/T1-01-AUDIT-FIX-REPORT.md)（返工后权威证据）、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（待重新独立审计，不自动合并）。
+**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[第一轮返工报告](testing/reports/T1-01-AUDIT-FIX-REPORT.md)、[第二轮独立审计报告](testing/reports/T1-01-SECOND-AUDIT-REPORT.md)、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（返工中，不合并）。
 
 ### T1-01 交付摘要（2026-11-17，返工后）
 
@@ -58,7 +58,7 @@
 - 已执行（返工后）：`cargo fmt --check` / `cargo check` / `cargo test`（**52 项通过**）/ `npm run check` / `npm run build` / `npm run tauri build -- --no-bundle`（成功，EXE 9,962,496 字节，SHA-256 `C863CAC5…67F4`）/ Release 运行时专项验证（便携 106 项、异常注入 **73 项**，0 FAIL）/ 重启持久化 / Release 忽略测试环境变量 / D 盘不可写与 D→C Junction fail-closed 测试。
 - **未实现**：项目与工作事项 CRUD、每日计划、复盘、日报/周报、附件、自动备份、密码/锁屏/SQLCipher/DPAPI。T1-01 只是基础设施，不代表业务功能已实现。
 
-### T1-01 独立审计问题（2026-11-17 已修复，待重新审计）
+### T1-01 第一轮独立审计问题（2026-11-17，第一轮返工已完成；第二轮复审发现新问题）
 
 独立审计对 PR #1（返工前基线 `682ba04`）提出以下问题，已全部修复并补充专项测试（详见 [修复报告](testing/reports/T1-01-AUDIT-FIX-REPORT.md)）：
 
@@ -71,9 +71,9 @@
 | P2 | `get_database_health` 为同步命令，完整完整性检查可能阻塞 UI 主线程 | 已修复：async 命令 + `spawn_blocking`；DTO 契约不变；真实 async runtime 单测 + Release CDP 通过 |
 | 可选 | `tauri.conf.json` 中 `csp = null` | 已实施生产 CSP + devCsp；Release WebView2 重载后 0 条 CSP 违规，UI/IPC 正常 |
 
-上述修复不降低任何既有测试要求，未删除现有测试；T1-01 仍须重新独立审计通过后才可标记完成。
+上述内容记录第一轮返工对原始问题的修复，不代表最新代码已经通过第二轮审计。第二轮未关闭问题见下表及 [第二轮独立审计报告](testing/reports/T1-01-SECOND-AUDIT-REPORT.md)。
 
-## 后续阶段
+### T1-01 第二轮独立审计未关闭问题（2026-11-17）\n\n| 优先级 | 问题 | 当前结论 |\n|---|---|---|\n| P1 | 初始化锁后先检查孤儿 WAL，再重检正式数据库，可能误判有效数据库的活动 WAL | 返工：先重检主库，仅主库确实缺失时才检查孤儿 sidecar；补确定性双进程 WAL 测试 |\n| P1 | Debug/Test 正式目录保护仅比较字符串，同卷 Junction 可指向正式目录绕过保护 | 返工：按真实最终路径检查正式目录边界；增加 Junction 别名测试，不触碰真实 `D:\\WorkManager` |\n| P1 | 真实卷身份与路径 TOCTOU 尚未充分关闭；SUBST/卷挂载点未专门验证 | 返工/待决：用卷 GUID/设备卷身份校验；评估句柄相对操作。未关闭前不得宣称绝对 D 盘写入保证 |\n| P2 | PR 描述、旧 evidence JSON、STATUS 风险描述过期；测试原始日志只在开发机 | 返工：更新 PR 描述，新增返工后 machine-readable evidence，修正状态文档并归档脱敏日志或 Windows CI 证据 |\n\n**门禁：** T1-01 当前为返工中；PR #1 不合并，main 不修改，T1-02 不得开始。\n\n## 后续阶段
 
 - [ ] 阶段 2：计划、优先级与当前工作。
 - [ ] 阶段 3：每日复盘与提醒。
@@ -90,7 +90,7 @@
 5. T0-06 并未取消：完整断网流程由 T6-04 验收；托盘、开机启动、单实例和通知由 T6-07 验收。
 6. 业务功能尚未实现；T1-01 只完成基础设施，技术验证与自测通过不等于业务功能完成或独立审计通过。
 7. Release 产物当前为 `target/release/workmanager.exe`（Tauri `--no-bundle` 不改名）；正式便携包中 `WorkManager.exe` 的命名与目录组装属于 T6-01，T1-01 运行时验证采用复制重命名后运行。
-8. 单实例保护尚未实现（规划在 T6-07）：首次初始化使用硬链接保证不覆盖已有数据库，但两个进程同时首次启动仍存在初始化竞争窗口，需在单实例任务中消除。
+8. 应用级单实例保护尚未实现（规划在 T6-07），因此允许多个 WorkManager 实例运行；数据库首次初始化已增加 LockFileEx 串行化机制，但第二轮审计发现锁后 sidecar 检查顺序仍有并发边界缺陷，修复前不能视为并发初始化完全通过。
 9. 启动时执行完整 `PRAGMA integrity_check`；数据库规模增大后启动耗时会增长，后续性能任务需评估改为 `quick_check` 或按需检查。
 10. 正常退出时已显式关闭 SQLite 连接（触发 WAL checkpoint 并清理 `-wal`/`-shm`，实测关闭后仅剩 `work.db`）；进程被强制结束（任务管理器/断电）时无法执行该逻辑，依赖 SQLite WAL 恢复与下次启动完整性检查兜底。
 11. `%LOCALAPPDATA%\EBWebView` 在本机验证开始前已存在（创建于 2024 年，本次运行前后时间戳与条目未变化）；WorkManager 专属 C 盘目录 `%LOCALAPPDATA%\com.workmanager.portable`、`%APPDATA%\com.workmanager.portable` 不存在。该共享目录的历史来源需在发布阶段审计确认。
@@ -99,7 +99,7 @@
 
 ## 下一步安排
 
-- T1-01 待重新审计：审计问题已全部修复（修复提交 `abf3e5a`，返工前基线 `682ba04`），分支 `task/T1-01-sqlite-foundation`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)；返工后权威证据见 [T1-01 独立审计问题修复报告](testing/reports/T1-01-AUDIT-FIX-REPORT.md)。请审计负责人核对修复 diff、专项测试证据、剩余风险；开发代理不得自行标记验收完成，也不得自动合并 PR。
+- T1-01 第二轮独立审计未通过，当前返工；最新审计基准 `892b25f`，分支 `task/T1-01-sqlite-foundation`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)；问题和修复要求见 [T1-01 第二轮独立审计报告](testing/reports/T1-01-SECOND-AUDIT-REPORT.md)。PR 不合并，main 不修改，T1-02 不得开始。
 - 重新审计通过并同步更新开发计划后，才决定是否进入 T1-02；开发代理不得自行开始 T1-02。
 - T0-05 不再安排开发；T0-06 延期至阶段 6，不得从最终发布验收清单中删除。
 - 备份策略（OPEN-001/002/003）未确认前，不实施、也不宣称自动备份。
