@@ -10,6 +10,12 @@
 //! - Windows 实机（审计 P1）：已存在的 EXE 目录与数据目录必须用 Win32 句柄解析真实最终路径，
 //!   展开 Junction/符号链接/重解析点后仍是 D 盘本地固定盘或可移动盘；拒绝映射网络盘、UNC
 //!   与 D→C 的 Junction，并在任何创建目录/写探针之前 fail-closed。
+//! - 审计 R2-02：Debug/Test 对正式目录的保护在字符串比较之外，还必须比较**真实最终路径**
+//!   （受保护根目录可注入，测试用 D 盘隔离目录模拟正式根），防止同卷 Junction 别名绕过。
+//! - 审计 R2-03：真实存储位置必须比较**物理卷身份**（Win32 句柄 `VOLUME_NAME_GUID` /
+//!   `VOLUME_NAME_NT`），而不是只比较 DOS 盘符；卷身份与 D 盘根卷不一致（SUBST、卷挂载点、
+//!   映射网络盘等）一律 fail-closed。路径校验与后续写入之间仍存在 TOCTOU 残余窗口，
+//!   句柄相对写入改造未在本任务完成，详见返工报告。
 //!
 //! 本模块不依赖 Tauri，可被普通 `cargo test` 覆盖。
 
@@ -30,7 +36,7 @@ use windows_sys::Win32::{
     Storage::FileSystem::{
         CreateFileW, FILE_FLAG_BACKUP_SEMANTICS, FILE_READ_ATTRIBUTES, FILE_SHARE_DELETE,
         FILE_SHARE_READ, FILE_SHARE_WRITE, GetDriveTypeW, GetFinalPathNameByHandleW, OPEN_EXISTING,
-        VOLUME_NAME_DOS,
+        VOLUME_NAME_DOS, VOLUME_NAME_GUID, VOLUME_NAME_NT,
     },
 };
 
@@ -39,6 +45,15 @@ pub const TEST_PORTABLE_ROOT_ENV: &str = "WORKMANAGER_TEST_PORTABLE_ROOT";
 
 /// 正式便携版默认根目录。Debug/Test 不得把测试数据写入该目录，避免污染未来正式目录。
 pub const FORMAL_RELEASE_ROOT: &str = r"D:\WorkManager";
+
+/// 生产环境的受保护正式目录列表。
+///
+/// 只有 Debug/Test 构建检查该列表；Release 的 EXE 同级便携路径规则不受影响。
+/// 测试通过 [`PortablePaths::resolve_with_protected_roots`] 注入 D 盘隔离目录来模拟
+/// 正式根目录，绝不创建、修改或删除真实 `D:\WorkManager`（审计 R2-02）。
+fn default_protected_roots() -> Vec<PathBuf> {
+    vec![PathBuf::from(FORMAL_RELEASE_ROOT)]
+}
 
 /// 数据根目录下的 SQLite 数据库文件（固定为 `data/database/work.db`）。
 pub const DATABASE_FILE_NAME: &str = "work.db";
@@ -160,6 +175,11 @@ pub struct PortablePaths {
     pub webview2_dir: PathBuf,
     pub temp_dir: PathBuf,
     pub backups_dir: PathBuf,
+    /// Debug/Test 必须拒绝写入的受保护正式目录（真实最终路径比较）。
+    ///
+    /// Release 构建为空；该字段只用于安全校验，不进入前端 DTO，因此序列化时跳过。
+    #[serde(skip)]
+    protected_roots: Vec<PathBuf>,
 }
 
 impl PortablePaths {
@@ -183,6 +203,26 @@ impl PortablePaths {
         mode: RuntimeMode,
         exe_path: &Path,
         debug_data_root: Option<&Path>,
+    ) -> Result<Self, PortablePathError> {
+        Self::resolve_with_protected_roots(
+            mode,
+            exe_path,
+            debug_data_root,
+            &default_protected_roots(),
+        )
+    }
+
+    /// 与 [`Self::resolve`] 相同，但显式指定 Debug/Test 的受保护正式目录。
+    ///
+    /// 生产代码固定使用 [`Self::resolve`]（默认受保护目录为 `D:\WorkManager`）。
+    /// 该入口仅用于测试注入 D 盘隔离的模拟正式根目录，以验证“同卷 Junction 别名指向
+    /// 受保护目录”会在创建任何目录、写探针、初始化锁和数据库之前被拒绝（审计 R2-02）。
+    /// Release 模式忽略该参数，EXE 同级便携路径规则不变。
+    pub fn resolve_with_protected_roots(
+        mode: RuntimeMode,
+        exe_path: &Path,
+        debug_data_root: Option<&Path>,
+        protected_roots: &[PathBuf],
     ) -> Result<Self, PortablePathError> {
         if !exe_path.is_absolute() {
             return Err(PortablePathError::new(
@@ -233,26 +273,19 @@ impl PortablePaths {
                 }
                 ensure_local_d_drive(data_root, TEST_PORTABLE_ROOT_ENV)?;
                 ensure_no_parent_components(data_root)?;
-                if is_same_or_child(data_root, Path::new(FORMAL_RELEASE_ROOT)) {
-                    return Err(PortablePathError::new(
-                        error_codes::DEBUG_ROOT_IS_FORMAL_RELEASE,
-                        format!(
-                            "拒绝把 Debug/Test 数据根目录指向正式便携目录 {FORMAL_RELEASE_ROOT}：{}。\
-                             请改用独立的测试目录，避免污染正式运行数据。",
-                            data_root.display()
-                        ),
-                    ));
-                }
+                // 审计 R2-02：字符串比较 + 真实最终路径比较（展开 Junction/符号链接后）。
+                ensure_not_protected_root(data_root, TEST_PORTABLE_ROOT_ENV, protected_roots)?;
                 (data_root.to_path_buf(), "debug-env")
             }
         };
 
         ensure_no_parent_components(&data_root)?;
 
-        // Windows 实机 fail-closed 校验（审计 P1）：
+        // Windows 实机 fail-closed 校验（审计 P1/R2-03）：
         // 对“已存在”的 EXE 目录与数据根目录，用 Win32 句柄解析真实最终路径（展开 Junction/
-        // 符号链接/卷挂载点），确认最终真实目标仍是 D 盘本地固定/可移动卷。不存在的路径保留
-        // 纯字符串规则，由 `ensure_directories()` 在创建任何目录之前校验最近已存在祖先。
+        // 符号链接/卷挂载点）并比较**物理卷身份**，确认最终真实目标仍是 D 盘本地固定/可移动卷。
+        // 不存在的路径保留纯字符串规则，由 `ensure_directories()` 在创建任何目录之前校验最近
+        // 已存在祖先。
         if path_exists_without_follow(&portable_root) {
             validate_real_storage_path(&portable_root, "EXE 所在目录")?;
         }
@@ -277,6 +310,11 @@ impl PortablePaths {
             webview2_dir: data_root.join("cache").join("webview2"),
             temp_dir: data_root.join("temp"),
             backups_dir: data_root.join("backups"),
+            protected_roots: match mode {
+                // 只有 Debug/Test 需要正式目录保护；Release 数据目录本来就在 EXE 旁边。
+                RuntimeMode::DebugTest => protected_roots.to_vec(),
+                RuntimeMode::Release => Vec::new(),
+            },
         })
     }
 
@@ -311,6 +349,8 @@ impl PortablePaths {
         // fail-closed：在任何 create_dir_all / 写探针之前，先确认便携根目录当前的真实存储位置
         // 仍在 D 盘本地卷，并确认 data_root 的最近已存在祖先没有被重解析到其他卷。
         validate_real_storage_path(&self.portable_root, "便携根目录")?;
+        // 审计 R2-02：正式目录保护必须在创建任何目录/写探针之前完成（真实最终路径比较）。
+        self.validate_protected_write_boundary(&self.data_root, "data 数据根目录")?;
         self.validate_real_storage_for_creation(&self.data_root, "data 数据根目录")?;
 
         self.ensure_directory(&self.data_root, "data 数据根目录")?;
@@ -321,8 +361,10 @@ impl PortablePaths {
         // 创建完成后再用句柄解析一次：防止 data_root / database / cache/webview2 等目录在创建
         // 过程中被并发替换为重解析点而静默写入其他卷（fail-closed，发现异常立即停止启动）。
         validate_real_storage_path(&self.data_root, "data 数据根目录")?;
+        self.validate_protected_write_boundary(&self.data_root, "data 数据根目录")?;
         for (path, label) in self.data_subdirectories() {
             validate_real_storage_path(path, label)?;
+            self.validate_protected_write_boundary(path, label)?;
         }
 
         for (path, label) in self.writable_probe_directories() {
@@ -330,6 +372,41 @@ impl PortablePaths {
         }
 
         Ok(())
+    }
+
+    /// 写入前置边界复验：数据库目录的真实物理卷必须是 D 盘，且 Debug/Test 数据目录不得
+    /// 落在受保护正式目录内。
+    ///
+    /// 该方法是 `Database::initialize()` 在创建初始化锁文件或正式数据库之前的最后一道
+    /// 路径边界检查。它**不能**消除路径校验与实际写入之间的 TOCTOU 竞争窗口（句柄相对
+    /// 写入改造尚未完成），只能缩小窗口并保证常见情况 fail-closed。
+    pub fn validate_write_boundary(&self) -> Result<(), PortablePathError> {
+        self.validate_protected_write_boundary(&self.data_root, "data 数据根目录")?;
+        let anchor = nearest_existing_ancestor(&self.database_dir)
+            .or_else(|| nearest_existing_ancestor(&self.data_root))
+            .ok_or_else(|| {
+                PortablePathError::new(
+                    error_codes::PATH_REAL_LOCATION_UNAVAILABLE,
+                    format!(
+                        "无法定位数据库目录的最近已存在祖先：{}。已停止启动，\
+                         不会回退到 C 盘、AppData 或系统 Temp。",
+                        self.database_dir.display()
+                    ),
+                )
+            })?;
+        validate_real_storage_path(&anchor, "database 目录")
+    }
+
+    /// 受保护正式目录检查（仅 Debug/Test 生效）：输入字符串 + 真实最终路径双重比较。
+    fn validate_protected_write_boundary(
+        &self,
+        path: &Path,
+        label: &str,
+    ) -> Result<(), PortablePathError> {
+        if self.protected_roots.is_empty() {
+            return Ok(());
+        }
+        ensure_not_protected_root(path, label, &self.protected_roots)
     }
 
     /// 创建目录之前：校验目标路径“最近已存在祖先”的真实存储位置。
@@ -489,6 +566,110 @@ fn is_same_or_child(path: &Path, parent: &Path) -> bool {
     path == parent || path.starts_with(&format!("{parent}\\"))
 }
 
+/// 判断路径是否命中受保护正式目录：输入字符串 + 真实最终路径双重比较。
+///
+/// 审计 R2-02：只比较输入字符串会被同卷 Junction 别名绕过（例如
+/// `D:\WorkManager-test-data\alias` → `D:\WorkManager`）。因此先做规范化字符串比较
+/// （覆盖受保护目录尚不存在的情况），再用 Win32 句柄解析真实最终路径（展开完整祖先链）
+/// 后比较；受保护根目录若存在，也按其真实最终路径比较。调用点必须早于任何目录创建、
+/// 写探针、初始化锁和数据库写入。
+fn ensure_not_protected_root(
+    path: &Path,
+    label: &str,
+    protected_roots: &[PathBuf],
+) -> Result<(), PortablePathError> {
+    for root in protected_roots {
+        if is_same_or_child(path, root) {
+            return Err(protected_root_error(path, root, "输入路径", label));
+        }
+    }
+
+    #[cfg(windows)]
+    {
+        // 路径本身已存在（可能是 Junction）则解析自身；否则解析最近已存在祖先，保证
+        // “即将在受保护目录内部创建新目录”同样会被拒绝。
+        let anchor = if path_exists_without_follow(path) {
+            path.to_path_buf()
+        } else {
+            nearest_existing_ancestor(path).ok_or_else(|| {
+                PortablePathError::new(
+                    error_codes::PATH_REAL_LOCATION_UNAVAILABLE,
+                    format!(
+                        "无法定位 {label} 的最近已存在祖先目录：{}。已停止启动，\
+                         不会回退到 C 盘、AppData 或系统 Temp。",
+                        path.display()
+                    ),
+                )
+            })?
+        };
+        let real_anchor = resolve_real_final_path(&anchor)?;
+        for root in protected_roots {
+            if !path_exists_without_follow(root) {
+                // 受保护目录当前不存在：真实最终路径不可能与它指向同一目录对象。
+                // 输入字符串命中（如 D:\WorkManager\data）已在上面的字符串比较中拒绝。
+                continue;
+            }
+            let real_root = resolve_real_final_path(root).map_err(|_| {
+                PortablePathError::new(
+                    error_codes::PATH_REAL_LOCATION_UNAVAILABLE,
+                    format!(
+                        "受保护正式目录存在但无法解析真实最终路径：{}。\
+                         已停止启动，不会创建或写入任何数据。",
+                        root.display()
+                    ),
+                )
+            })?;
+            if is_same_or_child_final(&real_anchor, &real_root) {
+                return Err(protected_root_error(
+                    &anchor,
+                    root,
+                    "真实最终路径（Junction/符号链接解析后）",
+                    label,
+                ));
+            }
+        }
+    }
+
+    let _ = (path, label);
+    Ok(())
+}
+
+fn protected_root_error(
+    path: &Path,
+    protected_root: &Path,
+    check_stage: &str,
+    label: &str,
+) -> PortablePathError {
+    PortablePathError::new(
+        error_codes::DEBUG_ROOT_IS_FORMAL_RELEASE,
+        format!(
+            "拒绝把 Debug/Test {label} 指向正式便携目录（{check_stage} 检查命中）：{}；\
+             受保护目录：{}。该路径可能通过 Junction/符号链接等别名指向正式运行数据；\
+             已停止启动，未创建任何目录、写探针、初始化锁或数据库。请改用独立的 D 盘测试目录。",
+            path.display(),
+            protected_root.display()
+        ),
+    )
+}
+
+/// 比较两个由 `GetFinalPathNameByHandleW` 返回的真实最终路径：大小写不敏感、统一
+/// 分隔符，并去掉 `\\?\` / `\??\` 前缀。
+#[cfg(windows)]
+fn is_same_or_child_final(path: &Path, parent: &Path) -> bool {
+    let normalize = |value: &Path| {
+        let text = value.to_string_lossy().replace('/', "\\");
+        let text = text
+            .strip_prefix(r"\\?\")
+            .or_else(|| text.strip_prefix(r"\??\"))
+            .unwrap_or(&text)
+            .to_string();
+        text.trim_end_matches('\\').to_lowercase()
+    };
+    let path = normalize(path);
+    let parent = normalize(parent);
+    path == parent || path.starts_with(&format!("{parent}\\"))
+}
+
 // ---------------------------------------------------------------------------
 // Windows 真实存储位置校验（T1-01 独立审计 P1 返工）
 //
@@ -580,21 +761,15 @@ fn handle_open_failed(path: &Path, error: &io::Error) -> PortablePathError {
     real_location_unavailable(path, error)
 }
 
-/// 用 Win32 句柄解析路径的真实最终存储路径（展开 Junction/符号链接/重解析点）。
+/// 打开已存在路径的句柄。
 ///
-/// 使用 `CreateFileW`（目录必须带 `FILE_FLAG_BACKUP_SEMANTICS`，并共享读/写/删除）打开
-/// 路径，再调用 `GetFinalPathNameByHandleW(VOLUME_NAME_DOS)` 取得形如 `\\?\D:\...` 的
-/// 最终路径。句柄解析会跟随完整祖先链上的重解析点，因此能识别“EXE 目录本身正常，但
-/// 某个祖先目录是 D→C Junction”的情况；不使用 `std::fs::canonicalize` 做单点判断。
-///
-/// 访问权限只请求 `FILE_READ_ATTRIBUTES`（`GetFinalPathNameByHandleW` 的要求）：
-/// 若像 `GENERIC_READ` 那样附带请求 `SYNCHRONIZE`，一个“拒绝写入”的 ACL 会连带拒绝
-/// `SYNCHRONIZE`，导致真实路径校验先于写探针报错，掩盖真正的“目录不可写”错误码。
+/// 目录必须带 `FILE_FLAG_BACKUP_SEMANTICS`，并共享读/写/删除，避免因为其他进程正在使用
+/// 同一目录而无法完成路径校验。访问权限只请求 `FILE_READ_ATTRIBUTES`
+/// （`GetFinalPathNameByHandleW` 的要求）：若像 `GENERIC_READ` 那样附带请求 `SYNCHRONIZE`，
+/// 一个“拒绝写入”的 ACL 会连带拒绝 `SYNCHRONIZE`，导致真实路径校验先于写探针报错，
+/// 掩盖真正的“目录不可写”错误码。
 #[cfg(windows)]
-fn resolve_real_final_path(path: &Path) -> Result<PathBuf, PortablePathError> {
-    use std::ffi::OsString;
-    use std::os::windows::ffi::OsStringExt;
-
+fn open_path_handle(path: &Path) -> Result<HandleGuard, PortablePathError> {
     let wide_path = to_wide_null(path);
     // SAFETY: wide_path 以 NUL 结尾且在本函数内保持存活；失败时 last_os_error 立即读取。
     let raw_handle = unsafe {
@@ -611,25 +786,38 @@ fn resolve_real_final_path(path: &Path) -> Result<PathBuf, PortablePathError> {
     if raw_handle.is_null() || raw_handle == INVALID_HANDLE_VALUE {
         return Err(handle_open_failed(path, &io::Error::last_os_error()));
     }
-    let handle = HandleGuard(raw_handle);
+    Ok(HandleGuard(raw_handle))
+}
 
-    // GetFinalPathNameByHandleW 返回值语义：
-    // - 0：失败（错误码用 GetLastError 读取）；
-    // - 小于缓冲区长度：成功，返回不含结尾 NUL 的字符数；
-    // - 大于等于缓冲区长度：缓冲区不足，返回所需长度（含结尾 NUL），扩容后二次调用。
+/// 调用 `GetFinalPathNameByHandleW` 并正确处理缓冲区不足的二次调用。
+///
+/// 返回语义：
+/// - 0：失败（错误码用 `GetLastError` 读取）；
+/// - 小于缓冲区长度：成功，返回不含结尾 NUL 的字符数；
+/// - 大于等于缓冲区长度：缓冲区不足，返回所需长度（含结尾 NUL），扩容后二次调用。
+#[cfg(windows)]
+fn get_final_path_by_flags(
+    handle: HANDLE,
+    path: &Path,
+    flags: u32,
+) -> Result<PathBuf, PortablePathError> {
+    use std::ffi::OsString;
+    use std::os::windows::ffi::OsStringExt;
+
     let mut buffer = vec![0u16; 512];
     loop {
         // SAFETY: handle 有效；buffer 可写且长度与传入的 cchfilepath 一致。
         let written = unsafe {
-            GetFinalPathNameByHandleW(
-                handle.0,
-                buffer.as_mut_ptr(),
-                buffer.len() as u32,
-                VOLUME_NAME_DOS,
-            )
+            GetFinalPathNameByHandleW(handle, buffer.as_mut_ptr(), buffer.len() as u32, flags)
         };
         if written == 0 {
-            return Err(handle_open_failed(path, &io::Error::last_os_error()));
+            return Err(real_location_unavailable(
+                path,
+                format!(
+                    "GetFinalPathNameByHandleW(flags={flags}) 失败：{}",
+                    io::Error::last_os_error()
+                ),
+            ));
         }
         let written = written as usize;
         if written < buffer.len() {
@@ -640,6 +828,24 @@ fn resolve_real_final_path(path: &Path) -> Result<PathBuf, PortablePathError> {
     }
 
     let real_path = PathBuf::from(OsString::from_wide(&buffer));
+    if real_path.as_os_str().is_empty() {
+        return Err(real_location_unavailable(
+            path,
+            format!("GetFinalPathNameByHandleW(flags={flags}) 返回空路径"),
+        ));
+    }
+    Ok(real_path)
+}
+
+/// 用 Win32 句柄解析路径的真实最终 DOS 存储路径（展开 Junction/符号链接/卷挂载点）。
+///
+/// 使用 `GetFinalPathNameByHandleW(VOLUME_NAME_DOS)` 取得形如 `\\?\D:\...` 的最终路径。
+/// 句柄解析会跟随完整祖先链上的重解析点，因此能识别“EXE 目录本身正常，但某个祖先目录是
+/// D→C Junction”的情况；不使用 `std::fs::canonicalize` 做单点判断。
+#[cfg(windows)]
+fn resolve_real_final_path(path: &Path) -> Result<PathBuf, PortablePathError> {
+    let handle = open_path_handle(path)?;
+    let real_path = get_final_path_by_flags(handle.0, path, VOLUME_NAME_DOS)?;
     if !real_path.is_absolute() {
         return Err(real_location_unavailable(
             path,
@@ -647,6 +853,141 @@ fn resolve_real_final_path(path: &Path) -> Result<PathBuf, PortablePathError> {
         ));
     }
     Ok(real_path)
+}
+
+// ---------------------------------------------------------------------------
+// 审计 R2-03：真实物理卷身份校验
+//
+// 只比较最终 DOS 盘符仍可能被别名欺骗（SUBST 驱动器、目录卷挂载点等）。这里用同一
+// Win32 句柄查询 `VOLUME_NAME_GUID` 与 `VOLUME_NAME_NT`，取得目标对象实际所在物理卷的
+// 身份，再与 `D:\` 根目录句柄的卷身份比较；不一致即 fail-closed。
+//
+// 评估过的 API 及取舍：
+// - `GetFinalPathNameByHandleW(VOLUME_NAME_GUID)`：主校验。直接返回句柄背后对象的卷
+//   GUID，由对象管理器解析别名，适用于 Junction/SUBST/挂载点；
+// - `GetFinalPathNameByHandleW(VOLUME_NAME_NT)`：备用校验。返回 `\Device\HarddiskVolumeN`
+//   设备路径，在卷 GUID 不可用时仍可比较同一物理卷；
+// - `GetVolumeNameForVolumeMountPointW`：可把盘符/挂载点转换为卷 GUID；本实现用
+//   `D:\` 句柄直接取身份更统一，该 API 仅在专项测试中做独立交叉核验；
+// - `GetVolumePathNameW`：返回路径所在挂载点（盘符根或挂载点目录）；不提供物理卷身份，
+//   已评估但不作为主校验；
+// - `QueryDosDeviceW`：把 `D:` 等 DOS 设备名翻译为 NT 目标；可用于识别 SUBST 映射，
+//   本实现在 SUBST 专项测试中用其记录映射目标作为证据。
+// ---------------------------------------------------------------------------
+
+/// 物理卷身份：卷 GUID 分量与 NT 设备卷分量（任一可用即可比较）。
+#[cfg(windows)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct VolumeIdentity {
+    volume_guid: Option<String>,
+    nt_device: Option<String>,
+}
+
+#[cfg(windows)]
+impl VolumeIdentity {
+    fn is_empty(&self) -> bool {
+        self.volume_guid.is_none() && self.nt_device.is_none()
+    }
+}
+
+/// 从 `\\?\Volume{GUID}\...` 中提取卷 GUID 分量（小写）。
+#[cfg(windows)]
+fn volume_guid_component(path: &Path) -> Option<String> {
+    let text = path.to_string_lossy().replace('/', "\\").to_lowercase();
+    let rest = text.strip_prefix(r"\\?\volume{")?;
+    let end = rest.find('}')?;
+    Some(format!(r"\\?\volume{{{}}}", &rest[..end]))
+}
+
+/// 从 `\Device\HarddiskVolumeN\...` 中提取 NT 设备卷分量（小写）。
+#[cfg(windows)]
+fn nt_device_component(path: &Path) -> Option<String> {
+    let text = path.to_string_lossy().replace('/', "\\").to_lowercase();
+    let rest = text.strip_prefix(r"\device\")?;
+    let device = rest.split('\\').next()?;
+    if device.is_empty() {
+        return None;
+    }
+    Some(format!(r"\device\{device}"))
+}
+
+/// 查询某个已打开句柄背后对象的物理卷身份。
+#[cfg(windows)]
+fn volume_identity_for_handle(
+    handle: HANDLE,
+    path: &Path,
+) -> Result<VolumeIdentity, PortablePathError> {
+    let volume_guid = get_final_path_by_flags(handle, path, VOLUME_NAME_GUID)
+        .ok()
+        .and_then(|final_path| volume_guid_component(&final_path));
+    let nt_device = get_final_path_by_flags(handle, path, VOLUME_NAME_NT)
+        .ok()
+        .and_then(|final_path| nt_device_component(&final_path));
+    let identity = VolumeIdentity {
+        volume_guid,
+        nt_device,
+    };
+    if identity.is_empty() {
+        return Err(real_location_unavailable(
+            path,
+            "无法取得卷 GUID 或 NT 设备卷身份（可能是 UNC/网络路径或 Windows API 不支持）",
+        ));
+    }
+    Ok(identity)
+}
+
+/// 查询已存在路径的物理卷身份。
+#[cfg(windows)]
+fn volume_identity_for_path(path: &Path) -> Result<VolumeIdentity, PortablePathError> {
+    let handle = open_path_handle(path)?;
+    volume_identity_for_handle(handle.0, path)
+}
+
+/// `D:\` 根目录的物理卷身份（从真实卷句柄取得，而不是从盘符字符串推断）。
+#[cfg(windows)]
+fn d_drive_volume_identity() -> Result<VolumeIdentity, PortablePathError> {
+    volume_identity_for_path(Path::new(r"D:\"))
+}
+
+/// 两个物理卷身份是否指向同一卷：优先比较卷 GUID；GUID 不可用时退回 NT 设备卷比较。
+#[cfg(windows)]
+fn volume_identities_match(left: &VolumeIdentity, right: &VolumeIdentity) -> bool {
+    if let (Some(left_guid), Some(right_guid)) = (&left.volume_guid, &right.volume_guid) {
+        return left_guid == right_guid;
+    }
+    if let (Some(left_device), Some(right_device)) = (&left.nt_device, &right.nt_device) {
+        return left_device == right_device;
+    }
+    false
+}
+
+/// 要求目标路径所在物理卷与 D 盘根卷一致（审计 R2-03）。
+#[cfg(windows)]
+fn ensure_volume_is_d_volume(
+    real_path: &Path,
+    volume: &VolumeIdentity,
+    original_path: &Path,
+    label: &str,
+) -> Result<(), PortablePathError> {
+    let d_drive_volume = d_drive_volume_identity().map_err(|_| {
+        real_location_unavailable(
+            Path::new(r"D:\"),
+            "无法解析 D 盘根目录的物理卷身份，无法证明数据落在 D 盘",
+        )
+    })?;
+    if volume_identities_match(volume, &d_drive_volume) {
+        return Ok(());
+    }
+    Err(PortablePathError::new(
+        error_codes::PATH_REAL_TARGET_NOT_D,
+        format!(
+            "{label} 所在物理卷与 D 盘根卷不一致（卷 GUID / NT 设备卷身份比对失败；\
+             可能是 SUBST 驱动器、目录卷挂载点、Junction 或映射网络盘别名）：{} -> {}。\
+             已停止启动，不会回退到 C 盘、AppData 或系统 Temp。",
+            original_path.display(),
+            real_path.display()
+        ),
+    ))
 }
 
 /// 从 Win32 最终路径中提取本地盘符；UNC、卷 GUID、设备路径等返回 `None`。
@@ -680,16 +1021,34 @@ fn is_allowed_volume_type(drive_type: u32) -> bool {
     drive_type == DRIVE_FIXED || drive_type == DRIVE_REMOVABLE
 }
 
-/// fail-closed 校验：`path` 的真实最终存储位置必须是 D 盘本地固定盘或可移动盘。
+/// fail-closed 校验：`path` 的真实最终存储位置必须与 D 盘根目录位于**同一物理卷**，
+/// 且仍是 D 盘本地固定盘或可移动盘。
 ///
 /// 调用方必须保证 `path` 已存在；不存在时返回 `path-real-location-unavailable`。
-/// 该函数会展开“路径自身”以及完整祖先链上的所有重解析点（由句柄解析保证），因此
-/// D 盘上的 Junction 指向 C 盘时会得到 `path-real-target-not-d`；若最终目标是 UNC/
-/// 卷挂载点/映射网络盘等非本地盘符卷，则得到 `path-not-local-volume`。
+/// 步骤（审计 P1 + R2-03）：
+/// 1. 用句柄解析真实最终 DOS 路径（展开完整祖先链上的 Junction/符号链接/挂载点）；
+/// 2. 用同一句柄取卷 GUID / NT 设备卷身份，与 `D:\` 根卷身份比较；不一致即拒绝
+///    （SUBST、目录卷挂载点、D→C 别名等）；
+/// 3. 最终 DOS 路径必须仍是 D 盘本地盘符；
+/// 4. 盘符卷类型必须是本地固定盘或可移动盘（拒绝映射网络盘/光驱/内存盘）。
 #[cfg(windows)]
 fn validate_real_storage_path(path: &Path, label: &str) -> Result<(), PortablePathError> {
-    let real_path = resolve_real_final_path(path)?;
+    let handle = open_path_handle(path)?;
+    let real_path = get_final_path_by_flags(handle.0, path, VOLUME_NAME_DOS)?;
+    let volume = volume_identity_for_handle(handle.0, path)?;
+    drop(handle);
 
+    if !real_path.is_absolute() {
+        return Err(real_location_unavailable(
+            path,
+            format!("真实最终路径不是绝对路径：{}", real_path.display()),
+        ));
+    }
+
+    // 1) 物理卷身份必须与 D 盘根卷一致（不能只看盘符字符串）。
+    ensure_volume_is_d_volume(&real_path, &volume, path, label)?;
+
+    // 2) DOS 最终路径必须仍是 D 盘本地盘符。
     let Some(drive) = drive_letter_of_local_path(&real_path) else {
         return Err(PortablePathError::new(
             error_codes::PATH_NOT_LOCAL_VOLUME,
@@ -716,6 +1075,7 @@ fn validate_real_storage_path(path: &Path, label: &str) -> Result<(), PortablePa
         ));
     }
 
+    // 3) 盘符卷类型必须是本地固定盘或可移动盘。
     let drive_type = query_drive_type(drive);
     if !is_allowed_volume_type(drive_type) {
         return Err(PortablePathError::new(
@@ -1008,5 +1368,232 @@ mod tests {
             drive_letter_of_local_path(Path::new(r"\\.\PhysicalDrive0")),
             None
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // 审计 R2-03：真实物理卷身份（卷 GUID / NT 设备卷）
+    // -----------------------------------------------------------------------
+
+    /// `GetVolumeNameForVolumeMountPointW` 独立 API：把盘符卷挂载点转换为卷 GUID 路径。
+    #[cfg(windows)]
+    fn mount_point_volume_guid(root: &Path) -> Option<String> {
+        use windows_sys::Win32::Storage::FileSystem::GetVolumeNameForVolumeMountPointW;
+
+        let wide = to_wide_null(root);
+        let mut buffer = vec![0u16; 1024];
+        // SAFETY: wide 以 NUL 结尾；buffer 可写且长度与传入值一致。
+        let ok = unsafe {
+            GetVolumeNameForVolumeMountPointW(
+                wide.as_ptr(),
+                buffer.as_mut_ptr(),
+                buffer.len() as u32,
+            )
+        };
+        if ok == 0 {
+            return None;
+        }
+        let length = buffer
+            .iter()
+            .position(|&value| value == 0)
+            .unwrap_or(buffer.len());
+        let text = String::from_utf16_lossy(&buffer[..length]);
+        volume_guid_component(Path::new(&text))
+    }
+
+    /// `QueryDosDeviceW`：把 DOS 设备名（如 `Q:`）翻译为 NT 目标路径（SUBST 证据）。
+    #[cfg(windows)]
+    fn query_dos_device_target(device: &str) -> Option<String> {
+        use windows_sys::Win32::Storage::FileSystem::QueryDosDeviceW;
+
+        let wide = to_wide_null(Path::new(device));
+        let mut buffer = vec![0u16; 4096];
+        // SAFETY: wide 以 NUL 结尾；buffer 可写且长度与传入值一致。
+        let length =
+            unsafe { QueryDosDeviceW(wide.as_ptr(), buffer.as_mut_ptr(), buffer.len() as u32) };
+        if length == 0 {
+            return None;
+        }
+        // 返回值是 NUL 分隔的多字符串列表；取第一个目标即可。
+        let text = String::from_utf16_lossy(&buffer[..length as usize]);
+        text.split('\0')
+            .find(|segment| !segment.is_empty())
+            .map(str::to_string)
+    }
+
+    /// 子进程级 SUBST 夹具：把空闲盘符映射到 C 盘测试目录；Drop 时删除映射与测试目录。
+    ///
+    /// 说明：本机 `D:` 是真实物理卷，Windows 不允许对已存在的盘符执行 SUBST；审计报告里
+    /// “SUBST 把 D: 映射到 C 盘目录”的场景无法在本机真实构造，因此用“空闲盘符 → C 盘目录”
+    /// 验证同一底层机制（DOS 设备别名）的卷身份识别，并在报告中如实标注差异。
+    #[cfg(windows)]
+    struct SubstFixture {
+        letter: char,
+        target: PathBuf,
+    }
+
+    #[cfg(windows)]
+    impl SubstFixture {
+        fn new() -> Self {
+            let local_app_data = std::env::var_os("LOCALAPPDATA")
+                .map(PathBuf::from)
+                .filter(|path| path.is_absolute())
+                .expect("需要 %LOCALAPPDATA% 绝对路径来构造 SUBST 测试夹具");
+            let nanos = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|duration| duration.as_nanos())
+                .unwrap_or(0);
+            let target = local_app_data.join(format!(
+                "WorkManager-subst-identity-{}-{nanos}",
+                std::process::id()
+            ));
+            fs::create_dir_all(&target).expect("创建 SUBST 测试目标目录");
+            assert_ne!(
+                drive_letter_of_local_path(&target).map(|letter| letter.to_ascii_uppercase()),
+                Some('D'),
+                "SUBST 测试目标必须在非 D 盘才能构造跨卷别名：{}",
+                target.display()
+            );
+
+            let letter = ['Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+                .into_iter()
+                .find(|letter| !Path::new(&format!("{letter}:\\")).exists())
+                .expect("没有空闲盘符可用于 SUBST 测试");
+            let status = std::process::Command::new("cmd")
+                .args(["/c", "subst"])
+                .arg(format!("{letter}:"))
+                .arg(&target)
+                .status()
+                .expect("执行 subst 命令");
+            assert!(
+                status.success(),
+                "subst {letter}: <目标> 失败（退出码 {status}）"
+            );
+            assert!(
+                Path::new(&format!("{letter}:\\")).is_dir(),
+                "SUBST 驱动器必须可见：{letter}:"
+            );
+            Self { letter, target }
+        }
+    }
+
+    #[cfg(windows)]
+    impl Drop for SubstFixture {
+        fn drop(&mut self) {
+            let _ = std::process::Command::new("cmd")
+                .args(["/c", "subst"])
+                .arg(format!("{}:", self.letter))
+                .arg("/D")
+                .status();
+            let _ = fs::remove_dir_all(&self.target);
+        }
+    }
+
+    /// R2-03：D 盘根卷的句柄卷 GUID 必须与 `GetVolumeNameForVolumeMountPointW` 独立 API
+    /// 返回的卷 GUID 一致，证明卷身份来自真实卷对象，而不是盘符字符串。
+    #[cfg(windows)]
+    #[test]
+    fn d_drive_volume_identity_matches_independent_mount_point_api() {
+        let identity = d_drive_volume_identity().expect("必须能解析 D 盘根卷身份");
+        let handle_guid = identity
+            .volume_guid
+            .clone()
+            .expect("D 盘根卷必须能取得卷 GUID（VOLUME_NAME_GUID）");
+        let api_guid = mount_point_volume_guid(Path::new(r"D:\"))
+            .expect("GetVolumeNameForVolumeMountPointW(D:\\) 应成功");
+        println!("[r2-03] D:\\ handle(VOLUME_NAME_GUID) = {handle_guid}");
+        println!("[r2-03] D:\\ GetVolumeNameForVolumeMountPointW = {api_guid}");
+        assert_eq!(
+            handle_guid, api_guid,
+            "句柄卷 GUID 必须与独立卷挂载点 API 结果一致"
+        );
+        let nt_device = identity
+            .nt_device
+            .as_deref()
+            .expect("D 盘根卷必须能取得 NT 设备卷身份（VOLUME_NAME_NT）");
+        assert!(
+            nt_device.starts_with(r"\device\"),
+            "NT 设备卷身份格式异常：{nt_device}"
+        );
+        println!("[r2-03] D:\\ VOLUME_NAME_NT = {nt_device}");
+        println!("[r2-03] PASS：D 盘卷身份由两个独立 Win32 API 交叉确认，非盘符字符串推断");
+    }
+
+    /// R2-03：SUBST 驱动器（DOS 设备别名）指向非 D 盘卷时，句柄卷身份必须识别为 C 盘卷，
+    /// 并且真实存储校验必须 fail-closed。
+    #[cfg(windows)]
+    #[test]
+    fn subst_drive_to_c_volume_is_detected_by_handle_volume_identity() {
+        let fixture = SubstFixture::new();
+        let subst_root = PathBuf::from(format!("{}:\\", fixture.letter));
+        let probe = subst_root.join("r2-03-subst-probe.txt");
+        fs::write(&probe, b"workmanager-test-fixture").expect("通过 SUBST 写入测试探针");
+
+        let d_identity = d_drive_volume_identity().expect("D 盘根卷身份");
+        let c_identity = volume_identity_for_path(Path::new(r"C:\")).expect("C 盘根卷身份");
+        let subst_identity = volume_identity_for_path(&subst_root).expect("SUBST 根目录卷身份");
+
+        println!(
+            "[r2-03] D: identity = guid {:?} / nt {:?}",
+            d_identity.volume_guid, d_identity.nt_device
+        );
+        println!(
+            "[r2-03] C: identity = guid {:?} / nt {:?}",
+            c_identity.volume_guid, c_identity.nt_device
+        );
+        println!(
+            "[r2-03] {}: identity = guid {:?} / nt {:?}",
+            fixture.letter, subst_identity.volume_guid, subst_identity.nt_device
+        );
+
+        assert!(
+            volume_identities_match(&c_identity, &subst_identity),
+            "SUBST 根目录的句柄卷身份必须与 C 盘根卷一致（证明句柄解析穿透 DOS 设备别名）"
+        );
+        assert!(
+            !volume_identities_match(&d_identity, &subst_identity),
+            "SUBST 根目录的句柄卷身份不得与 D 盘根卷相同"
+        );
+
+        // QueryDosDeviceW 证据：SUBST 是 DOS 设备层别名，而不是卷挂载点。
+        let dos_device = query_dos_device_target(&format!("{}:", fixture.letter));
+        println!(
+            "[r2-03] QueryDosDeviceW({}:) = {:?}",
+            fixture.letter, dos_device
+        );
+        assert!(
+            dos_device.is_some(),
+            "QueryDosDeviceW 应返回 SUBST 映射目标"
+        );
+        // GetVolumeNameForVolumeMountPointW 期望卷挂载点；SUBST 盘符不是卷挂载点。
+        let mount_point_guid = mount_point_volume_guid(&subst_root);
+        println!(
+            "[r2-03] GetVolumeNameForVolumeMountPointW({}:) = {:?}",
+            fixture.letter, mount_point_guid
+        );
+
+        // 真实存储校验必须 fail-closed（物理卷不是 D 盘卷）。
+        let error = validate_real_storage_path(&probe, "SUBST 测试路径")
+            .expect_err("SUBST 指向非 D 盘卷时真实存储校验必须 fail-closed");
+        println!(
+            "[r2-03] validate_real_storage_path(SUBST) -> code = {}",
+            error.code()
+        );
+        assert_eq!(
+            error.code(),
+            error_codes::PATH_REAL_TARGET_NOT_D,
+            "SUBST 跨卷别名必须返回 path-real-target-not-d：{error}"
+        );
+
+        // 字符串盘符规则仍然独立拒绝非 D 盘符（防御纵深）。
+        let resolve_error = PortablePaths::resolve(
+            RuntimeMode::Release,
+            &subst_root.join("WorkManager.exe"),
+            None,
+        )
+        .expect_err("非 D 盘符必须被字符串规则拒绝");
+        assert_eq!(resolve_error.code(), error_codes::PATH_NOT_ON_D_DRIVE);
+
+        fs::remove_file(&probe).expect("删除 SUBST 测试探针");
+        println!("[r2-03] PASS：SUBST 卷别名被物理卷身份识别并 fail-closed；映射与测试探针已清理");
     }
 }

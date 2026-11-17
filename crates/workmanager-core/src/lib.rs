@@ -16,4 +16,6 @@ pub use database::{
     LATEST_SCHEMA_VERSION, MIGRATIONS, Migration, MigrationOutcome,
 };
 pub use error::DatabaseError;
-pub use portable_paths::{PortablePathError, PortablePaths, RuntimeMode, TEST_PORTABLE_ROOT_ENV};
+pub use portable_paths::{
+    FORMAL_RELEASE_ROOT, PortablePathError, PortablePaths, RuntimeMode, TEST_PORTABLE_ROOT_ENV,
+};

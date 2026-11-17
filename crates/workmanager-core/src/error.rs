@@ -166,6 +166,19 @@ pub enum DatabaseError {
     /// WAL 合并（checkpoint）失败，无法得到单文件完整数据库。
     #[error("WAL 合并失败，未安装初始化数据库文件：{detail}。")]
     WalConsolidationFailed { detail: String },
+
+    /// 数据库目录的真实存储边界校验失败（真实卷不是 D 盘，或 Debug/Test 数据目录
+    /// 通过 Junction/别名指向受保护正式目录）。
+    ///
+    /// 在创建初始化锁文件或正式数据库之前返回，保证异常路径下不会产生应用数据。
+    #[error(
+        "数据库目录存储边界校验失败（{portable_code}）：{detail}。\
+         已停止启动，未创建初始化锁或数据库，不会回退到 C 盘、AppData 或系统 Temp。"
+    )]
+    DirectoryBoundaryViolation {
+        portable_code: &'static str,
+        detail: String,
+    },
 }
 
 impl DatabaseError {
@@ -195,6 +208,7 @@ impl DatabaseError {
             Self::NewDatabaseInitializationFailed { .. } => "database-initialization-failed",
             Self::ConcurrentInitialization { .. } => "database-concurrent-initialization",
             Self::WalConsolidationFailed { .. } => "database-wal-consolidation-failed",
+            Self::DirectoryBoundaryViolation { .. } => "database-directory-boundary-violation",
         }
     }
 }
