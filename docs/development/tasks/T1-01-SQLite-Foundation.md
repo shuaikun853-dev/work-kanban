@@ -1,9 +1,10 @@
 # T1-01：正式工程骨架、便携路径接入与 SQLite 基础设施
 
-**任务状态：** 返工中 / R2-03 阻塞（2026-11-17 第二轮审计返工：R2-01、R2-02、R2-04 已修复并通过完整回归；R2-03 真实卷身份已修复并实机验证，但路径校验 TOCTOU 残余窗口未关闭，等待用户决策；最新代码提交 `a148f0d`；未标记待审计或验收完成） \
+**任务状态：** 返工中 / P1 阻塞（2026-11-18 第三轮独立审计：TOCTOU 未关闭；新增 R3-01 D 根卷信任锚验证缺口；R2-01 waiter 测试有 R3-02 P2 同步精度问题；最新代码提交 `a148f0d`、PR HEAD `eaf6ef7`；未标记待审计或验收完成） \
 **第一轮返工报告：** [T1-01-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-AUDIT-FIX-REPORT.md)（历史修复与测试记录） \
 **第二轮独立审计：** [T1-01-SECOND-AUDIT-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-REPORT.md)（本轮修复依据） \
 **第二轮返工修复报告：** [T1-01-SECOND-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md)（本轮修复、测试与剩余风险） \
+**第三轮独立审计报告：** [T1-01-THIRD-AUDIT-REPORT.md](../../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)（当前最新审计结论与未关闭问题） \\
 **返工后机器可读证据：** [T1-01-AUDIT-FIX-evidence.json](../../testing/reports/T1-01-AUDIT-FIX-evidence.json) \
 **测试报告：** [T1-01-REPORT.md](../../testing/reports/T1-01-REPORT.md)（返工前历史证据） \
 **Pull Request：** [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（指向 main，保持打开、不合并；开发代理未合并）
