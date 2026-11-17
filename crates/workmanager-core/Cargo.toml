@@ -1,0 +1,12 @@
+[package]
+name = "workmanager-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "WorkManager 独立 Rust Core：便携路径解析与普通 SQLite 基础设施（不依赖 Tauri）"
+
+[dependencies]
+chrono.workspace = true
+rusqlite.workspace = true
+serde.workspace = true
+thiserror.workspace = true

@@ -1,0 +1,19 @@
+[package]
+name = "workmanager"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "WorkManager - Windows 本地工作管理软件（绿色便携版 Tauri 适配层）"
+
+[lib]
+# `_lib` 后缀用于避免 Windows 下 lib 与 bin 目标同名冲突。
+name = "workmanager_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { workspace = true, features = [] }
+
+[dependencies]
+serde.workspace = true
+tauri.workspace = true
+workmanager-core.workspace = true
