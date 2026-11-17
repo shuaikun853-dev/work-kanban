@@ -1,6 +1,6 @@
 # WorkManager
 
-Windows 本地工作管理软件（绿色便携版）。当前进度：**T1-01 正式工程骨架、便携路径与 SQLite 基础设施已完成代码与测试，等待独立审计**（代码提交 `682ba04`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)）。项目管理、工作事项、每日复盘、报表、附件等业务功能尚未实现；本仓库不表示这些功能已经可用。
+Windows 本地工作管理软件（绿色便携版）。当前进度：**T1-01 正式工程骨架、便携路径与 SQLite 基础设施已完成，独立审计提出的 P1/P2 问题已全部修复并通过回归/Release 复验，等待重新独立审计**（修复提交 `abf3e5a`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)，[审计修复报告](docs/testing/reports/T1-01-AUDIT-FIX-REPORT.md)）。项目管理、工作事项、每日复盘、报表、附件等业务功能尚未实现；本仓库不表示这些功能已经可用。
 
 ## 文档
 

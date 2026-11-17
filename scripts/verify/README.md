@@ -50,15 +50,19 @@ $null = $process.CloseMainWindow(); $process.WaitForExit(20000)
 （EXE 不存在、python 不可用、输出目录非法）。脚本不会伪造 PASS：无法执行的检查会
 如实记录为 FAIL/INFO，并保留可复核证据。
 
-## 当前验证结果（2026-11-17，T1-01）
+## 当前验证结果（2026-11-17，T1-01 审计修复后）
 
-Release 产物：`target\release\workmanager.exe`，9,899,520 字节，
-SHA-256 `B5CBEC7DEAE067247ECCBA8EA10BED86AF814ED4A324AC482B16651C059E43A0`。
+Release 产物：`target\release\workmanager.exe`，9,962,496 字节，
+SHA-256 `C863CAC5DEE29CD7A5DB25DA3B4610023CB8C4BF59DD97534764BC7D96FA67F4`。
 
 | 脚本 | 退出码 | 结果 |
 |---|---|---|
 | `verify-release-portable.ps1` | 0 | TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15 |
-| `verify-release-faults.ps1` | 0 | TOTAL=59 PASS=51 FAIL=0 WARN=0 INFO=8 |
-| `inspect-release-ui.mjs` | 0 | 19/19 断言通过（真实窗口渲染 + 真实 IPC 返回 + 截图） |
+| `verify-release-faults.ps1` | 0 | TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9（新增“已存在 0 字节 work.db”故障用例） |
+| `inspect-release-ui.mjs` | 0 | 21/21 断言通过（真实窗口渲染 + 真实 IPC 返回 + CSP 违规 0 + 截图） |
 
-详细结果与已知 WARN 见 `docs/testing/reports/T1-01-REPORT.md`。
+说明：审计修复后应用会在数据库目录保留跨进程初始化锁文件 `.work.db.init.lock`
+（仅 PID/时间戳诊断），异常路径检查允许该文件存在；`.work.db.init-*` 临时数据库仍必须为空。
+`inspect-release-ui.mjs` 现会在页面重载后收集 `securitypolicyviolation` 事件，断言生产 CSP 无违规。
+
+详细结果与已知 WARN 见 `docs/testing/reports/T1-01-AUDIT-FIX-REPORT.md`。
