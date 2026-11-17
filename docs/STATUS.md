@@ -53,7 +53,7 @@
 ### T1-01 交付摘要（2026-11-17，第二轮返工后）
 
 - 正式 Tauri 2 + Svelte 5 + TypeScript + Vite 工程可构建；`workmanager-core`（Rust Core，不依赖 Tauri）与 `src-tauri`（Tauri 适配层）职责分离。
-- Release 数据目录跟随 EXE：`<exe目录>/data/database/work.db`；WebView2 绝对数据目录 `<data>/cache/webview2`；仅 D 盘、无 C 盘/AppData/Temp 回退；Win32 真实最终路径校验 + **物理卷身份校验（卷 GUID / NT 设备卷）**（拒绝 D→C Junction、SUBST 卷别名、映射网络盘、UNC）。
+- Release 数据目录跟随 EXE：`<exe目录>/data/database/work.db`；WebView2 绝对数据目录 `<data>/cache/webview2`；仅 D 盘、无 C 盘/AppData/Temp 回退；已实现 Win32 真实最终路径和目标卷身份校验，实测拒绝 D→C Junction，并实测 SUBST Q:→C: 场景。**D 根卷自身的独立信任锚验证仍有 R3-01 待修复；映射网络盘、真实跨卷挂载点未实机验证。**
 - 普通 bundled SQLite 3.54.1：WAL、`foreign_keys=ON`、`synchronous=FULL`、`busy_timeout=5000`、`temp_store=MEMORY`；启动时完整性检查与外键检查；已有数据库先做只读预检查（版本/完整性/外键/兼容性）后才应用持久化 PRAGMA。
 - schema 版本 1（`schema_migrations`、`settings`）；`PRAGMA user_version` + 编号 SQL migration，每个 migration 独立事务、失败回滚；首次初始化临时库 + 硬链接原子安装 + 跨进程初始化锁；0 字节库/孤儿 WAL/journal 均 fail-closed 且保留原文件。
 - 最小健康检查窗口已实现并通过真实 Release WebView2 端到端验证（页面渲染 + 异步 `get_database_health` IPC 返回 + 截图 + CSP 0 违规）。
@@ -110,7 +110,7 @@
 10. 正常退出时已显式关闭 SQLite 连接（触发 WAL checkpoint 并清理 `-wal`/`-shm`，实测关闭后仅剩 `work.db`）；进程被强制结束（任务管理器/断电）时无法执行该逻辑，依赖 SQLite WAL 恢复与下次启动完整性检查兜底。
 11. `%LOCALAPPDATA%\EBWebView` 在本机验证开始前已存在（创建于 2024 年，本次运行前后时间戳与条目未变化）；WorkManager 专属 C 盘目录 `%LOCALAPPDATA%\com.workmanager.portable`、`%APPDATA%\com.workmanager.portable` 不存在。该共享目录的历史来源需在发布阶段审计确认。
 12. **【已接受残余风险 DEC-029】路径校验 TOCTOU 未关闭：** 真实最终路径/卷身份校验与后续目录创建、写探针、初始化锁、SQLite 按路径打开之间仍非原子，存在理论竞争窗口。用户于 2026-11-18 明确接受该风险在 T1-01 内不彻底关闭，转入[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)。当前实现的前置校验、创建后复验和数据库初始化前复验仍保留；但不得宣称“任何情况下都不会写入 C 盘”，也不得静默回退 C 盘。后续加固需先提交句柄相对操作 + SQLite VFS/受控折衷方案设计和 PoC，未经用户另行授权不得启动。
-13. 真实卷身份校验已实现：目标路径句柄的 `VOLUME_NAME_GUID` / `VOLUME_NAME_NT` 必须与 `D:\` 根卷身份一致，不再只比较盘符。已实机验证：正常 D 盘、D 盘内部 Junction、D→C Junction；SUBST 用空闲盘符→C 盘实测（D: 为真实物理卷，无法构造 D:→C:）。**未实机验证**：真实映射网络盘（本机无网络共享）、D 盘路径下的真实跨卷目录挂载点（需管理员权限与额外卷）；未伪造结果。非 Windows 降级实现未做交叉编译验证（目标平台 Windows 10）。
+13. 目标路径句柄的 `VOLUME_NAME_GUID` / `VOLUME_NAME_NT` 与 `D:\\` 根卷句柄身份比较已实现，并实测正常 D 盘、D 盘内部 Junction、D→C Junction，以及 SUBST Q:→C:。**但 D 根卷本身尚未在生产路径独立验证为真实卷挂载点/非 C 卷别名（R3-01 P1 待修复）**，因此当前不能将完整卷信任链判定为通过。真实映射网络盘、D 盘路径下真实跨卷目录挂载点未实机验证；非 Windows 降级实现未交叉编译验证（目标平台 Windows 10）。
 14. 本轮新增测试引入 `Database::initialize()` 的数据库目录边界复验（数据库增量锁/写库之前）；异常的 ACL/文件阻塞等既有故障码由 Release 异常注入 73 项回归覆盖，未发现回归。
 
 ## 下一步安排
