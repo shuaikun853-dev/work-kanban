@@ -21,6 +21,6 @@ Windows 本地工作管理软件。当前仓库处于需求、技术验证与开
 
 ## 当前进度
 
-阶段 0 技术验证：3/6。业务功能开发尚未开始。请查看 [开发状态](docs/STATUS.md) 和 [开发计划书](docs/development/DEVELOPMENT_PLAN.md)。
+阶段 0 技术验证执行进度：3/6；最终审计放行尚未完成。业务功能开发尚未开始。请查看 [开发状态](docs/STATUS.md) 和 [开发计划书](docs/development/DEVELOPMENT_PLAN.md)。
 
 本仓库文档区分已确认需求、技术建议、待决事项和真实开发状态。未完成实现与验收的功能不会标记为已完成。
