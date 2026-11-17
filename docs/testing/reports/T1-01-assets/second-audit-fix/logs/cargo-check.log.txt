@@ -1,0 +1,3 @@
+    Checking workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+    Checking workmanager v0.1.0 (<repo>\src-tauri)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.56s

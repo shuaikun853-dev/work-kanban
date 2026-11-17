@@ -1,0 +1,40 @@
+UI_CHECK_ROOT=D:\WorkManager-test-data\release-ui-r2-20261117-222411
+UI_CHECK_EXE=D:\WorkManager-test-data\release-ui-r2-20261117-222411\app\WorkManager.exe
+UI_CHECK_EVIDENCE=D:\WorkManager-test-data\release-ui-r2-20261117-222411\evidence
+UI_CHECK_PORT=9334
+APP_PID=40684
+CDP_READY=true
+{
+  "evidencePath": "D:\\WorkManager-test-data\\release-ui-r2-20261117-222411\\evidence\\release-ui-ipc-evidence.json",
+  "screenshotPath": "D:\\WorkManager-test-data\\release-ui-r2-20261117-222411\\evidence\\release-window.png",
+  "assertions": {
+    "pageLoaded": true,
+    "cspCollectorInstalled": true,
+    "noCspViolations": true,
+    "uiRenderedHealth": true,
+    "noErrorAlert": true,
+    "appNameRendered": true,
+    "versionRendered": true,
+    "footerScopeRendered": true,
+    "ipcCommandSucceeded": true,
+    "ipcAppName": true,
+    "ipcAppVersion": true,
+    "ipcRuntimeModeRelease": true,
+    "ipcSchemaVersion": true,
+    "ipcIntegrityOk": true,
+    "ipcJournalModeWal": true,
+    "ipcForeignKeysEnabled": true,
+    "ipcBusyTimeout": true,
+    "ipcSynchronousFull": true,
+    "ipcMigrationRecorded": true,
+    "ipcDatabasePathPortable": true,
+    "ipcWebview2DirPortable": true
+  }
+}
+T1_01_RELEASE_UI_IPC_CHECK=PASS
+INSPECT_EXIT=0
+CLOSE_MAIN_WINDOW=True
+True
+APP_EXIT_CODE=
+APP_CLOSED_GRACEFULLY=true
+DATABASE_DIR_ENTRIES=.work.db.init.lock:42,work.db:20480

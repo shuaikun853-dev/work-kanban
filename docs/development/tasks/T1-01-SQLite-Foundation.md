@@ -1,10 +1,12 @@
 # T1-01：正式工程骨架、便携路径接入与 SQLite 基础设施
 
-**任务状态：** 返工中（2026-11-17 第二轮独立审计未通过；最新审计基准 `892b25f`；分支 `task/T1-01-sqlite-foundation`；未标记验收完成） \
+**任务状态：** 返工中 / R2-03 阻塞（2026-11-17 第二轮审计返工：R2-01、R2-02、R2-04 已修复并通过完整回归；R2-03 真实卷身份已修复并实机验证，但路径校验 TOCTOU 残余窗口未关闭，等待用户决策；最新代码提交 `a148f0d`；未标记待审计或验收完成） \
 **第一轮返工报告：** [T1-01-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-AUDIT-FIX-REPORT.md)（历史修复与测试记录） \
-**第二轮独立审计：** [T1-01-SECOND-AUDIT-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-REPORT.md)（当前未关闭问题与返工要求） \
-**测试报告：** [T1-01-REPORT.md](../../testing/reports/T1-01-REPORT.md) \
-**Pull Request：** [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（指向 main，待独立审计；开发代理未合并）
+**第二轮独立审计：** [T1-01-SECOND-AUDIT-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-REPORT.md)（本轮修复依据） \
+**第二轮返工修复报告：** [T1-01-SECOND-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md)（本轮修复、测试与剩余风险） \
+**返工后机器可读证据：** [T1-01-AUDIT-FIX-evidence.json](../../testing/reports/T1-01-AUDIT-FIX-evidence.json) \
+**测试报告：** [T1-01-REPORT.md](../../testing/reports/T1-01-REPORT.md)（返工前历史证据） \
+**Pull Request：** [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（指向 main，保持打开、不合并；开发代理未合并）
 **任务阶段：** 阶段 1：基础架构与工作事项  
 **执行方式：** 用户 Windows 10 本机 DeepSeek Agent  
 **授权日期：** 2026-11-17  
@@ -193,3 +195,20 @@
 - [ ] 测试报告、Git commit 和 PR 可追溯。
 
 **停止条件：** 上述核心验收项未满足，不得开始 T1-02 项目管理功能。
+
+---
+
+## 第二轮独立审计返工执行记录（2026-11-17，开发代理）
+
+**当前状态：** 返工中 / R2-03 阻塞（未标记待审计，未标记验收完成）。
+
+| 审计问题 | 处理结果 | 专项测试 |
+|---|---|---|
+| R2-01 初始化锁后先检查孤儿 WAL，误判有效数据库活动 WAL | 已修复：取得锁后先重检主库；主库缺失时才检查孤儿 sidecar | 确定性真实双进程测试 3 项 PASS；零字节/孤儿 sidecar 回归 6 项 PASS |
+| R2-02 Debug/Test 正式目录保护可被同卷 Junction 绕过 | 已修复：字符串 + 真实最终路径双重比较；创建目录/写探针/锁/数据库之前拒绝；Release 规则不变 | `tests/formal_root_protection.rs` 5 项 PASS；真实 `D:\WorkManager` 零触碰 |
+| R2-03 真实卷身份与 TOCTOU | 部分修复 / 阻塞：卷 GUID + NT 设备卷身份校验已实现并实机验证；TOCTOU 残余窗口未关闭，未宣称绝对保证。**等待用户决定延期加固方案** | 卷身份交叉核验 + SUBST→C 实测 PASS；D 盘真实路径回归 4 项 PASS；跨卷挂载点/映射网络盘标注未验证 |
+| R2-04 GitHub 证据与进度过期 | 已修复：旧 evidence 标记历史；新增返工后机器可读证据与脱敏日志；更新 STATUS/计划/本任务说明/PR 描述 | 见[第二轮返工修复报告](../../testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md) |
+
+完整回归：`cargo test --workspace` 62 passed / 0 failed；Release 便携验证 106 项 0 FAIL；异常注入 73 项 0 FAIL；真实窗口 UI/IPC/CSP 21/21；Release EXE SHA-256 `849E803D2456B28DF8BABFE201E187FB0FC45B7104A5E2CD2FD34B1D4366019E`。
+
+**门禁：** R2-03 TOCTOU 未关闭前，不得把本任务改为待审计、不得标记验收完成、不得合并 PR #1、不得开始 T1-02。

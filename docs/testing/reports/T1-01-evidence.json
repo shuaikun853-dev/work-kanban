@@ -5,6 +5,8 @@
   "generatedAt": "2026-11-17T18:53:00+08:00",
   "status": "awaiting-independent-audit",
   "statusNote": "开发代理自测与独立验证子代理执行均已完成；未通过 ChatGPT 独立审计，不构成验收完成",
+  "historical": true,
+  "historicalNote": "返工前历史证据（代码提交 682ba04，第一轮修复前基线）。其测试数量、Release SHA-256 与结论均已过期，不得作为当前验收依据；第二轮独立审计（审计基准 892b25f）及之后返工的最新证据见 docs/testing/reports/T1-01-AUDIT-FIX-evidence.json 与 docs/testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md。本文件仅作为历史记录保留，未删除、未覆盖。",
   "branch": "task/T1-01-sqlite-foundation",
   "pullRequest": {
     "number": 1,

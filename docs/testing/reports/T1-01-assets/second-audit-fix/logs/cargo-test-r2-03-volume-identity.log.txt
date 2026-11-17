@@ -1,0 +1,21 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.39s
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d91055ce50e.exe)
+
+running 3 tests
+test portable_paths::tests::d_drive_volume_identity_matches_independent_mount_point_api ... [r2-03] D:\ handle(VOLUME_NAME_GUID) = \\?\volume{519fbe4e-b7fe-4b36-8393-11eb159db771}
+[r2-03] D:\ GetVolumeNameForVolumeMountPointW = \\?\volume{519fbe4e-b7fe-4b36-8393-11eb159db771}
+[r2-03] D:\ VOLUME_NAME_NT = \device\harddiskvolume4
+[r2-03] PASS：D 盘卷身份由两个独立 Win32 API 交叉确认，非盘符字符串推断
+ok
+test portable_paths::tests::only_fixed_and_removable_volumes_are_allowed ... ok
+test portable_paths::tests::subst_drive_to_c_volume_is_detected_by_handle_volume_identity ... [r2-03] D: identity = guid Some("\\\\?\\volume{519fbe4e-b7fe-4b36-8393-11eb159db771}") / nt Some("\\device\\harddiskvolume4")
+[r2-03] C: identity = guid Some("\\\\?\\volume{8ee60a1e-b5a7-4feb-bda9-1c9de1e671ae}") / nt Some("\\device\\harddiskvolume3")
+[r2-03] Q: identity = guid Some("\\\\?\\volume{8ee60a1e-b5a7-4feb-bda9-1c9de1e671ae}") / nt Some("\\device\\harddiskvolume3")
+[r2-03] QueryDosDeviceW(Q:) = Some("\\??\\C:\\Users\\<redacted>\\AppData\\Local\\WorkManager-subst-identity-41036-1794925063692583700")
+[r2-03] GetVolumeNameForVolumeMountPointW(Q:) = None
+[r2-03] validate_real_storage_path(SUBST) -> code = path-real-target-not-d
+[r2-03] PASS：SUBST 卷别名被物理卷身份识别并 fail-closed；映射与测试探针已清理
+ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.09s
+

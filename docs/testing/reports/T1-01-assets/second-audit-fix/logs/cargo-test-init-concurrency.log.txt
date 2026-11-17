@@ -1,0 +1,23 @@
+   Compiling workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.18s
+     Running tests\init_concurrency.rs (target\debug\build\workmanager-core/56f27dcf2dd923f0\out\init_concurrency-56f27dcf2dd923f0.exe)
+
+running 3 tests
+test active_process_temp_database_is_never_deleted_and_lock_recovers_after_kill ... 
+running 1 test
+init-active-temp: child pid=38168 holds lock; active temp=D:\WorkManager-test-data\init-active-temp-26420-0-1794925072126542300\data-root\database\.work.db.init-38168-active.tmp
+init-active-temp: lock_busy_code=database-initialization-locked; active temp preserved; after-kill lock recovered; temp cleaned; integrity=ok; canary_preserved=true
+ok
+test child_helper ... ok
+test two_processes_concurrent_first_initialization_is_safe ... init-concurrency: spawned pids 35152 and 41796; releasing start trigger
+
+running 1 test
+
+running 1 test
+child-initialize-ok pid=41796 created_new=true schema=1
+child-initialize-ok pid=35152 created_new=false schema=1
+init-concurrency: both children succeeded; single work.db; integrity=ok; migrations=1; temp_files=none
+ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.33s
+
