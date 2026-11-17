@@ -14,6 +14,11 @@ chrono = { version = "0.4", default-features = false, features = ["clock", "std"
 rusqlite = { version = "0.43", features = ["bundled"] }
 tauri = { version = "2", features = [] }
 tauri-build = "2"
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+] }
 workmanager-core = { path = "crates/workmanager-core" }
 
 # 绿色便携版发布构建：体积优先，但保留确定性优化。

@@ -2,10 +2,10 @@
 
 **文档版本：** V1.1  
 **编制日期：** 2026-11-17  
-**文档状态：** 开发执行基线（阶段 0 已放行；阶段 1 已启动，T1-01 待独立审计） \
+**文档状态：** 开发执行基线（阶段 0 已放行；阶段 1 已启动，T1-01 返工中） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；阶段 1 已启动；T1-01 代码与测试完成（代码提交 `682ba04`），测试通过，等待独立审计；分支 `task/T1-01-sqlite-foundation`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)
+**当前进度：** 阶段 0 已放行；阶段 1 已启动；T1-01 因独立审计发现 P1/P2 问题进入返工（返工前基线 `682ba04`），分支 `task/T1-01-sqlite-foundation`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并
 
 ---
 
@@ -176,7 +176,7 @@
 
 ### T1-01 详细范围
 
-**当前状态（2026-11-17）：** 待审计。代码、自动化测试、Release 构建和运行时专项验证已完成；代码提交 `682ba04`，测试证据见 [T1-01 测试报告](../../testing/reports/T1-01-REPORT.md)，代码审阅见 [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)。开发代理自测不等于独立审计，任务不得在审计通过前标记验收完成。
+**当前状态（2026-11-17）：** 返工。独立审计对 PR #1 基线 `682ba04` 提出 2 项 P1、3 项 P2 与 1 项可选 CSP 加固问题，正在修复并补充专项测试；修复报告见 [T1-01-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-AUDIT-FIX-REPORT.md)。返工完成前不得标记验收完成，也不得进入 T1-02。
 
 **实际实现范围：**
 
@@ -421,6 +421,7 @@
 | 2026-11-17 | T1-01 状态改为进行中 | 用户明确授权立即开始，不再等待 18:00；建立开发分支 `task/T1-01-sqlite-foundation`；本机开发环境已复核 |
 | 2026-11-17 | T1-01 代码与测试完成（待审计） | 代码提交 `682ba04`：Tauri 2 + Svelte 5 工程骨架、便携路径、bundled SQLite、user_version migration、失败保护、最小健康检查界面；cargo/npm/Release 构建与运行时专项验证通过；测试报告 `docs/testing/reports/T1-01-REPORT.md`；等待独立审计，未标记验收完成 |
 | 2026-11-17 | 创建 T1-01 Pull Request | 推送分支 `task/T1-01-sqlite-foundation` 并创建 [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 指向 main；未合并、未推送 main；等待独立审计 |
+| 2026-11-17 | T1-01 进入返工 | 独立审计提出 2 项 P1、3 项 P2 与 1 项可选 CSP 加固问题：零字节数据库保护、D 盘真实卷/重解析点校验、已有数据库预检查顺序、初始化跨进程锁、数据库命令异步化、CSP；保留原始提交历史，在 `task/T1-01-sqlite-foundation` 新增修复提交 |
 
 后续每次阶段、任务状态变化，都应追加记录，并同步更新 docs/STATUS.md。历史记录不得通过覆盖方式抹去。
 
@@ -428,7 +429,7 @@
 
 ## 17. 当前执行结论
 
-- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 代码与测试完成（代码提交 `682ba04`、[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)），当前状态待独立审计。
+- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 因独立审计问题进入返工（返工前基线 `682ba04`、[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)），当前状态返工。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
 - 当前首个开发任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**。
 - T1-01 的具体实施提示词见 `docs/development/tasks/T1-01-SQLite-Foundation.md`。
