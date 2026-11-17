@@ -2,10 +2,10 @@
 
 **文档版本：** V1.1  
 **编制日期：** 2026-11-17  
-**文档状态：** 开发执行基线（阶段 0 已放行；阶段 1 已启动，T1-01 第三轮独立审计未通过，P1 阻塞） \
+**文档状态：** 开发执行基线（阶段 0 已放行；T1-01 第三轮独立审计未通过；TOCTOU 按 DEC-029 接受并延期，R3-01/R3-02 待处理） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；阶段 1 已启动；T1-01 第三轮独立审计未通过：TOCTOU 未关闭（P1），新增 D 根卷信任锚验证缺口 R3-01（P1），R2-01 waiter 测试确定性需补强 R3-02（P2）；最新代码提交 `a148f0d`、PR HEAD `eaf6ef7`；分支 `task/T1-01-sqlite-foundation`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并
+**当前进度：** 阶段 0 已放行；T1-01 第三轮独立审计未通过；用户按 DEC-029 接受 TOCTOU 残余风险并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)；R3-01 P1 D 根信任锚验证与 R3-02 P2 waiter 测试同步精度仍待处理；PR #1 保持打开、不合并，T1-02 不得开始
 
 ---
 
@@ -176,7 +176,7 @@
 
 ### T1-01 详细范围
 
-**当前状态（2026-11-18）：** 第三轮独立审计未通过。R2-01/R2-02/R2-04 修复逻辑复核成立；R2-03 TOCTOU 仍未关闭；新增 R3-01：D 根卷信任锚未在生产路径独立验证（P1）；新增 R3-02：R2-01 waiter 测试未严格证明已观察到锁竞争（P2）。详见 [T1-01-THIRD-AUDIT-REPORT.md](../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)。PR #1 保持 Open、不合并；修复 P1、补强测试并由用户决定 TOCTOU 范围前，不得标记待审计或验收完成，也不得进入 T1-02。
+**当前状态（2026-11-18）：** 第三轮独立审计未通过。R2-01/R2-02/R2-04 修复逻辑复核成立；TOCTOU 残余风险未修复，但用户已按 DEC-029 接受延期至[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，不作为 T1-01 单独阻塞项；R3-01 D 根卷信任锚未在生产路径独立验证（P1）仍须修复，R3-02 waiter 测试同步精度（P2）仍须补强。详见 [T1-01-THIRD-AUDIT-REPORT.md](../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)。R3-01/R3-02 处理并重新独立审计通过前，PR #1 不合并、不得标记验收完成、不得进入 T1-02。
 
 **实际实现范围：**
 
@@ -426,7 +426,8 @@
 | 2026-11-17 | T1-01 进入返工 | 独立审计提出 2 项 P1、3 项 P2 与 1 项可选 CSP 加固问题：零字节数据库保护、D 盘真实卷/重解析点校验、已有数据库预检查顺序、初始化跨进程锁、数据库命令异步化、CSP；保留原始提交历史，在 `task/T1-01-sqlite-foundation` 新增修复提交 |
 | 2026-11-17 | T1-01 返工完成（待重新审计） | 修复提交 `abf3e5a`；新增专项测试，Rust 测试报告 52 项通过；Release 复验报告通过；等待重新独立审计 |
 | 2026-11-17 | T1-01 第二轮独立审计未通过 | 最新审计基准 PR #1 HEAD `892b25f`；发现初始化锁后 WAL 检查顺序竞争、Debug/Test Junction 可绕过正式目录保护、真实卷身份/TOCTOU 未充分关闭、PR/机器证据/状态文档过期；记录见 `docs/testing/reports/T1-01-SECOND-AUDIT-REPORT.md`；任务重新进入返工，PR 不合并，不开始 T1-02 |
-| 2026-11-17 | T1-01 第二轮审计返工修复（返工中 / R2-03 阻塞） | 修复代码提交 `a148f0d`：R2-01/R2-02/R2-04 返工与 62 项 Rust 测试、Release 复验通过；R2-03 TOCTOU 未关闭 |\n| 2026-11-18 | T1-01 第三轮独立审计未通过 | 代码提交 `a148f0d`、PR HEAD `eaf6ef7`；R2-01/R2-02/R2-04 修复逻辑复核成立；R2-03 TOCTOU 仍阻塞；新增 R3-01 D 根卷信任锚验证缺口（P1）和 R3-02 waiter 测试竞争状态证据精度问题（P2）；报告 `docs/testing/reports/T1-01-THIRD-AUDIT-REPORT.md`；PR 不合并，不开始 T1-02 |
+| 2026-11-17 | T1-01 第二轮审计返工修复（返工中 / R2-03 阻塞） | 修复代码提交 `a148f0d`：R2-01/R2-02/R2-04 返工与 62 项 Rust 测试、Release 复验通过；R2-03 TOCTOU 未关闭 |\n| 2026-11-18 | T1-01 第三轮独立审计未通过 | 代码提交 `a148f0d`、审计对象 PR HEAD `eaf6ef7`；R2-01/R2-02/R2-04 修复逻辑复核成立；TOCTOU 未修复，后由用户 DEC-029 接受并延期至 Issue #2；R3-01 P1、R3-02 P2 仍待处理；报告 `docs/testing/reports/T1-01-THIRD-AUDIT-REPORT.md`；PR 不合并，不开始 T1-02 |
+| 2026-11-18 | 用户接受 T1-01 TOCTOU 残余风险（DEC-029） | 不在 T1-01 内实施完整句柄相对改造/custom SQLite VFS；风险保留并转入独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)。R3-01 P1 与 R3-02 P2 仍须处理后重新独立审计 |
 
 后续每次阶段、任务状态变化，都应追加记录，并同步更新 docs/STATUS.md。历史记录不得通过覆盖方式抹去。
 
@@ -434,7 +435,7 @@
 
 ## 17. 当前执行结论
 
-- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 第三轮独立审计未通过，P1 阻塞（TOCTOU 未关闭，新增 D 根卷信任锚验证缺口 R3-01；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并），不得合并 PR 或开始 T1-02。
+- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 第三轮独立审计未通过；TOCTOU 残余风险按 DEC-029 接受并延期至 Issue #2；R3-01 P1 和 R3-02 P2 仍待处理并重新独立审计；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并，不得开始 T1-02。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
 - 当前首个开发任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**；任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；本轮返工证据见 `docs/testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-AUDIT-FIX-evidence.json`。
 - 第一版采用普通 SQLite，不实现应用密码、SQLCipher 或 DPAPI。
