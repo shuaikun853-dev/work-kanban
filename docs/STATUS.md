@@ -46,7 +46,7 @@
 | T1-06 | 六位数字应用密码与锁屏 | 取消 |
 | T1-07 | 首次初始化与 SQLite 异常保护 | 未开始 |
 
-**当前交付物：** [T1-01 开发任务说明与 DeepSeek 提示词](development/tasks/T1-01-SQLite-Foundation.md)、[T1-01 测试报告](testing/reports/T1-01-REPORT.md)（含实际命令、结果与证据）。
+**当前交付物：** [T1-01 开发任务说明与 DeepSeek 提示词](development/tasks/T1-01-SQLite-Foundation.md)、[T1-01 测试报告](testing/reports/T1-01-REPORT.md)（含实际命令、结果与证据）、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（待独立审计，不自动合并）。
 
 ### T1-01 交付摘要（2026-11-17）
 
@@ -82,7 +82,7 @@
 
 ## 下一步安排
 
-- T1-01 待独立审计：代码提交 `682ba04`，分支 `task/T1-01-sqlite-foundation`；测试报告、运行时证据与 PR 链接见任务报告与 PR。请审计负责人核对完整 diff、测试证据、验收标准、异常路径与数据安全边界；开发代理不得自行标记验收完成。
+- T1-01 待独立审计：代码提交 `682ba04`，分支 `task/T1-01-sqlite-foundation`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)；测试报告与运行时证据见 [T1-01 测试报告](testing/reports/T1-01-REPORT.md)。请审计负责人核对完整 diff、测试证据、验收标准、异常路径与数据安全边界；开发代理不得自行标记验收完成，也不得自动合并 PR。
 - 独立审计通过并同步更新开发计划后，才决定是否进入 T1-02；本任务结束后停止，不自动开始 T1-02。
 - T0-05 不再安排开发；T0-06 延期至阶段 6，不得从最终发布验收清单中删除。
 - 备份策略（OPEN-001/002/003）未确认前，不实施、也不宣称自动备份。

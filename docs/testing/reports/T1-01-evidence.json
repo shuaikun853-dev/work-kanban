@@ -6,6 +6,14 @@
   "status": "awaiting-independent-audit",
   "statusNote": "开发代理自测与独立验证子代理执行均已完成；未通过 ChatGPT 独立审计，不构成验收完成",
   "branch": "task/T1-01-sqlite-foundation",
+  "pullRequest": {
+    "number": 1,
+    "url": "https://github.com/shuaikun853-dev/work-kanban/pull/1",
+    "base": "main",
+    "head": "task/T1-01-sqlite-foundation",
+    "merged": false,
+    "note": "由开发代理创建，等待独立审计；未自动合并，未推送 main"
+  },
   "codeCommit": "682ba0438ada466e1cd33879ee2513484d986483",
   "baseCommit": "5a55b8d04e79d19cae67067e3fef09140c3fe501",
   "rangeDeclaration": "本任务只交付基础设施（工程骨架、便携路径、SQLite 底座、最小健康检查），未实现任何业务功能",

@@ -1,7 +1,8 @@
 # T1-01：正式工程骨架、便携路径接入与 SQLite 基础设施
 
 **任务状态：** 待审计（2026-11-17 代码与测试完成，测试通过；代码提交 `682ba04`；分支 `task/T1-01-sqlite-foundation`；等待独立审计，未标记验收完成） \
-**测试报告：** [T1-01-REPORT.md](../../testing/reports/T1-01-REPORT.md)
+**测试报告：** [T1-01-REPORT.md](../../testing/reports/T1-01-REPORT.md)  
+**Pull Request：** [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（指向 main，待独立审计；开发代理未合并）
 **任务阶段：** 阶段 1：基础架构与工作事项  
 **执行方式：** 用户 Windows 10 本机 DeepSeek Agent  
 **授权日期：** 2026-11-17  
