@@ -94,7 +94,7 @@ V0.2
 
 | 项目 | 技术与能力 | 许可证 | WorkManager 的研究用途 |
 |---|---|---|---|
-| [PomeTodo](https://github.com/ShiliuX-Team/pometodo) | Tauri 2、Rust、React、SQLite；本地待办、附件、备份、托盘、提醒、DPAPI | GPL-3.0-only | 研究 Rust Core 分层、校验、附件安全、备份和 DPAPI 思路；不复制源代码 |
+| [PomeTodo](https://github.com/ShiliuX-Team/pometodo) | Tauri 2、Rust、React、SQLite；本地待办、附件、备份、托盘、提醒 | GPL-3.0-only | 研究 Rust Core 分层、校验、附件安全和备份思路；不复制源代码 |
 | [Super Productivity](https://github.com/super-productivity/super-productivity) | Angular；任务计划、工作日志、时间统计、每日/每周总结 | MIT | 研究日报/周报、统计口径和日期边界；不复制源代码 |
 | [Chiri](https://github.com/chiriapp/chiri) | Tauri 2、Rust、React；任务、拖动排序、托盘、开机启动 | zlib | 研究 Tauri 2 Windows 集成和排序交互；不复制源代码 |
 | [Todofy](https://github.com/salarzeidanlou/todofy) | Tauri 2、Rust、Preact、SQLite；今日/未来/待安排、置顶、提醒、计时 | Source-Available License | 只研究产品行为；不复制或移植代码 |
@@ -111,12 +111,9 @@ WorkManager 已明确选择**完全自研**。上表只用于研究架构、产�
 -   研究 Rust 侧对输入数据、备份数据的校验方式。
 -   研究附件路径校验、原子文件写入和失败清理方式。
 -   研究 SQLite 单连接管理、事务和备份处理。
--   研究 DPAPI 调用的 Rust/Windows API 接入方式。
+-   只研究其 SQLite 单连接管理、事务、备份校验和附件路径处理；不引入其密钥保护实现。
 
-注意：PomeTodo 的 `rusqlite` 配置使用普通 bundled
-SQLite，并不等于已经解决 SQLCipher 数据库加密；其 DPAPI
-示例主要用于本地密钥类数据保护。WorkManager 仍须单独完成 SQLCipher +
-DPAPI 数据库密钥验证。
+注意：PomeTodo 的 SQLite 和备份处理方式可作为普通本地数据库的架构研究参考。WorkManager 第一版不采用其 DPAPI/加密相关实现。
 
 PomeTodo 是 GPL-3.0-only。WorkManager 只研究其架构与安全处理思路，不复制或移植其源代码；第三方依赖仍需单独审查许可证。
 
@@ -912,7 +909,7 @@ Rust 后台调度器负责复盘提醒，但提醒时机必须遵循用户确认
 
 > 有一项上一工作日复盘待处理
 
-不要在锁屏通知里显示客户、项目或工作标题。
+系统通知只显示通用提醒，不显示客户、项目或工作标题。
 
 ## 10. Windows 托盘、开机启动和通知
 
@@ -939,7 +936,7 @@ Rust 后台调度器负责复盘提醒，但提醒时机必须遵循用户确认
 -   当前用户登录后可以启动。
 -   便携目录移动后可以修复启动路径。
 -   禁用开机启动后能清理对应注册项。
--   不在启动参数中传递密码或数据库密钥。
+-   不在启动参数中传递工作内容或其他敏感业务数据。
 
 ### 10.3 单实例
 
@@ -1292,7 +1289,7 @@ UI、IPC、业务层、数据库和测试，形成可以独立演示的纵向切
 -   [ ] T5-02：附件存在性检查和重新选择。
 -   [ ] T5-03：三个月工作档案清理。
 -   [ ] T5-04：一年每日快照清理。
--   [ ] T5-05：加密备份和恢复。
+-   [ ] T5-05：普通 SQLite 一致性备份和恢复。
 -   [ ] T5-06：迁移失败回滚和数据恢复验证。
 
 ### 阶段 6：发布
@@ -1473,10 +1470,8 @@ ADR。
 -   [Tauri Windows
     notifications](https://v2.tauri.app/plugin/notification/)
 -   [Tauri system tray](https://v2.tauri.app/learn/system-tray/)
--   [rusqlite SQLCipher features](https://docs.rs/crate/rusqlite/latest)
 -   [rusqlite online backup
     API](https://docs.rs/rusqlite/latest/rusqlite/backup/)
--   [SQLCipher](https://github.com/sqlcipher/sqlcipher)
 -   [Microsoft
     CryptProtectData](https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata)
 -   [Microsoft
