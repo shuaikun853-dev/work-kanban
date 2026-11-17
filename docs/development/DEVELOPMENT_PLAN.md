@@ -17,8 +17,8 @@
 
 | 文档 | 用途 |
 |---|---|
-| [产品需求规格说明书 PRD V0.2](../requirements/PRD.md) | 产品范围、业务规则、用户体验和产品验收标准 |
-| [技术架构设计说明书 V0.3.2](../architecture/TECHNICAL_DESIGN.md) | 技术栈、模块边界、数据模型、安全、测试与技术任务 |
+| [产品需求规格说明书 PRD V0.3](../requirements/PRD.md) | 产品范围、业务规则、用户体验和产品验收标准 |
+| [技术架构设计说明书 V0.4.0](../architecture/TECHNICAL_DESIGN.md) | 技术栈、模块边界、数据模型、安全、测试与技术任务 |
 | [用户决策记录](../decisions/DECISIONS.md) | 已确认决策和待确认事项 |
 | [AI Agent 开发规范](../../AGENTS.md) | AI Agent 必须遵守的开发、安全和 Git 规则 |
 | [开发状态](../STATUS.md) | 当前进度摘要和阶段状态 |
