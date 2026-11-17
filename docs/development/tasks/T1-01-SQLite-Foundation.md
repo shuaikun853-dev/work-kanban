@@ -1,9 +1,10 @@
 # T1-01：正式工程骨架、便携路径接入与 SQLite 基础设施
 
-**任务状态：** 待开始  
+**任务状态：** 已获授权，计划于 2026-11-17 18:00（北京时间）后开始；当前尚未执行  
 **任务阶段：** 阶段 1：基础架构与工作事项  
 **执行方式：** 用户 Windows 10 本机 DeepSeek Agent  
 **授权日期：** 2026-11-17  
+**计划启动时间：** 2026-11-17 18:00（北京时间），由用户在本机 DeepSeek 环境执行  
 **权威依据：** PRD、技术设计 V0.4.0、DECISIONS.md、DEVELOPMENT_PLAN.md、AGENTS.md、STATUS.md
 
 ---
@@ -23,7 +24,7 @@
    - git remote -v
    - git log -1 --oneline
 3. 不得覆盖、清理或重置用户未提交的修改。
-4. 检查 GitHub 仓库 shuaikun853-dev/work-kanban 的最新 main，确认已包含 DEC-028 和本任务说明。
+4. 检查 GitHub 仓库 shuaikun853-dev/work-kanban 的最新 main，确认已包含 DEC-028、本任务说明，以及 T0-06 延期至阶段 6 的安排。T0-06 不属于 T1-01 阻塞项。
 5. 阅读 AGENTS.md、PRD、决策记录、技术设计、开发计划和 STATUS。
 6. 检查仓库是否已有实际 Tauri 源码。如果有，先理解并复用；如果目前只有文档，再创建正式工程骨架。
 
