@@ -2,10 +2,10 @@
 
 **文档版本：** V1.1  
 **编制日期：** 2026-11-17  
-**文档状态：** 开发执行基线（阶段 0 已放行；阶段 1 已启动，T1-01 第二轮审计返工中 / R2-03 阻塞） \
+**文档状态：** 开发执行基线（阶段 0 已放行；阶段 1 已启动，T1-01 第三轮独立审计未通过，P1 阻塞） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；阶段 1 已启动；T1-01 第二轮审计返工：R2-01、R2-02、R2-04 已修复并通过完整回归，R2-03 真实物理卷身份校验已实现并实机验证，但路径校验 TOCTOU 残余窗口未关闭，当前为返工中 / R2-03 阻塞（等待用户决策）；最新代码提交 `a148f0d`；分支 `task/T1-01-sqlite-foundation`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并
+**当前进度：** 阶段 0 已放行；阶段 1 已启动；T1-01 第三轮独立审计未通过：TOCTOU 未关闭（P1），新增 D 根卷信任锚验证缺口 R3-01（P1），R2-01 waiter 测试确定性需补强 R3-02（P2）；最新代码提交 `a148f0d`、PR HEAD `eaf6ef7`；分支 `task/T1-01-sqlite-foundation`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并
 
 ---
 
@@ -176,7 +176,7 @@
 
 ### T1-01 详细范围
 
-**当前状态（2026-11-17）：** 第二轮独立审计返工中 / R2-03 阻塞。第二轮审计基准为 PR #1 HEAD `892b25f`，提出初始化锁后孤儿 WAL 检查顺序可能误判已创建数据库的活动 WAL（R2-01）、Debug/Test 可通过同卷 Junction 绕过正式目录字符串保护（R2-02）、真实卷身份/SUBST/卷挂载点与路径校验 TOCTOU 尚未充分关闭（R2-03）、PR 描述/机器证据/状态文档存在过期内容（R2-04）。修复代码提交 `a148f0d`：R2-01、R2-02、R2-04 已修复并通过完整回归；R2-03 的卷 GUID / NT 设备卷身份校验已实现并实机验证，但路径校验 TOCTOU 残余窗口未关闭，等待用户决定是否接受延期加固。详见 [T1-01-SECOND-AUDIT-FIX-REPORT.md](../testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md) 与 [返工后机器可读证据](../testing/reports/T1-01-AUDIT-FIX-evidence.json)。修复并重新独立审计通过前不得标记待审计或验收完成，也不得进入 T1-02。
+**当前状态（2026-11-18）：** 第三轮独立审计未通过。R2-01/R2-02/R2-04 修复逻辑复核成立；R2-03 TOCTOU 仍未关闭；新增 R3-01：D 根卷信任锚未在生产路径独立验证（P1）；新增 R3-02：R2-01 waiter 测试未严格证明已观察到锁竞争（P2）。详见 [T1-01-THIRD-AUDIT-REPORT.md](../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)。PR #1 保持 Open、不合并；修复 P1、补强测试并由用户决定 TOCTOU 范围前，不得标记待审计或验收完成，也不得进入 T1-02。
 
 **实际实现范围：**
 
@@ -426,7 +426,7 @@
 | 2026-11-17 | T1-01 进入返工 | 独立审计提出 2 项 P1、3 项 P2 与 1 项可选 CSP 加固问题：零字节数据库保护、D 盘真实卷/重解析点校验、已有数据库预检查顺序、初始化跨进程锁、数据库命令异步化、CSP；保留原始提交历史，在 `task/T1-01-sqlite-foundation` 新增修复提交 |
 | 2026-11-17 | T1-01 返工完成（待重新审计） | 修复提交 `abf3e5a`；新增专项测试，Rust 测试报告 52 项通过；Release 复验报告通过；等待重新独立审计 |
 | 2026-11-17 | T1-01 第二轮独立审计未通过 | 最新审计基准 PR #1 HEAD `892b25f`；发现初始化锁后 WAL 检查顺序竞争、Debug/Test Junction 可绕过正式目录保护、真实卷身份/TOCTOU 未充分关闭、PR/机器证据/状态文档过期；记录见 `docs/testing/reports/T1-01-SECOND-AUDIT-REPORT.md`；任务重新进入返工，PR 不合并，不开始 T1-02 |
-| 2026-11-17 | T1-01 第二轮审计返工修复（返工中 / R2-03 阻塞） | 修复代码提交 `a148f0d`：R2-01 先重检主库再检查孤儿 sidecar（确定性真实双进程测试 3 项）；R2-02 正式目录保护改为真实最终路径 + 可注入受保护根目录（专项测试 5 项）；R2-03 卷 GUID/NT 设备卷身份校验 + SUBST 实机测试，但 TOCTOU 残余窗口未关闭；R2-04 同步新证据 JSON、脱敏日志、STATUS/计划/任务说明与 PR 描述。完整回归 `cargo test --workspace` 62 项通过；Release 便携 106 项、异常注入 73 项 0 FAIL；UI/IPC/CSP 21/21；新 Release SHA-256 `849E803D…019E`。R2-03 等待用户决策，任务不得标记待审计或验收完成 |
+| 2026-11-17 | T1-01 第二轮审计返工修复（返工中 / R2-03 阻塞） | 修复代码提交 `a148f0d`：R2-01/R2-02/R2-04 返工与 62 项 Rust 测试、Release 复验通过；R2-03 TOCTOU 未关闭 |\n| 2026-11-18 | T1-01 第三轮独立审计未通过 | 代码提交 `a148f0d`、PR HEAD `eaf6ef7`；R2-01/R2-02/R2-04 修复逻辑复核成立；R2-03 TOCTOU 仍阻塞；新增 R3-01 D 根卷信任锚验证缺口（P1）和 R3-02 waiter 测试竞争状态证据精度问题（P2）；报告 `docs/testing/reports/T1-01-THIRD-AUDIT-REPORT.md`；PR 不合并，不开始 T1-02 |
 
 后续每次阶段、任务状态变化，都应追加记录，并同步更新 docs/STATUS.md。历史记录不得通过覆盖方式抹去。
 
@@ -434,7 +434,7 @@
 
 ## 17. 当前执行结论
 
-- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 第二轮审计返工中 / R2-03 阻塞（R2-01/R2-02/R2-04 已修复并通过回归；R2-03 TOCTOU 未关闭，等待用户决策；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并），不得合并 PR 或开始 T1-02。
+- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 第三轮独立审计未通过，P1 阻塞（TOCTOU 未关闭，新增 D 根卷信任锚验证缺口 R3-01；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并），不得合并 PR 或开始 T1-02。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
 - 当前首个开发任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**；任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；本轮返工证据见 `docs/testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-AUDIT-FIX-evidence.json`。
 - 第一版采用普通 SQLite，不实现应用密码、SQLCipher 或 DPAPI。
