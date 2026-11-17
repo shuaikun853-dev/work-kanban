@@ -2,10 +2,10 @@
 
 **文档版本：** V1.1  
 **编制日期：** 2026-11-17  
-**文档状态：** 开发执行基线（阶段 0 已放行；阶段 1 已启动，T1-01 返工完成、待重新审计） \
+**文档状态：** 开发执行基线（阶段 0 已放行；阶段 1 已启动，T1-01 第二轮独立审计未通过，返工中） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；阶段 1 已启动；T1-01 独立审计问题已全部修复（修复提交 `abf3e5a`，返工前基线 `682ba04`；52 项 Rust 测试与 Release 运行时复验通过），等待重新独立审计；分支 `task/T1-01-sqlite-foundation`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并
+**当前进度：** 阶段 0 已放行；阶段 1 已启动；T1-01 第二轮独立审计发现 3 项 P1 存储/并发边界问题和 1 项 P2 文档证据问题，当前返工中；最新审计基准 `892b25f`；分支 `task/T1-01-sqlite-foundation`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并
 
 ---
 
@@ -176,7 +176,7 @@
 
 ### T1-01 详细范围
 
-**当前状态（2026-11-17）：** 返工完成，待重新审计。独立审计对 PR #1 基线 `682ba04` 提出的 2 项 P1、3 项 P2 与 1 项可选 CSP 问题已全部修复（修复提交 `abf3e5a`）：零字节数据库保护、D 盘真实卷/重解析点校验、已有数据库预检查顺序、跨进程初始化锁、数据库命令异步化、生产 CSP；新增/更新专项测试后 Rust 测试 52 项通过、Release 运行时复验通过。修复证据见 [T1-01-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-AUDIT-FIX-REPORT.md)。重新审计通过前不得标记验收完成，也不得进入 T1-02。
+**当前状态（2026-11-17）：** 第二轮独立审计未通过，返工中。最新审计基准为 PR #1 HEAD `892b25f`。发现：初始化锁后孤儿 WAL 检查顺序可能误判已创建数据库的活动 WAL；Debug/Test 可通过同卷 Junction 绕过正式目录字符串保护；真实卷身份/SUBST/挂载点与路径校验 TOCTOU 尚未充分关闭；PR 描述、机器证据和状态文档存在过期内容。详见 [T1-01-SECOND-AUDIT-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-REPORT.md)。修复并重新独立审计通过前不得标记验收完成，也不得进入 T1-02。
 
 **实际实现范围：**
 
@@ -422,7 +422,7 @@
 | 2026-11-17 | T1-01 代码与测试完成（待审计） | 代码提交 `682ba04`：Tauri 2 + Svelte 5 工程骨架、便携路径、bundled SQLite、user_version migration、失败保护、最小健康检查界面；cargo/npm/Release 构建与运行时专项验证通过；测试报告 `docs/testing/reports/T1-01-REPORT.md`；等待独立审计，未标记验收完成 |
 | 2026-11-17 | 创建 T1-01 Pull Request | 推送分支 `task/T1-01-sqlite-foundation` 并创建 [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 指向 main；未合并、未推送 main；等待独立审计 |
 | 2026-11-17 | T1-01 进入返工 | 独立审计提出 2 项 P1、3 项 P2 与 1 项可选 CSP 加固问题：零字节数据库保护、D 盘真实卷/重解析点校验、已有数据库预检查顺序、初始化跨进程锁、数据库命令异步化、CSP；保留原始提交历史，在 `task/T1-01-sqlite-foundation` 新增修复提交 |
-| 2026-11-17 | T1-01 返工完成（待重新审计） | 修复提交 `abf3e5a`；新增 4 个专项测试文件与 3 类扩展测试（0 字节库/WAL 边界、预检查顺序、双进程初始化竞争、Windows Junction 实机、异步派发、CSP），Rust 测试 52 项通过；Release 复验：便携 106 项、异常注入 73 项（0 FAIL）、真实窗口 CDP 21/21（CSP 违规 0）；EXE SHA-256 `C863CAC5DEE29CD7A5DB25DA3B4610023CB8C4BF59DD97534764BC7D96FA67F4`；等待重新独立审计 |
+| 2026-11-17 | T1-01 返工完成（待重新审计） | 修复提交 `abf3e5a`；新增专项测试，Rust 测试报告 52 项通过；Release 复验报告通过；等待重新独立审计 |\n| 2026-11-17 | T1-01 第二轮独立审计未通过 | 最新审计基准 PR #1 HEAD `892b25f`；发现初始化锁后 WAL 检查顺序竞争、Debug/Test Junction 可绕过正式目录保护、真实卷身份/TOCTOU 未充分关闭、PR/机器证据/状态文档过期；记录见 `docs/testing/reports/T1-01-SECOND-AUDIT-REPORT.md`；任务重新进入返工，PR 不合并，不开始 T1-02 |
 
 后续每次阶段、任务状态变化，都应追加记录，并同步更新 docs/STATUS.md。历史记录不得通过覆盖方式抹去。
 
@@ -430,7 +430,7 @@
 
 ## 17. 当前执行结论
 
-- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 审计问题已修复（修复提交 `abf3e5a`、返工前基线 `682ba04`、[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)），当前状态待重新审计。
+- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 第二轮独立审计未通过，当前返工（最新审计基准 `892b25f`、[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)），不得合并 PR 或开始 T1-02。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
 - 当前首个开发任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**。
 - T1-01 的具体实施提示词见 `docs/development/tasks/T1-01-SQLite-Foundation.md`。
