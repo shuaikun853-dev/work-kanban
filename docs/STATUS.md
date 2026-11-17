@@ -3,7 +3,7 @@
 **更新日期：** 2026-11-17  
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **当前任务：** T1-01 正式工程骨架与 SQLite 基础设施  
-**总体状态：** 阶段 0 已按用户最新决策放行；阶段 1 已启动。用户在 2026-11-17 明确授权立即开始 T1-01，不再等待原定 18:00。T1-01 进行中，开发分支 `task/T1-01-sqlite-foundation`。
+**总体状态：** 阶段 0 已按用户最新决策放行；阶段 1 已启动。用户在 2026-11-17 明确授权立即开始 T1-01，不再等待原定 18:00。T1-01 代码与测试完成，测试通过，**等待独立审计**（代码提交 `682ba04`，分支 `task/T1-01-sqlite-foundation`）；任务未标记验收完成。
 
 ## 最新产品决策
 
@@ -38,7 +38,7 @@
 
 | 任务 | 内容 | 状态 |
 |---|---|---|
-| T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | 进行中（2026-11-17 开始；分支 `task/T1-01-sqlite-foundation`） |
+| T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | 待审计（测试通过；代码提交 `682ba04`；分支 `task/T1-01-sqlite-foundation`） |
 | T1-02 | 项目创建、编辑、归档 | 未开始 |
 | T1-03 | 工作事项快速创建和待安排区域 | 未开始 |
 | T1-04 | 多项目独立副本创建 | 未开始 |
@@ -46,7 +46,17 @@
 | T1-06 | 六位数字应用密码与锁屏 | 取消 |
 | T1-07 | 首次初始化与 SQLite 异常保护 | 未开始 |
 
-**当前交付物：** [T1-01 开发任务说明与 DeepSeek 提示词](development/tasks/T1-01-SQLite-Foundation.md)；T1-01 正在实施中，尚未提交验收证据。
+**当前交付物：** [T1-01 开发任务说明与 DeepSeek 提示词](development/tasks/T1-01-SQLite-Foundation.md)、[T1-01 测试报告](testing/reports/T1-01-REPORT.md)（含实际命令、结果与证据）。
+
+### T1-01 交付摘要（2026-11-17）
+
+- 正式 Tauri 2 + Svelte 5 + TypeScript + Vite 工程可构建；`workmanager-core`（Rust Core，不依赖 Tauri）与 `src-tauri`（Tauri 适配层）职责分离。
+- Release 数据目录跟随 EXE：`<exe目录>/data/database/work.db`；WebView2 绝对数据目录 `<data>/cache/webview2`；仅 D 盘、无 C 盘/AppData/Temp 回退。
+- 普通 bundled SQLite 3.54.1：WAL、`foreign_keys=ON`、`synchronous=FULL`、`busy_timeout=5000`、`temp_store=MEMORY`；启动时完整性检查与外键检查。
+- schema 版本 1（`schema_migrations`、`settings`）；`PRAGMA user_version` + 编号 SQL migration，每个 migration 独立事务、失败回滚；首次初始化临时库 + 原子安装，绝不覆盖已有数据库。
+- 最小健康检查窗口已实现并通过真实 Release WebView2 端到端验证（页面渲染 + `get_database_health` IPC 返回 + 截图）。
+- 已执行：`cargo fmt --check` / `cargo check` / `cargo test`（33 项通过）/ `npm run check` / `npm run build` / `npm run tauri build -- --no-bundle`（成功，EXE 9,898,496 字节）/ Release 运行时专项验证（便携 106 项、异常 59 项检查，0 FAIL）/ 重启持久化 / Release 忽略测试环境变量 / D 盘不可写 fail-closed 测试。
+- **未实现**：项目与工作事项 CRUD、每日计划、复盘、日报/周报、附件、自动备份、密码/锁屏/SQLCipher/DPAPI。T1-01 只是基础设施，不代表业务功能已实现。
 
 ## 后续阶段
 
@@ -63,13 +73,19 @@
 3. SQLite WAL 模式下不得简单复制正在使用的主数据库文件作为可靠备份；备份实现应使用 SQLite 在线备份 API 或经过验证的一致性快照流程。
 4. 正式应用目录移动、物理拔除 D 盘、D:/WorkManager 正式路径实跑和管理员 Process Monitor 审计需在阶段 6 发布验收补测。
 5. T0-06 并未取消：完整断网流程由 T6-04 验收；托盘、开机启动、单实例和通知由 T6-07 验收。
-5. 业务功能尚未实现；技术验证通过不等于业务功能完成。
+6. 业务功能尚未实现；T1-01 只完成基础设施，技术验证与自测通过不等于业务功能完成或独立审计通过。
+7. Release 产物当前为 `target/release/workmanager.exe`（Tauri `--no-bundle` 不改名）；正式便携包中 `WorkManager.exe` 的命名与目录组装属于 T6-01，T1-01 运行时验证采用复制重命名后运行。
+8. 单实例保护尚未实现（规划在 T6-07）：首次初始化使用硬链接保证不覆盖已有数据库，但两个进程同时首次启动仍存在初始化竞争窗口，需在单实例任务中消除。
+9. 启动时执行完整 `PRAGMA integrity_check`；数据库规模增大后启动耗时会增长，后续性能任务需评估改为 `quick_check` 或按需检查。
+10. 正常退出时已显式关闭 SQLite 连接（触发 WAL checkpoint 并清理 `-wal`/`-shm`，实测关闭后仅剩 `work.db`）；进程被强制结束（任务管理器/断电）时无法执行该逻辑，依赖 SQLite WAL 恢复与下次启动完整性检查兜底。
+11. `%LOCALAPPDATA%\EBWebView` 在本机验证开始前已存在（创建于 2024 年，本次运行前后时间戳与条目未变化）；WorkManager 专属 C 盘目录 `%LOCALAPPDATA%\com.workmanager.portable`、`%APPDATA%\com.workmanager.portable` 不存在。该共享目录的历史来源需在发布阶段审计确认。
 
 ## 下一步安排
 
-- T1-01 进行中：本机开发环境已复核，已建立分支 `task/T1-01-sqlite-foundation`，正在实施工程骨架、便携路径与 SQLite 基础设施。
-- T1-01 代码和测试完成后：先提交可复核的测试证据和 PR，由独立审计核验，再决定是否进入 T1-02。
+- T1-01 待独立审计：代码提交 `682ba04`，分支 `task/T1-01-sqlite-foundation`；测试报告、运行时证据与 PR 链接见任务报告与 PR。请审计负责人核对完整 diff、测试证据、验收标准、异常路径与数据安全边界；开发代理不得自行标记验收完成。
+- 独立审计通过并同步更新开发计划后，才决定是否进入 T1-02；本任务结束后停止，不自动开始 T1-02。
 - T0-05 不再安排开发；T0-06 延期至阶段 6，不得从最终发布验收清单中删除。
+- 备份策略（OPEN-001/002/003）未确认前，不实施、也不宣称自动备份。
 
 ## 进度口径
 

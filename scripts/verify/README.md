@@ -52,9 +52,12 @@ $null = $process.CloseMainWindow(); $process.WaitForExit(20000)
 
 ## 当前验证结果（2026-11-17，T1-01）
 
+Release 产物：`target\release\workmanager.exe`，9,899,520 字节，
+SHA-256 `B5CBEC7DEAE067247ECCBA8EA10BED86AF814ED4A324AC482B16651C059E43A0`。
+
 | 脚本 | 退出码 | 结果 |
 |---|---|---|
-| `verify-release-portable.ps1` | 0 | TOTAL=106 PASS=88 FAIL=0 WARN=3 INFO=15 |
+| `verify-release-portable.ps1` | 0 | TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15 |
 | `verify-release-faults.ps1` | 0 | TOTAL=59 PASS=51 FAIL=0 WARN=0 INFO=8 |
 | `inspect-release-ui.mjs` | 0 | 19/19 断言通过（真实窗口渲染 + 真实 IPC 返回 + 截图） |
 

@@ -2,10 +2,10 @@
 
 **文档版本：** V1.1  
 **编制日期：** 2026-11-17  
-**文档状态：** 开发执行基线（阶段 0 已放行；阶段 1 已启动，T1-01 进行中）  
+**文档状态：** 开发执行基线（阶段 0 已放行；阶段 1 已启动，T1-01 待独立审计） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；阶段 1 已启动；T1-01 于 2026-11-17 开始实施（用户授权立即执行），分支 `task/T1-01-sqlite-foundation`
+**当前进度：** 阶段 0 已放行；阶段 1 已启动；T1-01 代码与测试完成（代码提交 `682ba04`），测试通过，等待独立审计；分支 `task/T1-01-sqlite-foundation`
 
 ---
 
@@ -86,7 +86,7 @@
 | 阶段 | 名称 | 主要交付 | 当前状态 |
 |---|---|---|---|
 | 0 | 技术验证 | 桌面壳、便携路径、WebView2 基础验证 | 已放行；SQLCipher/DPAPI 取消，系统集成验证延期至阶段 6 |
-| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 进行中；T1-01 实施中 |
+| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 进行中；T1-01 待独立审计 |
 | 2 | 计划、优先级与当前工作 | 每日计划、全局排序、当前工作和切换记录 | 未开始 |
 | 3 | 每日复盘与提醒 | 工作日历、复盘、补录、提醒调度 | 未开始 |
 | 4 | 日志、搜索与报表 | 工作日志、历史搜索、日报、周报、月报 | 未开始 |
@@ -176,19 +176,18 @@
 
 ### T1-01 详细范围
 
-**当前状态（2026-11-17）：** 进行中。开发分支 `task/T1-01-sqlite-foundation`；工程骨架、便携路径和 SQLite 基础设施正在实施，尚未提交测试证据。
+**当前状态（2026-11-17）：** 待审计。代码、自动化测试、Release 构建和运行时专项验证已完成；代码提交 `682ba04`，测试证据见 [T1-01 测试报告](../../testing/reports/T1-01-REPORT.md)。开发代理自测不等于独立审计，任务不得在审计通过前标记验收完成。
 
-- 正式仓库从文档仓库升级为可构建的 Tauri 2 应用工程。
-- 前端使用 Svelte 5 + TypeScript + Vite；不引入 SvelteKit，除非先提交有证据的技术理由并获得确认。
-- Rust 后端建立独立 Core crate/模块边界。
-- 接入已验证的 PortablePaths 规则，Release 数据根目录跟随 EXE 所在目录，Debug/Test 可指定隔离测试根目录。
-- 使用 `rusqlite` + 普通 bundled SQLite，不启用 SQLCipher。
-- 数据库路径为 `data/database/work.db`。
-- 使用 `PRAGMA user_version` 管理 schema 版本；migration 按顺序执行并在事务中完成。
-- 开启 `foreign_keys`、WAL 和合理的 `busy_timeout`；`synchronous` 根据测试确定，优先数据可靠性。
-- SQLite 访问只在 Rust 后端；前端只能调用业务命令，不暴露任意 SQL IPC。
-- 首次初始化必须避免半初始化数据库；migration 失败不得覆盖原库。
-- 本任务只建立数据库底座和最小健康检查，不提前实现项目/工作事项 CRUD。
+**实际实现范围：**
+
+- 正式仓库从文档仓库升级为可构建的 Tauri 2 + Svelte 5 + TypeScript + Vite 工程（未引入 SvelteKit）。
+- 独立 `workmanager-core` Rust crate（不依赖 Tauri）：便携路径解析、SQLite 连接/PRAGMA/migration/完整性检查/健康快照；`src-tauri` 作为 Tauri 适配层，只暴露 `get_database_health` 一个受限命令。
+- 便携路径：Release 数据根目录跟随 EXE（`<exe目录>/data`）；Debug/Test 必须显式设置 `WORKMANAGER_TEST_PORTABLE_ROOT`；仅允许 D 盘；不静默回退到 AppData/LocalAppData/Temp/C 盘；目录被文件阻塞、不可写、符号链接或含 `..` 时 fail-closed。
+- WebView2 使用 Rust 侧绝对数据目录 `<data>/cache/webview2`（运行时验证 `EBWebView` profile 真实创建于该目录）。
+- SQLite：`rusqlite` 0.43.0 + bundled SQLite 3.54.1；WAL、`foreign_keys=ON`、`synchronous=FULL`、`busy_timeout=5000`、`temp_store=MEMORY`；启动时 `PRAGMA integrity_check` 与 `foreign_key_check`；正常退出时显式关闭连接并清理 WAL/SHM。
+- schema 版本 1（`0001_initial_foundation`：`schema_migrations`、`settings`）；`PRAGMA user_version` + 每个 migration 独立 IMMEDIATE 事务，失败回滚；首次初始化在临时数据库完成 schema 与检查后用硬链接原子安装，绝不覆盖已有数据库。
+- 最小健康检查窗口：显示 WorkManager 名称/版本、数据库状态、schema 版本、完整性、PRAGMA 配置、便携路径与 migration 记录；明确标注"仅基础设施预览，业务功能尚未实现"。
+- 本任务未实现：项目/工作事项 CRUD、每日计划、复盘、报表、附件、自动备份、密码/锁屏/SQLCipher/DPAPI。
 
 阶段验收：
 - 项目和工作事项可独立创建、编辑、归档。
@@ -420,6 +419,7 @@
 | 2026-11-17 | 更新开发计划 V1.1 | 根据 DEC-028 取消应用密码、SQLCipher 和 DPAPI；阶段 0 放行，启动阶段 1；T1-01 改为普通 SQLite 基础设施 |
 | 2026-11-17 | 更新开发计划 V1.2 | 明确 T1-01 计划 18:00（北京时间）后启动；T0-06 延期至阶段 6，新增 T6-07 验收托盘、开机启动、单实例和通知 |
 | 2026-11-17 | T1-01 状态改为进行中 | 用户明确授权立即开始，不再等待 18:00；建立开发分支 `task/T1-01-sqlite-foundation`；本机开发环境已复核 |
+| 2026-11-17 | T1-01 代码与测试完成（待审计） | 代码提交 `682ba04`：Tauri 2 + Svelte 5 工程骨架、便携路径、bundled SQLite、user_version migration、失败保护、最小健康检查界面；cargo/npm/Release 构建与运行时专项验证通过；测试报告 `docs/testing/reports/T1-01-REPORT.md`；等待独立审计，未标记验收完成 |
 
 后续每次阶段、任务状态变化，都应追加记录，并同步更新 docs/STATUS.md。历史记录不得通过覆盖方式抹去。
 
@@ -427,7 +427,7 @@
 
 ## 17. 当前执行结论
 
-- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 于 2026-11-17 开始实施，当前状态进行中。
+- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 代码与测试完成（代码提交 `682ba04`），当前状态待独立审计。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
 - 当前首个开发任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**。
 - T1-01 的具体实施提示词见 `docs/development/tasks/T1-01-SQLite-Foundation.md`。

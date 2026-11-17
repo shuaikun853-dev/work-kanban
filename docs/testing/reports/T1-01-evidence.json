@@ -1,0 +1,301 @@
+{
+  "taskId": "T1-01",
+  "taskName": "正式工程骨架、便携路径接入与 SQLite 基础设施",
+  "report": "docs/testing/reports/T1-01-REPORT.md",
+  "generatedAt": "2026-11-17T18:53:00+08:00",
+  "status": "awaiting-independent-audit",
+  "statusNote": "开发代理自测与独立验证子代理执行均已完成；未通过 ChatGPT 独立审计，不构成验收完成",
+  "branch": "task/T1-01-sqlite-foundation",
+  "codeCommit": "682ba0438ada466e1cd33879ee2513484d986483",
+  "baseCommit": "5a55b8d04e79d19cae67067e3fef09140c3fe501",
+  "rangeDeclaration": "本任务只交付基础设施（工程骨架、便携路径、SQLite 底座、最小健康检查），未实现任何业务功能",
+  "environment": {
+    "os": "Microsoft Windows 10 家庭中文版 10.0.19045 (x86_64)",
+    "node": "v22.20.0",
+    "npm": "10.9.3",
+    "rustc": "1.100.0 (0ef1bc386 2026-11-09)",
+    "cargo": "1.100.0",
+    "rustToolchain": "stable-x86_64-pc-windows-msvc",
+    "msvcBuildTools": "Visual Studio Build Tools 2022 17.14.37906.3, MSVC 14.44.35207",
+    "windowsSdk": "10.0.19041.0",
+    "webview2Runtime": "131.0.2903.86",
+    "git": "2.52.0.windows.1",
+    "python": "3.14.5 (sqlite3 3.50.4)",
+    "repoPath": "D:\\工作事项看板",
+    "testDataRoot": "D:\\WorkManager-test-data",
+    "formalReleaseRoot": "D:\\WorkManager（不存在，从未被写入）"
+  },
+  "dependencies": {
+    "tauri": "2.12.6",
+    "tauriBuild": "2.7.5",
+    "rusqlite": "0.43.0 (bundled)",
+    "libsqlite3Sys": "0.40.0 (bundled SQLite 3.54.1)",
+    "serde": "1.0.229",
+    "thiserror": "2.0.21",
+    "chrono": "0.4.45",
+    "svelte": "5.57.3",
+    "vite": "8.3.8",
+    "typescript": "6.0.3",
+    "svelteCheck": "4.7.8",
+    "vitePluginSvelte": "7.3.1",
+    "tauriCli": "2.12.5",
+    "tauriApi": "2.12.5",
+    "notIntroduced": ["SvelteKit", "SQLCipher", "DPAPI", "ORM/migration crate", "telemetry/cloud sync"]
+  },
+  "database": {
+    "path": "<exeDir>/data/database/work.db",
+    "schemaVersion": 1,
+    "latestSchemaVersion": 1,
+    "migrationFiles": ["migrations/0001_initial_foundation.sql"],
+    "tables": ["schema_migrations", "settings"],
+    "pragmasActual": {
+      "journal_mode": "wal",
+      "foreign_keys": "1 (ON)",
+      "synchronous": "2 (FULL)",
+      "busy_timeout": "5000 ms",
+      "temp_store": "2 (MEMORY)",
+      "integrity_check": "startup: must return ok",
+      "foreign_key_check": "startup: must return zero rows"
+    },
+    "migrationTransaction": "one IMMEDIATE transaction per migration (SQL, schema_migrations record, user_version are committed together; failure rolls back)",
+    "firstInitialization": "temp database file -> migrations + integrity + FK checks -> WAL consolidated (journal_mode=DELETE) -> atomic install via NTFS hard link (fails instead of overwriting existing database)",
+    "gracefulShutdown": "Tauri RunEvent::Exit closes SQLite connection explicitly (WAL checkpoint, -wal/-shm removed). Forced process termination relies on SQLite WAL recovery + startup integrity check."
+  },
+  "releaseArtifact": {
+    "path": "target/release/workmanager.exe",
+    "sizeBytes": 9899520,
+    "sha256": "B5CBEC7DEAE067247ECCBA8EA10BED86AF814ED4A324AC482B16651C059E43A0",
+    "productName": "WorkManager",
+    "fileVersion": "0.1.0",
+    "buildCommand": "npm run tauri build -- --no-bundle",
+    "buildExitCode": 0,
+    "buildDurationSecondsFinal": 173,
+    "note": "Tauri --no-bundle 产物按 Cargo 包名小写；正式便携包中 WorkManager.exe 的命名与组装属于 T6-01；运行时验证复制重命名为 WorkManager.exe"
+  },
+  "commands": [
+    {
+      "id": "cargo-fmt-check",
+      "command": "cargo fmt --all -- --check",
+      "exitCode": 0,
+      "summary": "无格式差异"
+    },
+    {
+      "id": "cargo-check",
+      "command": "cargo check --workspace --all-targets",
+      "exitCode": 0,
+      "summary": "编译通过"
+    },
+    {
+      "id": "cargo-test",
+      "command": "cargo test --workspace",
+      "exitCode": 0,
+      "summary": "33 passed; 0 failed; 0 ignored"
+    },
+    {
+      "id": "npm-check",
+      "command": "npm run check",
+      "exitCode": 0,
+      "summary": "svelte-check found 0 errors and 0 warnings"
+    },
+    {
+      "id": "npm-build",
+      "command": "npm run build",
+      "exitCode": 0,
+      "summary": "vite 8.3.8 built dist: index.html 0.39 kB, CSS 11.65 kB, JS 53.71 kB"
+    },
+    {
+      "id": "tauri-build-release",
+      "command": "npm run tauri build -- --no-bundle",
+      "exitCode": 0,
+      "summary": "Finished release profile [optimized] in 2m 53s; Built application at target/release/workmanager.exe"
+    },
+    {
+      "id": "release-portable-verification",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify/verify-release-portable.ps1",
+      "exitCode": 0,
+      "summary": "TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15 OVERALL=PASS",
+      "evidenceDir": "D:\\WorkManager-test-data\\release-verify-20261117-185117"
+    },
+    {
+      "id": "release-fault-verification",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify/verify-release-faults.ps1",
+      "exitCode": 0,
+      "summary": "TOTAL=59 PASS=51 FAIL=0 WARN=0 INFO=8 OVERALL=PASS",
+      "evidenceDir": "D:\\WorkManager-test-data\\release-verify-20261117-185125"
+    },
+    {
+      "id": "release-ui-ipc-cdp",
+      "command": "node scripts/verify/inspect-release-ui.mjs 9333 <evidenceDir>",
+      "exitCode": 0,
+      "summary": "19/19 assertions PASS (real WebView2 DOM render + real Tauri IPC invoke + screenshot)",
+      "evidenceDir": "D:\\WorkManager-test-data\\final-ui-check-20261117-185107\\evidence"
+    },
+    {
+      "id": "graceful-close-sidecar-check",
+      "command": "manual: launch release, CloseMainWindow, list data/database",
+      "exitCode": 0,
+      "summary": "关闭后仅剩 work.db（-wal/-shm 已清理），exit_code=0"
+    }
+  ],
+  "rustTests": {
+    "total": 33,
+    "unit": 8,
+    "integration": 25,
+    "suites": {
+      "src/portable_paths.rs (unit)": 8,
+      "tests/database_lifecycle.rs": 5,
+      "tests/migration_rollback.rs": 5,
+      "tests/foreign_keys.rs": 2,
+      "tests/database_fail_closed.rs": 8,
+      "tests/portable_paths.rs": 5
+    },
+    "highlights": [
+      "foreign_keys=ON 真实拒绝违规插入，ON DELETE CASCADE 生效",
+      "migration 中途失败回滚，user_version 停在已提交版本，失败建表语句回滚",
+      "垃圾/损坏数据库不被覆盖，原文件 SHA-256 前后一致",
+      "schema 版本过高保留原数据 fail-closed",
+      "D 盘目录 ACL 拒绝写入时 fail-closed，恢复 ACL 后可用",
+      "两套测试根目录数据隔离；正式目录 D:\\WorkManager 被拒绝"
+    ]
+  },
+  "releaseRuntime": {
+    "portable": {
+      "checksTotal": 106,
+      "pass": 90,
+      "fail": 0,
+      "warn": 1,
+      "info": 15,
+      "overall": "PASS",
+      "firstLaunch": {
+        "windowTitle": "WorkManager",
+        "windowVisibleMs": 354,
+        "databaseSizeBytes": 20480,
+        "userVersion": 1,
+        "integrityCheck": "ok",
+        "journalMode": "wal",
+        "schemaMigrationsRows": 1,
+        "closeMethod": "CloseMainWindow",
+        "exitCode": 0
+      },
+      "webview2": {
+        "dataDirectoryUnderPortableRoot": true,
+        "profileDir": "<exeDir>/data/cache/webview2/EBWebView",
+        "profileDirExists": true
+      },
+      "gracefulClose": {
+        "walBytes": 0,
+        "shmRemoved": true,
+        "sidecarsRemovedAfterClose": true
+      },
+      "restartPersistence": {
+        "canaryInserted": "{\"value\": \"release-verify-canary-20261117-185117\"}",
+        "canaryPresentAfterRestart": true,
+        "userVersionAfterRestart": 1,
+        "integrityCheckAfterRestart": "ok",
+        "schemaMigrationsRowsAfterRestart": 1,
+        "exitCode": 0
+      },
+      "releaseIgnoresTestPortableRootEnv": true,
+      "cDriveBoundary": {
+        "LOCALAPPDATA\\com.workmanager.portable": "absent before/after",
+        "APPDATA\\com.workmanager.portable": "absent before/after",
+        "LOCALAPPDATA\\EBWebView": "pre-existing before verification (created 2024-07-15), unchanged during run (WARN)"
+      }
+    },
+    "faults": {
+      "checksTotal": 59,
+      "pass": 51,
+      "fail": 0,
+      "warn": 0,
+      "info": 8,
+      "overall": "PASS",
+      "cases": [
+        {
+          "case": "corrupt_database",
+          "exitCode": 1,
+          "failureDialogTitle": "WorkManager 启动失败",
+          "originalFileUnchanged": true,
+          "noInitTempFiles": true,
+          "noEmptyDatabaseCreated": true,
+          "errorCodeClass": "database-open-failed / database-not-a-database"
+        },
+        {
+          "case": "data_path_blocked_by_file",
+          "exitCode": 1,
+          "failureDialogTitle": "WorkManager 启动失败",
+          "blockingFileUnchanged": true,
+          "noInitTempFiles": true,
+          "errorCodeClass": "path-not-directory"
+        },
+        {
+          "case": "work_db_is_directory",
+          "exitCode": 1,
+          "failureDialogTitle": "WorkManager 启动失败",
+          "directoryStillExists": true,
+          "notReplacedByDatabase": true,
+          "errorCodeClass": "database-path-not-file"
+        },
+        {
+          "case": "database_dir_acl_denied_write",
+          "exitCode": 1,
+          "failureDialogTitle": "WorkManager 启动失败",
+          "aclRemovedInFinally": true,
+          "writeRestored": true,
+          "noDatabaseCreated": true,
+          "errorCodeClass": "directory-not-writable"
+        }
+      ]
+    },
+    "uiIpcCdp": {
+      "assertionsTotal": 19,
+      "assertionsPassed": 19,
+      "renderedDomVerified": true,
+      "screenshot": "docs/testing/reports/T1-01-assets/release-window.png",
+      "rawEvidence": "docs/testing/reports/T1-01-assets/release-ui-ipc-evidence.json",
+      "ipcReturned": {
+        "appName": "WorkManager",
+        "appVersion": "0.1.0",
+        "runtimeMode": "release",
+        "schemaVersion": 1,
+        "integrityCheck": "ok",
+        "journalMode": "wal",
+        "foreignKeys": true,
+        "synchronous": 2,
+        "busyTimeoutMs": 5000,
+        "appliedMigrations": 1,
+        "databasePathEndsWith": "\\app\\data\\database\\work.db",
+        "webview2DataDirEndsWith": "\\app\\data\\cache\\webview2"
+      }
+    }
+  },
+  "warnings": [
+    {
+      "id": "c-drive-ebwebview-preexisting",
+      "detail": "%LOCALAPPDATA%\\EBWebView 在验证开始前已存在（创建于 2024-07-15，创建时间/25 个顶层条目在本次运行前后未变化），非本次运行创建；WorkManager 专属 C 盘目录不存在。来源需发布阶段审计确认。"
+    },
+    {
+      "id": "t0-prototype-appdata-leftover",
+      "detail": "本机存在 T0 原型遗留目录 %LOCALAPPDATA%\\com.workmanager.smoke（时间戳早于本任务），与 T1-01 无关；正式 com.workmanager.portable 目录不存在。"
+    }
+  ],
+  "failuresEncounteredAndFixed": [
+    {
+      "id": "vite8-esbuild-minify",
+      "detail": "vite.config.ts build.minify='esbuild' 在 Vite 8.3.8 下报 Cannot find package 'esbuild'，npm run build 退出码 1。改为 Vite 8 默认 minify='oxc'（无新依赖）后构建通过。"
+    },
+    {
+      "id": "independent-verifier-shm-semantics",
+      "detail": "独立验证首轮把正常关闭后 -shm 存在判为 FAIL（退出码 1）。复核发现 -wal 为 0 字节且无未提交数据；修正检查语义并在应用侧增加退出时显式关闭连接，修复后 shm 相关检查 PASS。首轮结果保留可复核。"
+    }
+  ],
+  "notCovered": [
+    "物理拔除 D 盘 / 正式 D:\\WorkManager 路径实跑 / Process Monitor 级文件审计（T6-03/T6-05）",
+    "单实例保护（T6-07）；首次初始化存在双进程竞争窗口（硬链接保证不覆盖已有数据库）",
+    "大数据量启动 integrity_check 性能评估",
+    "Debug 构建 GUI 端到端运行（Release 已端到端验证，Debug 路径由单元/集成测试覆盖）",
+    "Windows Toast / 托盘 / 开机启动 / 断网验收（T6-04/T6-07）",
+    "备份与恢复（OPEN-001/002/003 待用户确认，未实现未宣称）",
+    "项目/工作事项/每日计划/复盘/报表/附件/数据清理等业务功能",
+    "前端自动化单元测试（未引入 vitest 依赖）"
+  ]
+}
