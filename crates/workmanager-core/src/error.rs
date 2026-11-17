@@ -21,6 +21,47 @@ pub enum DatabaseError {
     #[error("数据库路径已存在但不是普通文件，已停止启动：{path}。不会删除或覆盖该路径。")]
     PathNotAFile { path: PathBuf },
 
+    /// 已存在的数据库文件为 0 字节：可能是崩溃、截断或外部程序造成的异常空文件。
+    ///
+    /// 不能交给 SQLite 打开：SQLite 会把 0 字节文件当作空数据库并执行 migration，
+    /// 且实测会忽略并删除残留的 WAL（可能包含未 checkpoint 的有效数据）。
+    #[error(
+        "检测到已存在的数据库文件为 0 字节（异常空文件）：{path}{wal_hint}。\
+         已停止启动，未删除、截断或覆盖原文件；不会把异常空文件当作首次安装，也不会自动重建。\
+         请从备份恢复，或在确认数据不可恢复后由用户手动处理后重试。"
+    )]
+    EmptyExistingDatabase { path: PathBuf, wal_hint: String },
+
+    /// 主数据库文件缺失，但存在非空的 WAL 或 journal 残留。
+    ///
+    /// 不能当作首次安装创建新库：否则残留 WAL/journal 可能被 SQLite 误用或丢弃，
+    /// 其中可能包含未 checkpoint 的有效数据。
+    #[error(
+        "数据库文件缺失但检测到残留的 {sidecar_name}：{sidecar_path}（{sidecar_size_bytes} 字节）。\
+         已停止启动；不会创建新数据库，也不会删除可能有效的数据。\
+         请从备份恢复，或在确认数据不可恢复后由用户手动处理后重试。"
+    )]
+    OrphanedSidecar {
+        database_path: PathBuf,
+        sidecar_path: PathBuf,
+        sidecar_name: String,
+        sidecar_size_bytes: u64,
+    },
+
+    /// 另一个 WorkManager 进程正在初始化数据库，等待初始化锁超时。
+    #[error(
+        "另一个 WorkManager 进程正在初始化数据库，等待 {waited_ms} 毫秒后仍未取得初始化锁：{lock_path}。\
+         已停止启动；不会删除活动进程的临时数据库，也不会覆盖正式数据库。请稍后重试。"
+    )]
+    InitializationLockBusy { lock_path: PathBuf, waited_ms: u64 },
+
+    /// 初始化锁文件不可用（创建/加锁失败）。
+    #[error(
+        "无法建立数据库初始化锁：{lock_path}；详情：{detail}。\
+         已停止启动，不会删除或覆盖数据库。"
+    )]
+    InitializationLockFailed { lock_path: PathBuf, detail: String },
+
     /// 创建临时初始化数据库文件失败。
     #[error("无法创建数据库初始化临时文件：{path}；系统错误：{source}。原始数据库未被修改。")]
     TemporaryFileFailed {
@@ -132,6 +173,10 @@ impl DatabaseError {
     pub fn code(&self) -> &'static str {
         match self {
             Self::PathNotAFile { .. } => "database-path-not-file",
+            Self::EmptyExistingDatabase { .. } => "database-empty-existing-file",
+            Self::OrphanedSidecar { .. } => "database-orphaned-sidecar",
+            Self::InitializationLockBusy { .. } => "database-initialization-locked",
+            Self::InitializationLockFailed { .. } => "database-initialization-lock-failed",
             Self::TemporaryFileFailed { .. } => "database-temp-file-failed",
             Self::FileSystemFailed { .. } => "database-file-system-failed",
             Self::OpenFailed { .. } => "database-open-failed",

@@ -7,6 +7,9 @@
 //! - 只允许 D 盘本地绝对路径；不得回退到 `%APPDATA%`、`%LOCALAPPDATA%`、系统 Temp 或其他盘。
 //! - 路径被文件阻塞、目录不可写、含符号链接或 `..` 时返回清晰错误，绝不静默换位置。
 //! - Debug/Test 明确禁止把测试数据写进正式目录 `D:\WorkManager`。
+//! - Windows 实机（审计 P1）：已存在的 EXE 目录与数据目录必须用 Win32 句柄解析真实最终路径，
+//!   展开 Junction/符号链接/重解析点后仍是 D 盘本地固定盘或可移动盘；拒绝映射网络盘、UNC
+//!   与 D→C 的 Junction，并在任何创建目录/写探针之前 fail-closed。
 //!
 //! 本模块不依赖 Tauri，可被普通 `cargo test` 覆盖。
 
@@ -16,7 +19,20 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+#[cfg(windows)]
+use std::path::Prefix;
+
 use serde::Serialize;
+
+#[cfg(windows)]
+use windows_sys::Win32::{
+    Foundation::{CloseHandle, ERROR_ACCESS_DENIED, HANDLE, INVALID_HANDLE_VALUE},
+    Storage::FileSystem::{
+        CreateFileW, FILE_FLAG_BACKUP_SEMANTICS, FILE_READ_ATTRIBUTES, FILE_SHARE_DELETE,
+        FILE_SHARE_READ, FILE_SHARE_WRITE, GetDriveTypeW, GetFinalPathNameByHandleW, OPEN_EXISTING,
+        VOLUME_NAME_DOS,
+    },
+};
 
 /// Debug/Test 构建用于指定隔离测试数据根目录的环境变量。Release 构建忽略该变量。
 pub const TEST_PORTABLE_ROOT_ENV: &str = "WORKMANAGER_TEST_PORTABLE_ROOT";
@@ -46,6 +62,12 @@ pub mod error_codes {
     pub const DIRECTORY_INSPECT_FAILED: &str = "directory-inspect-failed";
     pub const DIRECTORY_CREATE_FAILED: &str = "directory-create-failed";
     pub const DIRECTORY_NOT_WRITABLE: &str = "directory-not-writable";
+    /// 无法用 Win32 句柄解析路径的真实存储位置（路径不存在、权限不足或 API 调用失败）。
+    pub const PATH_REAL_LOCATION_UNAVAILABLE: &str = "path-real-location-unavailable";
+    /// 真实最终目标不在 D 盘（典型：D 盘上的 Junction/符号链接指向 C 盘）。
+    pub const PATH_REAL_TARGET_NOT_D: &str = "path-real-target-not-d";
+    /// 真实最终路径不是本地盘符，或所在卷类型不允许（映射网络盘、光驱、内存盘等）。
+    pub const PATH_NOT_LOCAL_VOLUME: &str = "path-not-local-volume";
 }
 
 /// 运行模式。
@@ -227,6 +249,17 @@ impl PortablePaths {
 
         ensure_no_parent_components(&data_root)?;
 
+        // Windows 实机 fail-closed 校验（审计 P1）：
+        // 对“已存在”的 EXE 目录与数据根目录，用 Win32 句柄解析真实最终路径（展开 Junction/
+        // 符号链接/卷挂载点），确认最终真实目标仍是 D 盘本地固定/可移动卷。不存在的路径保留
+        // 纯字符串规则，由 `ensure_directories()` 在创建任何目录之前校验最近已存在祖先。
+        if path_exists_without_follow(&portable_root) {
+            validate_real_storage_path(&portable_root, "EXE 所在目录")?;
+        }
+        if path_exists_without_follow(&data_root) {
+            validate_real_storage_path(&data_root, "data 数据根目录")?;
+        }
+
         let database_dir = data_root.join("database");
         let database_file = database_dir.join(DATABASE_FILE_NAME);
 
@@ -275,9 +308,21 @@ impl PortablePaths {
             ));
         }
 
+        // fail-closed：在任何 create_dir_all / 写探针之前，先确认便携根目录当前的真实存储位置
+        // 仍在 D 盘本地卷，并确认 data_root 的最近已存在祖先没有被重解析到其他卷。
+        validate_real_storage_path(&self.portable_root, "便携根目录")?;
+        self.validate_real_storage_for_creation(&self.data_root, "data 数据根目录")?;
+
         self.ensure_directory(&self.data_root, "data 数据根目录")?;
         for (path, label) in self.data_subdirectories() {
             self.ensure_directory(path, label)?;
+        }
+
+        // 创建完成后再用句柄解析一次：防止 data_root / database / cache/webview2 等目录在创建
+        // 过程中被并发替换为重解析点而静默写入其他卷（fail-closed，发现异常立即停止启动）。
+        validate_real_storage_path(&self.data_root, "data 数据根目录")?;
+        for (path, label) in self.data_subdirectories() {
+            validate_real_storage_path(path, label)?;
         }
 
         for (path, label) in self.writable_probe_directories() {
@@ -285,6 +330,28 @@ impl PortablePaths {
         }
 
         Ok(())
+    }
+
+    /// 创建目录之前：校验目标路径“最近已存在祖先”的真实存储位置。
+    ///
+    /// 例如 `data_root = <portable_root>\data` 时校验 `portable_root`；若 `data_root` 本身
+    /// 已存在（可能是 Junction）则校验 `data_root`。该校验发生在任何 `create_dir_all` 之前。
+    fn validate_real_storage_for_creation(
+        &self,
+        path: &Path,
+        label: &str,
+    ) -> Result<(), PortablePathError> {
+        let ancestor = nearest_existing_ancestor(path).ok_or_else(|| {
+            PortablePathError::new(
+                error_codes::PATH_REAL_LOCATION_UNAVAILABLE,
+                format!(
+                    "无法定位 {label} 的最近已存在祖先目录：{}。已停止启动，\
+                     不会回退到 C 盘、AppData 或系统 Temp。",
+                    path.display()
+                ),
+            )
+        })?;
+        validate_real_storage_path(&ancestor, label)
     }
 
     /// 必须通过可写探针验证的目录：数据库、日志、缓存/WebView2、临时和备份。
@@ -420,6 +487,263 @@ fn is_same_or_child(path: &Path, parent: &Path) -> bool {
     let path = normalize(path);
     let parent = normalize(parent);
     path == parent || path.starts_with(&format!("{parent}\\"))
+}
+
+// ---------------------------------------------------------------------------
+// Windows 真实存储位置校验（T1-01 独立审计 P1 返工）
+//
+// 仅用字符串判断盘符不足以证明数据真的落在 D 盘：D 盘上的 Junction/符号链接可以把路径
+// 重解析到 C 盘、映射网络盘或其他卷。这里用 Win32 句柄解析真实最终目标，再校验卷类型，
+// 并在任何创建目录/写文件之前 fail-closed。
+// ---------------------------------------------------------------------------
+
+/// 路径自身是否存在（不跟随最后一级重解析点；Junction/符号链接本身也算存在）。
+fn path_exists_without_follow(path: &Path) -> bool {
+    fs::symlink_metadata(path).is_ok()
+}
+
+/// 返回 `path` 自身或最深的已存在祖先（逐级向上，不跟随最后一级重解析点）。
+///
+/// 用于在创建目录之前校验“当前真实可落脚的位置”：只要最近已存在祖先被重解析到其他卷，
+/// 就拒绝创建任何目录，避免先写入再报错。
+fn nearest_existing_ancestor(path: &Path) -> Option<PathBuf> {
+    let mut candidate = path.to_path_buf();
+    loop {
+        match fs::symlink_metadata(&candidate) {
+            Ok(_) => return Some(candidate),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => match candidate.parent() {
+                Some(parent) if !parent.as_os_str().is_empty() => {
+                    candidate = parent.to_path_buf();
+                }
+                _ => return None,
+            },
+            Err(_) => return None,
+        }
+    }
+}
+
+/// Win32 句柄的 RAII 包装：无论函数正常返回、返回错误还是 panic，都会 `CloseHandle`。
+#[cfg(windows)]
+struct HandleGuard(HANDLE);
+
+#[cfg(windows)]
+impl Drop for HandleGuard {
+    fn drop(&mut self) {
+        // SAFETY: 句柄来自成功的 CreateFileW 调用，只会在此处关闭一次。
+        unsafe {
+            let _ = CloseHandle(self.0);
+        }
+    }
+}
+
+/// 把 Windows 路径转换为以 NUL 结尾的 UTF-16（宽字符）缓冲区。
+#[cfg(windows)]
+fn to_wide_null(path: &Path) -> Vec<u16> {
+    use std::os::windows::ffi::OsStrExt;
+    path.as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect()
+}
+
+/// 无法解析真实存储位置时的统一错误（fail-closed，绝不回退到其他目录）。
+#[cfg(windows)]
+fn real_location_unavailable(path: &Path, detail: impl fmt::Display) -> PortablePathError {
+    PortablePathError::new(
+        error_codes::PATH_REAL_LOCATION_UNAVAILABLE,
+        format!(
+            "无法解析路径的真实存储位置（Windows API 调用失败或结果异常）：{}；详情：{detail}。\
+             已停止启动，不会回退到 C 盘、AppData 或系统 Temp。",
+            path.display()
+        ),
+    )
+}
+
+/// 打开路径句柄失败时的错误映射。
+///
+/// “拒绝访问”说明权限不足、目录不可检查，保持既有 `directory-inspect-failed` 错误码语义
+/// （目录不可写/不可访问仍会由后续写探针以 `directory-not-writable` 暴露），避免把权限
+/// 问题误报成“真实路径不可解析”而覆盖既有行为；其余错误一律 fail-closed 为
+/// `path-real-location-unavailable`。
+#[cfg(windows)]
+fn handle_open_failed(path: &Path, error: &io::Error) -> PortablePathError {
+    if error.raw_os_error() == Some(ERROR_ACCESS_DENIED as i32) {
+        return PortablePathError::new(
+            error_codes::DIRECTORY_INSPECT_FAILED,
+            format!(
+                "检查路径的真实存储位置失败（拒绝访问）：{}；系统错误：{error}。\
+                 已停止启动，不会回退到 C 盘、AppData 或系统 Temp。",
+                path.display()
+            ),
+        );
+    }
+    real_location_unavailable(path, error)
+}
+
+/// 用 Win32 句柄解析路径的真实最终存储路径（展开 Junction/符号链接/重解析点）。
+///
+/// 使用 `CreateFileW`（目录必须带 `FILE_FLAG_BACKUP_SEMANTICS`，并共享读/写/删除）打开
+/// 路径，再调用 `GetFinalPathNameByHandleW(VOLUME_NAME_DOS)` 取得形如 `\\?\D:\...` 的
+/// 最终路径。句柄解析会跟随完整祖先链上的重解析点，因此能识别“EXE 目录本身正常，但
+/// 某个祖先目录是 D→C Junction”的情况；不使用 `std::fs::canonicalize` 做单点判断。
+///
+/// 访问权限只请求 `FILE_READ_ATTRIBUTES`（`GetFinalPathNameByHandleW` 的要求）：
+/// 若像 `GENERIC_READ` 那样附带请求 `SYNCHRONIZE`，一个“拒绝写入”的 ACL 会连带拒绝
+/// `SYNCHRONIZE`，导致真实路径校验先于写探针报错，掩盖真正的“目录不可写”错误码。
+#[cfg(windows)]
+fn resolve_real_final_path(path: &Path) -> Result<PathBuf, PortablePathError> {
+    use std::ffi::OsString;
+    use std::os::windows::ffi::OsStringExt;
+
+    let wide_path = to_wide_null(path);
+    // SAFETY: wide_path 以 NUL 结尾且在本函数内保持存活；失败时 last_os_error 立即读取。
+    let raw_handle = unsafe {
+        CreateFileW(
+            wide_path.as_ptr(),
+            FILE_READ_ATTRIBUTES,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            std::ptr::null(),
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS,
+            std::ptr::null_mut(),
+        )
+    };
+    if raw_handle.is_null() || raw_handle == INVALID_HANDLE_VALUE {
+        return Err(handle_open_failed(path, &io::Error::last_os_error()));
+    }
+    let handle = HandleGuard(raw_handle);
+
+    // GetFinalPathNameByHandleW 返回值语义：
+    // - 0：失败（错误码用 GetLastError 读取）；
+    // - 小于缓冲区长度：成功，返回不含结尾 NUL 的字符数；
+    // - 大于等于缓冲区长度：缓冲区不足，返回所需长度（含结尾 NUL），扩容后二次调用。
+    let mut buffer = vec![0u16; 512];
+    loop {
+        // SAFETY: handle 有效；buffer 可写且长度与传入的 cchfilepath 一致。
+        let written = unsafe {
+            GetFinalPathNameByHandleW(
+                handle.0,
+                buffer.as_mut_ptr(),
+                buffer.len() as u32,
+                VOLUME_NAME_DOS,
+            )
+        };
+        if written == 0 {
+            return Err(handle_open_failed(path, &io::Error::last_os_error()));
+        }
+        let written = written as usize;
+        if written < buffer.len() {
+            buffer.truncate(written);
+            break;
+        }
+        buffer = vec![0u16; written + 1];
+    }
+
+    let real_path = PathBuf::from(OsString::from_wide(&buffer));
+    if !real_path.is_absolute() {
+        return Err(real_location_unavailable(
+            path,
+            format!("真实最终路径不是绝对路径：{}", real_path.display()),
+        ));
+    }
+    Ok(real_path)
+}
+
+/// 从 Win32 最终路径中提取本地盘符；UNC、卷 GUID、设备路径等返回 `None`。
+#[cfg(windows)]
+fn drive_letter_of_local_path(path: &Path) -> Option<char> {
+    match path.components().next()? {
+        Component::Prefix(prefix) => match prefix.kind() {
+            Prefix::Disk(letter) | Prefix::VerbatimDisk(letter) => Some(char::from(letter)),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+/// 查询盘符根目录的卷类型（Win32 `GetDriveTypeW`）。
+#[cfg(windows)]
+fn query_drive_type(letter: char) -> u32 {
+    let root = format!("{letter}:\\");
+    let wide_root = to_wide_null(Path::new(&root));
+    // SAFETY: wide_root 以 NUL 结尾；GetDriveTypeW 只读取该字符串。
+    unsafe { GetDriveTypeW(wide_root.as_ptr()) }
+}
+
+/// 允许的卷类型：本地固定盘（`DRIVE_FIXED`=3）或可移动盘（`DRIVE_REMOVABLE`=2）。
+///
+/// 显式拒绝 `DRIVE_REMOTE`=4（映射网络盘）、`DRIVE_CDROM`=5、`DRIVE_RAMDISK`=6、
+/// `DRIVE_NO_ROOT_DIR`=1 以及 `DRIVE_UNKNOWN`=0。纯函数，便于单元测试覆盖各卷类型。
+#[cfg(windows)]
+fn is_allowed_volume_type(drive_type: u32) -> bool {
+    use windows_sys::Win32::System::WindowsProgramming::{DRIVE_FIXED, DRIVE_REMOVABLE};
+    drive_type == DRIVE_FIXED || drive_type == DRIVE_REMOVABLE
+}
+
+/// fail-closed 校验：`path` 的真实最终存储位置必须是 D 盘本地固定盘或可移动盘。
+///
+/// 调用方必须保证 `path` 已存在；不存在时返回 `path-real-location-unavailable`。
+/// 该函数会展开“路径自身”以及完整祖先链上的所有重解析点（由句柄解析保证），因此
+/// D 盘上的 Junction 指向 C 盘时会得到 `path-real-target-not-d`；若最终目标是 UNC/
+/// 卷挂载点/映射网络盘等非本地盘符卷，则得到 `path-not-local-volume`。
+#[cfg(windows)]
+fn validate_real_storage_path(path: &Path, label: &str) -> Result<(), PortablePathError> {
+    let real_path = resolve_real_final_path(path)?;
+
+    let Some(drive) = drive_letter_of_local_path(&real_path) else {
+        return Err(PortablePathError::new(
+            error_codes::PATH_NOT_LOCAL_VOLUME,
+            format!(
+                "{label} 的真实最终路径不是本地盘符路径（可能是 UNC 网络路径、卷挂载点或设备路径）：\
+                 {} -> {}。WorkManager 只允许 D 盘本地固定盘或可移动盘；已停止启动，\
+                 不会回退到 C 盘、AppData 或系统 Temp。",
+                path.display(),
+                real_path.display()
+            ),
+        ));
+    };
+
+    if !matches!(drive, 'D' | 'd') {
+        return Err(PortablePathError::new(
+            error_codes::PATH_REAL_TARGET_NOT_D,
+            format!(
+                "{label} 的真实最终目标在 {drive}: 盘而不是 D 盘：{} -> {}。\
+                 该路径可能被 Junction/符号链接重解析到其他卷；已停止启动，\
+                 不会回退到 C 盘、AppData 或系统 Temp。",
+                path.display(),
+                real_path.display()
+            ),
+        ));
+    }
+
+    let drive_type = query_drive_type(drive);
+    if !is_allowed_volume_type(drive_type) {
+        return Err(PortablePathError::new(
+            error_codes::PATH_NOT_LOCAL_VOLUME,
+            format!(
+                "{label} 所在的 {drive}: 卷不是本地固定盘或可移动盘（GetDriveTypeW={drive_type}；\
+                 DRIVE_REMOTE=4 表示映射网络盘）：{} -> {}。已停止启动，\
+                 不会回退到 C 盘、AppData 或系统 Temp。",
+                path.display(),
+                real_path.display()
+            ),
+        ));
+    }
+
+    Ok(())
+}
+
+/// 非 Windows 平台降级实现：保留既有纯字符串规则，不引入 Win32 卷/重解析点语义。
+#[cfg(not(windows))]
+fn resolve_real_final_path(path: &Path) -> Result<PathBuf, PortablePathError> {
+    Ok(path.to_path_buf())
+}
+
+/// 非 Windows 平台降级实现：真实存储位置校验为空操作（本产品目标平台为 Windows 10）。
+#[cfg(not(windows))]
+fn validate_real_storage_path(path: &Path, _label: &str) -> Result<(), PortablePathError> {
+    let _ = resolve_real_final_path(path)?;
+    Ok(())
 }
 
 fn write_writable_probe(directory: &Path, label: &str) -> Result<(), PortablePathError> {
@@ -623,6 +947,66 @@ mod tests {
                 Some(std::ffi::OsString::from(r"D:\WorkManager-test-data\x"))
             ),
             Some(d_path(r"D:\WorkManager-test-data\x"))
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn only_fixed_and_removable_volumes_are_allowed() {
+        use windows_sys::Win32::System::WindowsProgramming::{
+            DRIVE_CDROM, DRIVE_FIXED, DRIVE_NO_ROOT_DIR, DRIVE_RAMDISK, DRIVE_REMOTE,
+            DRIVE_REMOVABLE,
+        };
+
+        assert!(is_allowed_volume_type(DRIVE_FIXED), "本地固定盘必须允许");
+        assert!(is_allowed_volume_type(DRIVE_REMOVABLE), "可移动盘必须允许");
+        // 映射网络盘无法在无网络共享的实机上真实构造，这里用 Win32 常量覆盖拒绝逻辑。
+        assert!(!is_allowed_volume_type(DRIVE_REMOTE), "映射网络盘必须拒绝");
+        assert!(!is_allowed_volume_type(DRIVE_CDROM), "光驱必须拒绝");
+        assert!(!is_allowed_volume_type(DRIVE_RAMDISK), "内存盘必须拒绝");
+        assert!(
+            !is_allowed_volume_type(DRIVE_NO_ROOT_DIR),
+            "无效盘符必须拒绝"
+        );
+        assert!(!is_allowed_volume_type(0), "DRIVE_UNKNOWN 必须拒绝");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn real_final_path_drive_letters_are_parsed_conservatively() {
+        // GetFinalPathNameByHandleW(VOLUME_NAME_DOS) 返回 `\\?\D:\...`（VerbatimDisk）；
+        // 普通 `D:\...` 路径解析为 Disk。盘符大小写不敏感（std 可能规范化为大写）。
+        for candidate in [
+            r"\\?\D:\WorkManager\data",
+            r"\\?\d:\WorkManager",
+            r"D:\WorkManager",
+            r"d:\WorkManager",
+        ] {
+            assert_eq!(
+                drive_letter_of_local_path(Path::new(candidate)).map(|c| c.to_ascii_uppercase()),
+                Some('D'),
+                "candidate={candidate}"
+            );
+        }
+        assert_eq!(
+            drive_letter_of_local_path(Path::new(r"\\?\C:\Users\Public"))
+                .map(|c| c.to_ascii_uppercase()),
+            Some('C')
+        );
+        // UNC 网络路径、卷 GUID 路径、设备路径一律不视为本地盘符。
+        assert_eq!(
+            drive_letter_of_local_path(Path::new(r"\\?\UNC\server\share\data")),
+            None
+        );
+        assert_eq!(
+            drive_letter_of_local_path(Path::new(
+                r"\\?\Volume{00000000-0000-0000-0000-000000000000}\data"
+            )),
+            None
+        );
+        assert_eq!(
+            drive_letter_of_local_path(Path::new(r"\\.\PhysicalDrive0")),
+            None
         );
     }
 }

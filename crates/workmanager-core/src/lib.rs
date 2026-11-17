@@ -12,8 +12,8 @@ pub mod error;
 pub mod portable_paths;
 
 pub use database::{
-    AppliedMigration, BUSY_TIMEOUT_MS, Database, DatabaseHealth, LATEST_SCHEMA_VERSION, MIGRATIONS,
-    Migration, MigrationOutcome,
+    AppliedMigration, BUSY_TIMEOUT_MS, Database, DatabaseHealth, InitializationLock,
+    LATEST_SCHEMA_VERSION, MIGRATIONS, Migration, MigrationOutcome,
 };
 pub use error::DatabaseError;
 pub use portable_paths::{PortablePathError, PortablePaths, RuntimeMode, TEST_PORTABLE_ROOT_ENV};

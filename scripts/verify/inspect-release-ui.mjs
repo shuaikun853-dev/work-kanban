@@ -115,6 +115,22 @@ async function evaluate(expression) {
 await send('Runtime.enable');
 await send('Page.enable');
 
+// CSP 回归验证（审计可选安全加固）：注入安全策略违规收集器后重新加载页面，
+// 确认生产 CSP 不会破坏 Svelte 资源加载、Tauri IPC 注入与 WebView2 渲染。
+await send('Page.addScriptToEvaluateOnNewDocument', {
+  source: `window.__wmCspViolations = [];
+document.addEventListener('securitypolicyviolation', (event) => {
+  window.__wmCspViolations.push({
+    blockedURI: event.blockedURI,
+    violatedDirective: event.violatedDirective,
+    sourceFile: event.sourceFile,
+    sample: event.sample
+  });
+});`
+});
+await send('Page.reload', { ignoreCache: true });
+await sleep(500);
+
 const readUiState = () =>
   evaluate(`(() => {
     const text = (selector) => {
@@ -146,7 +162,13 @@ const readUiState = () =>
 // 等待真实渲染完成（成功徽标或错误卡片出现）。
 let uiState = null;
 for (let attempt = 0; attempt < 120; attempt += 1) {
-  uiState = await readUiState();
+  try {
+    uiState = await readUiState();
+  } catch {
+    // 页面重新加载期间执行上下文可能短暂失效，重试即可。
+    await sleep(250);
+    continue;
+  }
   const rendered =
     uiState.readyState === 'complete' &&
     uiState.badges.some((badge) => badge.includes('正常（ok）')) &&
@@ -174,10 +196,22 @@ const screenshot = await send('Page.captureScreenshot', { format: 'png', fromSur
 const screenshotPath = path.join(outputDir, 'release-window.png');
 fs.writeFileSync(screenshotPath, Buffer.from(screenshot.data, 'base64'));
 
+// 收集页面重新加载期间发生的 CSP 违规（应为 0）。
+let cspViolations = [];
+try {
+  cspViolations = await evaluate(
+    'Array.isArray(window.__wmCspViolations) ? window.__wmCspViolations : []'
+  );
+} catch (error) {
+  cspViolations = [{ error: String(error) }];
+}
+
 const database = ipcResult && ipcResult.database ? ipcResult.database : null;
 
 const assertions = {
   pageLoaded: uiState !== null && uiState.readyState === 'complete',
+  cspCollectorInstalled: Array.isArray(cspViolations),
+  noCspViolations: Array.isArray(cspViolations) && cspViolations.length === 0,
   uiRenderedHealth: uiState !== null && uiState.badges.some((badge) => badge.includes('正常（ok）')),
   noErrorAlert: uiState !== null && uiState.hasErrorAlert === false,
   appNameRendered: uiState !== null && uiState.heading === 'WorkManager',
@@ -210,7 +244,7 @@ const assertions = {
 const evidence = {
   generatedAt: new Date().toISOString(),
   method:
-    'CDP Runtime.evaluate against real Release WebView2 (DOM state + direct Tauri IPC invoke + screenshot)',
+    'CDP Runtime.evaluate against real Release WebView2 (DOM state + direct Tauri IPC invoke + CSP violation capture after reload + screenshot)',
   port,
   target: {
     id: pageTarget.id,
@@ -219,6 +253,10 @@ const evidence = {
     type: pageTarget.type
   },
   uiState,
+  csp: {
+    checkedAfterReload: true,
+    violations: cspViolations
+  },
   ipc: { ok: ipcError === null, error: ipcError, result: ipcResult },
   assertions,
   screenshotPath

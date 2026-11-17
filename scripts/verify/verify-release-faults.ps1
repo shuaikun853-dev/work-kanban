@@ -422,9 +422,12 @@ try {
     $corruptDirSnapshotPath = Join-Path $evidenceDir 'fault-corrupt-db-database-dir-snapshot.json'
     Save-VerifyJsonFile -Path $corruptDirSnapshotPath -Object $corruptDirSnapshot -Depth 10 | Out-Null
     Register-VerifyArtifact -Label 'fault-corrupt-db 数据库目录快照' -Path $corruptDirSnapshotPath
-    $unexpectedDbEntries = @($corruptDirSnapshot.entries | Where-Object { $_.relative_path -ne 'work.db' })
+    # `.work.db.init.lock` 是审计 P2 修复引入的跨进程初始化锁文件（仅含 PID/时间戳诊断），
+    # 属于应用的持久锁文件，不是空库或临时库，不应计为“新增数据库文件”。
+    $allowedDatabaseEntries = @('work.db', '.work.db.init.lock')
+    $unexpectedDbEntries = @($corruptDirSnapshot.entries | Where-Object { $allowedDatabaseEntries -notcontains $_.relative_path })
     if ($unexpectedDbEntries.Count -eq 0) {
-        Add-VerifyCheck -Name 'fault.corrupt_db.no_new_database_files' -Status 'PASS' -Detail '数据库目录中除原 work.db 外没有新增文件（未创建空库/临时库）'
+        Add-VerifyCheck -Name 'fault.corrupt_db.no_new_database_files' -Status 'PASS' -Detail '数据库目录中除原 work.db 与初始化锁文件外没有新增文件（未创建空库/临时库）'
     }
     else {
         Add-VerifyCheck -Name 'fault.corrupt_db.no_new_database_files' -Status 'WARN' -Detail ('数据库目录出现额外条目：' + (($unexpectedDbEntries | ForEach-Object { $_.relative_path + '(' + $_.size_bytes + ')' }) -join ', '))
@@ -440,6 +443,73 @@ try {
             dialog_title         = $corruptObservation.dialog_title
             dialog_texts         = $corruptObservation.dialog_texts
             exit_code            = $corruptObservation.exit_code
+        })
+
+    # =======================================================================
+    # 用例 A2：已存在的 0 字节 work.db（审计 P1 修复）
+    # =======================================================================
+    Write-VerifySection '用例 A2：已存在 0 字节 work.db → 启动必须失败且原文件不变'
+    $caseName = 'fault-zero-byte-db'
+    $caseDir = New-FaultCaseDirectory -OutputDir $OutputDir -CaseName $caseName
+    $appExe = Copy-FaultCaseExecutable -SourceExePath $ExePath -CaseDir $caseDir -Prefix 'fault.zero_byte_db' -SourceSha256 $exeSha256
+    $zeroByteDatabaseDirectory = Join-Path $caseDir 'data\database'
+    New-Item -ItemType Directory -Path $zeroByteDatabaseDirectory -Force | Out-Null
+    $zeroByteDatabasePath = Join-Path $zeroByteDatabaseDirectory 'work.db'
+    [System.IO.File]::WriteAllBytes($zeroByteDatabasePath, (New-Object byte[] 0))
+    $zeroByteHashBefore = Get-FileSha256 -Path $zeroByteDatabasePath
+    $zeroByteSizeBefore = Get-FileSizeBytes -Path $zeroByteDatabasePath
+    Write-VerifyLog -Message ('已写入 0 字节 work.db：' + $zeroByteDatabasePath + '；size=' + [string]$zeroByteSizeBefore + '；sha256=' + [string]$zeroByteHashBefore) -Level 'STEP'
+    Add-VerifyCheck -Name 'fault.zero_byte_db.fixture_created' -Status 'PASS' -Detail ('size_bytes=' + [string]$zeroByteSizeBefore + '；sha256=' + [string]$zeroByteHashBefore + '；期望 size=0')
+
+    $zeroByteObservation = Invoke-StartupFailureObservation -CaseDir $caseDir -EvidenceDir $evidenceDir -Tag 'fault-zero-byte-db'
+    Add-ExpectedFailureChecks -Observation $zeroByteObservation -Prefix 'fault.zero_byte_db' -ExpectedKeyword '0 字节'
+    Add-InitTempFileCheck -CaseDir $caseDir -Prefix 'fault.zero_byte_db'
+
+    if (Test-Path -LiteralPath $zeroByteDatabasePath -PathType Leaf) {
+        Add-VerifyCheck -Name 'fault.zero_byte_db.original_still_file' -Status 'PASS' -Detail ('原 0 字节数据库文件仍存在：' + $zeroByteDatabasePath)
+    }
+    else {
+        Add-VerifyCheck -Name 'fault.zero_byte_db.original_still_file' -Status 'FAIL' -Detail ('原 0 字节数据库文件已不存在：' + $zeroByteDatabasePath)
+    }
+    $zeroByteHashAfter = Get-FileSha256 -Path $zeroByteDatabasePath
+    $zeroByteSizeAfter = Get-FileSizeBytes -Path $zeroByteDatabasePath
+    if (($zeroByteHashAfter -eq $zeroByteHashBefore) -and ($zeroByteSizeAfter -eq $zeroByteSizeBefore) -and ($zeroByteSizeAfter -eq 0)) {
+        Add-VerifyCheck -Name 'fault.zero_byte_db.original_bytes_unchanged' -Status 'PASS' -Detail ('size=' + [string]$zeroByteSizeAfter + '；sha256=' + [string]$zeroByteHashAfter + '；文件保持 0 字节')
+    }
+    else {
+        Add-VerifyCheck -Name 'fault.zero_byte_db.original_bytes_unchanged' -Status 'FAIL' -Detail ('原 0 字节文件被修改：before size=' + [string]$zeroByteSizeBefore + ' sha256=' + [string]$zeroByteHashBefore + '；after size=' + [string]$zeroByteSizeAfter + ' sha256=' + [string]$zeroByteHashAfter)
+    }
+    $zeroByteWalPath = $zeroByteDatabasePath + '-wal'
+    $zeroByteShmPath = $zeroByteDatabasePath + '-shm'
+    if ((-not (Test-Path -LiteralPath $zeroByteWalPath)) -and (-not (Test-Path -LiteralPath $zeroByteShmPath))) {
+        Add-VerifyCheck -Name 'fault.zero_byte_db.no_sidecars_created' -Status 'PASS' -Detail '未创建 WAL/SHM 文件（未把 0 字节文件交给 SQLite 打开）'
+    }
+    else {
+        Add-VerifyCheck -Name 'fault.zero_byte_db.no_sidecars_created' -Status 'FAIL' -Detail ('发现 WAL/SHM 文件：wal=' + [string](Test-Path -LiteralPath $zeroByteWalPath) + '；shm=' + [string](Test-Path -LiteralPath $zeroByteShmPath))
+    }
+    $zeroByteDirSnapshot = Get-DirectorySnapshot -Path $zeroByteDatabaseDirectory -MaxDepth 2 -MaxEntries 50
+    $zeroByteDirSnapshotPath = Join-Path $evidenceDir 'fault-zero-byte-db-database-dir-snapshot.json'
+    Save-VerifyJsonFile -Path $zeroByteDirSnapshotPath -Object $zeroByteDirSnapshot -Depth 10 | Out-Null
+    Register-VerifyArtifact -Label 'fault-zero-byte-db 数据库目录快照' -Path $zeroByteDirSnapshotPath
+    $zeroByteAllowedEntries = @('work.db', '.work.db.init.lock')
+    $zeroByteUnexpectedEntries = @($zeroByteDirSnapshot.entries | Where-Object { $zeroByteAllowedEntries -notcontains $_.relative_path })
+    if ($zeroByteUnexpectedEntries.Count -eq 0) {
+        Add-VerifyCheck -Name 'fault.zero_byte_db.no_schema_created' -Status 'PASS' -Detail '数据库目录中只有原 work.db（0 字节）与初始化锁文件，没有生成任何 schema/数据库文件'
+    }
+    else {
+        Add-VerifyCheck -Name 'fault.zero_byte_db.no_schema_created' -Status 'FAIL' -Detail ('数据库目录出现额外条目：' + (($zeroByteUnexpectedEntries | ForEach-Object { $_.relative_path + '(' + $_.size_bytes + ')' }) -join ', '))
+    }
+    [void]$script:FaultCaseResults.Add([ordered]@{
+            case                   = $caseName
+            directory              = $caseDir
+            database_path          = $zeroByteDatabasePath
+            database_sha256_before = $zeroByteHashBefore
+            database_sha256_after  = $zeroByteHashAfter
+            database_size_before   = $zeroByteSizeBefore
+            database_size_after    = $zeroByteSizeAfter
+            dialog_title           = $zeroByteObservation.dialog_title
+            dialog_texts           = $zeroByteObservation.dialog_texts
+            exit_code              = $zeroByteObservation.exit_code
         })
 
     # =======================================================================

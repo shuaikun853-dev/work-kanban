@@ -5,13 +5,19 @@
 //! - 生产 PRAGMA 配置（WAL、foreign_keys、busy_timeout、synchronous=FULL、temp_store=MEMORY）；
 //! - `PRAGMA user_version` + 编号 SQL migration；
 //! - 首次初始化使用临时数据库文件，完成 schema 与完整性检查后再原子安装为正式库；
-//! - 启动时 fail-closed：损坏、非数据库、版本过新、迁移失败都保留原文件并返回结构化错误；
+//! - 已有数据库先做只读预检查（版本、完整性、外键数据、兼容性），确认健康兼容后才
+//!   应用持久化 PRAGMA（`journal_mode=WAL`），避免在不兼容/损坏库上留下设置改动；
+//! - 区分“首次安装”和“已有数据库”：已存在的 0 字节异常空文件 fail-closed，
+//!   绝不当作首次安装，也绝不交给 SQLite 打开（SQLite 会把 0 字节文件当空库，
+//!   并可能丢弃残留 WAL 中未 checkpoint 的数据）；
+//! - 首次初始化使用跨进程初始化锁，避免并发首次启动互相删除临时库或重复迁移；
 //! - 健康检查快照（不包含用户工作内容）。
 //!
 //! 本模块由 Rust 后端独占使用；前端只能调用受限的 Tauri command，不能执行 SQL。
 
 mod connection;
 mod health;
+mod init_lock;
 mod migrations;
 
 use std::fs;
@@ -24,6 +30,7 @@ use crate::error::DatabaseError;
 use crate::portable_paths::PortablePaths;
 
 pub use health::{AppliedMigration, DatabaseHealth};
+pub use init_lock::{DEFAULT_ACQUIRE_TIMEOUT, INITIALIZATION_LOCK_FILE_NAME, InitializationLock};
 pub use migrations::{
     LATEST_SCHEMA_VERSION, MIGRATIONS, Migration, MigrationOutcome, apply_migrations,
     read_schema_version,
@@ -67,32 +74,62 @@ impl Database {
             });
         }
 
-        // 清理本应用上次初始化中断留下的临时文件（只匹配本模块创建的固定前缀）。
-        Self::remove_stale_initialization_files(&paths.database_dir);
-
         let database_path = paths.database_file.clone();
-        let existed = match fs::symlink_metadata(&database_path) {
-            Ok(metadata) if metadata.is_file() => true,
-            Ok(_) => {
-                return Err(DatabaseError::PathNotAFile {
-                    path: database_path,
-                });
-            }
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => false,
-            Err(error) => {
-                return Err(DatabaseError::FileSystemFailed {
-                    context: "检查数据库文件状态",
-                    path: database_path,
-                    source: error,
-                });
-            }
-        };
 
-        if !existed {
-            Self::create_new_database(paths)?;
+        // 只读判断当前是否已有数据库文件（含 0 字节异常空文件），不修改任何文件。
+        match Self::inspect_existing_database(&database_path)? {
+            Some(size_bytes) => {
+                // 已有数据库：尽力取得初始化锁；只有持锁时才清理遗留临时文件，
+                // 绝不删除其他活动进程正在使用的临时数据库。
+                let lock = InitializationLock::try_acquire(&paths.database_dir)?;
+                if let Some(lock) = lock.as_ref() {
+                    let _ = lock.write_diagnostic();
+                    Self::remove_stale_initialization_files(&paths.database_dir);
+                }
+                if size_bytes == 0 {
+                    return Err(empty_existing_database_error(&database_path));
+                }
+                let database = Self::open_existing_database(paths, false)?;
+                drop(lock);
+                Ok(database)
+            }
+            None => {
+                // 首次安装：必须取得跨进程初始化锁，防止两个进程同时初始化、
+                // 互相删除临时库或重复执行 migration。
+                let lock = InitializationLock::acquire(
+                    &paths.database_dir,
+                    init_lock::DEFAULT_ACQUIRE_TIMEOUT,
+                )?;
+                let _ = lock.write_diagnostic();
+
+                // 主库缺失时，若存在非空 WAL/journal 残留，绝不能当作首次安装：
+                // 创建新库可能让 SQLite 误用或丢弃其中可能有效的数据。
+                if let Some(error) = Self::orphaned_sidecar_error(&database_path) {
+                    return Err(error);
+                }
+
+                // 取得锁后重新检查：另一个进程可能刚完成首次初始化并释放锁。
+                match Self::inspect_existing_database(&database_path)? {
+                    Some(size_bytes) => {
+                        Self::remove_stale_initialization_files(&paths.database_dir);
+                        if size_bytes == 0 {
+                            return Err(empty_existing_database_error(&database_path));
+                        }
+                        let database = Self::open_existing_database(paths, false)?;
+                        drop(lock);
+                        Ok(database)
+                    }
+                    None => {
+                        Self::remove_stale_initialization_files(&paths.database_dir);
+                        Self::remove_stale_shm_when_creating_new(&database_path);
+                        Self::create_new_database(paths)?;
+                        let database = Self::open_existing_database(paths, true)?;
+                        drop(lock);
+                        Ok(database)
+                    }
+                }
+            }
         }
-
-        Self::open_existing_database(paths, !existed)
     }
 
     /// 数据库文件路径（`data/database/work.db`）。
@@ -131,6 +168,51 @@ impl Database {
         connection::run_foreign_key_check(&self.connection, &self.database_path)
     }
 
+    /// 只读检查数据库文件是否存在及其大小；不打开数据库、不修改文件。
+    fn inspect_existing_database(path: &Path) -> Result<Option<u64>, DatabaseError> {
+        match fs::symlink_metadata(path) {
+            Ok(metadata) if metadata.is_file() => Ok(Some(metadata.len())),
+            Ok(_) => Err(DatabaseError::PathNotAFile {
+                path: path.to_path_buf(),
+            }),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+            Err(error) => Err(DatabaseError::FileSystemFailed {
+                context: "检查数据库文件状态",
+                path: path.to_path_buf(),
+                source: error,
+            }),
+        }
+    }
+
+    /// 主库缺失时检查非空 WAL / journal 残留。
+    ///
+    /// 存在时 fail-closed：当作首次安装创建新库可能让 SQLite 误用或丢弃
+    /// 这些残留文件中可能有效、尚未 checkpoint 的数据。
+    fn orphaned_sidecar_error(database_path: &Path) -> Option<DatabaseError> {
+        for (suffix, name) in [("-wal", "WAL"), ("-journal", "journal")] {
+            let sidecar = sidecar_path(database_path, suffix);
+            if let Ok(metadata) = fs::metadata(&sidecar) {
+                if metadata.len() > 0 {
+                    return Some(DatabaseError::OrphanedSidecar {
+                        database_path: database_path.to_path_buf(),
+                        sidecar_path: sidecar,
+                        sidecar_name: name.to_string(),
+                        sidecar_size_bytes: metadata.len(),
+                    });
+                }
+            }
+        }
+        None
+    }
+
+    /// 创建全新数据库前清理孤立的 `-shm` 文件。
+    ///
+    /// 仅在主库、WAL、journal 都不存在时调用：此时 `-shm` 只是运行时共享内存索引，
+    /// 不含已提交数据；若保留，SQLite 可能因共享内存头与新建数据库不匹配而拒绝打开。
+    fn remove_stale_shm_when_creating_new(database_path: &Path) {
+        remove_file_if_exists(&sidecar_path(database_path, "-shm"));
+    }
+
     /// 首次初始化：在临时数据库中完成 migration 与检查，再原子安装为正式数据库文件。
     ///
     /// Windows 说明：安装使用 `hard_link`（NTFS 原子、目标已存在时失败而不是覆盖），
@@ -163,7 +245,8 @@ impl Database {
         database_path: &Path,
     ) -> Result<(), DatabaseError> {
         let mut connection = connection::open_for_initialization(temp_path)?;
-        connection::configure(&connection, temp_path)?;
+        connection::set_busy_timeout(&connection)?;
+        connection::configure_runtime(&connection, temp_path)?;
 
         let outcome = migrations::apply_migrations(
             &mut connection,
@@ -190,18 +273,49 @@ impl Database {
         install_initialized_database(temp_path, database_path)
     }
 
+    /// 打开已有数据库。
+    ///
+    /// 严格顺序（审计 P2）：
+    /// 1. 打开连接（不修改数据库）；
+    /// 2. 读取 schema 版本；
+    /// 3. 完整性检查；
+    /// 4. 外键数据检查；
+    /// 5. 判断 schema 版本兼容性（过高则 fail-closed）；
+    /// 6. 只有健康且兼容后才应用持久化运行参数（`journal_mode=WAL` 等）；
+    /// 7. 执行 migration；
+    /// 8. 再次检查完整性与外键。
     fn open_existing_database(
         paths: &PortablePaths,
         created_new: bool,
     ) -> Result<Self, DatabaseError> {
         let database_path = paths.database_file.clone();
         let mut connection = connection::open_read_write(&database_path)?;
-        connection::configure(&connection, &database_path)?;
 
-        // 先证明数据库健康，再允许执行 migration 等写入操作。
+        // 连接级、非持久化设置：避免并发访问产生瞬时 SQLITE_BUSY。
+        connection::set_busy_timeout(&connection)?;
+
+        // 1. schema 版本（只读数据库 header）。
+        let schema_version = migrations::read_schema_version(&connection, &database_path)?;
+
+        // 2. 完整性检查（只读，不修改数据库）。
         connection::run_integrity_check(&connection, &database_path)?;
+
+        // 3. 外键数据检查（只读）。
         connection::run_foreign_key_check(&connection, &database_path)?;
 
+        // 4. 兼容性判断：高于当前支持版本时立即 fail-closed，不应用 WAL 等
+        //    持久化设置，保证被拒绝的数据库保持原样。
+        if schema_version > migrations::LATEST_SCHEMA_VERSION {
+            return Err(DatabaseError::SchemaVersionTooNew {
+                found: schema_version,
+                supported: migrations::LATEST_SCHEMA_VERSION,
+            });
+        }
+
+        // 5. 健康且兼容，才应用持久化运行参数并验证。
+        connection::configure_runtime(&connection, &database_path)?;
+
+        // 6. migration（内部仍会再次校验版本，防止竞态）。
         let outcome = migrations::apply_migrations(
             &mut connection,
             &database_path,
@@ -210,7 +324,7 @@ impl Database {
         )?;
 
         if outcome.applied_anything() {
-            // 迁移后复查数据库完整性与外键。
+            // 7. 迁移后复查数据库完整性与外键。
             connection::run_integrity_check(&connection, &database_path)?;
             connection::run_foreign_key_check(&connection, &database_path)?;
         }
@@ -222,6 +336,10 @@ impl Database {
         })
     }
 
+    /// 清理本应用上次初始化中断遗留的临时文件。
+    ///
+    /// 只匹配本模块创建的固定前缀（`.work.db.init-*`）。**只能在取得初始化锁后调用**，
+    /// 否则可能删除另一个活动进程正在使用的临时数据库（审计 P2）。
     fn remove_stale_initialization_files(database_dir: &Path) {
         let Ok(entries) = fs::read_dir(database_dir) else {
             return;
@@ -240,6 +358,30 @@ impl Database {
             remove_file_if_exists(&sidecar_path(&path, "-wal"));
             remove_file_if_exists(&sidecar_path(&path, "-shm"));
         }
+    }
+}
+
+/// 构造“已有数据库文件为 0 字节”错误，并附带 WAL 边界说明。
+///
+/// 设计结论（审计 P1，已在真机验证）：SQLite 会把 0 字节主文件当作空数据库，
+/// 并在打开/关闭过程中**忽略并删除**残留 WAL。因此绝不能打开该文件；
+/// 必须保留主文件与 WAL 原样，由用户确认或从备份恢复。
+fn empty_existing_database_error(database_path: &Path) -> DatabaseError {
+    let wal_path = sidecar_path(database_path, "-wal");
+    let wal_hint = match fs::metadata(&wal_path) {
+        Ok(metadata) if metadata.len() == 0 => {
+            format!("；残留 WAL 文件为 0 字节：{}", wal_path.display())
+        }
+        Ok(metadata) => format!(
+            "；检测到非空残留 WAL：{}（{} 字节），已原样保留，未交给 SQLite 打开，避免其丢弃可能有效的数据",
+            wal_path.display(),
+            metadata.len()
+        ),
+        Err(_) => String::new(),
+    };
+    DatabaseError::EmptyExistingDatabase {
+        path: database_path.to_path_buf(),
+        wal_hint,
     }
 }
 

@@ -242,3 +242,139 @@ pub fn raw_debug_paths(app_root: &Path, data_root: &Path) -> PortablePaths {
 pub fn os(value: &str) -> OsString {
     OsString::from(value)
 }
+
+// ---------------------------------------------------------------------------
+// 审计返工新增：文件哈希、数据库 sidecar、子进程与数据根目录辅助
+// ---------------------------------------------------------------------------
+
+/// 极简 SHA-256（FIPS 180-4）实现，只用于测试证据（不引入额外依赖）。
+pub fn sha256_hex(input: &[u8]) -> String {
+    const K: [u32; 64] = [
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4,
+        0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe,
+        0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f,
+        0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+        0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc,
+        0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b,
+        0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116,
+        0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7,
+        0xc67178f2,
+    ];
+
+    let mut h: [u32; 8] = [
+        0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
+        0x5be0cd19,
+    ];
+
+    let mut message = input.to_vec();
+    let bit_len = (message.len() as u64).wrapping_mul(8);
+    message.push(0x80);
+    while message.len() % 64 != 56 {
+        message.push(0);
+    }
+    message.extend_from_slice(&bit_len.to_be_bytes());
+
+    for chunk in message.chunks_exact(64) {
+        let mut w = [0u32; 64];
+        for (index, word) in chunk.chunks_exact(4).enumerate() {
+            w[index] = u32::from_be_bytes([word[0], word[1], word[2], word[3]]);
+        }
+        for index in 16..64 {
+            let s0 = w[index - 15].rotate_right(7)
+                ^ w[index - 15].rotate_right(18)
+                ^ (w[index - 15] >> 3);
+            let s1 = w[index - 2].rotate_right(17)
+                ^ w[index - 2].rotate_right(19)
+                ^ (w[index - 2] >> 10);
+            w[index] = w[index - 16]
+                .wrapping_add(s0)
+                .wrapping_add(w[index - 7])
+                .wrapping_add(s1);
+        }
+
+        let [mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut hh] = h;
+        for index in 0..64 {
+            let s1 = e.rotate_right(6) ^ e.rotate_right(11) ^ e.rotate_right(25);
+            let ch = (e & f) ^ ((!e) & g);
+            let temp1 = hh
+                .wrapping_add(s1)
+                .wrapping_add(ch)
+                .wrapping_add(K[index])
+                .wrapping_add(w[index]);
+            let s0 = a.rotate_right(2) ^ a.rotate_right(13) ^ a.rotate_right(22);
+            let maj = (a & b) ^ (a & c) ^ (b & c);
+            let temp2 = s0.wrapping_add(maj);
+            hh = g;
+            g = f;
+            f = e;
+            e = d.wrapping_add(temp1);
+            d = c;
+            c = b;
+            b = a;
+            a = temp1.wrapping_add(temp2);
+        }
+
+        h[0] = h[0].wrapping_add(a);
+        h[1] = h[1].wrapping_add(b);
+        h[2] = h[2].wrapping_add(c);
+        h[3] = h[3].wrapping_add(d);
+        h[4] = h[4].wrapping_add(e);
+        h[5] = h[5].wrapping_add(f);
+        h[6] = h[6].wrapping_add(g);
+        h[7] = h[7].wrapping_add(hh);
+    }
+
+    h.iter().map(|value| format!("{value:08x}")).collect()
+}
+
+/// 文件 SHA-256（十六进制小写）；文件不存在时返回 `None`。
+pub fn file_sha256(path: &Path) -> Option<String> {
+    fs::read(path).ok().map(|bytes| sha256_hex(&bytes))
+}
+
+/// SQLite sidecar 路径：`<path>-wal` / `<path>-shm` / `<path>-journal`。
+pub fn sidecar_path(path: &Path, suffix: &str) -> PathBuf {
+    PathBuf::from(format!("{}{suffix}", path.display()))
+}
+
+/// 列出数据库目录中的初始化临时文件（`.work.db.init-*`）。
+pub fn init_temp_files(database_dir: &Path) -> Vec<PathBuf> {
+    let Ok(entries) = fs::read_dir(database_dir) else {
+        return Vec::new();
+    };
+    entries
+        .flatten()
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .map(|name| name.starts_with(".work.db.init-"))
+                .unwrap_or(false)
+        })
+        .collect()
+}
+
+/// 在 Debug/Test 模式下构造独立数据根目录的便携路径（供子进程与并发测试使用）。
+pub fn prepare_debug_paths(data_root: &Path) -> PortablePaths {
+    let paths = PortablePaths::resolve(
+        RuntimeMode::DebugTest,
+        &data_root.join("WorkManager.exe"),
+        Some(data_root),
+    )
+    .expect("resolve debug paths");
+    paths.ensure_directories().expect("ensure debug layout");
+    paths
+}
+
+/// 轮询等待文件出现（用于子进程启动栅栏）。
+pub fn wait_for_file(path: &Path, timeout: std::time::Duration) -> bool {
+    let deadline = std::time::Instant::now() + timeout;
+    while std::time::Instant::now() < deadline {
+        if path.is_file() {
+            return true;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+    path.is_file()
+}

@@ -50,14 +50,27 @@ pub fn open_for_initialization(path: &Path) -> Result<Connection, DatabaseError>
         .map_err(|error| map_sqlite_error("创建初始化临时数据库", path, error))
 }
 
-/// 应用生产 PRAGMA 配置并验证其真实生效。
-pub fn configure(connection: &Connection, path: &Path) -> Result<(), DatabaseError> {
+/// 设置连接级、非持久化的 `busy_timeout`。
+///
+/// 该设置只影响当前连接，不会修改数据库文件；可以在打开数据库后立即设置，
+/// 用于避免并发访问时无谓的 `SQLITE_BUSY`。
+pub fn set_busy_timeout(connection: &Connection) -> Result<(), DatabaseError> {
     connection
         .busy_timeout(Duration::from_millis(u64::from(BUSY_TIMEOUT_MS)))
         .map_err(|error| DatabaseError::PragmaFailed {
             pragma: "busy_timeout",
             detail: error.to_string(),
-        })?;
+        })
+}
+
+/// 应用生产运行期 PRAGMA 配置并验证其真实生效。
+///
+/// **调用时机约束（审计 P2）：** 只能用于全新初始化临时数据库，或已确认
+/// 数据库健康且 schema 版本兼容的已有数据库。`journal_mode = WAL` 是持久化
+/// 数据库设置，不得在完整性/版本兼容性检查之前执行。
+pub fn configure_runtime(connection: &Connection, path: &Path) -> Result<(), DatabaseError> {
+    // 防御性保证：非持久化的 busy_timeout 也在这里设置一次（幂等）。
+    set_busy_timeout(connection)?;
 
     // foreign_keys 必须在任何事务之外设置；SQLite 默认关闭外键。
     connection
