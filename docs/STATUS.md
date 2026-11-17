@@ -3,7 +3,7 @@
 **更新日期：** 2026-11-17  
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **当前任务：** T1-01 正式工程骨架与 SQLite 基础设施  
-**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 第二轮独立审计返工：R2-01（初始化锁后 WAL 误判）、R2-02（Debug/Test 正式目录 Junction 绕过）、R2-04（证据/进度过期）已修复并通过完整回归；R2-03 的真实物理卷身份校验已实现并通过实机测试，但**路径校验 TOCTOU 残余窗口未关闭**，当前为**返工中 / R2-03 阻塞（等待用户决策）**；最新代码提交 `a148f0d10eda994d21bb088984228b4e9d6b97ce`；分支 `task/T1-01-sqlite-foundation`，PR #1 保持打开、不合并。任务未标记待审计或验收完成。
+**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 第三轮独立审计未通过：R2-01/R2-02/R2-04 修复逻辑成立；R2-03 TOCTOU 仍未关闭，并新增 R3-01（D 根卷信任锚未独立验证，P1）及 R3-02（R2-01 测试未严格证明 waiter 已观察到锁竞争，P2）；当前为**返工中 / P1 阻塞**。最新代码提交 `a148f0d`、PR HEAD `eaf6ef7`；PR #1 保持打开、不合并。任务未标记待审计或验收完成。
 
 ## 最新产品决策
 
@@ -38,7 +38,7 @@
 
 | 任务 | 内容 | 状态 |
 |---|---|---|
-| T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | 返工中 / R2-03 阻塞（R2-01/R2-02/R2-04 已修复；R2-03 卷身份已修复、TOCTOU 未关闭等待用户决策；最新代码提交 `a148f0d`；PR #1 不合并） |
+| T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | 返工中 / P1 阻塞（TOCTOU 未关闭；新增 D 根卷信任锚验证缺口；R2-01 测试确定性需补强；最新 PR HEAD `eaf6ef7`） |
 | T1-02 | 项目创建、编辑、归档 | 未开始 |
 | T1-03 | 工作事项快速创建和待安排区域 | 未开始 |
 | T1-04 | 多项目独立副本创建 | 未开始 |
@@ -46,7 +46,7 @@
 | T1-06 | 六位数字应用密码与锁屏 | 取消 |
 | T1-07 | 首次初始化与 SQLite 异常保护 | 未开始 |
 
-**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[第二轮返工修复报告](testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md)、[返工后机器可读证据](testing/reports/T1-01-AUDIT-FIX-evidence.json)、[第一轮返工报告](testing/reports/T1-01-AUDIT-FIX-REPORT.md)（历史）、[第二轮独立审计报告](testing/reports/T1-01-SECOND-AUDIT-REPORT.md)（历史审计依据）、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（返工中、不合并）。
+**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[第二轮返工修复报告](testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md)、[返工后机器可读证据](testing/reports/T1-01-AUDIT-FIX-evidence.json)、[第三轮独立审计报告](testing/reports/T1-01-THIRD-AUDIT-REPORT.md)、历史审计/返工报告、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（返工中、不合并）。
 
 ### T1-01 交付摘要（2026-11-17，第二轮返工后）
 
@@ -86,7 +86,7 @@
 | P1 | 真实卷身份与路径 TOCTOU 尚未充分关闭；SUBST/卷挂载点未专门验证 | **部分修复 / 阻塞**：卷 GUID + NT 设备卷身份校验已实现并实机测试；TOCTOU 残余窗口未关闭，等待用户决策 | D 盘卷身份两 API 交叉核验 PASS；SUBST→C 实测 PASS；跨卷挂载点/映射网络盘标注未验证 |
 | P2 | PR 描述、旧 evidence JSON、STATUS 风险描述过期；测试原始日志只在开发机 | **已修复**：旧 evidence 标记 historical；新增机器可读证据与脱敏日志；更新 STATUS/计划/任务说明/PR 描述 | 本轮文档与 `docs/testing/reports/T1-01-assets/second-audit-fix/` |
 
-**门禁：** T1-01 当前为返工中 / R2-03 阻塞（等待用户决策）；PR #1 不合并、main 不修改、T1-02 不得开始；任务不得标记待审计或验收完成。
+**门禁：** T1-01 当前为返工中 / P1 阻塞：TOCTOU 未关闭，且 D 根卷信任锚需独立验证；PR #1 不合并、main 不修改、T1-02 不得开始；任务不得标记待审计或验收完成。
 
 - [ ] 阶段 2：计划、优先级与当前工作。
 - [ ] 阶段 3：每日复盘与提醒。
