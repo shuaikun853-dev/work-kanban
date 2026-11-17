@@ -5,7 +5,7 @@
 **本轮代码提交：** `a148f0d10eda994d21bb088984228b4e9d6b97ce`  
 **基线 main：** `5a55b8d04e79d19cae67067e3fef09140c3fe501`  
 **PR：** [#1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（Open、未合并）  
-**审计结论：** **不通过；R2-03 仍阻塞，并新增 R3-01 P1 信任锚验证缺口、R3-02 P2 测试确定性缺口。不得合并 PR，不得开始 T1-02。**
+**审计结论（审计时点）：** **不通过；R2-03 TOCTOU 未关闭，并新增 R3-01 P1 信任锚验证缺口、R3-02 P2 测试确定性缺口。2026-11-18 用户随后按 DEC-029 接受 TOCTOU 残余风险并延期至独立 Issue #2；R3-01/R3-02 仍待处理，PR 不得合并、T1-02 不得开始。**
 
 ---
 
@@ -79,15 +79,16 @@ Microsoft API 依据：
 - [GetVolumeNameForVolumeMountPointW](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getvolumenameforvolumemountpointw)：从驱动器号或挂载目录取得卷 GUID。
 - [SUBST 命令](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/subst)：把一个路径关联到驱动器号，说明 DOS 驱动器号本身不必然代表独立物理卷。
 
-## 4. R2-03 TOCTOU：继续保持 P1 阻塞
+## 4. R2-03 TOCTOU：未修复，用户已接受残余风险并延期（DEC-029）
 
 代码和返工报告对残余风险的描述一致：`open_path_handle()` 的句柄在真实路径/卷身份校验后关闭，后续 `create_dir_all`、写探针、初始化锁和 SQLite 仍通过路径字符串操作。当前前置校验、创建后复验和数据库初始化前复验只能缩小窗口，不能把检查与实际写入绑定到同一目录对象。
 
 因此：
 - 不得宣称“任何情况下都不会写入 C 盘”；
 - 不得把 TOCTOU 标记为已修复；
-- 不得把 T1-01 标记为待审计或验收完成；
-- 不得合并 PR 或开始 T1-02。
+- 按用户 DEC-029，TOCTOU 不在 T1-01 内彻底加固，转入[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)；
+- 该用户风险接受只覆盖 TOCTOU，不覆盖 R3-01/R3-02；R3-01 P1 和 R3-02 P2 仍需处理并重新独立审计；
+- 在剩余问题关闭并复审通过前，不得合并 PR 或开始 T1-02。
 
 ### 技术范围判断
 
@@ -124,11 +125,24 @@ Microsoft API 依据：
 | R2-01 测试确定性 | 需要补强（P2） |
 | R2-02 正式目录保护 | 修复成立 |
 | R2-03 目标卷身份比较 | 部分成立；新增 R3-01 P1 信任锚验证缺口 |
-| R2-03 TOCTOU | 未解决，P1 阻塞 |
+| R2-03 TOCTOU | 未解决；用户按 DEC-029 接受残余风险并延期至 Issue #2，不作为 T1-01 单独阻塞项 |
 | R2-04 证据同步 | 完成 |
-| T1-01 | **不通过，返工中 / R2-03 阻塞** |
+| T1-01 | **返工中；R3-01 P1 与 R3-02 P2 待处理；TOCTOU 按 DEC-029 接受并延期** |
 | PR #1 | Open，不合并 |
 | main | 不修改 |
 | T1-02 | 不得开始 |
 
-**下一步门禁：** 先补齐 R3-01 的 D 根信任锚验证与 R2-01 测试证据精度；然后由用户决定 TOCTOU 是纳入 T1-01 扩大范围完成，还是明确接受残余风险并安排后续安全加固。未得到用户决定前，保持阻塞。
+**下一步门禁：** 用户已明确按 DEC-029 接受 TOCTOU 残余风险，完整加固转入[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未经另行授权不得开始。T1-01 继续处理 R3-01 P1 和 R3-02 P2；两项修复后重新独立审计。旧机器可读 evidence JSON 中的 `open-blocking` 反映用户决策前的证据生成时点，不代表 DEC-029 之后的当前风险处置状态。
+
+
+## 7. 用户后续决策：接受 TOCTOU 残余风险（DEC-029，2026-11-18）
+
+用户明确选择“接受现有残余风险”，其含义限定为：
+
+1. 接受当前路径校验与后续目录创建、写探针、初始化锁、SQLite 按路径打开之间仍存在理论 TOCTOU 竞争窗口。
+2. 不要求在 T1-01 内实施完整句柄相对改造或 custom SQLite VFS。
+3. 将完整技术设计、PoC、实现和竞态测试转入[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)。该 Issue 仅建立跟踪，未授权自动开始实施。
+4. 该风险未被修复；当前不能作出“任何情况下都不会写入 C 盘”的保证。禁止静默回退 C 盘、对已检测边界违规 fail-closed 的要求不变。
+5. 本决定不覆盖 R3-01 P1 与 R3-02 P2。它们仍需处理并重新独立审计；在此之前 T1-01 不得验收、PR #1 不得合并、T1-02 不得开始。
+
+第三轮审计结论仍保留为当时的审计结果；DEC-029 只改变 TOCTOU 风险的处置状态，不改变代码事实、测试事实或审计发现。
