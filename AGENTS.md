@@ -11,6 +11,7 @@
 3. docs/architecture/TECHNICAL_DESIGN.md：技术架构和实现约束。
 4. docs/development/DEVELOPMENT_PLAN.md：阶段划分、任务编号、任务验收标准和依赖关系。
 5. docs/STATUS.md：当前真实进度。
+6. docs/design/UI-DESIGN-SPEC.md：用户确认的 UI 原型、视觉规范、组件边界和 UI 回归要求。
 
 用户在当前对话中明确作出的新决定优先于旧文档。发现文档冲突时，先记录并解决冲突，不得选择对实现最方便的一条自行继续。
 
@@ -40,6 +41,20 @@
 - 不将工作标题、客户信息、工作日志或 SQL 参数值写入日志。
 - 不把业务状态存入 localStorage、IndexedDB 或仅存在于前端内存中。
 - 多表状态更新必须有明确事务边界；数据库结构变化必须使用版本化 migration。
+
+### 3.1 UI 设计与前端工程边界（强制）
+
+- [docs/design/UI-DESIGN-SPEC.md](docs/design/UI-DESIGN-SPEC.md) 和其中的原型图是 UI 的权威基线；不得擅自改变“工作总览 + 今日工作”两大核心页面的信息层级，不得堆叠图表、指标和装饰卡片。
+- 工作总览必须优先展示今日要做、今日已完成和当前工作；上个工作日复盘与待跟进为次级区域。
+- 今日工作页面必须突出当前工作、待完成、已完成；当前工作不得重复出现在待完成列表。
+- Apple 风格只作为视觉语言参考；实际运行在 Windows 10，必须使用 Windows 原生窗口标题栏和窗口控制，不得绘制假的 macOS traffic lights。
+- 前端必须分层：应用壳/导航、Design Tokens/通用 UI 组件、Feature 页面、类型安全 Bridge、DTO Contracts、纯展示格式化。不得将页面、业务规则、IPC 和 CSS 全部堆在 `App.svelte`。
+- UI 组件只负责展示和交互回调；页面容器负责页面状态与命令编排；Rust Core 是业务规则和持久化状态的唯一权威来源。
+- 所有颜色、字体、间距、圆角和层级从语义化 Design Tokens 读取；使用 Svelte scoped styles，禁止通过全局 CSS 选择器侵入其他 Feature。
+- 当前工作指针、工作事项生命周期状态和每日执行结果不得在前端重复维护或混为一谈；动态任务列表必须使用稳定业务 ID 作为 key。
+- UI 改动必须先给出组件树、影响文件清单和回归计划；一次只改一个页面或一个可验证纵向切片。修改共享组件时必须检查所有使用方。
+- 每次 UI 变更必须运行 `npm run check`、`npm run build`，并提供工作总览/今日工作截图；涉及 Bridge、DTO 或 Rust Core 时运行对应 Rust 测试。
+- 不得声称仓库已有独立前端组件测试或视觉回归框架；新增测试依赖须先说明必要性和影响，并纳入具体任务评审。
 
 ## 4. 安全与数据保护
 
