@@ -1,0 +1,415 @@
+{
+  "task": "T1-02",
+  "taskName": "项目创建、编辑、归档",
+  "status": "待审计",
+  "statusNote": "第一轮独立审计问题已修复并完成自测；等待第二轮独立审计。开发代理不得自行标记独立审计通过或用户验收完成。",
+  "generatedAt": "2026-11-18T18:45:00+08:00",
+  "audit": {
+    "report": "docs/testing/reports/T1-02-INDEPENDENT-AUDIT-REPORT.md",
+    "reportModifiedByDevelopAgent": false,
+    "baselineHead": "a0aec0032cf3c3ef3ab87513ae93f7a4f4351f69",
+    "result": "未通过，进入小范围返工",
+    "reworkStartHead": "54f025d0e2d4c95a53604e3d05b6e6764236e600"
+  },
+  "git": {
+    "branch": "task/T1-02-project-management",
+    "baseMainCommit": "0cafde61078c8d428a37cd509a349e4db8f4096e",
+    "reworkStartHead": "54f025d0e2d4c95a53604e3d05b6e6764236e600",
+    "fixCommit": null,
+    "fixCommitNote": "修复提交 SHA 在提交后由文档同步提交回填；PR #7 Head 以 GitHub 页面为准。",
+    "preservedExistingCommits": true,
+    "forcePush": false,
+    "mainModified": false,
+    "pullRequest": {
+      "number": 7,
+      "url": "https://github.com/shuaikun853-dev/work-kanban/pull/7",
+      "state": "OPEN",
+      "merged": false
+    }
+  },
+  "environment": {
+    "os": "Windows 10 家庭中文版 10.0.19045 (build 19045)",
+    "rustc": "1.100.0 (0ef1bc386 2026-11-09)",
+    "cargo": "1.100.0 (3acc79c0c 2026-11-05)",
+    "node": "v22.20.0",
+    "npm": "10.9.3",
+    "powershell": "5.1.19041.6456 Desktop",
+    "testDataRoot": "D:\\WorkManager-test-data（隔离目录，非正式 D:\\WorkManager）"
+  },
+  "fixes": [
+    {
+      "id": "P2-01",
+      "priority": "P2",
+      "title": "Design Token 原始颜色与静态检查门禁",
+      "status": "fixed",
+      "auditListedRawColors": 9,
+      "auditListedRawColorsRemoved": 9,
+      "additionalRawColorsRemovedUnderCheckScope": 23,
+      "totalRawColorsRemovedFromComponentsAndCss": 32,
+      "tokensAdded": 20,
+      "centralTokenFile": "src/lib/ui/tokens.css",
+      "visualEffectChanged": false,
+      "visualValuePolicy": "所有替换 Token 的取值与替换前渲染值一致；0.45/0.42 两个 spinner 轨道 Token 分别保留原值。",
+      "componentsDeletedOrStylesRemoved": false,
+      "staticCheck": {
+        "script": "scripts/quality/check-design-tokens.mjs",
+        "tests": "scripts/quality/design-tokens.test.mjs",
+        "integratedInto": "npm run check",
+        "scanScope": [
+          "src/**/*.svelte <style> blocks",
+          "src/**/*.svelte inline style attributes",
+          "src/**/*.css"
+        ],
+        "onlyExemptFile": "src/lib/ui/tokens.css",
+        "directoryExemptions": 0,
+        "detectedForms": ["hex", "rgb", "rgba", "hsl", "hsla"],
+        "exitCodes": { "pass": 0, "violations": 1, "cannotRun": 2 },
+        "filesScanned": 18,
+        "violations": 0,
+        "testsTotal": 8,
+        "testsPassed": 8,
+        "testsFailed": 0,
+        "report": "docs/testing/reports/T1-02-AUDIT-FIX-assets/design-token-check.json",
+        "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/design-token-check.log.txt",
+        "testsLog": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/design-token-tests.log.txt"
+      },
+      "files": [
+        "src/lib/ui/tokens.css",
+        "src/app/Sidebar.svelte",
+        "src/app.css",
+        "src/lib/WindowTitlebar.svelte",
+        "src/lib/features/diagnostics/DiagnosticsPage.svelte",
+        "src/lib/features/projects/ConfirmArchiveDialog.svelte",
+        "src/lib/features/projects/ProjectFormDialog.svelte",
+        "src/lib/features/projects/ProjectsPage.svelte",
+        "src/lib/ui/components/Button.svelte",
+        "package.json",
+        "scripts/quality/check-design-tokens.mjs",
+        "scripts/quality/design-tokens.test.mjs"
+      ]
+    },
+    {
+      "id": "P3-01",
+      "priority": "P3",
+      "title": "Tauri 命令说明注释过期",
+      "status": "fixed",
+      "file": "src-tauri/src/lib.rs",
+      "change": "模块注释由“目前只有数据库健康检查”更新为数据库健康检查 + 项目列表/创建/编辑/归档，并指向 generate_handler 注册列表。",
+      "commandRegistrationChanged": false,
+      "ipcNameOrDtoChanged": false,
+      "businessLogicChanged": false
+    },
+    {
+      "id": "P3-02",
+      "priority": "P3",
+      "title": "Release UI E2E 空状态等待时序抖动",
+      "status": "fixed-test-strategy",
+      "productLogicChanged": false,
+      "rootCauseJudgement": "现有证据不足以认定为产品缺陷；旧 E2E 直接轮询“暂无项目”文本 12s，未等待页面壳/IPC/加载终态，且 reload 后可能对旧文档做判断。按测试等待策略与观测时序问题修复。",
+      "rootCauseConfidence": "倾向性判断；基线复现尝试 2/2 通过未能复现历史首次失败，历史失败原始日志不在仓库中，仅存在于第一轮独立审计报告。",
+      "deterministicWaits": [
+        "page.reloadNewDocumentBootMarker",
+        "appShell.renderedWithTauriInternals",
+        "ipc.databaseHealthReady",
+        "projectsPage.loadingSettled"
+      ],
+      "failureDiagnosticsAdded": "t1-02-ui-failure-*.json（页面状态、标题、loading/error、项目行数、Tauri internals、list_projects/get_database_health IPC、页面异常、截图）",
+      "assertionsRemoved": 0,
+      "emptyStateAssertionRetained": true,
+      "retriesOrSkipsUsed": false,
+      "unlimitedTimeoutsUsed": false,
+      "files": [
+        "scripts/verify/inspect-t1-02-ui.mjs",
+        "scripts/verify/inspect-t1-02-min-window.mjs",
+        "scripts/verify/verify-t1-02-ui.ps1",
+        "scripts/verify/README.md"
+      ]
+    }
+  ],
+  "statisticsReconciliation": {
+    "mainUiChecks": {
+      "executed": 73,
+      "persistedInEvidenceJson": 73,
+      "auditReported": 73,
+      "consistent": true,
+      "explanation": "73 = 66 次直接 check 调用 + checkNoOverflow 辅助函数内 1 条 × 7 次调用；证据 JSON checks 数组为 73。"
+    },
+    "minWindowChecks": {
+      "executed": 12,
+      "persistedInEvidenceJsonBeforeFix": 11,
+      "persistedInEvidenceJsonAfterFix": 12,
+      "auditReported": 12,
+      "developmentReportReported": "11/11（旧口径：点击关闭按钮前写盘的 JSON 断言数）",
+      "consistent": true,
+      "explanation": "旧脚本先写证据再点击关闭按钮，第 12 项 minWindow.closeButtonClicked 只出现在日志/退出码/编排证据；本次改为点击关闭后由 Node 写证据，12 项全部进入 JSON，并由编排记录 closeExitCode。"
+    },
+    "historicalAuditRuns": {
+      "firstRunFailed": true,
+      "firstRunFailure": "Timed out waiting for: projects empty state",
+      "immediateRerunPassed": true,
+      "subsequentConsecutivePassedRuns": 3,
+      "totalSuccessfulRunsRecordedByAudit": 4,
+      "rawLogsArchivedInRepo": false,
+      "verificationLimit": "仓库内没有这些运行的原始日志/JSON/截图，只能引用第一轮独立审计报告历史记录。"
+    },
+    "currentReworkRuns": {
+      "officialCompleteE2ERuns": 5,
+      "passed": 5,
+      "failed": 0,
+      "consecutive": true,
+      "logsArchivedPerRun": true,
+      "evidenceArchivedPerRun": true
+    },
+    "inheritedReleaseSuites": {
+      "portable": { "total": 106, "pass": 90, "fail": 0, "warn": 1, "info": 15, "overall": "PASS", "warnDetail": "验证开始前已存在的 %LOCALAPPDATA%\\EBWebView 历史目录，非本次创建" },
+      "faults": { "total": 73, "pass": 64, "fail": 0, "warn": 0, "info": 9, "overall": "PASS" },
+      "diagnosticsUi": { "total": 24, "failed": 0, "exitCode": 0 }
+    }
+  },
+  "commands": [
+    {
+      "command": "cargo fmt --all -- --check",
+      "exitCode": 0,
+      "result": "PASS（无输出）",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/cargo-fmt-check.log.txt"
+    },
+    {
+      "command": "cargo check --workspace --all-targets",
+      "exitCode": 0,
+      "result": "PASS（Finished dev profile，无 warning）",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/cargo-check.log.txt"
+    },
+    {
+      "command": "cargo test --workspace",
+      "exitCode": 0,
+      "result": "PASS：90 passed / 0 failed / 0 ignored",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/cargo-test-workspace.log.txt"
+    },
+    {
+      "command": "npm run check",
+      "exitCode": 0,
+      "result": "PASS：svelte-check 0 errors / 0 warnings；Design Token 检查 PASS（18 文件/0 违规）；Token 自测 8/8",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/npm-check.log.txt"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "PASS：Vite 构建成功（156 modules；JS 96.13 kB / CSS 26.89 kB）",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/npm-build.log.txt"
+    },
+    {
+      "command": "node scripts/quality/check-design-tokens.mjs --report docs/testing/reports/T1-02-AUDIT-FIX-assets/design-token-check.json",
+      "exitCode": 0,
+      "result": "PASS：DESIGN_TOKEN_CHECK=PASS files=18 violations=0",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/design-token-check.log.txt"
+    },
+    {
+      "command": "node --test scripts/quality/design-tokens.test.mjs",
+      "exitCode": 0,
+      "result": "PASS：8/8（正反向测试）",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/design-token-tests.log.txt"
+    },
+    {
+      "command": "npm run tauri build -- --no-bundle",
+      "exitCode": 0,
+      "result": "PASS：Release 构建成功",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/tauri-build.log.txt"
+    },
+    {
+      "command": "powershell -File scripts\\verify\\verify-release-portable.ps1",
+      "exitCode": 0,
+      "result": "PASS：TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-release-portable.log.txt",
+      "summary": "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/release-portable-summary.json"
+    },
+    {
+      "command": "powershell -File scripts\\verify\\verify-release-faults.ps1",
+      "exitCode": 0,
+      "result": "PASS：TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-release-faults.log.txt",
+      "summary": "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/release-faults-summary.json"
+    },
+    {
+      "command": "powershell -File scripts\\verify\\verify-t1-02-ui.ps1（连续 5 次完整运行）",
+      "exitCode": 0,
+      "result": "PASS：5/5；每次主检查 73/73、最小窗口 12/12、CSP 0、未捕获异常 0、closeExitCode 0",
+      "logs": [
+        "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run1.log.txt",
+        "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run2.log.txt",
+        "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run3.log.txt",
+        "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run4.log.txt",
+        "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run5.log.txt"
+      ],
+      "orchestrationSummary": "docs/testing/reports/T1-02-AUDIT-FIX-assets/regression-summary.json"
+    },
+    {
+      "command": "node scripts\\verify\\inspect-release-ui.mjs（T1-01 诊断页回归，新 Release EXE）",
+      "exitCode": 0,
+      "result": "PASS：24/24 断言，进程退出码 0",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/inspect-release-ui.log.txt",
+      "summary": "docs/testing/reports/T1-02-AUDIT-FIX-assets/diagnostics-ui-regression.json"
+    }
+  ],
+  "release": {
+    "path": "target/release/workmanager.exe",
+    "sizeBytes": 10230784,
+    "sha256": "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6",
+    "schemaVersion": 2,
+    "runtimeMode": "release",
+    "previousAuditedBuild": {
+      "sizeBytes": 10230272,
+      "sha256": "df4469ea067dee39e10e49f0592fd4a9dab076f4186ff3e8cf60f8f72eabb7e8",
+      "note": "第一轮审计时的 Release 产物；本次重建后 EXE 因前端 Token/CSS 变更增加 512 字节并产生新 SHA-256。"
+    }
+  },
+  "e2eRuns": [
+    {
+      "run": 1,
+      "outputDir": "D:\\WorkManager-test-data\\t1-02-audit-fix-e2e-run1-20261118-183932",
+      "exitCode": 0,
+      "exeSha256": "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6",
+      "mainUiChecks": { "total": 73, "passed": 73, "failed": 0 },
+      "minWindowChecks": { "total": 12, "passed": 12, "failed": 0, "closeButtonClicked": true },
+      "cspViolations": 0,
+      "uncaughtPageErrors": 0,
+      "closeExitCode": 0,
+      "projectEmptyStateAssertionPassed": true,
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run1.log.txt",
+      "evidence": "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/run1/"
+    },
+    {
+      "run": 2,
+      "outputDir": "D:\\WorkManager-test-data\\t1-02-audit-fix-e2e-run2-20261118-183944",
+      "exitCode": 0,
+      "exeSha256": "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6",
+      "mainUiChecks": { "total": 73, "passed": 73, "failed": 0 },
+      "minWindowChecks": { "total": 12, "passed": 12, "failed": 0, "closeButtonClicked": true },
+      "cspViolations": 0,
+      "uncaughtPageErrors": 0,
+      "closeExitCode": 0,
+      "projectEmptyStateAssertionPassed": true,
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run2.log.txt",
+      "evidence": "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/run2/"
+    },
+    {
+      "run": 3,
+      "outputDir": "D:\\WorkManager-test-data\\t1-02-audit-fix-e2e-run3-20261118-183955",
+      "exitCode": 0,
+      "exeSha256": "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6",
+      "mainUiChecks": { "total": 73, "passed": 73, "failed": 0 },
+      "minWindowChecks": { "total": 12, "passed": 12, "failed": 0, "closeButtonClicked": true },
+      "cspViolations": 0,
+      "uncaughtPageErrors": 0,
+      "closeExitCode": 0,
+      "projectEmptyStateAssertionPassed": true,
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run3.log.txt",
+      "evidence": "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/run3/"
+    },
+    {
+      "run": 4,
+      "outputDir": "D:\\WorkManager-test-data\\t1-02-audit-fix-e2e-run4-20261118-184007",
+      "exitCode": 0,
+      "exeSha256": "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6",
+      "mainUiChecks": { "total": 73, "passed": 73, "failed": 0 },
+      "minWindowChecks": { "total": 12, "passed": 12, "failed": 0, "closeButtonClicked": true },
+      "cspViolations": 0,
+      "uncaughtPageErrors": 0,
+      "closeExitCode": 0,
+      "projectEmptyStateAssertionPassed": true,
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run4.log.txt",
+      "evidence": "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/run4/"
+    },
+    {
+      "run": 5,
+      "outputDir": "D:\\WorkManager-test-data\\t1-02-audit-fix-e2e-run5-20261118-184020",
+      "exitCode": 0,
+      "exeSha256": "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6",
+      "mainUiChecks": { "total": 73, "passed": 73, "failed": 0 },
+      "minWindowChecks": { "total": 12, "passed": 12, "failed": 0, "closeButtonClicked": true },
+      "cspViolations": 0,
+      "uncaughtPageErrors": 0,
+      "closeExitCode": 0,
+      "projectEmptyStateAssertionPassed": true,
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run5.log.txt",
+      "evidence": "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/run5/"
+    }
+  ],
+  "p302Investigation": {
+    "baselineProbe": {
+      "description": "HEAD 54f025d 旧脚本 + 第一轮审计同一 Release EXE，仓库外运行",
+      "runs": 2,
+      "passed": 2,
+      "failed": 0,
+      "reproducedEmptyStateTimeout": false,
+      "logs": [
+        "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/p3-02-probe/run-baseline1.log.txt",
+        "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/p3-02-probe/run-baseline2.log.txt"
+      ],
+      "limitation": "机器 WebView2 已预热，无法完全复刻审计时可能的首次冷启动窗口；2 次通过不能证明历史失败不存在。"
+    },
+    "modifiedScriptSmoke": {
+      "runs": 1,
+      "passed": 1,
+      "result": "主检查 73/73；最小窗口 12/12（JSON 含 closeButtonClicked）；CSP 0；无未捕获异常",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/p3-02-probe/run4.log.txt"
+    },
+    "reworkProcessFailureRecord": {
+      "description": "返工中间版本 verify-t1-02-ui.ps1 丢失 UTF-8 BOM，Windows PowerShell 5.1 按本地代码页解码导致脚本结构破坏；已修复并验证。",
+      "rootCause": "编辑工具保存 .ps1 时丢失 BOM；非 P3-02 同步失败、非产品缺陷。",
+      "finalScriptEncoding": "UTF-8 with BOM + CRLF",
+      "finalScriptValidation": "Windows PowerShell 5.1 AST 解析通过，WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS 赋值 = 1；5 次正式运行通过。",
+      "log": "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/p3-02-probe/encoding-regression-failure-run1.log.txt"
+    }
+  },
+  "releaseUi": {
+    "officialRuns": 5,
+    "officialRunsPassed": 5,
+    "mainChecks": { "total": 73, "passed": 73, "failed": 0 },
+    "minWindowChecks": {
+      "executed": 12,
+      "persistedInEvidenceJson": 12,
+      "passed": 12,
+      "failed": 0,
+      "composition": "11 项布局/导航/对话框断言 + 1 项 minWindow.closeButtonClicked；进程真实退出由编排 closeExitCode 独立验证"
+    },
+    "minimumWindowViewport": "844x632（外部窗口请求 860x640，受 Windows 边框影响）",
+    "titlebarMaximizeVerified": "1100 → 1920 → 1100（真实窗口 API）",
+    "closeButtonVerified": "点击红色关闭圆点后进程退出，退出码 0（5/5 次）",
+    "cspViolations": 0,
+    "uncaughtPageErrors": 0,
+    "emptyStateAssertionRetained": true,
+    "evidenceIndex": "docs/testing/reports/T1-02-AUDIT-FIX-assets/evidence/"
+  },
+  "designTokenCheck": {
+    "command": "node scripts/quality/check-design-tokens.mjs --report ...",
+    "filesScanned": 18,
+    "violations": 0,
+    "pass": true,
+    "tokenFile": "src/lib/ui/tokens.css",
+    "directoryExemptions": 0,
+    "testsTotal": 8,
+    "testsPassed": 8,
+    "testsFailed": 0
+  },
+  "artifacts": {
+    "fixReport": "docs/testing/reports/T1-02-AUDIT-FIX-REPORT.md",
+    "fixEvidence": "docs/testing/reports/T1-02-AUDIT-FIX-evidence.json",
+    "assetsRoot": "docs/testing/reports/T1-02-AUDIT-FIX-assets/",
+    "regressionSummary": "docs/testing/reports/T1-02-AUDIT-FIX-assets/regression-summary.json",
+    "designTokenReport": "docs/testing/reports/T1-02-AUDIT-FIX-assets/design-token-check.json",
+    "diagnosticsUiRegression": "docs/testing/reports/T1-02-AUDIT-FIX-assets/diagnostics-ui-regression.json",
+    "updatedTaskReport": "docs/testing/reports/T1-02-REPORT.md",
+    "updatedTaskEvidence": "docs/testing/reports/T1-02-evidence.json",
+    "unchangedAuditReport": "docs/testing/reports/T1-02-INDEPENDENT-AUDIT-REPORT.md"
+  },
+  "uncovered": [
+    "第一轮审计首次失败运行的原始日志不在仓库中，无法独立复核该次运行的页面状态；仅保留审计报告历史记录。",
+    "本次 P3-02 基线复现尝试 2/2 通过但机器 WebView2 已预热，无法完全复刻首次冷启动环境。",
+    "Design Token 静态检查不覆盖 Svelte style: 指令与脚本动态颜色；当前代码不存在此类用法。",
+    "仓库仍无独立前端组件测试/视觉回归框架；UI 证据来自真实 Release CDP 脚本与截图。",
+    "项目名称唯一性、删除/恢复、排序偏好等 PRD 未定义行为仍未实现。",
+    "TOCTOU 按 DEC-029 接受并延期至 Issue #2；普通 SQLite 未加密；备份/恢复策略待用户确认（OPEN-001/002/003）。",
+    "T1-03 未开始；未修改其它阶段业务代码。"
+  ],
+  "statusPolicy": "只有第二轮独立审计通过且用户验收后，才能将 T1-02 标记为验收完成；本次仅恢复到可重新接受独立审计的状态。"
+}

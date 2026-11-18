@@ -1,0 +1,30 @@
+{
+  "task": "T1-02",
+  "generatedAt": "2026-11-18T10:36:15.697Z",
+  "purpose": "禁止 Feature/UI 组件散落原始颜色；中央 Token 文件除外",
+  "root": "D:\\工作事项看板",
+  "tokenFile": "src/lib/ui/tokens.css",
+  "filesScanned": 18,
+  "scannedFiles": [
+    "src/app.css",
+    "src/App.svelte",
+    "src/app/AppShell.svelte",
+    "src/app/Sidebar.svelte",
+    "src/lib/features/diagnostics/DiagnosticsPage.svelte",
+    "src/lib/features/overview/OverviewPage.svelte",
+    "src/lib/features/placeholder/PlaceholderPage.svelte",
+    "src/lib/features/projects/ConfirmArchiveDialog.svelte",
+    "src/lib/features/projects/ProjectFormDialog.svelte",
+    "src/lib/features/projects/ProjectList.svelte",
+    "src/lib/features/projects/ProjectRow.svelte",
+    "src/lib/features/projects/ProjectsPage.svelte",
+    "src/lib/features/settings/SettingsPage.svelte",
+    "src/lib/features/today/TodayPage.svelte",
+    "src/lib/ui/components/Button.svelte",
+    "src/lib/ui/components/EmptyState.svelte",
+    "src/lib/ui/components/PageHeader.svelte",
+    "src/lib/WindowTitlebar.svelte"
+  ],
+  "violations": [],
+  "pass": true
+}

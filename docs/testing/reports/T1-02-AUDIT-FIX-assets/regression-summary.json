@@ -1,0 +1,234 @@
+﻿{
+    "task":  "T1-02",
+    "purpose":  "First-round independent audit P2-01 / P3-01 / P3-02 rework regression",
+    "generatedAt":  "2026-11-18T10:40:32.9137745Z",
+    "environment":  {
+                        "sampledAt":  "2026-11-18T10:35:47.2632695Z",
+                        "os":  "Microsoft Windows NT 10.0.19045.0",
+                        "osCaption":  "Microsoft Windows 10 家庭中文版",
+                        "osBuild":  "19045",
+                        "psVersion":  "5.1.19041.6456",
+                        "rustc":  "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+                        "cargo":  "cargo 1.100.0 (3acc79c0c 2026-11-05)",
+                        "node":  "v22.20.0",
+                        "npm":  "10.9.3",
+                        "powershell51":  "5.1.19041.6456",
+                        "cargoHome":  "D:\\DevTools\\cargo",
+                        "rustupHome":  "D:\\DevTools\\rustup",
+                        "msvcVcvars":  "D:\\DevTools\\VSBuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat",
+                        "msvcLinker":  "D:\\DevTools\\VSBuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\link.exe",
+                        "gitHead":  "54f025d0e2d4c95a53604e3d05b6e6764236e600",
+                        "gitBranch":  "task/T1-02-project-management",
+                        "workingTreeDirty":  true
+                    },
+    "release":  {
+                    "path":  "D:\\工作事项看板\\target\\release\\workmanager.exe",
+                    "exists":  true,
+                    "sizeBytes":  10230784,
+                    "sha256":  "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6"
+                },
+    "inheritedReleaseSuites":  {
+                                   "portable":  {
+                                                    "total":  106,
+                                                    "pass":  90,
+                                                    "fail":  0,
+                                                    "warn":  1,
+                                                    "info":  15,
+                                                    "overallPass":  true
+                                                },
+                                   "faults":  {
+                                                  "total":  73,
+                                                  "pass":  64,
+                                                  "fail":  0,
+                                                  "warn":  0,
+                                                  "info":  9,
+                                                  "overallPass":  true
+                                              }
+                               },
+    "steps":  [
+                  {
+                      "name":  "cargo fmt --all -- --check",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\cargo-fmt-check.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  0.5,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "cargo check --workspace --all-targets",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\cargo-check.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  1.6,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "cargo test --workspace",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\cargo-test-workspace.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  5.3,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "npm run check (svelte-check + design tokens + token tests)",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\npm-check.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  14,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "npm run build",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\npm-build.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  4.8,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "design token check (report)",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\design-token-check.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  0.1,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "design token checker tests (positive/negative)",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\design-token-tests.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  1.1,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "npm run tauri build -- --no-bundle",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\tauri-build.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  178.5,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "verify-release-portable.ps1",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-release-portable.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  6.9,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "verify-release-faults.ps1",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-release-faults.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  9.6,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "verify-t1-02-ui.ps1 run1",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-t1-02-ui-run1.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  12.3,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "verify-t1-02-ui.ps1 run2",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-t1-02-ui-run2.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  11.5,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "verify-t1-02-ui.ps1 run3",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-t1-02-ui-run3.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  11.7,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "verify-t1-02-ui.ps1 run4",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-t1-02-ui-run4.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  12.6,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "verify-t1-02-ui.ps1 run5",
+                      "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-t1-02-ui-run5.log.txt",
+                      "exitCode":  0,
+                      "durationSeconds":  12.4,
+                      "pass":  true
+                  }
+              ],
+    "e2eRuns":  [
+                    {
+                        "run":  1,
+                        "outputDir":  "D:\\WorkManager-test-data\\t1-02-audit-fix-e2e-run1-20261118-183932",
+                        "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-t1-02-ui-run1.log.txt",
+                        "exitCode":  0,
+                        "pass":  true,
+                        "exeSha256":  "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6",
+                        "mainUiCheckCount":  73,
+                        "mainUiFailedCheckCount":  0,
+                        "minWindowCheckCount":  12,
+                        "minWindowFailedCheckCount":  0,
+                        "closeButtonCheckPassed":  true,
+                        "closeExitCode":  0,
+                        "orchestrationPass":  true
+                    },
+                    {
+                        "run":  2,
+                        "outputDir":  "D:\\WorkManager-test-data\\t1-02-audit-fix-e2e-run2-20261118-183944",
+                        "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-t1-02-ui-run2.log.txt",
+                        "exitCode":  0,
+                        "pass":  true,
+                        "exeSha256":  "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6",
+                        "mainUiCheckCount":  73,
+                        "mainUiFailedCheckCount":  0,
+                        "minWindowCheckCount":  12,
+                        "minWindowFailedCheckCount":  0,
+                        "closeButtonCheckPassed":  true,
+                        "closeExitCode":  0,
+                        "orchestrationPass":  true
+                    },
+                    {
+                        "run":  3,
+                        "outputDir":  "D:\\WorkManager-test-data\\t1-02-audit-fix-e2e-run3-20261118-183955",
+                        "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-t1-02-ui-run3.log.txt",
+                        "exitCode":  0,
+                        "pass":  true,
+                        "exeSha256":  "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6",
+                        "mainUiCheckCount":  73,
+                        "mainUiFailedCheckCount":  0,
+                        "minWindowCheckCount":  12,
+                        "minWindowFailedCheckCount":  0,
+                        "closeButtonCheckPassed":  true,
+                        "closeExitCode":  0,
+                        "orchestrationPass":  true
+                    },
+                    {
+                        "run":  4,
+                        "outputDir":  "D:\\WorkManager-test-data\\t1-02-audit-fix-e2e-run4-20261118-184007",
+                        "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-t1-02-ui-run4.log.txt",
+                        "exitCode":  0,
+                        "pass":  true,
+                        "exeSha256":  "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6",
+                        "mainUiCheckCount":  73,
+                        "mainUiFailedCheckCount":  0,
+                        "minWindowCheckCount":  12,
+                        "minWindowFailedCheckCount":  0,
+                        "closeButtonCheckPassed":  true,
+                        "closeExitCode":  0,
+                        "orchestrationPass":  true
+                    },
+                    {
+                        "run":  5,
+                        "outputDir":  "D:\\WorkManager-test-data\\t1-02-audit-fix-e2e-run5-20261118-184020",
+                        "log":  "D:\\工作事项看板\\docs\\testing\\reports\\T1-02-AUDIT-FIX-assets\\logs\\verify-t1-02-ui-run5.log.txt",
+                        "exitCode":  0,
+                        "pass":  true,
+                        "exeSha256":  "51bbba8dd17103d742e1bd4a85b83377f7578d34584f2206f30edfec8d3dc7f6",
+                        "mainUiCheckCount":  73,
+                        "mainUiFailedCheckCount":  0,
+                        "minWindowCheckCount":  12,
+                        "minWindowFailedCheckCount":  0,
+                        "closeButtonCheckPassed":  true,
+                        "closeExitCode":  0,
+                        "orchestrationPass":  true
+                    }
+                ],
+    "overallPass":  true,
+    "notes":  "Suite overallPass flags re-derived from each suite summary.json overall field after generation."
+}

@@ -1,0 +1,401 @@
+{
+  "generatedAt": "2026-11-18T10:40:16.624Z",
+  "task": "T1-02",
+  "method": "CDP against real Release WebView2: shell/DOM assertions, real UI create/edit/archive flows, direct typed Tauri IPC checks, CPU-throttled real loading state capture, screenshots, CSP collection, maximize/restore window API check",
+  "port": 9334,
+  "bootMarker": "wm-t1-02-1794998410202-38a15c4fdefdb",
+  "deterministicWaits": [
+    "page.reloadNewDocumentBootMarker",
+    "appShell.renderedWithTauriInternals",
+    "ipc.databaseHealthReady",
+    "projectsPage.loadingSettled"
+  ],
+  "target": {
+    "id": "25D957F7266C85F2F1882BA015C93E4E",
+    "title": "工作总览 · WorkManager",
+    "url": "http://tauri.localhost/",
+    "type": "page"
+  },
+  "screenshots": [
+    "diagnostics.png",
+    "overview-normal.png",
+    "projects-archive-confirm.png",
+    "projects-archived.png",
+    "projects-empty.png",
+    "projects-error.png",
+    "projects-list.png",
+    "projects-loading.png",
+    "settings-normal.png",
+    "today-normal.png"
+  ],
+  "pageErrors": [],
+  "checks": [
+    {
+      "name": "shell.rendered",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "shell.titlebarAppName",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "shell.threeWindowControls",
+      "pass": true,
+      "detail": "[{\"label\":\"关闭 WorkManager\",\"title\":\"关闭\"},{\"label\":\"最小化窗口\",\"title\":\"最小化\"},{\"label\":\"最大化窗口\",\"title\":\"最大化\"}]"
+    },
+    {
+      "name": "shell.windowControlsEnabled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "shell.titlebarNoActionError",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "shell.sidebarNavigation",
+      "pass": true,
+      "detail": "工作总览 / 今日工作 / 未来 7 天 / 历史记录 / 报告 / 设置"
+    },
+    {
+      "name": "shell.defaultOverview",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "shell.overviewActiveNav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "shell.noHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[]}"
+    },
+    {
+      "name": "nav.todayClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "today.pageRendered",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "today.noHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[]}"
+    },
+    {
+      "name": "nav.settingsClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "settings.pageRendered",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "settings.noHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[]}"
+    },
+    {
+      "name": "projects.openViaSettings",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.loadingStateVisible",
+      "pass": true,
+      "detail": "{\"clicked\":true,\"loading\":true,\"statusCount\":2,\"heading\":\"项目管理\"}"
+    },
+    {
+      "name": "projects.emptyStateRendered",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"page\":\"项目管理\",\"loading\":false,\"empty\":true,\"rows\":0,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "projects.emptyStateCreateAction",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.emptyNoHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[]}"
+    },
+    {
+      "name": "ipc.listProjectsEmpty",
+      "pass": true,
+      "detail": "{\"ok\":true,\"value\":[]}"
+    },
+    {
+      "name": "ipc.diagnosticsAlive",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ipc.schemaVersion2",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ipc.migrations1And2",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ipc.integrityOk",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ipc.noArbitrarySqlCommand",
+      "pass": true,
+      "detail": "Command execute_sql not found"
+    },
+    {
+      "name": "projects.createDialogOpened",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.createDialogRendered",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.createInputFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.createSubmitted",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.createRowVisible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ipc.createPersisted",
+      "pass": true,
+      "detail": "[{\"id\":\"749a57a6-3584-4030-b549-02254ce14eb9\",\"name\":\"T1-02 验收项目\",\"isArchived\":false,\"createdAt\":\"2026-11-18T10:40:13.493Z\",\"updatedAt\":\"2026-11-18T10:40:13.493Z\"}]"
+    },
+    {
+      "name": "projects.longCreateDialogOpened",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.longInputFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.longSubmitted",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.longNameFullTitleAvailable",
+      "pass": true,
+      "detail": "title=超长项目名称用于验证项目管理列表布局不会横向溢出也不会撑破窗口——这是第二段用于…"
+    },
+    {
+      "name": "projects.longNameNoHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[]}"
+    },
+    {
+      "name": "ipc.longNamePersisted",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.editActionClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.editDialogPrefilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.editInputChanged",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.editSubmitted",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.editRowUpdated",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ipc.editPersisted",
+      "pass": true,
+      "detail": "{\"id\":\"749a57a6-3584-4030-b549-02254ce14eb9\",\"name\":\"T1-02 验收项目（已编辑）\",\"isArchived\":false,\"createdAt\":\"2026-11-18T10:40:13.493Z\",\"updatedAt\":\"2026-11-18T10:40:13.860Z\"}"
+    },
+    {
+      "name": "projects.archiveActionClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.archiveConfirmExplainsNonDestructive",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.archiveConfirmed",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.archivedBadgeVisible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.archivedRowHasNoEditOrArchive",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ipc.archivePersistedWithoutDeleting",
+      "pass": true,
+      "detail": "{\"id\":\"ffeb1ece-2756-4cae-a24f-3478ba145fa4\",\"name\":\"超长项目名称用于验证项目管理列表布局不会横向溢出也不会撑破窗口——这是第二段用于增加长度的虚构项目名称内容——T1-02-LONG-PROJECT-NAME-0123456789-ABCDEFGHIJ\",\"isArchived\":true,\"createdAt\":\"2026-11-18T10:40:13.643Z\",\"updatedAt\":\"2026-11-18T10:40:14.063Z\"}"
+    },
+    {
+      "name": "projects.archivedNoHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[]}"
+    },
+    {
+      "name": "projects.errorScenarioEditOpened",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.errorScenarioArchiveViaIpc",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.errorScenarioSaveClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.errorStateVisible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.errorDialogStillOpen",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.errorDialogCancelled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.refreshViaSettings",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.reopenProjects",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "projects.archivedRecordsStillExistAfterReload",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnostics.navigateSettings",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnostics.open",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnostics.heading",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnostics.healthOk",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnostics.noErrorAlert",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnostics.threePortablePaths",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnostics.migrationRows",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnostics.unencryptedNote",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnostics.noHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[{\"tag\":\"CAPTION\",\"cls\":\"visually-hidden\",\"text\":\"已应用的数据库 migration 记录\",\"left\":253,\"right\":254,\"width\":1,\"scrollWidth\":180,\"clientWidth\":1}]}"
+    },
+    {
+      "name": "titlebar.maximizeCallsRealWindowApi",
+      "pass": true,
+      "detail": "1100 → 1920"
+    },
+    {
+      "name": "titlebar.restoreCallsRealWindowApi",
+      "pass": true,
+      "detail": "1920 → 1100 (before 1100)"
+    },
+    {
+      "name": "csp.noViolations",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "page.noUncaughtErrors",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "failed": [],
+  "pass": true
+}

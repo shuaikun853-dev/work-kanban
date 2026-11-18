@@ -1,0 +1,15 @@
+--- 杩愯 T1-02 涓?UI/IPC 妫€鏌?---
+file:///D:/%E5%B7%A5%E4%BD%9C%E4%BA%8B%E9%A1%B9%E7%9C%8B%E6%9D%BF/scripts/verify/inspect-t1-02-ui.mjs:53
+  throw new Error(`CDP page target not found on port ${port}. Last error: ${lastError}`);
+        ^
+
+Error: CDP page target not found on port 9334. Last error: TypeError: fetch failed
+    at findPageTarget (file:///D:/%E5%B7%A5%E4%BD%9C%E4%BA%8B%E9%A1%B9%E7%9C%8B%E6%9D%BF/scripts/verify/inspect-t1-02-ui.mjs:53:9)
+    at async file:///D:/%E5%B7%A5%E4%BD%9C%E4%BA%8B%E9%A1%B9%E7%9C%8B%E6%9D%BF/scripts/verify/inspect-t1-02-ui.mjs:56:20
+
+Node.js v22.20.0
+--- 璋冩暣鍒版渶灏忔敮鎸佺獥鍙?860x640 ---
+D:\工作事项看板\scripts\verify\verify-t1-02-ui.ps1 : You cannot call a method on a null-valued expression.
+    + CategoryInfo          : InvalidOperation: (:) [verify-t1-02-ui.ps1], RuntimeException
+    + FullyQualifiedErrorId : InvokeMethodOnNull,verify-t1-02-ui.ps1
+ 

@@ -1,15 +1,18 @@
 # T1-02：项目创建、编辑、归档
 
-**任务状态：** 返工（第一轮独立审计未通过；修复 P2-01 后重新审计，不得标记验收完成）  
+**任务状态：** 待审计（第一轮独立审计问题已修复并完成自测；等待第二轮独立审计，不得标记验收完成）  
 **启动日期：** 2026-11-18  
 **自测完成日期：** 2026-11-18  
+**返工修复完成日期：** 2026-11-18  
 **所属阶段：** 阶段 1：基础架构与工作事项  
 **前置任务：** T1-01 已验收完成并已合并到 main  
 **开发分支：** `task/T1-02-project-management`  
 **目标分支：** `main`  
-**Pull Request：** [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)（返工，未合并）  
+**Pull Request：** [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)（保持 Open，不合并）  
 **测试报告：** [T1-02-REPORT.md](../../testing/reports/T1-02-REPORT.md)  
-**机器可读证据：** [T1-02-evidence.json](../../testing/reports/T1-02-evidence.json)
+**返工修复报告：** [T1-02-AUDIT-FIX-REPORT.md](../../testing/reports/T1-02-AUDIT-FIX-REPORT.md)  
+**机器可读证据：** [T1-02-evidence.json](../../testing/reports/T1-02-evidence.json)  
+**返工修复机器可读证据：** [T1-02-AUDIT-FIX-evidence.json](../../testing/reports/T1-02-AUDIT-FIX-evidence.json)
 
 ## 1. 权威依据
 
@@ -206,7 +209,7 @@ UI 变更必须提供：
 - 归档为 UPDATE 标记，不删除项目记录；已归档项目只读并保留在列表；重复归档幂等。
 - 测试：`cargo test --workspace` 90 passed / 0 failed；`npm run check` / `npm run build` / `cargo fmt --check` / `cargo check` 均通过。
 - Release：`target\release\workmanager.exe` 10,230,272 字节，SHA-256 `DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8`。
-- Release UI/IPC：主检查 73/73、最小窗口 11/11、关闭按钮真实退出；继承便携验证 106 项 0 FAIL、异常注入 73 项 0 FAIL；诊断页 24/24。
+- Release UI/IPC：主检查 73/73、最小窗口 12/12（旧证据 JSON 因关闭按钮前写盘只持久化 11 项；该口径问题已在返工中修复）、关闭按钮真实退出；继承便携验证 106 项 0 FAIL、异常注入 73 项 0 FAIL；诊断页 24/24。
 - 截图与日志：`docs/testing/reports/T1-02-assets/`。
 
 **未实现（保持任务边界）：** T1-03 工作事项、T1-04 多项目副本、T1-05 状态流转、每日计划、复盘、报表、附件、备份恢复、TOCTOU 加固。
@@ -223,3 +226,35 @@ UI 变更必须提供：
 - 独立实测：`cargo test --workspace` 90 passed / 0 failed；`cargo fmt` / `cargo check` / `npm run check` / `npm run build` 全部退出码 0；Release SHA-256 与交付报告一致；便携 106 项、异常 73 项均 0 FAIL；Release UI E2E 在首次抖动后连续 4 次通过。
 - PR #7 保持 Open，不合并；main 不修改；T1-03 不开始。
 - 权威审计报告：`docs/testing/reports/T1-02-INDEPENDENT-AUDIT-REPORT.md`。
+
+## 11. 返工修复结果（2026-11-18，待第二轮独立审计）
+
+**当前状态：** **待审计**。第一轮独立审计 P2-01 / P3-01 / P3-02 已修复并完成重新自测；开发代理
+不自行宣布审计通过或验收完成，第一轮独立审计报告未修改。
+
+**修复内容：**
+
+- **P2-01（Design Token）：** 审计点名 9 处原始颜色全部改为语义 Token；另把静态检查覆盖范围内
+  同类散落颜色一并收敛，共 **32 处**（含 T1-01 诊断页 18 处、DEC-032 标题栏 4 处、`app.css` 1 处），
+  新增 **20 个**语义 Token，取值与修改前渲染值一致（视觉无变化）；新增
+  `scripts/quality/check-design-tokens.mjs` 静态检查与 `design-tokens.test.mjs` 8 项正反向测试，
+  并接入 `npm run check`；实际检查 18 个文件、0 违规。
+- **P3-01（过期注释）：** `src-tauri/src/lib.rs` 命令说明更新为数据库健康检查 + 项目 CRUD 5 个命令；
+  未改命令注册、IPC 名称或 DTO。
+- **P3-02（E2E 稳定性）：** 只改测试脚本——新增 reload 新文档 boot marker、应用壳 + Tauri IPC 就绪、
+  项目 Loading 终态 4 项确定性等待，失败时写页面状态/IPC/异常/截图诊断 JSON；保留空状态断言；
+  未改产品业务逻辑。最终 EXE 上 **连续 5 次完整 E2E 全部通过**（每次主检查 73/73、最小窗口 12/12）。
+- **统计口径：** 主检查 73 项、最小窗口实际执行 12 项；旧证据 JSON 因“关闭按钮前写盘”只持久化
+  11 项，审计报告 12/12 正确。返工后 12 项全部进入证据 JSON，编排脚本另行验证进程真实退出。
+
+**回归结果（最终 EXE）：** `cargo fmt --check` / `cargo check` / `cargo test`（90 passed） /
+`npm run check` / `npm run build` / Release 构建全部退出码 0；便携 106 项、异常注入 73 项 0 FAIL；
+诊断页 24/24；CSP 0；未捕获异常 0。Release EXE 10,230,784 字节，
+SHA-256 `51BBBA8DD17103D742E1BD4A85B83377F7578D34584F2206F30EDFEC8D3DC7F6`。
+
+**证据：** [T1-02-AUDIT-FIX-REPORT.md](../../testing/reports/T1-02-AUDIT-FIX-REPORT.md)、
+[T1-02-AUDIT-FIX-evidence.json](../../testing/reports/T1-02-AUDIT-FIX-evidence.json)、
+[T1-02-AUDIT-FIX-assets/](../../testing/reports/T1-02-AUDIT-FIX-assets/README.md)。
+
+**未开始/未修改：** T1-03 未开始；PRD、DEC-028～DEC-032、UI 布局、三色窗口按钮、项目业务逻辑、
+T1-01 基础架构、migration 历史均未修改；main 未修改；PR #7 未合并。

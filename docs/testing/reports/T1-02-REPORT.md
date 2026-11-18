@@ -3,16 +3,21 @@
 **任务 ID：** T1-02  
 **任务名称：** 项目创建、编辑、归档  
 **所属阶段：** 阶段 1：基础架构与工作事项  
-**任务状态：** **待审计**（开发代理自测完成，未经独立审计，不得视为验收完成）  
-**报告日期：** 2026-11-18  
+**任务状态：** **待审计**（第一轮独立审计问题已修复并完成自测；等待第二轮独立审计，不得视为验收完成）  
+**报告日期：** 2026-11-18（返工修复后更新）  
 **开发分支：** `task/T1-02-project-management`  
 **目标分支：** `main`  
 **基线 main：** `0cafde61078c8d428a37cd509a349e4db8f4096e`  
-**Pull Request：** [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)（待审计，未合并）  
-**代码提交：** `b8962b5`（Core + migration）、`2b3035d`（Tauri IPC）、`14a542e`（UI）、`30666c8`（验证脚本）  
-**机器可读证据：** [T1-02-evidence.json](T1-02-evidence.json)
+**Pull Request：** [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)（保持 Open，不合并）  
+**代码提交：** `b8962b5`（Core + migration）、`2b3035d`（Tauri IPC）、`14a542e`（UI）、`30666c8`（验证脚本）；返工修复提交见分支最新提交  
+**机器可读证据：** [T1-02-evidence.json](T1-02-evidence.json)  
+**第一轮审计问题修复报告：** [T1-02-AUDIT-FIX-REPORT.md](T1-02-AUDIT-FIX-REPORT.md)  
+**返工修复机器可读证据：** [T1-02-AUDIT-FIX-evidence.json](T1-02-AUDIT-FIX-evidence.json)  
+**返工回归证据资产：** [T1-02-AUDIT-FIX-assets/](T1-02-AUDIT-FIX-assets/README.md)
 
-> 本报告记录开发代理的实际实现与自测结果。独立审计尚未进行，任务状态只能为“待审计”。
+> 本报告记录开发代理的实际实现与自测结果。第一轮独立审计已进行并发现 P2-01 / P3-01 / P3-02，
+> 本次已完成修复与重新回归；任务状态仍只能为“待审计”，不得自行标记独立审计通过或用户验收完成。
+> 第一轮独立审计报告由独立审计方维护，本次未修改。
 
 ---
 
@@ -139,22 +144,22 @@ src/
 | Node / npm | v22.20.0 / 10.9.3 |
 | PowerShell | Windows PowerShell 5.1.19041.6456 |
 | 测试数据目录 | `D:\WorkManager-test-data`（隔离；正式目录 `D:\WorkManager` 未触碰） |
-| Release | `target\release\workmanager.exe`，10,230,272 字节，SHA-256 `DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8` |
+| Release | `target\release\workmanager.exe`，**10,230,784 字节**，SHA-256 **`51BBBA8DD17103D742E1BD4A85B83377F7578D34584F2206F30EDFEC8D3DC7F6`**（返工修复后重建） |
 
 ## 7. 回归测试命令与结果
 
 | 命令 | 退出码 | 结果 | 证据 |
 |---|---:|---|---|
-| `cargo fmt --all -- --check` | 0 | PASS（无输出） | [日志](T1-02-assets/logs/cargo-fmt-check.log.txt) |
-| `cargo check --workspace --all-targets` | 0 | PASS，无 warning | [日志](T1-02-assets/logs/cargo-check.log.txt) |
-| `cargo test --workspace` | 0 | **90 passed / 0 failed** | [日志](T1-02-assets/logs/cargo-test-workspace.log.txt) |
-| `npm run check` | 0 | svelte-check 0 errors / 0 warnings | [日志](T1-02-assets/logs/npm-check.log.txt) |
-| `npm run build` | 0 | Vite 构建成功 | [日志](T1-02-assets/logs/npm-build.log.txt) |
-| `npm run tauri build -- --no-bundle` | 0 | Release 构建成功 | [日志](T1-02-assets/logs/tauri-build.log.txt) |
-| `verify-t1-02-ui.ps1` | 0 | 真实 Release UI/IPC **73/73 + 11/11**，关闭按钮真实退出 | [日志](T1-02-assets/logs/verify-t1-02-ui.log.txt) |
-| `verify-release-portable.ps1` | 0 | TOTAL=106 PASS=90 **FAIL=0** WARN=1 INFO=15 | [日志](T1-02-assets/logs/verify-release-portable.log.txt) |
-| `verify-release-faults.ps1` | 0 | TOTAL=73 PASS=64 **FAIL=0** WARN=0 INFO=9 | [日志](T1-02-assets/logs/verify-release-faults.log.txt) |
-| `inspect-release-ui.mjs`（诊断页） | 0 | 24/24 断言，CSP 0 违规 | [日志](T1-02-assets/logs/inspect-release-ui.log.txt) |
+| `cargo fmt --all -- --check` | 0 | PASS（无输出） | [日志](T1-02-AUDIT-FIX-assets/logs/cargo-fmt-check.log.txt) |
+| `cargo check --workspace --all-targets` | 0 | PASS，无 warning | [日志](T1-02-AUDIT-FIX-assets/logs/cargo-check.log.txt) |
+| `cargo test --workspace` | 0 | **90 passed / 0 failed / 0 ignored** | [日志](T1-02-AUDIT-FIX-assets/logs/cargo-test-workspace.log.txt) |
+| `npm run check` | 0 | svelte-check 0 errors / 0 warnings；Design Token 静态检查 PASS（18 文件 / 0 违规）；Token 自测 8/8 | [日志](T1-02-AUDIT-FIX-assets/logs/npm-check.log.txt) |
+| `npm run build` | 0 | Vite 构建成功（156 modules；JS 96.13 kB / CSS 26.89 kB） | [日志](T1-02-AUDIT-FIX-assets/logs/npm-build.log.txt) |
+| `npm run tauri build -- --no-bundle` | 0 | Release 构建成功 | [日志](T1-02-AUDIT-FIX-assets/logs/tauri-build.log.txt) |
+| `verify-t1-02-ui.ps1`（连续 5 次） | 0 | 真实 Release UI/IPC **每次主检查 73/73 + 最小窗口 12/12**，关闭按钮真实退出，CSP 0，未捕获异常 0 | [run1](T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run1.log.txt)、[run2](T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run2.log.txt)、[run3](T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run3.log.txt)、[run4](T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run4.log.txt)、[run5](T1-02-AUDIT-FIX-assets/logs/verify-t1-02-ui-run5.log.txt) |
+| `verify-release-portable.ps1` | 0 | TOTAL=106 PASS=90 **FAIL=0** WARN=1 INFO=15 | [日志](T1-02-AUDIT-FIX-assets/logs/verify-release-portable.log.txt) |
+| `verify-release-faults.ps1` | 0 | TOTAL=73 PASS=64 **FAIL=0** WARN=0 INFO=9 | [日志](T1-02-AUDIT-FIX-assets/logs/verify-release-faults.log.txt) |
+| `inspect-release-ui.mjs`（诊断页） | 0 | 24/24 断言，CSP 0 违规 | [日志](T1-02-AUDIT-FIX-assets/logs/inspect-release-ui.log.txt) |
 
 ### 7.1 项目领域新增/关键自动化测试（15 项，全部 PASS）
 
@@ -180,42 +185,62 @@ src/
 
 脚本 `scripts/verify/verify-t1-02-ui.ps1` 编排真实 Release + WebView2 + CDP：
 
-- 主检查 **73/73 PASS**：应用壳、6 项一级导航、三色窗口按钮、默认工作总览、今日工作、设置、loading、空状态、真实 UI 创建/编辑/归档、长名称、归档后操作消失、真实错误态、归档记录仍存在、诊断页、CSP 0 违规、页面 0 未捕获异常、最大化/还原真实窗口 API。
-- 最小窗口检查 **11/11 PASS**：按外部 Win32 调整为 860×640（实际视口 844×632），工作总览与项目管理无横向溢出，新建弹窗完整可见；点击红色关闭圆点后进程**真实退出（退出码 0）**。
+- 主检查 **73/73 PASS**（连续 5 次）：应用壳、6 项一级导航、三色窗口按钮、默认工作总览、今日工作、设置、loading、空状态、真实 UI 创建/编辑/归档、长名称、归档后操作消失、真实错误态、归档记录仍存在、诊断页、CSP 0 违规、页面 0 未捕获异常、最大化/还原真实窗口 API。
+- 最小窗口检查 **12/12 PASS**（连续 5 次）：按外部 Win32 调整为 860×640（实际视口 844×632），工作总览与项目管理无横向溢出，新建弹窗完整可见；其中 11 项为布局/导航/对话框断言，第 12 项为 `minWindow.closeButtonClicked`（点击红色关闭圆点），进程**真实退出（退出码 0）**由编排脚本独立验证。
 - loading 状态通过 CDP CPU 限速放慢渲染线程后稳定观察并截图；真实异步 IPC 未被 mock。
 - `isArchived` / 时间字段等 DTO 契约由直接 IPC 调用核对，创建/编辑/归档结果均回读自 SQLite。
+- P3-02 修复后新增确定性等待：reload 新文档 boot marker、应用壳 + Tauri IPC 就绪、项目页 Loading 终态；
+  每次运行的证据 JSON 记录 `deterministicWaits`，失败时会写页面状态/IPC/异常/截图诊断 JSON。
 
-机器可读证据：[t1-02-ui-evidence.json](T1-02-assets/t1-02-ui-evidence.json)、[t1-02-min-window-evidence.json](T1-02-assets/t1-02-min-window-evidence.json)、[t1-02-ui-orchestration.json](T1-02-assets/t1-02-ui-orchestration.json)。
+机器可读证据（返工修复后 5 次连续运行）：[run1](T1-02-AUDIT-FIX-assets/evidence/run1/t1-02-ui-orchestration.json)、[run2](T1-02-AUDIT-FIX-assets/evidence/run2/t1-02-ui-orchestration.json)、[run3](T1-02-AUDIT-FIX-assets/evidence/run3/t1-02-ui-orchestration.json)、[run4](T1-02-AUDIT-FIX-assets/evidence/run4/t1-02-ui-orchestration.json)、[run5](T1-02-AUDIT-FIX-assets/evidence/run5/t1-02-ui-orchestration.json)（每次含 `t1-02-ui-evidence.json` 73 项与 `t1-02-min-window-evidence.json` 12 项）。第一轮审计时的旧证据保留在 [T1-02-assets/](T1-02-assets/) 供历史对照。
 
-### 8.1 截图（真实 Release 运行）
+### 8.1 截图（返工修复后真实 Release 运行，run1）
 
 | 工作总览（正常窗口） | 今日工作（正常窗口） |
 |---|---|
-| ![工作总览](T1-02-assets/screenshots/overview-normal.png) | ![今日工作](T1-02-assets/screenshots/today-normal.png) |
+| ![工作总览](T1-02-AUDIT-FIX-assets/screenshots/run1/overview-normal.png) | ![今日工作](T1-02-AUDIT-FIX-assets/screenshots/run1/today-normal.png) |
 
 | 项目管理 loading | 项目管理空状态 |
 |---|---|
-| ![loading](T1-02-assets/screenshots/projects-loading.png) | ![empty](T1-02-assets/screenshots/projects-empty.png) |
+| ![loading](T1-02-AUDIT-FIX-assets/screenshots/run1/projects-loading.png) | ![empty](T1-02-AUDIT-FIX-assets/screenshots/run1/projects-empty.png) |
 
 | 多项目 + 长名称 | 归档确认 |
 |---|---|
-| ![list](T1-02-assets/screenshots/projects-list.png) | ![archive confirm](T1-02-assets/screenshots/projects-archive-confirm.png) |
+| ![list](T1-02-AUDIT-FIX-assets/screenshots/run1/projects-list.png) | ![archive confirm](T1-02-AUDIT-FIX-assets/screenshots/run1/projects-archive-confirm.png) |
 
 | 归档后（无编辑/归档操作） | 真实错误状态 |
 |---|---|
-| ![archived](T1-02-assets/screenshots/projects-archived.png) | ![error](T1-02-assets/screenshots/projects-error.png) |
+| ![archived](T1-02-AUDIT-FIX-assets/screenshots/run1/projects-archived.png) | ![error](T1-02-AUDIT-FIX-assets/screenshots/run1/projects-error.png) |
 
 | 数据库诊断（T1-01 功能未破坏） | 最小窗口 844×632 |
 |---|---|
-| ![diagnostics](T1-02-assets/screenshots/diagnostics.png) | ![min](T1-02-assets/screenshots/projects-min.png) |
+| ![diagnostics](T1-02-AUDIT-FIX-assets/screenshots/run1/diagnostics.png) | ![min](T1-02-AUDIT-FIX-assets/screenshots/run1/projects-min.png) |
 
-最小窗口：工作总览见 [overview-min.png](T1-02-assets/screenshots/overview-min.png)，最小窗口新建弹窗见 [projects-dialog-min.png](T1-02-assets/screenshots/projects-dialog-min.png)。
+最小窗口：工作总览见 [overview-min.png](T1-02-AUDIT-FIX-assets/screenshots/run1/overview-min.png)，最小窗口新建弹窗见 [projects-dialog-min.png](T1-02-AUDIT-FIX-assets/screenshots/run1/projects-dialog-min.png)。
+
+第一轮审计时（修复前）的截图仍保留在 [T1-02-assets/screenshots/](T1-02-assets/screenshots/)，
+可用于对照；本次 Token 收敛未改变任何布局、字号、间距或颜色语义。
+
+### 8.2 P3-02 修复与最小窗口统计口径说明
+
+- 旧最小窗口脚本在点击关闭按钮**之前**写证据 JSON，故旧 JSON 只含 11 项断言；第 12 项
+  `minWindow.closeButtonClicked` 只出现在日志、退出码与编排证据中。这解释了
+  “开发报告 11/11”与“独立审计 12/12”的差异：两者分别是“JSON 持久化口径”和“实际执行口径”，
+  审计报告的 12/12 正确。
+- 返工修复后，脚本在点击关闭按钮后由 Node 进程写证据，**12 项断言全部进入 JSON**；
+  编排脚本从 JSON 读取断言数量，并独立记录 `closeExitCode=0`。5 次运行均为 12/12。
+- P3-02 只修改测试等待策略与证据记录，不修改产品业务逻辑；空状态断言、最小窗口断言均保留，
+  无跳过、无忽略、无自动重试、无无限延长超时。
+- 详细根因分析与基线复现探针证据见
+  [T1-02-AUDIT-FIX-REPORT.md](T1-02-AUDIT-FIX-REPORT.md) 第 5 节与
+  [T1-02-AUDIT-FIX-assets/evidence/p3-02-probe/](T1-02-AUDIT-FIX-assets/evidence/p3-02-probe/README.md)。
 
 ## 9. 继承 Release 脚本回归
 
-- `verify-release-portable.ps1`：**106 项，90 PASS / 0 FAIL / 1 WARN / 15 INFO**。唯一 WARN 仍是本机既有的 `%LOCALAPPDATA%\EBWebView` 历史目录（非本次创建，前后时间戳未变）。schema 期望已更新为 v2，`projects` 表存在、migration 记录为 1、2。
+- `verify-release-portable.ps1`：**106 项，90 PASS / 0 FAIL / 1 WARN / 15 INFO**。唯一 WARN 仍是本机既有的 `%LOCALAPPDATA%\<user>\EBWebView` 历史目录（非本次创建，前后时间戳未变）。schema 期望已更新为 v2，`projects` 表存在、migration 记录为 1、2。
 - `verify-release-faults.ps1`：**73 项，64 PASS / 0 FAIL / 0 WARN / 9 INFO**。覆盖损坏库、0 字节库、data 被文件阻塞、work.db 为目录、ACL 拒绝写入；启动失败对话框、非零退出码、原文件字节不变均通过。
-- 旧 T1-01 诊断页 UI 检查已适配新应用壳并可重复运行：24/24 通过。
+- 旧 T1-01 诊断页 UI 检查已适配新应用壳并可重复运行：24/24 通过（返工修复后使用新 EXE 重新执行）。
+- 机器可读汇总：[release-portable-summary.json](T1-02-AUDIT-FIX-assets/evidence/release-portable-summary.json)、[release-faults-summary.json](T1-02-AUDIT-FIX-assets/evidence/release-faults-summary.json)。
 
 ## 10. 业务规则取舍与假设（供审计重点核对）
 
@@ -234,19 +259,40 @@ PRD / 技术设计未定义、但实现必须选择的边界，均按最小必�
 
 ## 11. 未覆盖与遗留风险
 
-1. **未做独立审计**：本报告仅为开发代理自测，状态“待审计”。
-2. 仓库仍无前端组件测试/视觉回归框架；UI 回归依赖真实 Release CDP 脚本与人工截图复核。
-3. 项目名称唯一性、删除/恢复、项目排序偏好等 PRD 未定义行为未实现；如产品需要，应由后续任务确认。
-4. `archive_does_not_delete_existing_history_associations` 使用测试探针表，不代表 T1-03 已完成；真实工作事项关联必须由 T1-03 建立并由后续任务验证。
-5. TOCTOU 残余风险按 DEC-029 接受并延期至 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，本任务未修复；不得宣称绝不会写入 C 盘。
-6. 普通 SQLite 文件未加密；拥有文件访问权限的人可读取数据库内容。
-7. 自动备份、备份轮转与恢复策略仍未确认（OPEN-001/002/003），本任务未实现、未宣称备份。
-8. 窗口标题栏为 DEC-032 自定义无边框实现；已通过真实窗口 API（最大化 1100→1920→1100、关闭按钮真实退出）验证，但未做长时间拖动/多显示器/高 DPI 专项矩阵。
-9. 未新增真实工作事项、每日计划、复盘、报表、附件等未授权功能；T1-03 未开始。
+1. **独立审计状态**：第一轮独立审计未通过，本次已完成返工修复并自测，状态仍为“待审计”，等待第二轮独立审计；开发代理不自行标记审计通过或验收完成。
+2. 第一轮审计首次失败运行（`projects empty state` 超时）的原始日志不在仓库中，只能引用审计报告历史记录；本次基线脚本 2 次复现尝试均通过，未能复现该次时序抖动。P3-02 按测试等待策略问题修复，未发现产品逻辑缺陷。
+3. 仓库仍无前端组件测试/视觉回归框架；UI 回归依赖真实 Release CDP 脚本与人工截图复核。
+4. 项目名称唯一性、删除/恢复、项目排序偏好等 PRD 未定义行为未实现；如产品需要，应由后续任务确认。
+5. `archive_does_not_delete_existing_history_associations` 使用测试探针表，不代表 T1-03 已完成；真实工作事项关联必须由 T1-03 建立并由后续任务验证。
+6. TOCTOU 残余风险按 DEC-029 接受并延期至 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，本任务未修复；不得宣称绝不会写入 C 盘。
+7. 普通 SQLite 文件未加密；拥有文件访问权限的人可读取数据库内容。
+8. 自动备份、备份轮转与恢复策略仍未确认（OPEN-001/002/003），本任务未实现、未宣称备份。
+9. 窗口标题栏为 DEC-032 自定义无边框实现；已通过真实窗口 API（最大化 1100→1920→1100、关闭按钮真实退出）验证，但未做长时间拖动/多显示器/高 DPI 专项矩阵。
+10. Design Token 静态检查覆盖 `<style>`、内联 style 属性与 src 下 CSS；不覆盖 Svelte `style:` 指令与脚本动态颜色，当前代码无此类用法。
+11. 未新增真实工作事项、每日计划、复盘、报表、附件等未授权功能；T1-03 未开始。
 
 ## 12. 结论
 
 - T1-02 代码、migration、Rust Core、typed IPC、项目 UI、自动化测试、Release 实跑与证据均已提交本分支。
-- 所有要求的本地回归命令退出码为 0；Rust 90/90 测试通过；Release UI/IPC 73/73 与最小窗口 11/11 通过；继承 Release 脚本 0 FAIL。
-- **当前状态：待审计。** 开发代理不自行标记“验收完成”；等待独立审计与用户验收。
+- 第一轮独立审计的 P2-01 / P3-01 / P3-02 已修复：组件/UI CSS 原始颜色全部收敛到语义 Token，并新增接入 `npm run check` 的静态检查与 8 项正反向测试；过期 Tauri 注释已更新；E2E 改为确定性等待并保留失败诊断。
+- 返工回归：`cargo fmt` / `cargo check` / `cargo test`（90 passed） / `npm run check` / `npm run build` / Release 构建全部退出码 0；Release UI/IPC **连续 5 次全部通过**（每次主检查 73/73、最小窗口 12/12、CSP 0、未捕获异常 0、关闭退出码 0）；继承便携 106 项与异常注入 73 项 0 FAIL；诊断页 24/24。
+- **当前状态：待审计。** 开发代理不自行标记“独立审计通过”或“验收完成”；等待第二轮独立审计与用户验收。
 - **T1-03 未开始。**
+
+---
+
+## 13. 第一轮独立审计问题修复记录（2026-11-18）
+
+完整修复说明、逐命令证据、统计口径核实与遗留风险见
+[T1-02-AUDIT-FIX-REPORT.md](T1-02-AUDIT-FIX-REPORT.md)；
+机器可读修复证据见 [T1-02-AUDIT-FIX-evidence.json](T1-02-AUDIT-FIX-evidence.json)。
+
+| 问题 | 优先级 | 状态 | 关键证据 |
+|---|---|---|---|
+| P2-01 Design Token 原始颜色 | P2 | **已修复** | 审计点名 9 处 + 检查覆盖范围内 23 处，共 32 处收敛为语义 Token；新增 20 个 Token；`npm run check` 集成静态检查（18 文件 0 违规）与 8/8 正反向测试 |
+| P3-01 Tauri 过期注释 | P3 | **已修复** | `src-tauri/src/lib.rs` 仅更新注释；命令注册/IPC/DTO 未改 |
+| P3-02 E2E 空状态等待抖动 | P3 | **已修复测试等待策略** | 确定性等待 4 项 + 失败诊断 + 12 项最小窗口证据；5 次连续完整 E2E 全部通过；未改产品业务逻辑 |
+| 测试统计口径不一致 | — | **已核实并统一** | 主检查 73/73；最小窗口实际执行 12/12（旧 JSON 持久化 11 项的问题已修复）；历史 4 次成功运行仅审计报告有记录、仓库无原始日志；本次 5 次连续运行日志齐全 |
+
+第一轮独立审计报告 [T1-02-INDEPENDENT-AUDIT-REPORT.md](T1-02-INDEPENDENT-AUDIT-REPORT.md)
+由独立审计方维护，本次未修改其任何内容。

@@ -1,0 +1,94 @@
+{
+  "generatedAt": "2026-11-18T10:39:43.674Z",
+  "task": "T1-02",
+  "method": "CDP at minimum supported window size; deterministic app-shell wait; viewport/dialog/layout checks; real titlebar close button click; process exit verified by orchestration",
+  "port": 9334,
+  "target": {
+    "id": "9920C1822CD41F04661AD23DCD72DD44",
+    "title": "数据库诊断 · WorkManager",
+    "url": "http://tauri.localhost/"
+  },
+  "viewport": {
+    "innerWidth": 844,
+    "innerHeight": 632,
+    "outerWidth": 844,
+    "outerHeight": 632
+  },
+  "dialogLayout": {
+    "top": 193.296875,
+    "left": 202,
+    "right": 642,
+    "bottom": 438.703125,
+    "innerWidth": 844,
+    "innerHeight": 632,
+    "fullyVisible": true
+  },
+  "checks": [
+    {
+      "name": "minWindow.sizeNear860x640",
+      "pass": true,
+      "detail": "{\"innerWidth\":844,\"innerHeight\":632,\"outerWidth\":844,\"outerHeight\":632}"
+    },
+    {
+      "name": "minWindow.navigateOverview",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "minWindow.overviewNoHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":844,\"docScrollWidth\":844,\"clientWidth\":844,\"bodyScrollWidth\":844,\"overflow\":false,\"offenders\":[]}"
+    },
+    {
+      "name": "minWindow.navigateSettings",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "minWindow.openProjects",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "minWindow.projectsNoHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":844,\"docScrollWidth\":844,\"clientWidth\":844,\"bodyScrollWidth\":844,\"overflow\":false,\"offenders\":[]}"
+    },
+    {
+      "name": "minWindow.projectsArchivedRowsVisible",
+      "pass": true,
+      "detail": "{\"rowCount\":2,\"archivedRows\":2,\"newProjectVisible\":true,\"headerRight\":828}"
+    },
+    {
+      "name": "minWindow.newProjectButtonVisible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "minWindow.openCreateDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "minWindow.dialogFullyVisible",
+      "pass": true,
+      "detail": "{\"top\":193.296875,\"left\":202,\"right\":642,\"bottom\":438.703125,\"innerWidth\":844,\"innerHeight\":632,\"fullyVisible\":true}"
+    },
+    {
+      "name": "minWindow.cancelDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "minWindow.closeButtonClicked",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "failed": [],
+  "checkCount": 12,
+  "plannedCheckCount": 12,
+  "closeClicked": true,
+  "processExitVerifiedBy": "scripts/verify/verify-t1-02-ui.ps1（t1-02-ui-orchestration.json closeExitCode）",
+  "pass": true
+}
