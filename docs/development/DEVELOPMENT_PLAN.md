@@ -472,7 +472,7 @@
 ## 17. 当前执行结论
 
 - 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 已于 2026-11-18 经第四轮独立审计、用户验收并合并到 main（PR #1，commit `260e6c0`），状态为**验收完成**。
-- **T1-02 项目创建、编辑、归档：开发与自测完成，状态“待审计”。** 完成 migration 0002（schema v2）、Rust Core 项目领域、typed Tauri IPC、项目 UI、AppShell/Tokens、诊断页迁移、自动化测试与 Release 证据；等待独立审计，开发代理不得自行标记验收完成。测试报告见 `docs/testing/reports/T1-02-REPORT.md`。
+- **T1-02 项目创建、编辑、归档：第一轮独立审计未通过，当前状态“返工”；P2-01 UI Design Token 散落 raw color 修复后重新审计。** 完成 migration 0002（schema v2）、Rust Core 项目领域、typed Tauri IPC、项目 UI、AppShell/Tokens、诊断页迁移、自动化测试与 Release 证据；等待独立审计，开发代理不得自行标记验收完成。测试报告见 `docs/testing/reports/T1-02-REPORT.md`。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
 - 最近完成任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**；任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；验收记录见 `docs/testing/reports/T1-01-USER-ACCEPTANCE.md`；R3 返工证据见 `docs/testing/reports/T1-01-R3-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-R3-FIX-evidence.json`。
 - 参考实现/候选依赖说明：项目 ID 使用 `uuid` crate（MIT/Apache-2.0，技术设计 1.3 已列出）；`serde_json` 仅用于测试 DTO 契约；未引入云服务、遥测、账户或同步依赖。
@@ -492,3 +492,4 @@
 | 2026-11-18 | T1-02 开发启动（进行中） | 用户指示启动 T1-02；分支 `task/T1-02-project-management` 基于最新 main `0cafde6`；保留并整合会话前工作区未提交的 DEC-032 自定义标题栏变更。 |
 | 2026-11-18 | T1-02 代码与自测完成（待审计） | 提交 `b8962b5`（migration 0002 + Rust Core 项目领域 + 测试）、`2b3035d`（typed Tauri IPC）、`14a542e`（Design Tokens/AppShell/项目管理 UI/诊断页迁移）、`30666c8`（Release 验证脚本）。`cargo test --workspace` 90 passed / 0 failed；`npm run check` / `npm run build` / Release 构建通过；Release UI/IPC 73/73 + 最小窗口 11/11；继承便携 106 项、异常注入 73 项 0 FAIL；EXE 10,230,272 字节，SHA-256 `DF4469EA…B7E8`。TOCTOU 按 DEC-029 未修复；状态置为**待审计**，不开始 T1-03。报告：`docs/testing/reports/T1-02-REPORT.md`。 |
 | 2026-11-18 | 创建 T1-02 Pull Request #7 | 推送分支 `task/T1-02-project-management` 并创建 [PR #7](https://github.com/shuaikun853-dev/work-kanban/pull/7) 指向 main；PR 保持 Open、不合并；等待独立审计；不开始 T1-03。 |
+| 2026-11-18 | T1-02 第一轮独立审计未通过 | 独立实测 `cargo test --workspace` 90 项通过、Release 便携/异常 0 FAIL；发现 P2-01 UI Design Token 散落 raw color，另记录 P3 注释与一次 E2E 时序抖动。状态改为返工，详见 `docs/testing/reports/T1-02-INDEPENDENT-AUDIT-REPORT.md`；PR #7 不合并，T1-03 不开始。 |
