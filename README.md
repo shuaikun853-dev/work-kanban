@@ -1,6 +1,6 @@
 # WorkManager
 
-Windows 本地工作管理软件（绿色便携版）。当前进度：**T1-01 已于 2026-11-18 经第四轮独立审计及用户验收，验收完成**。R3-01/R3-02 修复提交分别为 `ae1eb65`、`4942eb0`；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、尚未合并；审计结论见[第四轮独立审计报告](docs/testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户确认见[验收记录](docs/testing/reports/T1-01-USER-ACCEPTANCE.md)。TOCTOU 按 DEC-029 接受并延期至独立[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。T1-02 尚未开始。项目管理、工作事项、每日复盘、报表、附件等业务功能尚未实现；本仓库不表示这些功能已经可用。
+Windows 本地工作管理软件（绿色便携版）。当前进度：**T1-01 已于 2026-11-18 经第四轮独立审计及用户验收，验收完成**。R3-01/R3-02 修复提交分别为 `ae1eb65`、`4942eb0`；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 已于 2026-11-18 合并到 main（commit `260e6c0`）；审计结论见[第四轮独立审计报告](docs/testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户确认见[验收记录](docs/testing/reports/T1-01-USER-ACCEPTANCE.md)。TOCTOU 按 DEC-029 接受并延期至独立[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。T1-02 尚未开始。项目管理、工作事项、每日复盘、报表、附件等业务功能尚未实现；本仓库不表示这些功能已经可用。
 
 ## 文档
 

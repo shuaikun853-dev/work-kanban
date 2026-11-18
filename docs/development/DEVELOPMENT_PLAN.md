@@ -5,7 +5,7 @@
 **文档状态：** 开发执行基线（阶段 0 已放行；T1-01 第四轮独立审计通过并于 2026-11-18 经用户验收，任务验收完成；TOCTOU 按 DEC-029 接受并延期） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；T1-01 第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。R3-01/R3-02 代码与证据复核通过；开发机回归日志记录 68 项 Rust 测试通过及 Release 便携/异常注入/UI 验证通过。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。PR #1 保持打开、未合并；main 仅合入 UI 设计文档 PR #4（commit `938f21c`），T1-01 代码仍未合入；T1-02 尚未开始。详见 [第四轮独立审计报告](../testing/reports/T1-01-FOURTH-AUDIT-REPORT.md) 与 [用户验收记录](../testing/reports/T1-01-USER-ACCEPTANCE.md)
+**当前进度：** 阶段 0 已放行；T1-01 第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。R3-01/R3-02 代码与证据复核通过；开发机回归日志记录 68 项 Rust 测试通过及 Release 便携/异常注入/UI 验证通过。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。PR #1 已于 2026-11-18 合并到 main（commit `260e6c0`）；UI 设计文档 PR #4 已合并（commit `938f21c`）；T1-02 尚未开始。详见 [第四轮独立审计报告](../testing/reports/T1-01-FOURTH-AUDIT-REPORT.md) 与 [用户验收记录](../testing/reports/T1-01-USER-ACCEPTANCE.md)
 
 ---
 
@@ -186,7 +186,7 @@
 
 ### T1-01 详细范围
 
-**当前状态（2026-11-18）：** 第四轮独立审计通过，且用户已明确验收；**T1-01 验收完成**。R2-01/R2-02/R2-04 修复逻辑复核成立；R3-01（D 根卷信任锚未独立验证，P1）已修复：生产路径用 `GetVolumeNameForVolumeMountPointW` + 根目录句柄 `VOLUME_NAME_GUID/NT` + `QueryDosDeviceW` + D/C 同卷拒绝独立验证 D 根，失败返回 `path-root-trust-anchor-invalid` 并 fail-closed；R3-02（真实双进程初始化锁测试同步确定性，P2）已修复：waiter 只在底层 `LockFileEx` 明确返回锁竞争后才发信号，并走完整 `Database::initialize()`，creator 收到确认后才建库，10/10 多轮真实进程测试通过。修复代码提交：R3-01 `ae1eb65`、R3-02 `4942eb0`。TOCTOU 残余风险未修复，但用户已按 DEC-029 接受延期至[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，不作为 T1-01 单独阻塞项。详见 [T1-01-R3-FIX-REPORT.md](../testing/reports/T1-01-R3-FIX-REPORT.md) 与 [第三轮独立审计报告](../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)。用户已验收 T1-01。PR #1 仍保持打开、未合并；合并和启动 T1-02 作为单独执行步骤，未经明确指示不自动执行。
+**当前状态（2026-11-18）：** 第四轮独立审计通过，且用户已明确验收；**T1-01 验收完成**。R2-01/R2-02/R2-04 修复逻辑复核成立；R3-01（D 根卷信任锚未独立验证，P1）已修复：生产路径用 `GetVolumeNameForVolumeMountPointW` + 根目录句柄 `VOLUME_NAME_GUID/NT` + `QueryDosDeviceW` + D/C 同卷拒绝独立验证 D 根，失败返回 `path-root-trust-anchor-invalid` 并 fail-closed；R3-02（真实双进程初始化锁测试同步确定性，P2）已修复：waiter 只在底层 `LockFileEx` 明确返回锁竞争后才发信号，并走完整 `Database::initialize()`，creator 收到确认后才建库，10/10 多轮真实进程测试通过。修复代码提交：R3-01 `ae1eb65`、R3-02 `4942eb0`。TOCTOU 残余风险未修复，但用户已按 DEC-029 接受延期至[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，不作为 T1-01 单独阻塞项。详见 [T1-01-R3-FIX-REPORT.md](../testing/reports/T1-01-R3-FIX-REPORT.md) 与 [第三轮独立审计报告](../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)。用户已验收 T1-01。PR #1 已于 2026-11-18 合并到 main（commit `260e6c0`）；T1-02 仍须作为独立执行步骤，未经用户明确启动指示不得开始。
 
 **实际实现范围：**
 
@@ -449,7 +449,7 @@
 
 ## 17. 当前执行结论
 
-- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 已于 2026-11-18 经第四轮独立审计和用户验收，状态为**验收完成**。PR #1 仍保持打开、未合并；T1-02 尚未开始，等待单独启动指示。
+- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 已于 2026-11-18 经第四轮独立审计、用户验收并合并到 main（PR #1，commit `260e6c0`），状态为**验收完成**。T1-02 尚未开始，等待单独启动指示。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
 - 最近完成任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**；任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；验收记录见 `docs/testing/reports/T1-01-USER-ACCEPTANCE.md`；R3 返工证据见 `docs/testing/reports/T1-01-R3-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-R3-FIX-evidence.json`。
 - 第一版采用普通 SQLite，不实现应用密码、SQLCipher 或 DPAPI。
@@ -463,4 +463,5 @@
 
 | 2026-11-18 | T1-01 用户验收完成 | 用户明确回复“接受”，确认接受第四轮独立审计结论及 DEC-029 中已接受但未修复的 TOCTOU 残余风险。T1-01 标记验收完成；PR #1 仍 Open、未合并，main 不修改；T1-02 未开始，等待单独启动指示。验收记录：`docs/testing/reports/T1-01-USER-ACCEPTANCE.md` |
 | 2026-11-18 | 用户确认 UI 原型与前端架构基线（DEC-030） | 建立 `docs/design/UI-DESIGN-SPEC.md` 和原型图；更新 PRD、技术架构、AGENTS 与开发状态。仅完成文档，不代表 UI 代码或 T1-02 已启动；实现必须按用户授权的对应任务逐步进行。 |
-| 2026-11-18 | UI 设计文档 PR #4 合并 | UI 原型、设计规范和 AI 前端架构约束已合入 main，合并提交 `938f21c`；PR #1（T1-01 代码）仍保持打开、未合并；T1-02 未开始。 |
+| 2026-11-18 | T1-01 PR #1 合并 | 用户验收后，PR #1 合并到 main，合并提交 `260e6c07802a297529d8bda1e2d9239fca90fc10`；T1-01 代码正式进入 main；T1-02 未开始。 |
+| 2026-11-18 | UI 设计文档 PR #4 合并 | UI 原型、设计规范和 AI 前端架构约束已合入 main，合并提交 `938f21c`；T1-02 未开始。 |
