@@ -10,6 +10,7 @@
 pub mod database;
 pub mod error;
 pub mod portable_paths;
+pub mod projects;
 
 pub use database::{
     AppliedMigration, BUSY_TIMEOUT_MS, Database, DatabaseHealth, InitializationLock,
@@ -19,3 +20,4 @@ pub use error::DatabaseError;
 pub use portable_paths::{
     FORMAL_RELEASE_ROOT, PortablePathError, PortablePaths, RuntimeMode, TEST_PORTABLE_ROOT_ENV,
 };
+pub use projects::{Project, ProjectError, ProjectService};

@@ -43,8 +43,15 @@ fn initializes_empty_database_with_latest_schema_and_safe_pragmas() {
     assert_eq!(health.temp_store, 2, "temp_store 必须为 MEMORY");
     assert_eq!(health.foreign_key_violations, 0);
     assert!(health.database_file_size_bytes > 0);
-    assert_eq!(health.applied_migrations.len(), 1);
+    assert_eq!(
+        health.applied_migrations.len(),
+        LATEST_SCHEMA_VERSION as usize
+    );
     assert_eq!(health.applied_migrations[0].version, 1);
+    assert_eq!(
+        health.applied_migrations[1].version, 2,
+        "T1-02 必须应用 0002_projects"
+    );
     assert!(health.database_path.ends_with("work.db"));
 
     let migration_rows: i64 = database
@@ -53,7 +60,7 @@ fn initializes_empty_database_with_latest_schema_and_safe_pragmas() {
             row.get(0)
         })
         .expect("migration 行数");
-    assert_eq!(migration_rows, 1);
+    assert_eq!(migration_rows, LATEST_SCHEMA_VERSION);
 
     let settings_rows: i64 = database
         .connection()
@@ -72,7 +79,10 @@ fn repeated_initialize_is_idempotent_and_does_not_rerun_migrations() {
         assert!(database.created_new());
         database.health_report().expect("首次健康检查")
     };
-    assert_eq!(first_health.applied_migrations.len(), 1);
+    assert_eq!(
+        first_health.applied_migrations.len(),
+        LATEST_SCHEMA_VERSION as usize
+    );
     let first_applied_at = first_health.applied_migrations[0].applied_at.clone();
 
     // 模拟应用关闭后再次启动。
@@ -85,7 +95,10 @@ fn repeated_initialize_is_idempotent_and_does_not_rerun_migrations() {
     assert_eq!(second_health.schema_version, first_health.schema_version);
     assert_eq!(second_health.integrity_check, "ok");
     // migration 不得重复执行：applied_at 与记录数都应保持不变。
-    assert_eq!(second_health.applied_migrations.len(), 1);
+    assert_eq!(
+        second_health.applied_migrations.len(),
+        LATEST_SCHEMA_VERSION as usize
+    );
     assert_eq!(
         second_health.applied_migrations[0].applied_at,
         first_applied_at

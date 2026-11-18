@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 
 use support::{TestDir, file_sha256, init_temp_files, sidecar_path};
-use workmanager_core::Database;
+use workmanager_core::{Database, LATEST_SCHEMA_VERSION};
 
 const CHILD_MODE_ENV: &str = "WM_TEST_CHILD_MODE";
 const CHILD_DB_PATH_ENV: &str = "WM_TEST_CHILD_DB_PATH";
@@ -153,7 +153,10 @@ fn zero_byte_existing_database_is_not_treated_as_first_install() {
     fs::remove_file(&database_path).expect("user-confirmed removal of zero-byte file");
     let database = Database::initialize(&paths).expect("删除异常空文件后应可首次初始化");
     assert!(database.created_new());
-    assert_eq!(database.schema_version().expect("schema version"), 1);
+    assert_eq!(
+        database.schema_version().expect("schema version"),
+        LATEST_SCHEMA_VERSION
+    );
     println!(
         "zero-byte-existing: recovery-after-user-removal created_new=true schema={}",
         database.schema_version().expect("schema version")
@@ -330,9 +333,14 @@ fn stale_shm_without_database_is_cleaned_before_first_initialization() {
 
     let database = Database::initialize(&paths).expect("孤立 SHM 不应阻止首次初始化");
     assert!(database.created_new());
-    assert_eq!(database.schema_version().expect("schema version"), 1);
+    assert_eq!(
+        database.schema_version().expect("schema version"),
+        LATEST_SCHEMA_VERSION
+    );
     let health = database.health_report().expect("health");
     assert_eq!(health.integrity_check, "ok");
     assert_eq!(health.journal_mode, "wal");
-    println!("stale-shm: initialized created_new=true schema=1 integrity=ok journal_mode=wal");
+    println!(
+        "stale-shm: initialized created_new=true schema={LATEST_SCHEMA_VERSION} integrity=ok journal_mode=wal"
+    );
 }

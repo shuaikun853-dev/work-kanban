@@ -4433,6 +4433,7 @@ name = "workmanager"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
  "tauri",
  "tauri-build",
  "workmanager-core",
@@ -4446,6 +4447,7 @@ dependencies = [
  "rusqlite",
  "serde",
  "thiserror 2.0.21",
+ "uuid",
  "windows-sys 0.61.2",
 ]
 

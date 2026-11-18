@@ -15,7 +15,7 @@ use super::connection::map_sqlite_error;
 use crate::error::DatabaseError;
 
 /// 当前应用支持的最新 schema 版本。
-pub const LATEST_SCHEMA_VERSION: i64 = 1;
+pub const LATEST_SCHEMA_VERSION: i64 = 2;
 
 /// 一个编号 SQL migration。
 #[derive(Debug, Clone, Copy)]
@@ -26,11 +26,18 @@ pub struct Migration {
 }
 
 /// 内置 migration 列表；SQL 在编译期嵌入可执行文件，运行时不需要外部文件。
-pub const MIGRATIONS: &[Migration] = &[Migration {
-    version: 1,
-    name: "0001_initial_foundation",
-    sql: include_str!("../../migrations/0001_initial_foundation.sql"),
-}];
+pub const MIGRATIONS: &[Migration] = &[
+    Migration {
+        version: 1,
+        name: "0001_initial_foundation",
+        sql: include_str!("../../migrations/0001_initial_foundation.sql"),
+    },
+    Migration {
+        version: 2,
+        name: "0002_projects",
+        sql: include_str!("../../migrations/0002_projects.sql"),
+    },
+];
 
 /// 一次 migration 执行结果。
 #[derive(Debug, Clone, PartialEq, Eq)]

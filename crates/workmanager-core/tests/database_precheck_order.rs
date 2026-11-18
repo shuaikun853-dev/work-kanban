@@ -14,7 +14,7 @@ mod support;
 use std::fs;
 
 use support::{TestDir, file_sha256, init_temp_files, sidecar_path};
-use workmanager_core::Database;
+use workmanager_core::{Database, LATEST_SCHEMA_VERSION};
 
 fn read_journal_mode(database_path: &std::path::Path) -> String {
     let connection = rusqlite::Connection::open_with_flags(
@@ -254,7 +254,7 @@ fn healthy_delete_mode_database_is_upgraded_only_after_passing_prechecks() {
     assert!(!database.created_new());
     let health = database.health_report().expect("health");
     assert_eq!(health.journal_mode, "wal");
-    assert_eq!(health.schema_version, 1);
+    assert_eq!(health.schema_version, LATEST_SCHEMA_VERSION);
     assert_eq!(health.integrity_check, "ok");
     let canary: String = database
         .connection()
@@ -266,6 +266,6 @@ fn healthy_delete_mode_database_is_upgraded_only_after_passing_prechecks() {
         .expect("canary must survive upgrade");
     assert_eq!(canary, "{\"marker\":\"precheck\"}");
     println!(
-        "precheck-healthy-delete-upgrade: journal_mode=wal schema_version=1 canary_preserved=true"
+        "precheck-healthy-delete-upgrade: journal_mode=wal schema_version={LATEST_SCHEMA_VERSION} canary_preserved=true"
     );
 }

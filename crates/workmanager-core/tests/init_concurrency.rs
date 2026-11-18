@@ -19,7 +19,7 @@ use std::process::{Child, Command, ExitStatus};
 use std::time::{Duration, Instant};
 
 use support::{TestDir, init_temp_files};
-use workmanager_core::{Database, InitializationLock};
+use workmanager_core::{Database, InitializationLock, LATEST_SCHEMA_VERSION, MIGRATIONS};
 
 const MODE_ENV: &str = "WM_TEST_CHILD_MODE";
 const DATA_ROOT_ENV: &str = "WM_TEST_CHILD_DATA_ROOT";
@@ -189,19 +189,31 @@ fn two_processes_concurrent_first_initialization_is_safe() {
     // 最终数据库完整、migration 只执行一次。
     let database = Database::initialize(&paths).expect("并发创建后再次打开数据库");
     assert!(!database.created_new(), "再次启动不应重新创建数据库");
-    assert_eq!(database.schema_version().expect("schema version"), 1);
+    assert_eq!(
+        database.schema_version().expect("schema version"),
+        LATEST_SCHEMA_VERSION
+    );
     let health = database.health_report().expect("health");
     assert_eq!(health.integrity_check, "ok");
-    assert_eq!(health.applied_migrations.len(), 1, "migration 只应执行一次");
+    assert_eq!(
+        health.applied_migrations.len(),
+        MIGRATIONS.len(),
+        "migration 只应执行一次"
+    );
     let migration_rows: i64 = database
         .connection()
         .query_row("SELECT COUNT(*) FROM schema_migrations", [], |row| {
             row.get(0)
         })
         .expect("count migrations");
-    assert_eq!(migration_rows, 1, "schema_migrations 只应有一条记录");
+    assert_eq!(
+        migration_rows,
+        MIGRATIONS.len() as i64,
+        "schema_migrations 只应记录每个版本一次"
+    );
     println!(
-        "init-concurrency: both children succeeded; single work.db; integrity=ok; migrations=1; temp_files=none"
+        "init-concurrency: both children succeeded; single work.db; integrity=ok; migrations={}; temp_files=none",
+        MIGRATIONS.len()
     );
 }
 

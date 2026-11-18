@@ -18,7 +18,9 @@
 //!
 //! 本模块由 Rust 后端独占使用；前端只能调用受限的 Tauri command，不能执行 SQL。
 
-mod connection;
+// `connection` 只对 crate 内部可见，供项目仓储等 Core 模块复用统一的
+// SQLite 错误分类与本连接配置；不对外暴露连接或任意 SQL。
+pub(crate) mod connection;
 mod health;
 mod init_lock;
 mod migrations;
@@ -27,7 +29,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use rusqlite::Connection;
+use rusqlite::{Connection, Transaction, TransactionBehavior};
 
 use crate::error::DatabaseError;
 use crate::portable_paths::PortablePaths;
@@ -184,6 +186,48 @@ impl Database {
     /// 不暴露给前端。
     pub fn connection_mut(&mut self) -> &mut Connection {
         &mut self.connection
+    }
+
+    /// 在明确的 `IMMEDIATE` 写事务中执行 `action`，成功后提交、失败后回滚。
+    ///
+    /// 业务写操作必须通过本方法获得事务边界（TD 6.1 / 7.4）：
+    /// - 开启事务失败、提交失败都转换为结构化数据库错误；
+    /// - `action` 返回任意错误时显式回滚，避免部分写入；
+    /// - `E: From<DatabaseError>` 便于业务错误类型直接向上传播。
+    pub fn write_transaction<T, E, F>(&mut self, action: F) -> Result<T, E>
+    where
+        F: FnOnce(&Transaction<'_>) -> Result<T, E>,
+        E: From<DatabaseError>,
+    {
+        let database_path = self.database_path.clone();
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|error| {
+                E::from(connection::map_sqlite_error(
+                    "开启数据库写事务",
+                    &database_path,
+                    error,
+                ))
+            })?;
+
+        match action(&transaction) {
+            Ok(value) => {
+                transaction.commit().map_err(|error| {
+                    E::from(connection::map_sqlite_error(
+                        "提交数据库写事务",
+                        &database_path,
+                        error,
+                    ))
+                })?;
+                Ok(value)
+            }
+            Err(error) => {
+                // 显式回滚；即使回滚本身失败，也返回原始业务错误。
+                let _ = transaction.rollback();
+                Err(error)
+            }
+        }
     }
 
     /// 当前 schema 版本（`PRAGMA user_version`）。
@@ -522,7 +566,7 @@ mod r2_01_tests {
     use std::process::{Child, Command, ExitStatus, Stdio};
     use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-    use super::{Database, InitializationLock, LATEST_SCHEMA_VERSION, sidecar_path};
+    use super::{Database, InitializationLock, LATEST_SCHEMA_VERSION, migrations, sidecar_path};
     use crate::portable_paths::{PortablePaths, RuntimeMode};
 
     const MODE_ENV: &str = "WM_R2_01_CHILD_MODE";
@@ -684,14 +728,22 @@ mod r2_01_tests {
                 row.get(0)
             })
             .expect("count migrations");
-        assert_eq!(migration_rows, 1, "migration 不得重复执行");
+        assert_eq!(
+            migration_rows,
+            migrations::MIGRATIONS.len() as i64,
+            "migration 不得重复执行"
+        );
         let health = database.health_report().expect("waiter health report");
         assert_eq!(health.integrity_check, "ok");
-        assert_eq!(health.applied_migrations.len(), 1);
+        assert_eq!(
+            health.applied_migrations.len(),
+            migrations::MIGRATIONS.len()
+        );
         println!(
             "r3-02-waiter: full Database::initialize observed real lock contention; \
              acquired lock after creator; main_db_exists=true; opened_existing=true; \
-             orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1"
+             orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations={}",
+            migrations::MIGRATIONS.len()
         );
         fs::write(
             marker_dir.join("b-done"),
@@ -1004,19 +1056,24 @@ mod r2_01_tests {
                 row.get(0)
             })
             .expect("count migrations");
-        assert_eq!(migration_rows, 1, "migration 不得重复执行");
+        assert_eq!(
+            migration_rows,
+            migrations::MIGRATIONS.len() as i64,
+            "migration 不得重复执行"
+        );
         let health = database.health_report().expect("final health report");
         assert_eq!(health.integrity_check, "ok");
         assert_eq!(
             health.applied_migrations.len(),
-            1,
-            "schema_migrations 只应有一条记录"
+            migrations::MIGRATIONS.len(),
+            "每个 migration 版本只应有一条记录"
         );
         println!(
             "r3-02: PASS — waiter observed real lock contention in Database::initialize; \
              creator created DB+active WAL while holding the lock; waiter acquired it after \
              release and opened the existing DB (no orphaned-sidecar); canary preserved; \
-             integrity=ok; migrations=1"
+             integrity=ok; migrations={}",
+            migrations::MIGRATIONS.len()
         );
     }
 

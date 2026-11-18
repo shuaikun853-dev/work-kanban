@@ -9,9 +9,11 @@ rust-version = "1.88"
 
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 thiserror = "2"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 rusqlite = { version = "0.43", features = ["bundled"] }
+uuid = { version = "1", features = ["v4"] }
 tauri = { version = "2", features = [] }
 tauri-build = "2"
 windows-sys = { version = "0.61", features = [
