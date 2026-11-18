@@ -48,7 +48,7 @@
 | T1-06 | 六位数字应用密码与锁屏 | 取消 |
 | T1-07 | 首次初始化与 SQLite 异常保护 | 未开始 |
 
-**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[R3 专项修复报告](testing/reports/T1-01-R3-FIX-REPORT.md)、[R3 机器可读证据](testing/reports/T1-01-R3-FIX-evidence.json)、第二轮返工报告与证据、[第三轮独立审计报告](testing/reports/T1-01-THIRD-AUDIT-REPORT.md)、[TOCTOU 后续安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)、历史审计/返工报告、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（待独立审计、不合并）。
+**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[R3 专项修复报告](testing/reports/T1-01-R3-FIX-REPORT.md)、[R3 机器可读证据](testing/reports/T1-01-R3-FIX-evidence.json)、第二轮返工报告与证据、[第三轮独立审计报告](testing/reports/T1-01-THIRD-AUDIT-REPORT.md)、[TOCTOU 后续安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)、历史审计/返工报告、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（独立审计通过，待用户验收；保持打开、不合并）；[第四轮独立审计报告](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)。
 
 ### T1-01 交付摘要（2026-11-17，第二轮返工后）
 
@@ -102,7 +102,7 @@
 
 **回归结果（R3 返工后）：** `cargo test --workspace` **68 passed / 0 failed**（上轮 62，新增 6 项）；Release 便携验证 **106 项 PASS 90 / FAIL 0**；异常注入 **73 项 PASS 64 / FAIL 0**；真实窗口 UI/IPC/CSP **21/21、CSP 0 违规**；Release EXE **9,993,216 字节**，SHA-256 **`41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800`**。
 
-**当前门禁：** T1-01 状态为**待独立审计**；独立审计通过前不得合并 PR #1、不得修改 main、不得开始 T1-02、不得标记验收完成。TOCTOU 按 DEC-029 作为已接受但未修复的残余风险单独追踪。
+**第三轮审计当时的门禁（历史记录）：** 当时 T1-01 尚待独立审计；第四轮复核现已通过，当前等待用户验收。PR #1 仍不合并、main 不修改、T1-02 不开始。TOCTOU 按 DEC-029 作为已接受但未修复的残余风险单独追踪。
 
 - [ ] 阶段 2：计划、优先级与当前工作。
 - [ ] 阶段 3：每日复盘与提醒。
@@ -129,8 +129,8 @@
 
 ## 下一步安排
 
-- T1-01 第三轮审计 R3 返工已完成：R3-01/R3-02 已修复并通过完整回归，当前状态 **待独立审计**；修复代码提交 R3-01 `ae1eb65`、R3-02 `4942eb0`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并，main 不修改，T1-02 不得开始。证据见 [R3 专项修复报告](testing/reports/T1-01-R3-FIX-REPORT.md) 与 [R3 机器可读证据](testing/reports/T1-01-R3-FIX-evidence.json)。
-- 需要独立审计重新核对 R3-01/R3-02 的修复 diff、测试证据（含真实 D 盘与 SUBST 实机证据、10/10 双进程稳定性）与剩余风险；独立审计通过并得到用户验收前，不得标记验收完成、不得合并 PR。
+- T1-01 第四轮独立审计已通过，当前状态 **独立审计通过，待用户验收**；R3-01/R3-02 代码与证据复核通过。审计报告见 [T1-01-FOURTH-AUDIT-REPORT.md](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)。PR #1 保持打开、不合并，main 不修改，T1-02 不得开始。
+- 当前只等待用户验收；用户明确验收前，不得标记 T1-01 为验收完成、不得合并 PR #1、不得开始 T1-02。
 - TOCTOU 残余风险按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复、不得宣称绝不写入 C 盘；未经用户另行授权不得开始完整句柄相对改造/custom SQLite VFS。
 - 重新审计通过并同步更新开发计划后，才决定是否进入 T1-02；开发代理不得自行开始 T1-02。
 - T0-05 不再安排开发；T0-06 延期至阶段 6，不得从最终发布验收清单中删除。
