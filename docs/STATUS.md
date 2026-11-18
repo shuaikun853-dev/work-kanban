@@ -4,7 +4,7 @@
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **最近完成任务：** T1-01 正式工程骨架与 SQLite 基础设施（用户验收完成）  
 **下一候选任务：** T1-02 项目创建、编辑、归档（尚未开始，等待单独启动指示）  
-**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 的 R3-01（P1）与 R3-02（P2）已修复，第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。用户同日确认 UI 原型与前端架构基线（DEC-030），文档已建立，业务 UI 尚未实现。TOCTOU 按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复，不作绝对 C 盘写入保证。分支 `task/T1-01-sqlite-foundation`；PR #1 保持打开、未合并；main 未修改；T1-02 未开始。
+**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 的 R3-01（P1）与 R3-02（P2）已修复，第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。用户同日确认 UI 原型与前端架构基线（DEC-030），UI 设计文档已通过 PR #4 合并到 main（commit `938f21c`），业务 UI 尚未实现。TOCTOU 按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复，不作绝对 C 盘写入保证。分支 `task/T1-01-sqlite-foundation`；PR #1 保持打开、未合并；main 仅合入 UI 设计文档 PR #4，T1-01 代码仍未合入；T1-02 未开始。
 
 ## 最新产品决策
 
@@ -21,7 +21,7 @@
 ## UI 设计基线（DEC-030，2026-11-18）
 
 - 用户已确认简洁 Apple 风格、Windows 原生桌面 UI 原型；以工作总览和今日工作作为两个核心页面。
-- 设计规范：[UI 设计规范](design/UI-DESIGN-SPEC.md)；原型图：[workmanager-ui-prototype.svg](design/assets/workmanager-ui-prototype.svg)。
+- 设计规范：[UI 设计规范](design/UI-DESIGN-SPEC.md)；原型图：[workmanager-ui-prototype.svg](design/assets/workmanager-ui-prototype.svg)。PR #4 已于 2026-11-18 合并到 main，合并提交 `938f21c`。
 - 首页优先展示今日要做、今日已完成、当前工作；复盘与待跟进降为次级信息；禁止堆叠统计图表和无关指标。
 - 前端组件分层、Design Tokens、typed Bridge、CSS 隔离和 UI 回归规则已写入 UI 规范、技术架构和 AGENTS.md。
 - **当前仅完成设计文档；UI 业务代码未开始。** T1-02 仍等待单独启动指示。
@@ -138,7 +138,7 @@
 
 ## 下一步安排
 
-- T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；R3-01/R3-02 代码与证据复核通过。审计报告见 [T1-01-FOURTH-AUDIT-REPORT.md](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户验收记录见 [T1-01-USER-ACCEPTANCE.md](testing/reports/T1-01-USER-ACCEPTANCE.md)。PR #1 保持打开、未合并，main 未修改，T1-02 尚未开始。
+- T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；R3-01/R3-02 代码与证据复核通过。审计报告见 [T1-01-FOURTH-AUDIT-REPORT.md](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户验收记录见 [T1-01-USER-ACCEPTANCE.md](testing/reports/T1-01-USER-ACCEPTANCE.md)。PR #1 保持打开、未合并；main 仅合入 UI 设计文档 PR #4，T1-01 代码仍未合入；T1-02 尚未开始。
 - T1-01 已验收完成；PR #1 合并和 T1-02 启动均作为独立执行步骤，等待单独指示。
 - TOCTOU 残余风险按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复、不得宣称绝不写入 C 盘；未经用户另行授权不得开始完整句柄相对改造/custom SQLite VFS。
 - 重新审计通过并同步更新开发计划后，才决定是否进入 T1-02；开发代理不得自行开始 T1-02。
@@ -159,7 +159,7 @@
 - R3-01：生产信任锚调用链、D/C 卷 GUID 比较、QueryDosDevice 映射检查及 fail-closed 顺序通过复核。
 - R3-02：观察器仅在 `cfg(test)` 编译；仅底层 `LockFileEx` 明确返回锁竞争时通知；waiter 走完整 `Database::initialize()`；10/10 稳定性日志通过复核。
 - 审计证据来自已提交 Windows 10 脱敏日志；本轮未在开发机独立重放，GitHub 当前无 Actions/status checks。
-- **当前状态：T1-01 验收完成（用户于 2026-11-18 明确确认）。** PR #1 保持打开、未合并；main 未修改；T1-02 尚未开始。
+- **当前状态：T1-01 验收完成（用户于 2026-11-18 明确确认）。** PR #1 保持打开、未合并；main 仅合入 UI 设计文档 PR #4，T1-01 代码仍未合入；T1-02 尚未开始。
 - TOCTOU 按 DEC-029 接受并延期至 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复；其余未实机验证场景详见第四轮审计报告。
 
 
