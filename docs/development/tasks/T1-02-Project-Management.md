@@ -7,7 +7,7 @@
 **前置任务：** T1-01 已验收完成并已合并到 main  
 **开发分支：** `task/T1-02-project-management`  
 **目标分支：** `main`  
-**Pull Request：** [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)（待审计，未合并）  
+**Pull Request：** [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)（返工，未合并）  
 **测试报告：** [T1-02-REPORT.md](../../testing/reports/T1-02-REPORT.md)  
 **机器可读证据：** [T1-02-evidence.json](../../testing/reports/T1-02-evidence.json)
 
