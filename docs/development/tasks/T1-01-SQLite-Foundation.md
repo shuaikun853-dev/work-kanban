@@ -1,6 +1,6 @@
 # T1-01：正式工程骨架、便携路径接入与 SQLite 基础设施
 
-**任务状态：** **独立审计通过，待用户验收**（2026-11-18 第三轮审计 R3-01/R3-02 已修复并通过完整回归；TOCTOU 残余风险已由用户按 DEC-029 接受并延期至 Issue #2，未修复；未标记验收完成） \
+**任务状态：** **独立审计通过，待用户验收**（2026-11-18 第四轮独立审计复核 R3-01/R3-02 通过；TOCTOU 按 DEC-029 接受并延期至 Issue #2，未修复；未标记验收完成） \
 **第一轮返工报告：** [T1-01-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-AUDIT-FIX-REPORT.md)（历史修复与测试记录） \
 **第二轮独立审计：** [T1-01-SECOND-AUDIT-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-REPORT.md)（历史） \
 **第二轮返工修复报告：** [T1-01-SECOND-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md)（历史） \
@@ -239,7 +239,7 @@
 
 **完整回归：** `cargo test --workspace` **68 passed / 0 failed**（上轮 62，新增 6 项 R3-01 测试）；Release 便携验证 **106 项 0 FAIL**；异常注入 **73 项 0 FAIL**；真实窗口 UI/IPC/CSP **21/21、CSP 违规 0**；Release EXE **9,993,216 字节**，SHA-256 `41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800`。修复代码提交：R3-01 `ae1eb65`、R3-02 `4942eb0`。
 
-**当前门禁：** T1-01 状态为**待独立审计**；独立审计通过并得到用户验收前，不得标记验收完成、不得合并 PR #1、不得修改 main、不得开始 T1-02。证据见 [T1-01-R3-FIX-REPORT.md](../../testing/reports/T1-01-R3-FIX-REPORT.md) 与 [T1-01-R3-FIX-evidence.json](../../testing/reports/T1-01-R3-FIX-evidence.json)。
+**第三轮审计当时的门禁（历史记录）：** 当时 T1-01 尚待独立审计；第四轮复核现已通过，当前等待用户验收。用户明确验收前，不得标记验收完成、不得合并 PR #1、不得修改 main、不得开始 T1-02。证据见 [T1-01-R3-FIX-REPORT.md](../../testing/reports/T1-01-R3-FIX-REPORT.md) 与 [T1-01-R3-FIX-evidence.json](../../testing/reports/T1-01-R3-FIX-evidence.json)。
 
 
 ## 第四轮独立审计结论（2026-11-18）
