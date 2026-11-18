@@ -1,0 +1,336 @@
+{
+  "$comment": "T1-01 第三轮独立审计 R3-01/R3-02 返工后的机器可读证据。仅代表开发代理自测与可复核日志归档，不代表独立审计通过，也不代表验收完成。",
+  "taskId": "T1-01",
+  "taskName": "正式工程骨架、便携路径接入与 SQLite 基础设施",
+  "evidenceScope": "third-audit-rework-r3",
+  "generatedAt": "2026-11-18T08:23:33+08:00",
+  "status": "awaiting-independent-audit",
+  "statusLabel": "待独立审计（R3-01/R3-02 已修复并通过完整回归；TOCTOU 按 DEC-029 接受并延期至 Issue #2，未修复；开发代理自测不等同独立审计通过）",
+  "statusNote": "本轮完成后 T1-01 最多标记为待独立审计。PR #1 不合并，main 不修改，T1-02 不得开始。",
+  "independentAudit": {
+    "thirdAuditReport": "docs/testing/reports/T1-01-THIRD-AUDIT-REPORT.md",
+    "thirdAuditAuditedCommit": "eaf6ef7013a5f669c152e57bf4da94bc77367b85",
+    "reAuditStatus": "not_yet_reaudited",
+    "reAuditNote": "本文件记录开发代理针对 R3-01/R3-02 的修复与自测证据；仍需独立审计重新核对 diff、测试证据与剩余风险。"
+  },
+  "decision": {
+    "id": "DEC-029",
+    "date": "2026-11-18",
+    "decision": "用户接受 T1-01 当前路径校验与后续路径字符串写入之间的 TOCTOU 残余风险；不在 T1-01 内实施完整句柄相对改造/custom SQLite VFS，转入独立安全加固 Issue #2。",
+    "trackingIssue": "https://github.com/shuaikun853-dev/work-kanban/issues/2",
+    "constraints": [
+      "TOCTOU 未修复，不得写成已修复",
+      "不得宣称任何情况下都不会写入 C 盘",
+      "禁止静默回退 C 盘/AppData/Temp；已检测边界违规继续 fail-closed",
+      "该决定不覆盖 R3-01/R3-02，两项仍需处理并重新独立审计"
+    ]
+  },
+  "branch": "task/T1-01-sqlite-foundation",
+  "pullRequest": {
+    "number": 1,
+    "url": "https://github.com/shuaikun853-dev/work-kanban/pull/1",
+    "base": "main",
+    "head": "task/T1-01-sqlite-foundation",
+    "state": "open",
+    "merged": false,
+    "note": "保持打开、不合并；未推送 main；未开始 T1-02"
+  },
+  "commits": {
+    "baseMain": "5a55b8d04e79d19cae67067e3fef09140c3fe501",
+    "branchHeadBeforeFix": "e3ec2ff2daffd28e21fbd51e984753c087345cfe",
+    "r3_01CodeCommit": "ae1eb65a00e0d36907f8769d1421aef17a73023f",
+    "r3_02CodeCommit": "4942eb0c60bf43fd3d1371fbf427f5b0d043ebc1",
+    "prHeadAtEvidence": "4942eb0c60bf43fd3d1371fbf427f5b0d043ebc1",
+    "prHeadNote": "本证据 JSON、修复报告、脱敏日志属于后续文档提交，提交并推送后会推进 PR HEAD；代码提交固定为 r3_01CodeCommit / r3_02CodeCommit。最终 PR HEAD 以分支尖端与 PR #1 页面为准，并在最终交付报告中记录。"
+  },
+  "environment": {
+    "os": "Microsoft Windows 10 家庭中文版 10.0.19045 (x86_64)",
+    "node": "v22.20.0",
+    "npm": "10.9.3",
+    "rustc": "1.100.0 (0ef1bc386 2026-11-09)",
+    "cargo": "1.100.0 (3acc79c0c 2026-11-05)",
+    "rustToolchain": "stable-x86_64-pc-windows-msvc",
+    "msvcBuildTools": "Visual Studio Build Tools 2022 17.14.45, MSVC 14.44.35207",
+    "webview2Runtime": "157.0.4341.60",
+    "git": "2.52.0.windows.1",
+    "testDataRoot": "D:\\WorkManager-test-data（D 盘隔离；所有测试数据均为虚构内容）",
+    "formalReleaseRoot": "D:\\WorkManager（验证前后均不存在；R3-01 测试只读取其存在性快照，从未创建、修改或删除）"
+  },
+  "r3_01": {
+    "priority": "P1",
+    "title": "D 盘根卷作为信任锚但自身未独立验证",
+    "status": "fixed",
+    "codeCommit": "ae1eb65a00e0d36907f8769d1421aef17a73023f",
+    "implementation": [
+      "生产函数 volume_mount_point_guid()：GetVolumeNameForVolumeMountPointW 必须成功返回卷 GUID，SUBST 失败即 path-root-trust-anchor-invalid",
+      "生产函数 query_dos_device_target()：QueryDosDeviceW 取得 DOS 设备映射目标",
+      "ensure_mount_point_guid_matches_handle()：D 根挂载点 GUID 必须与根目录句柄 VOLUME_NAME_GUID 一致",
+      "ensure_dos_device_maps_to_volume()：DOS 映射必须是 \\Device\\HarddiskVolumeN 真实 NT 设备卷且与句柄 VOLUME_NAME_NT 一致；\\??\\C:\\... SUBST 别名拒绝",
+      "ensure_root_volume_differs_from_c()：D 根卷 GUID 不得等于 C 根卷 GUID",
+      "verify_root_volume_trust()：按序执行上述验证并保留 GetDriveTypeW 固定盘/可移动盘白名单",
+      "d_drive_volume_identity() 改为调用 verify_root_volume_trust(D:\\)；ensure_volume_is_d_volume() 原样传播信任锚错误",
+      "新增稳定错误码 path-root-trust-anchor-invalid；任一 API 失败/GUID 不一致/DOS 别名/同 C 卷都在创建目录、写探针、初始化锁、数据库之前 fail-closed",
+      "生产调用链：resolve()/ensure_directories()/Database::initialize() -> validate_real_storage_path() -> ensure_volume_is_d_volume() -> d_drive_volume_identity() -> verify_root_volume_trust()"
+    ],
+    "testCommand": "cargo test -p workmanager-core --lib r3_01 -- --nocapture --test-threads=1",
+    "testExitCode": 0,
+    "testResult": "6 passed / 0 failed",
+    "testLog": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-r3-01-trust-anchor.log.txt",
+    "realMachineEvidence": {
+      "dRootMountPointGuid": "\\\\?\\volume{519fbe4e-b7fe-4b36-8393-11eb159db771}",
+      "dRootHandleVolumeNameGuid": "\\\\?\\volume{519fbe4e-b7fe-4b36-8393-11eb159db771}",
+      "dRootHandleVolumeNameNt": "\\device\\harddiskvolume4",
+      "dRootQueryDosDevice": "\\Device\\HarddiskVolume4",
+      "dRootDriveType": 3,
+      "cRootMountPointGuid": "\\\\?\\volume{8ee60a1e-b5a7-4feb-bda9-1c9de1e671ae}",
+      "dAndCAreDistinctVolumes": true,
+      "normalDTrustAnchorResult": "PASS（允许）"
+    },
+    "substRealMachineEvidence": {
+      "candidateLetter": "Q（SUBST → C 盘临时目录，测试后删除）",
+      "trustAnchorResult": "path-root-trust-anchor-invalid（在 GetVolumeNameForVolumeMountPointW 阶段失败，系统错误 87）",
+      "queryDosDeviceTargetStartsWith": "\\??\\C:\\Users\\<redacted>\\...",
+      "dosAliasClassifierResult": "path-root-trust-anchor-invalid（拒绝）",
+      "note": "这是真实 SUBST Q:→C: 实机验证，不等同于真实 D:→C: SUBST；本机 D: 是真实物理卷，无法构造 D:→C:，未伪造该实机结果"
+    },
+    "injectedSimulationTests": [
+      "挂载点 GUID 与句柄 GUID 不一致 → 拒绝；注入相同 GUID → 纯校验通过（非实机）",
+      "D 根与 C 根 GUID 相同 → 拒绝；不同 GUID → 纯校验通过（非实机）",
+      "注入 \\??\\C:\\... DOS 别名 → 拒绝（非实机）",
+      "注入 \\Device\\HarddiskVolume99 与 D 卷身份不一致 → 拒绝（非实机）"
+    ],
+    "apiFailureTests": [
+      "普通目录调用 GetVolumeNameForVolumeMountPointW 失败 → path-root-trust-anchor-invalid（真实 API 失败）",
+      "非盘符根目录作为信任锚 → 拒绝",
+      "UNC 路径作为信任锚 → 拒绝"
+    ]
+  },
+  "r3_02": {
+    "priority": "P2",
+    "title": "真实双进程初始化锁测试的同步确定性不足",
+    "status": "fixed",
+    "codeCommit": "4942eb0c60bf43fd3d1371fbf427f5b0d043ebc1",
+    "rootCause": "旧 waiter 在调用 InitializationLock::acquire() 之前就写 b-inspected 信号；creator 只等该信号即创建数据库并释放锁。OS 可能在 waiter 写信号后暂停它，导致无法证明 waiter 在锁被持有时真实尝试过加锁。旧测试还只调用私有 open_or_create_after_lock()，未覆盖完整 Database::initialize()。",
+    "implementation": [
+      "init_lock.rs 新增 #[cfg(test)] 专用锁竞争观察点 test_contention_observer：只在 LockFileEx 明确返回 ERROR_LOCK_VIOLATION 时通知回调；未安装回调时无操作；不进入生产构建、不是 IPC、不改变锁语义",
+      "waiter 子进程安装观察回调后调用完整生产 Database::initialize()；底层加锁真实返回 busy 时才写 b-lock-contention（内容含 try_lock_exclusive=busy），随后继续正常等待锁",
+      "creator 取得锁后先写 a-has-lock，等待 b-lock-contention 后才创建正式数据库、进入 WAL、写虚构 canary（WAL 非空），写 a-created 并继续持锁等待父进程释放指令",
+      "父进程确认 b-lock-contention、a-created、creator 仍在运行、主库与活动 WAL 已存在后才写 parent-release-lock 让 creator 释放锁",
+      "waiter 取得锁后由生产代码 open_or_create_after_lock() 先重检主库并正常打开；断言 canary/integrity/migration 且无 database-orphaned-sidecar",
+      "所有等待有超时；子进程守卫 panic 时强杀；不使用固定 sleep 安排进程顺序"
+    ],
+    "testCommand": "cargo test -p workmanager-core --lib r2_01 -- --nocapture --test-threads=1",
+    "testExitCode": 0,
+    "testResult": "3 passed / 0 failed",
+    "testLog": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-r3-02-lock-contention.log.txt",
+    "contentionEvidence": {
+      "marker": "b-lock-contention：pid=... try_lock_exclusive=busy lock_file=...\\.work.db.init.lock",
+      "creatorHeldLockWithActiveWal": true,
+      "mainDbBytes": 20480,
+      "activeWalBytes": 8272,
+      "waiterFullInitializePath": true,
+      "waiterCreatedNew": false,
+      "orphanedSidecar": false,
+      "canaryPreserved": true,
+      "integrity": "ok",
+      "migrations": 1
+    },
+    "acceptanceCriteria": [
+      "Creator 确实持有初始化锁：PASS",
+      "Waiter 在锁仍被持有时实际尝试获取锁：PASS（b-lock-contention 来自底层 LockFileEx 竞争结果）",
+      "Waiter 得到明确的锁竞争结果：PASS（try_lock_exclusive=busy）",
+      "Creator 收到竞争确认后才继续：PASS",
+      "Creator 创建正式数据库并产生有效活动 WAL：PASS（main 20480 / WAL 8272，父进程确认时 creator 仍在运行）",
+      "Waiter 获取锁后正确识别已有数据库：PASS（完整 Database::initialize，created_new=false）",
+      "不把有效 WAL 误判为孤儿文件：PASS（无 database-orphaned-sidecar）",
+      "不重复创建数据库/错误初始化：PASS（migration 1 条）",
+      "canary、migration、完整性检查全部通过：PASS",
+      "重复运行稳定：PASS（10/10 连续多轮真实进程运行）"
+    ],
+    "stability": {
+      "rounds": 10,
+      "passed": 10,
+      "failed": 0,
+      "command": "连续 10 次 cargo test -p workmanager-core --lib -- --exact database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error --nocapture",
+      "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-r3-02-stability-10x.log.txt"
+    }
+  },
+  "commands": [
+    { "id": "cargo-fmt-check", "command": "cargo fmt --all -- --check", "exitCode": 0, "summary": "无格式差异", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-fmt-check.log.txt" },
+    { "id": "cargo-check", "command": "cargo check --workspace --all-targets", "exitCode": 0, "summary": "编译通过，无警告", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-check.log.txt" },
+    { "id": "cargo-test-workspace", "command": "cargo test --workspace", "exitCode": 0, "summary": "68 passed / 0 failed / 0 ignored", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-workspace.log.txt" },
+    { "id": "cargo-test-r3-01", "command": "cargo test -p workmanager-core --lib r3_01 -- --nocapture --test-threads=1", "exitCode": 0, "summary": "6 passed / 0 failed", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-r3-01-trust-anchor.log.txt" },
+    { "id": "cargo-test-r3-02", "command": "cargo test -p workmanager-core --lib r2_01 -- --nocapture --test-threads=1", "exitCode": 0, "summary": "3 passed / 0 failed", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-r3-02-lock-contention.log.txt" },
+    { "id": "cargo-test-r3-02-stability", "command": "10× cargo test ... --exact database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error", "exitCode": 0, "summary": "10/10 rounds passed", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-r3-02-stability-10x.log.txt" },
+    { "id": "cargo-test-r2-02-junction", "command": "cargo test -p workmanager-core --test formal_root_protection -- --nocapture --test-threads=1", "exitCode": 0, "summary": "5 passed / 0 failed", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-r2-02-junction.log.txt" },
+    { "id": "cargo-test-zero-byte", "command": "cargo test -p workmanager-core --test zero_byte_database -- --nocapture --test-threads=1", "exitCode": 0, "summary": "6 passed / 0 failed", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-zero-byte-database.log.txt" },
+    { "id": "cargo-test-init-concurrency", "command": "cargo test -p workmanager-core --test init_concurrency -- --nocapture --test-threads=1", "exitCode": 0, "summary": "3 passed / 0 failed", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-init-concurrency.log.txt" },
+    { "id": "cargo-test-windows-real-paths", "command": "cargo test -p workmanager-core --test windows_real_paths -- --nocapture --test-threads=1", "exitCode": 0, "summary": "4 passed / 0 failed", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-windows-real-paths.log.txt" },
+    { "id": "cargo-test-database-fail-closed", "command": "cargo test -p workmanager-core --test database_fail_closed -- --nocapture --test-threads=1", "exitCode": 0, "summary": "8 passed / 0 failed", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/cargo-test-database-fail-closed.log.txt" },
+    { "id": "npm-check", "command": "npm run check", "exitCode": 0, "summary": "svelte-check 0 errors / 0 warnings", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/npm-check.log.txt" },
+    { "id": "npm-build", "command": "npm run build", "exitCode": 0, "summary": "vite 8.3.8 构建成功", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/npm-build.log.txt" },
+    { "id": "tauri-build-release", "command": "npm run tauri build -- --no-bundle", "exitCode": 0, "summary": "Release 构建成功，Finished release profile in 4m 07s", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/tauri-build.log.txt" },
+    { "id": "release-portable-verification", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify/verify-release-portable.ps1", "exitCode": 0, "summary": "TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15 OVERALL=PASS", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/verify-release-portable.log.txt" },
+    { "id": "release-fault-verification", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify/verify-release-faults.ps1", "exitCode": 0, "summary": "TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9 OVERALL=PASS", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/verify-release-faults.log.txt" },
+    { "id": "release-ui-ipc-cdp", "command": "node scripts/verify/inspect-release-ui.mjs 9336 <evidenceDir>（真实 Release WebView2 + CDP）", "exitCode": 0, "summary": "21/21 断言 PASS；CSP 违规 0；CloseMainWindow 正常关闭，数据库目录仅 work.db + 初始化锁文件", "log": "docs/testing/reports/T1-01-assets/r3-fix/logs/inspect-release-ui.log.txt" }
+  ],
+  "rustTests": {
+    "command": "cargo test --workspace",
+    "total": 68,
+    "passed": 68,
+    "failed": 0,
+    "ignored": 0,
+    "previousCount": 62,
+    "newCount": 6,
+    "suites": {
+      "src-tauri/src/lib.rs (unit)": 1,
+      "src-tauri/src/main.rs (unit)": 0,
+      "crates/workmanager-core/src/lib.rs (unit)": 21,
+      "tests/database_fail_closed.rs": 8,
+      "tests/database_lifecycle.rs": 5,
+      "tests/database_precheck_order.rs": 3,
+      "tests/foreign_keys.rs": 2,
+      "tests/formal_root_protection.rs": 5,
+      "tests/init_concurrency.rs": 3,
+      "tests/migration_rollback.rs": 5,
+      "tests/portable_paths.rs": 5,
+      "tests/windows_real_paths.rs": 4,
+      "tests/zero_byte_database.rs": 6
+    }
+  },
+  "releaseArtifact": {
+    "path": "target/release/workmanager.exe",
+    "sizeBytes": 9993216,
+    "sha256": "41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800",
+    "buildCommand": "npm run tauri build -- --no-bundle",
+    "buildExitCode": 0,
+    "buildDurationSeconds": 247,
+    "previousSha256": "849E803D2456B28DF8BABFE201E187FB0FC45B7104A5E2CD2FD34B1D4366019E",
+    "note": "Tauri --no-bundle 产物按 Cargo 包名小写；正式便携包命名与目录组装属于 T6-01"
+  },
+  "releaseRuntime": {
+    "portable": {
+      "checksTotal": 106,
+      "pass": 90,
+      "fail": 0,
+      "warn": 1,
+      "info": 15,
+      "overall": "PASS",
+      "localEvidenceDir": "D:\\WorkManager-test-data\\release-verify-r3-20261118-082154",
+      "highlights": [
+        "首次启动创建 data/database/work.db，user_version=1，integrity_check=ok，journal_mode=wal",
+        "CloseMainWindow 正常关闭，关闭后 WAL/SHM 清理",
+        "重启后 canary 保留、user_version 仍为 1、schema_migrations 仍为 1 条",
+        "Release 忽略 WORKMANAGER_TEST_PORTABLE_ROOT，诱饵目录保持为空",
+        "C 盘 com.workmanager.portable 目录不存在"
+      ]
+    },
+    "faults": {
+      "checksTotal": 73,
+      "pass": 64,
+      "fail": 0,
+      "warn": 0,
+      "info": 9,
+      "overall": "PASS",
+      "localEvidenceDir": "D:\\WorkManager-test-data\\release-verify-faults-r3-20261118-082212",
+      "cases": [
+        "corrupt_database：启动失败，原文件字节不变",
+        "data_path_blocked_by_file：启动失败，阻塞文件不变",
+        "work_db_is_directory：启动失败，目录仍存在",
+        "database_dir_acl_denied_write：启动失败，ACL 在 finally 恢复，未创建数据库",
+        "zero_byte_database：启动失败，未创建 WAL/SHM/schema，原文件保持 0 字节"
+      ]
+    },
+    "uiIpcCdp": {
+      "assertionsTotal": 21,
+      "assertionsPassed": 21,
+      "noCspViolations": true,
+      "ipcCommandSucceeded": true,
+      "gracefulClose": true,
+      "databaseDirEntriesAfterClose": [".work.db.init.lock:42", "work.db:20480"],
+      "rawEvidence": "docs/testing/reports/T1-01-assets/r3-fix/release-ui-ipc-evidence.json",
+      "screenshot": "docs/testing/reports/T1-01-assets/r3-fix/release-window-r3.png"
+    }
+  },
+  "unresolvedRisks": [
+    {
+      "id": "toctou-path-validation-vs-write",
+      "status": "accepted-deferred-DEC-029",
+      "detail": "路径校验与后续目录创建/写探针/初始化锁/SQLite 按路径打开之间仍存在理论 TOCTOU 竞争窗口；未修复，不得宣称绝不写入 C 盘。按 DEC-029 转入 Issue #2，未经另行授权不启动。"
+    },
+    {
+      "id": "subst-D-to-C-not-constructible",
+      "status": "not_verified_real_D_to_C_simulated_with_real_SUBST_Q_to_C",
+      "detail": "D: 为真实物理卷，无法用 SUBST 映射；已用真实 SUBST Q:→C: 验证同一 DOS 设备别名机制，并明确标注差异。"
+    },
+    {
+      "id": "mapped-network-drive-unverified",
+      "status": "unverified-on-this-machine",
+      "detail": "本机无网络共享，映射网络盘没有实机验证；仅卷类型白名单与最终路径/卷身份 fail-closed 设计。"
+    },
+    {
+      "id": "cross-volume-mount-point-unverified",
+      "status": "unverified-on-this-machine",
+      "detail": "D 盘路径下的真实跨卷目录挂载点需要管理员权限与额外卷；未在用户机器上修改卷挂载配置，未伪造结果。"
+    },
+    {
+      "id": "non-windows-fallback-not-cross-compiled",
+      "status": "unverified",
+      "detail": "非 Windows 降级实现未交叉编译验证；产品目标平台为 Windows 10。"
+    },
+    {
+      "id": "devcsp-not-e2e-verified",
+      "status": "unverified",
+      "detail": "devCsp 已配置但未在 tauri dev 下实跑验证；生产 Release CSP 已通过 CDP 验证（0 违规）。"
+    },
+    {
+      "id": "single-instance-not-implemented",
+      "status": "planned-t6-07",
+      "detail": "应用级单实例保护尚未实现（T6-07）；首次初始化已由 LockFileEx 串行化，R3-02 已强化其测试证据。"
+    },
+    {
+      "id": "c-drive-shared-ebwebview-preexisting",
+      "status": "warn-needs-release-audit",
+      "detail": "%LOCALAPPDATA%\\EBWebView 在验证开始前已存在（2024-07-15 创建），本次运行前后时间戳/条目未变化；WorkManager 专属 C 盘目录不存在。来源需在发布阶段审计确认。"
+    },
+    {
+      "id": "physical-unplug-formal-dir-procmon",
+      "status": "deferred-to-phase-6",
+      "detail": "物理拔除 D 盘、正式 D:\\WorkManager 路径实跑、Process Monitor 级文件审计仍属阶段 6 发布验收。"
+    }
+  ],
+  "notCovered": [
+    "项目/工作事项/每日计划/复盘/报表/附件/数据清理等业务功能（T1-01 仅基础设施）",
+    "备份与恢复（OPEN-001/002/003 未确认，未实现未宣称）",
+    "Windows Toast / 托盘 / 开机启动 / 断网验收（T6-04/T6-07）",
+    "物理拔盘、正式 D:\\WorkManager 实跑、Process Monitor 审计（T6-03/T6-05）",
+    "真实映射网络盘与真实跨卷目录挂载点实机验证",
+    "真实 D:→C: SUBST 实机构造",
+    "非 Windows 平台交叉编译验证"
+  ],
+  "documentsUpdated": [
+    "docs/STATUS.md",
+    "docs/development/DEVELOPMENT_PLAN.md",
+    "docs/development/tasks/T1-01-SQLite-Foundation.md",
+    "docs/testing/reports/T1-01-R3-FIX-REPORT.md",
+    "docs/testing/reports/T1-01-R3-FIX-evidence.json",
+    "docs/testing/reports/T1-01-assets/r3-fix/（脱敏日志、CDP 证据、截图）",
+    "Pull Request #1 描述（github.com）"
+  ],
+  "evidenceLocations": {
+    "committed": [
+      "docs/testing/reports/T1-01-R3-FIX-REPORT.md",
+      "docs/testing/reports/T1-01-R3-FIX-evidence.json",
+      "docs/testing/reports/T1-01-assets/r3-fix/logs/",
+      "docs/testing/reports/T1-01-assets/r3-fix/release-ui-ipc-evidence.json",
+      "docs/testing/reports/T1-01-assets/r3-fix/release-window-r3.png"
+    ],
+    "localOnly": [
+      "D:\\WorkManager-test-data\\release-verify-r3-20261118-082154\\（便携验证证据与 summary）",
+      "D:\\WorkManager-test-data\\release-verify-faults-r3-20261118-082212\\（异常注入证据与 summary）",
+      "D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\（UI/IPC/CSP 证据原始目录）"
+    ],
+    "privacy": "归档日志已脱敏：移除本机用户名、计算机名与仓库绝对路径；不包含真实工作数据、附件路径、凭据或密钥。"
+  },
+  "independentAuditStatus": "尚未重新独立审计。开发代理自测与自动化验证不构成独立审计通过；T1-01 当前最多标记为待独立审计，不得标记验收完成，PR #1 不得合并，T1-02 不得开始。"
+}

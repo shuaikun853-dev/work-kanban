@@ -1,0 +1,28 @@
+   Compiling workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.58s
+     Running tests\zero_byte_database.rs (target\debug\build\workmanager-core/82ee36f716ecc755\out\zero_byte_database-82ee36f716ecc755.exe)
+
+running 6 tests
+test child_writer_helper ... ok
+test main_database_missing_but_journal_leftover_fails_closed ... orphaned-journal: main_missing=true journal_size=63 journal_sha256=5e52635717fe0462fa8b2984d1c045617d40611d7ce1f1c42126ea2856a7823f
+ok
+test main_database_missing_but_wal_leftover_fails_closed ... 
+running 1 test
+child-crash-wal-writer main=4096 wal=16512
+orphaned-wal: main_missing=true wal_size=16512 wal_sha256=7472c630109cf5441332258b6b6a66413d24443c3ff09667e937f5078b129ad9
+ok
+test stale_shm_without_database_is_cleaned_before_first_initialization ... stale-shm: stale_shm_size=32768 main_missing=true
+stale-shm: initialized created_new=true schema=1 integrity=ok journal_mode=wal
+ok
+test zero_byte_database_with_wal_leftover_fails_closed_and_preserves_wal ... 
+running 1 test
+child-crash-wal-writer main=4096 wal=16512
+zero-byte-wal: crash-state main=4096 wal=16512
+zero-byte-wal: code=database-empty-existing-file main_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 wal_sha256=e3320b3048b3f8cb5c6ef5a49b6aec84c8c44c606f7be52e59dabbb203bf8974
+ok
+test zero_byte_existing_database_is_not_treated_as_first_install ... zero-byte-existing: code=database-empty-existing-file sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+zero-byte-existing: recovery-after-user-removal created_new=true schema=1
+ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.43s
+

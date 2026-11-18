@@ -1,0 +1,16 @@
+   Compiling workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.32s
+     Running tests\database_fail_closed.rs (target\debug\build\workmanager-core/a5368bbca0101f74\out\database_fail_closed-a5368bbca0101f74.exe)
+
+running 8 tests
+test acl::unwritable_database_directory_fails_closed_and_recovers_after_acl_restore ... ok
+test corrupted_database_image_is_never_overwritten ... ok
+test data_directory_blocked_by_file_fails_without_fallback ... ok
+test database_directory_blocked_by_file_fails_without_fallback ... ok
+test database_path_that_is_a_directory_fails_closed ... ok
+test garbage_database_file_is_never_overwritten ... ok
+test schema_version_newer_than_application_fails_closed_and_keeps_data ... ok
+test webview2_directory_blocked_by_file_fails_without_fallback ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.43s
+

@@ -1,0 +1,27 @@
+
+> workmanager@0.1.0 tauri
+> tauri build --no-bundle
+
+        Info `tauri-build` dependency has workspace inheritance enabled. The features array won't be automatically rewritten. Expected features: []
+        Info `tauri` dependency has workspace inheritance enabled. The features array won't be automatically rewritten. Expected features: []
+        Info Looking up installed tauri packages to check mismatched versions...
+     Running beforeBuildCommand `npm run build`
+
+> workmanager@0.1.0 build
+> vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 116 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  0.39 kB │ gzip:  0.26 kB
+dist/assets/index-CnnghHFr.css  11.65 kB │ gzip:  2.87 kB
+dist/assets/index-fq92idwG.js   53.71 kB │ gzip: 19.96 kB
+
+✓ built in 377ms
+   Compiling workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+   Compiling workmanager v0.1.0 (<repo>\src-tauri)
+    Finished `release` profile [optimized] target(s) in 4m 07s
+       Built application at: <repo>\target\release\workmanager.exe
+TAURI_BUILD_OK 

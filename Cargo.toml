@@ -1,0 +1,31 @@
+[workspace]
+members = ["crates/workmanager-core", "src-tauri"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+rusqlite = { version = "0.43", features = ["bundled"] }
+tauri = { version = "2", features = [] }
+tauri-build = "2"
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+    "Win32_System_WindowsProgramming",
+] }
+workmanager-core = { path = "crates/workmanager-core" }
+
+# 绿色便携版发布构建：体积优先，但保留确定性优化。
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+strip = true

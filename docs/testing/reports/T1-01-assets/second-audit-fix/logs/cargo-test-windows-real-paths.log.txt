@@ -1,0 +1,41 @@
+   Compiling workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.05s
+     Running tests\windows_real_paths.rs (target\debug\build\workmanager-core/f3e20d0232de0869\out\windows_real_paths-f3e20d0232de0869.exe)
+
+running 4 tests
+test junction_above_exe_directory_is_rejected_via_ancestor_chain ... [fixture-ancestor] C 盘夹具目标目录 = C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-0-1794925077164759200
+Junction created for D:\WorkManager-test-data\realpath-junction-ancestor-28632-0-1794925077163957000\app\link-ancestor <<===>> C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-0-1794925077164759200
+[fixture-ancestor] Junction = D:\WorkManager-test-data\realpath-junction-ancestor-28632-0-1794925077163957000\app\link-ancestor -> C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-0-1794925077164759200；EXE 目录 = D:\WorkManager-test-data\realpath-junction-ancestor-28632-0-1794925077163957000\app\link-ancestor\app-sub
+[ancestor-A] resolve(Release, link\app-sub\WorkManager.exe) -> code = path-real-target-not-d
+[ancestor-A] message = [path-real-target-not-d] EXE 所在目录 所在物理卷与 D 盘根卷不一致（卷 GUID / NT 设备卷身份比对失败；可能是 SUBST 驱动器、目录卷挂载点、Junction 或映射网络盘别名）：D:\WorkManager-test-data\realpath-junction-ancestor-28632-0-1794925077163957000\app\link-ancestor\app-sub -> \\?\C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-0-1794925077164759200\app-sub。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。
+[ancestor-B] ensure_directories() -> code = path-real-target-not-d
+[ancestor-B] message = [path-real-target-not-d] data 数据根目录 所在物理卷与 D 盘根卷不一致（卷 GUID / NT 设备卷身份比对失败；可能是 SUBST 驱动器、目录卷挂载点、Junction 或映射网络盘别名）：D:\WorkManager-test-data\realpath-junction-ancestor-28632-0-1794925077163957000\app\link-ancestor\app-sub -> \\?\C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-0-1794925077164759200\app-sub。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。
+[assert] C 盘夹具目录条目 = ["app-sub"]（期望仅 ["app-sub"]）
+[cleanup] Junction 链接已删除（只删链接，未触碰目标内容）：D:\WorkManager-test-data\realpath-junction-ancestor-28632-0-1794925077163957000\app\link-ancestor
+[cleanup] C 盘测试夹具目录已删除：C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-0-1794925077164759200
+[cleanup-ancestor] 已验证祖先 Junction 与 C 盘夹具均已清理
+ok
+test junction_from_d_to_c_is_rejected_without_writing_c_drive ... [fixture] C 盘夹具目标目录 = C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-1-1794925077230301700
+Junction created for D:\WorkManager-test-data\realpath-junction-c-attack-28632-1-1794925077229750700\app\portable-root-link <<===>> C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-1-1794925077230301700
+[fixture] Junction = D:\WorkManager-test-data\realpath-junction-c-attack-28632-1-1794925077229750700\app\portable-root-link -> C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-1-1794925077230301700
+[case A] resolve(Release, link\WorkManager.exe) -> code = path-real-target-not-d
+[case A] message = [path-real-target-not-d] EXE 所在目录 所在物理卷与 D 盘根卷不一致（卷 GUID / NT 设备卷身份比对失败；可能是 SUBST 驱动器、目录卷挂载点、Junction 或映射网络盘别名）：D:\WorkManager-test-data\realpath-junction-c-attack-28632-1-1794925077229750700\app\portable-root-link -> \\?\C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-1-1794925077230301700。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。
+[case B] ensure_directories() -> code = path-real-target-not-d
+[case B] message = [path-real-target-not-d] data 数据根目录 所在物理卷与 D 盘根卷不一致（卷 GUID / NT 设备卷身份比对失败；可能是 SUBST 驱动器、目录卷挂载点、Junction 或映射网络盘别名）：D:\WorkManager-test-data\realpath-junction-c-attack-28632-1-1794925077229750700\app\portable-root-link -> \\?\C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-1-1794925077230301700。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。
+[assert] C 盘夹具目录内条目数 = 0（期望 0）
+[cleanup] Junction 链接已删除（只删链接，未触碰目标内容）：D:\WorkManager-test-data\realpath-junction-c-attack-28632-1-1794925077229750700\app\portable-root-link
+[cleanup] C 盘测试夹具目录已删除：C:\Users\<redacted>\AppData\Local\WorkManager-junction-test-28632-1-1794925077230301700
+[cleanup] 已验证 Junction 与 C 盘夹具均已清理；D 盘测试目录由 TestDir 自动清理
+ok
+test junction_within_d_drive_is_allowed_when_real_target_stays_on_d ... Junction created for D:\WorkManager-test-data\realpath-junction-same-volume-28632-2-1794925077289018500\link-within-d <<===>> D:\WorkManager-test-data\realpath-junction-same-volume-28632-2-1794925077289018500\real-target
+[same-volume] Junction = D:\WorkManager-test-data\realpath-junction-same-volume-28632-2-1794925077289018500\link-within-d -> D:\WorkManager-test-data\realpath-junction-same-volume-28632-2-1794925077289018500\real-target
+[same-volume] 允许通过：真实数据目录 = D:\WorkManager-test-data\realpath-junction-same-volume-28632-2-1794925077289018500\real-target\data
+[cleanup] Junction 链接已删除（只删链接，未触碰目标内容）：D:\WorkManager-test-data\realpath-junction-same-volume-28632-2-1794925077289018500\link-within-d
+ok
+test normal_d_drive_layout_passes_real_path_validation ... [normal] resolve OK：portable_root = D:\WorkManager-test-data\realpath-normal-d-28632-3-1794925077370297800\app
+[normal] ensure_directories OK：database_dir = D:\WorkManager-test-data\realpath-normal-d-28632-3-1794925077370297800\app\data\database
+[normal] database 目录可写：测试探针已写入、读回并删除
+ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+

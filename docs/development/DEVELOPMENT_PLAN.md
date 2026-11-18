@@ -1,11 +1,11 @@
 # WorkManager 开发计划书
 
-**文档版本：** V1.1  
-**编制日期：** 2026-11-17  
-**文档状态：** 开发执行基线（阶段 0 已放行；阶段 1 已授权，T1-01 计划 18:00 后启动）  
+**文档版本：** V1.4  
+**编制日期：** 2026-11-18  
+**文档状态：** 开发执行基线（阶段 0 已放行；T1-01 第四轮独立审计通过并于 2026-11-18 经用户验收，任务验收完成；TOCTOU 按 DEC-029 接受并延期） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；阶段 1 已获授权但未执行；T1-01 计划于 2026-11-17 18:00（北京时间）后开始
+**当前进度：** 阶段 0 已放行；T1-01 第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。R3-01/R3-02 代码与证据复核通过；开发机回归日志记录 68 项 Rust 测试通过及 Release 便携/异常注入/UI 验证通过。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。PR #1 保持打开、未合并，main 未修改；T1-02 尚未开始。详见 [第四轮独立审计报告](../testing/reports/T1-01-FOURTH-AUDIT-REPORT.md) 与 [用户验收记录](../testing/reports/T1-01-USER-ACCEPTANCE.md)
 
 ---
 
@@ -86,7 +86,7 @@
 | 阶段 | 名称 | 主要交付 | 当前状态 |
 |---|---|---|---|
 | 0 | 技术验证 | 桌面壳、便携路径、WebView2 基础验证 | 已放行；SQLCipher/DPAPI 取消，系统集成验证延期至阶段 6 |
-| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 已启动；T1-01 待开始 |
+| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 进行中；**T1-01 已验收完成**，T1-02 未开始（TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
 | 2 | 计划、优先级与当前工作 | 每日计划、全局排序、当前工作和切换记录 | 未开始 |
 | 3 | 每日复盘与提醒 | 工作日历、复盘、补录、提醒调度 | 未开始 |
 | 4 | 日志、搜索与报表 | 工作日志、历史搜索、日报、周报、月报 | 未开始 |
@@ -176,17 +176,22 @@
 
 ### T1-01 详细范围
 
-- 正式仓库从文档仓库升级为可构建的 Tauri 2 应用工程。
-- 前端使用 Svelte 5 + TypeScript + Vite；不引入 SvelteKit，除非先提交有证据的技术理由并获得确认。
-- Rust 后端建立独立 Core crate/模块边界。
-- 接入已验证的 PortablePaths 规则，Release 数据根目录跟随 EXE 所在目录，Debug/Test 可指定隔离测试根目录。
-- 使用 `rusqlite` + 普通 bundled SQLite，不启用 SQLCipher。
-- 数据库路径为 `data/database/work.db`。
-- 使用 `PRAGMA user_version` 管理 schema 版本；migration 按顺序执行并在事务中完成。
-- 开启 `foreign_keys`、WAL 和合理的 `busy_timeout`；`synchronous` 根据测试确定，优先数据可靠性。
-- SQLite 访问只在 Rust 后端；前端只能调用业务命令，不暴露任意 SQL IPC。
-- 首次初始化必须避免半初始化数据库；migration 失败不得覆盖原库。
-- 本任务只建立数据库底座和最小健康检查，不提前实现项目/工作事项 CRUD。
+**当前状态（2026-11-18）：** 第四轮独立审计通过，且用户已明确验收；**T1-01 验收完成**。R2-01/R2-02/R2-04 修复逻辑复核成立；R3-01（D 根卷信任锚未独立验证，P1）已修复：生产路径用 `GetVolumeNameForVolumeMountPointW` + 根目录句柄 `VOLUME_NAME_GUID/NT` + `QueryDosDeviceW` + D/C 同卷拒绝独立验证 D 根，失败返回 `path-root-trust-anchor-invalid` 并 fail-closed；R3-02（真实双进程初始化锁测试同步确定性，P2）已修复：waiter 只在底层 `LockFileEx` 明确返回锁竞争后才发信号，并走完整 `Database::initialize()`，creator 收到确认后才建库，10/10 多轮真实进程测试通过。修复代码提交：R3-01 `ae1eb65`、R3-02 `4942eb0`。TOCTOU 残余风险未修复，但用户已按 DEC-029 接受延期至[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，不作为 T1-01 单独阻塞项。详见 [T1-01-R3-FIX-REPORT.md](../testing/reports/T1-01-R3-FIX-REPORT.md) 与 [第三轮独立审计报告](../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)。用户已验收 T1-01。PR #1 仍保持打开、未合并；合并和启动 T1-02 作为单独执行步骤，未经明确指示不自动执行。
+
+**实际实现范围：**
+
+- 正式仓库从文档仓库升级为可构建的 Tauri 2 + Svelte 5 + TypeScript + Vite 工程（未引入 SvelteKit）。
+- 独立 `workmanager-core` Rust crate（不依赖 Tauri）：便携路径解析、SQLite 连接/PRAGMA/migration/完整性检查/健康快照；`src-tauri` 作为 Tauri 适配层，只暴露 `get_database_health` 一个受限命令。
+- 便携路径：Release 数据根目录跟随 EXE（`<exe目录>/data`）；Debug/Test 必须显式设置 `WORKMANAGER_TEST_PORTABLE_ROOT`；仅允许 D 盘；不静默回退到 AppData/LocalAppData/Temp/C 盘；目录被文件阻塞、不可写、符号链接或含 `..` 时 fail-closed。
+- 二次返工新增：Debug/Test 正式目录保护同时比较规范化输入路径与 Win32 真实最终路径（受保护根目录可注入测试，测试用 D 盘隔离目录模拟正式根，绝不触碰真实 `D:\WorkManager`）；真实物理卷身份用句柄 `VOLUME_NAME_GUID` / `VOLUME_NAME_NT` 与 `D:\` 根卷比对（不再只比较盘符），并在 `resolve()`、`ensure_directories()`、`Database::initialize()` 的目录创建/写探针/初始化锁/数据库写入之前 fail-closed。
+- 二次返工新增：首次初始化取得跨进程锁后**先重新检查正式主库**，只有主库确实缺失时才检查孤儿 WAL/journal；等待锁进程不会把另一个进程已创建数据库的活动 WAL 误判为孤儿（确定性真实双进程测试覆盖）。
+- 三次返工新增（R3-01）：D 盘根卷作为信任锚被独立验证——生产函数 `volume_mount_point_guid()`（`GetVolumeNameForVolumeMountPointW`）要求 D 根是真实卷挂载点，根目录句柄 `VOLUME_NAME_GUID` 必须与挂载点 GUID 一致，`query_dos_device_target()`（`QueryDosDeviceW`）必须映射到 `\Device\HarddiskVolumeN` 真实 NT 设备卷且与句柄 `VOLUME_NAME_NT` 一致，D 根卷 GUID 不得等于 C 根卷 GUID；任一步失败返回 `path-root-trust-anchor-invalid`，在创建目录/写探针/初始化锁/数据库之前 fail-closed。该检查由 `validate_real_storage_path()` → `ensure_volume_is_d_volume()` → `verify_root_volume_trust()` 生产调用链使用。
+- 三次返工新增（R3-02）：真实双进程初始化锁测试改为“底层锁竞争确认”同步——`#[cfg(test)]` 观察点只在 `LockFileEx` 明确返回锁竞争时通知，waiter 走完整 `Database::initialize()` 并在真实竞争后才发信号；creator 收到竞争确认后才创建数据库与活动 WAL，父进程确认后才放锁；专项测试 10/10 多轮稳定通过，观察点不进入生产构建、不是 IPC、不改变锁语义。
+- WebView2 使用 Rust 侧绝对数据目录 `<data>/cache/webview2`（运行时验证 `EBWebView` profile 真实创建于该目录）。
+- SQLite：`rusqlite` 0.43.0 + bundled SQLite 3.54.1；WAL、`foreign_keys=ON`、`synchronous=FULL`、`busy_timeout=5000`、`temp_store=MEMORY`；启动时 `PRAGMA integrity_check` 与 `foreign_key_check`；正常退出时显式关闭连接并清理 WAL/SHM。
+- schema 版本 1（`0001_initial_foundation`：`schema_migrations`、`settings`）；`PRAGMA user_version` + 每个 migration 独立 IMMEDIATE 事务，失败回滚；首次初始化在临时数据库完成 schema 与检查后用硬链接原子安装，绝不覆盖已有数据库。
+- 最小健康检查窗口：显示 WorkManager 名称/版本、数据库状态、schema 版本、完整性、PRAGMA 配置、便携路径与 migration 记录；明确标注"仅基础设施预览，业务功能尚未实现"。
+- 本任务未实现：项目/工作事项 CRUD、每日计划、复盘、报表、附件、自动备份、密码/锁屏/SQLCipher/DPAPI。
 
 阶段验收：
 - 项目和工作事项可独立创建、编辑、归档。
@@ -417,6 +422,16 @@
 | 2026-11-17 | 建立开发计划 V1.0 | 根据 PRD V0.2、技术设计 V0.3.2 和决策记录建立阶段与任务基线；当时阶段 0 登记为 3/6 |
 | 2026-11-17 | 更新开发计划 V1.1 | 根据 DEC-028 取消应用密码、SQLCipher 和 DPAPI；阶段 0 放行，启动阶段 1；T1-01 改为普通 SQLite 基础设施 |
 | 2026-11-17 | 更新开发计划 V1.2 | 明确 T1-01 计划 18:00（北京时间）后启动；T0-06 延期至阶段 6，新增 T6-07 验收托盘、开机启动、单实例和通知 |
+| 2026-11-17 | T1-01 状态改为进行中 | 用户明确授权立即开始，不再等待 18:00；建立开发分支 `task/T1-01-sqlite-foundation`；本机开发环境已复核 |
+| 2026-11-17 | T1-01 代码与测试完成（待审计） | 代码提交 `682ba04`：Tauri 2 + Svelte 5 工程骨架、便携路径、bundled SQLite、user_version migration、失败保护、最小健康检查界面；cargo/npm/Release 构建与运行时专项验证通过；测试报告 `docs/testing/reports/T1-01-REPORT.md`；等待独立审计，未标记验收完成 |
+| 2026-11-17 | 创建 T1-01 Pull Request | 推送分支 `task/T1-01-sqlite-foundation` 并创建 [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 指向 main；未合并、未推送 main；等待独立审计 |
+| 2026-11-17 | T1-01 进入返工 | 独立审计提出 2 项 P1、3 项 P2 与 1 项可选 CSP 加固问题：零字节数据库保护、D 盘真实卷/重解析点校验、已有数据库预检查顺序、初始化跨进程锁、数据库命令异步化、CSP；保留原始提交历史，在 `task/T1-01-sqlite-foundation` 新增修复提交 |
+| 2026-11-17 | T1-01 返工完成（待重新审计） | 修复提交 `abf3e5a`；新增专项测试，Rust 测试报告 52 项通过；Release 复验报告通过；等待重新独立审计 |
+| 2026-11-17 | T1-01 第二轮独立审计未通过 | 最新审计基准 PR #1 HEAD `892b25f`；发现初始化锁后 WAL 检查顺序竞争、Debug/Test Junction 可绕过正式目录保护、真实卷身份/TOCTOU 未充分关闭、PR/机器证据/状态文档过期；记录见 `docs/testing/reports/T1-01-SECOND-AUDIT-REPORT.md`；任务重新进入返工，PR 不合并，不开始 T1-02 |
+| 2026-11-17 | T1-01 第二轮审计返工修复（返工中 / R2-03 阻塞） | 修复代码提交 `a148f0d`：R2-01/R2-02/R2-04 返工与 62 项 Rust 测试、Release 复验通过；R2-03 TOCTOU 未关闭 |
+| 2026-11-18 | T1-01 第三轮独立审计未通过 | 代码提交 `a148f0d`、审计对象 PR HEAD `eaf6ef7`；R2-01/R2-02/R2-04 修复逻辑复核成立；TOCTOU 未修复，后由用户 DEC-029 接受并延期至 Issue #2；R3-01 P1、R3-02 P2 仍待处理；报告 `docs/testing/reports/T1-01-THIRD-AUDIT-REPORT.md`；PR 不合并，不开始 T1-02 |
+| 2026-11-18 | 用户接受 T1-01 TOCTOU 残余风险（DEC-029） | 不在 T1-01 内实施完整句柄相对改造/custom SQLite VFS；风险保留并转入独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)。R3-01 P1 与 R3-02 P2 仍须处理后重新独立审计 |
+| 2026-11-18 | T1-01 第三轮审计 R3 返工完成（待独立审计） | R3-01 修复提交 `ae1eb65`：生产路径独立验证 D 根卷信任锚（真实卷挂载点 GUID + 句柄 GUID/NT + QueryDosDevice NT 设备映射 + D/C 同卷拒绝），失败 `path-root-trust-anchor-invalid` fail-closed；R3-02 修复提交 `4942eb0`：双进程测试改为“底层锁竞争确认信号 + 完整 Database::initialize”，10/10 多轮稳定通过。完整回归 `cargo test --workspace` 68 passed；Release 便携 106 项、异常注入 73 项 0 FAIL；UI/IPC/CSP 21/21；EXE 9,993,216 字节、SHA-256 `41A8F6B4…7800`。TOCTOU 按 DEC-029 接受延期（未修复）；任务状态置为待独立审计，PR 不合并，不开始 T1-02 |
 
 后续每次阶段、任务状态变化，都应追加记录，并同步更新 docs/STATUS.md。历史记录不得通过覆盖方式抹去。
 
@@ -424,10 +439,15 @@
 
 ## 17. 当前执行结论
 
-- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 尚未开始，计划于 2026-11-17 18:00（北京时间）后由用户在本机启动。
+- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 已于 2026-11-18 经第四轮独立审计和用户验收，状态为**验收完成**。PR #1 仍保持打开、未合并；T1-02 尚未开始，等待单独启动指示。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
-- 当前首个开发任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**。
-- T1-01 的具体实施提示词见 `docs/development/tasks/T1-01-SQLite-Foundation.md`。
+- 最近完成任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**；任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；验收记录见 `docs/testing/reports/T1-01-USER-ACCEPTANCE.md`；R3 返工证据见 `docs/testing/reports/T1-01-R3-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-R3-FIX-evidence.json`。
 - 第一版采用普通 SQLite，不实现应用密码、SQLCipher 或 DPAPI。
 - D 盘本地存储、不上传数据、事务、版本化 migration、异常保护和备份恢复仍是必须要求。
 - 本计划书定义未来工作，不表示尚未开发的功能已经实现。
+
+
+| 2026-11-18 | T1-01 第四轮独立审计通过（审计当时待用户验收） | 复核 PR #1 HEAD `ae14bff`、R3-01/R3-02 代码提交、生产调用链、专项测试与脱敏日志；两项审计问题通过。TOCTOU 按 DEC-029 接受并延期、未修复。审计报告：`docs/testing/reports/T1-01-FOURTH-AUDIT-REPORT.md`。PR 保持打开、不合并；main 不修改；T1-02 不开始 |
+
+
+| 2026-11-18 | T1-01 用户验收完成 | 用户明确回复“接受”，确认接受第四轮独立审计结论及 DEC-029 中已接受但未修复的 TOCTOU 残余风险。T1-01 标记验收完成；PR #1 仍 Open、未合并，main 不修改；T1-02 未开始，等待单独启动指示。验收记录：`docs/testing/reports/T1-01-USER-ACCEPTANCE.md` |

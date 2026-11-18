@@ -1,0 +1,15 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.44s
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d91055ce50e.exe)
+
+running 3 tests
+test database::r2_01_tests::r2_01_child_helper ... ok
+test database::r2_01_tests::r2_01_fixtures_stay_inside_isolated_test_dir ... ok
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... r3-02: waiter observed real lock contention: pid=38612 try_lock_exclusive=busy lock_file=D:\WorkManager-test-data\r2-01-waiter-active-wal-40800-1794960984785334400\data-root\database\.work.db.init.lock
+r3-02: creator holds lock with active WAL before waiter acquires it; main_db_bytes=20480 wal_bytes=8272
+r3-02-waiter-stdout: running 1 test
+r3-02-waiter: full Database::initialize observed real lock contention; acquired lock after creator; main_db_exists=true; opened_existing=true; orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1
+r3-02: PASS — waiter observed real lock contention in Database::initialize; creator created DB+active WAL while holding the lock; waiter acquired it after release and opened the existing DB (no orphaned-sidecar); canary preserved; integrity=ok; migrations=1
+ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.28s
+

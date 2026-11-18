@@ -1,0 +1,33 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.45s
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d91055ce50e.exe)
+
+running 6 tests
+test portable_paths::tests::r3_01_trust_anchor_fails_closed_on_api_unavailable ... [r3-01] volume_mount_point_guid(普通目录) -> code = path-root-trust-anchor-invalid
+[r3-01] PASS：挂载点 API 失败与非法信任锚路径均 fail-closed
+ok
+test portable_paths::tests::r3_01_trust_anchor_passes_for_real_d_drive_and_differs_from_c ... [r3-01] D:\ mount-point GUID = \\?\volume{519fbe4e-b7fe-4b36-8393-11eb159db771}
+[r3-01] D:\ handle(VOLUME_NAME_GUID) = Some("\\\\?\\volume{519fbe4e-b7fe-4b36-8393-11eb159db771}")
+[r3-01] D:\ handle(VOLUME_NAME_NT) = Some("\\device\\harddiskvolume4")
+[r3-01] QueryDosDeviceW(D:) = \Device\HarddiskVolume4
+[r3-01] D:\ GetDriveTypeW = 3
+[r3-01] C:\ mount-point GUID = \\?\volume{8ee60a1e-b5a7-4feb-bda9-1c9de1e671ae}
+[r3-01] PASS：D 根卷信任锚由挂载点 API、句柄 GUID/NT、QueryDosDevice 与 D/C 卷比较独立验证
+ok
+test portable_paths::tests::r3_01_trust_anchor_rejects_d_root_same_volume_as_c ... [r3-01] injected D == C -> code = path-root-trust-anchor-invalid
+[r3-01] PASS（注入模拟）：D 与 C 同卷拒绝、不同卷允许；非真实实机场景
+ok
+test portable_paths::tests::r3_01_trust_anchor_rejects_dos_device_alias_and_device_mismatch ... [r3-01] injected DOS alias -> code = path-root-trust-anchor-invalid
+[r3-01] PASS：注入 DOS 别名/设备不一致拒绝；真实 D 盘映射允许（实机 API 证据 \Device\HarddiskVolume4）
+ok
+test portable_paths::tests::r3_01_trust_anchor_rejects_mount_point_guid_mismatch ... [r3-01] injected GUID mismatch -> code = path-root-trust-anchor-invalid
+[r3-01] PASS（注入模拟）：GUID 不一致拒绝、一致允许；非真实实机场景
+ok
+test portable_paths::tests::r3_01_trust_anchor_rejects_real_subst_candidate_root ... [r3-01] verify_root_volume_trust(Q:) -> code = path-root-trust-anchor-invalid
+[r3-01] message = [path-root-trust-anchor-invalid] 根卷信任锚验证失败：GetVolumeNameForVolumeMountPointW 失败（系统错误：参数错误。 (os error 87)），该路径不是真实的卷挂载点；根路径：Q:\。无法证明该盘符是独立的本地 D 盘卷，已停止启动，不会回退到 C 盘、AppData 或系统 Temp。
+[r3-01] QueryDosDeviceW(Q:) = \??\C:\Users\<redacted>\AppData\Local\WorkManager-subst-identity-35944-1794960981343587000
+[r3-01] ensure_dos_device_maps_to_volume(SUBST) -> code = path-root-trust-anchor-invalid
+[r3-01] PASS：真实 SUBST 候选根在信任锚阶段被拒绝；DOS 设备别名分类拒绝生效
+ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.11s
+

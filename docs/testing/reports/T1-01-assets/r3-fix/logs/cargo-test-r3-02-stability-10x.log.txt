@@ -1,0 +1,220 @@
+=== ROUND 1 exit=0 ===
+cmd :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.43s
+所在位置 行:1 字符: 651
++ ... instead_of_orphan_error --nocapture'; $out = cmd /c $cmd 2>&1 | Out-S ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.43s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d9105
+5ce50e.exe)
+
+running 1 test
+r3-02: waiter observed real lock contention: pid=39948 try_lock_exclusive=busy lock_file=D:\WorkManager-test-data\r2-01-waiter-active-wal-38692-1794960846874488900\data-root\database\.work.db.init.lock
+r3-02: creator holds lock with active WAL before waiter acquires it; main_db_bytes=20480 wal_bytes=8272
+r3-02-waiter-stdout: running 1 test
+r3-02-waiter: full Database::initialize observed real lock contention; acquired lock after creator; main_db_exists=true; opened_existing=true; orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1
+r3-02: PASS — waiter observed real lock contention in Database::initialize; creator created DB+active WAL while holding the lock; waiter acquired it after release and opened the existing DB (no orphaned-sidecar); canary preserved; integrity=ok; migrations=1
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.27s
+
+
+=== ROUND 2 exit=0 ===
+cmd :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.38s
+所在位置 行:1 字符: 651
++ ... instead_of_orphan_error --nocapture'; $out = cmd /c $cmd 2>&1 | Out-S ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.38s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d9105
+5ce50e.exe)
+
+running 1 test
+r3-02: waiter observed real lock contention: pid=39380 try_lock_exclusive=busy lock_file=D:\WorkManager-test-data\r2-01-waiter-active-wal-40964-1794960849993105000\data-root\database\.work.db.init.lock
+r3-02: creator holds lock with active WAL before waiter acquires it; main_db_bytes=20480 wal_bytes=8272
+r3-02-waiter-stdout: running 1 test
+r3-02-waiter: full Database::initialize observed real lock contention; acquired lock after creator; main_db_exists=true; opened_existing=true; orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1
+r3-02: PASS — waiter observed real lock contention in Database::initialize; creator created DB+active WAL while holding the lock; waiter acquired it after release and opened the existing DB (no orphaned-sidecar); canary preserved; integrity=ok; migrations=1
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.26s
+
+
+=== ROUND 3 exit=0 ===
+cmd :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.39s
+所在位置 行:1 字符: 651
++ ... instead_of_orphan_error --nocapture'; $out = cmd /c $cmd 2>&1 | Out-S ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.39s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d9105
+5ce50e.exe)
+
+running 1 test
+r3-02: waiter observed real lock contention: pid=36732 try_lock_exclusive=busy lock_file=D:\WorkManager-test-data\r2-01-waiter-active-wal-16508-1794960853106509700\data-root\database\.work.db.init.lock
+r3-02: creator holds lock with active WAL before waiter acquires it; main_db_bytes=20480 wal_bytes=8272
+r3-02-waiter-stdout: running 1 test
+r3-02-waiter: full Database::initialize observed real lock contention; acquired lock after creator; main_db_exists=true; opened_existing=true; orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1
+r3-02: PASS — waiter observed real lock contention in Database::initialize; creator created DB+active WAL while holding the lock; waiter acquired it after release and opened the existing DB (no orphaned-sidecar); canary preserved; integrity=ok; migrations=1
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.28s
+
+
+=== ROUND 4 exit=0 ===
+cmd :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.37s
+所在位置 行:1 字符: 651
++ ... instead_of_orphan_error --nocapture'; $out = cmd /c $cmd 2>&1 | Out-S ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.37s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d9105
+5ce50e.exe)
+
+running 1 test
+r3-02: waiter observed real lock contention: pid=38496 try_lock_exclusive=busy lock_file=D:\WorkManager-test-data\r2-01-waiter-active-wal-12824-1794960856295761900\data-root\database\.work.db.init.lock
+r3-02: creator holds lock with active WAL before waiter acquires it; main_db_bytes=20480 wal_bytes=8272
+r3-02-waiter-stdout: running 1 test
+r3-02-waiter: full Database::initialize observed real lock contention; acquired lock after creator; main_db_exists=true; opened_existing=true; orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1
+r3-02: PASS — waiter observed real lock contention in Database::initialize; creator created DB+active WAL while holding the lock; waiter acquired it after release and opened the existing DB (no orphaned-sidecar); canary preserved; integrity=ok; migrations=1
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.27s
+
+
+=== ROUND 5 exit=0 ===
+cmd :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.37s
+所在位置 行:1 字符: 651
++ ... instead_of_orphan_error --nocapture'; $out = cmd /c $cmd 2>&1 | Out-S ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.37s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d9105
+5ce50e.exe)
+
+running 1 test
+r3-02: waiter observed real lock contention: pid=17112 try_lock_exclusive=busy lock_file=D:\WorkManager-test-data\r2-01-waiter-active-wal-32576-1794960859400474100\data-root\database\.work.db.init.lock
+r3-02: creator holds lock with active WAL before waiter acquires it; main_db_bytes=20480 wal_bytes=8272
+r3-02-waiter-stdout: running 1 test
+r3-02-waiter: full Database::initialize observed real lock contention; acquired lock after creator; main_db_exists=true; opened_existing=true; orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1
+r3-02: PASS — waiter observed real lock contention in Database::initialize; creator created DB+active WAL while holding the lock; waiter acquired it after release and opened the existing DB (no orphaned-sidecar); canary preserved; integrity=ok; migrations=1
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.27s
+
+
+=== ROUND 6 exit=0 ===
+cmd :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.43s
+所在位置 行:1 字符: 651
++ ... instead_of_orphan_error --nocapture'; $out = cmd /c $cmd 2>&1 | Out-S ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.43s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d9105
+5ce50e.exe)
+
+running 1 test
+r3-02: waiter observed real lock contention: pid=13544 try_lock_exclusive=busy lock_file=D:\WorkManager-test-data\r2-01-waiter-active-wal-2764-1794960862689077300\data-root\database\.work.db.init.lock
+r3-02: creator holds lock with active WAL before waiter acquires it; main_db_bytes=20480 wal_bytes=8272
+r3-02-waiter-stdout: running 1 test
+r3-02-waiter: full Database::initialize observed real lock contention; acquired lock after creator; main_db_exists=true; opened_existing=true; orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1
+r3-02: PASS — waiter observed real lock contention in Database::initialize; creator created DB+active WAL while holding the lock; waiter acquired it after release and opened the existing DB (no orphaned-sidecar); canary preserved; integrity=ok; migrations=1
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.27s
+
+
+=== ROUND 7 exit=0 ===
+cmd :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.64s
+所在位置 行:1 字符: 651
++ ... instead_of_orphan_error --nocapture'; $out = cmd /c $cmd 2>&1 | Out-S ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.64s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d9105
+5ce50e.exe)
+
+running 1 test
+r3-02: waiter observed real lock contention: pid=12764 try_lock_exclusive=busy lock_file=D:\WorkManager-test-data\r2-01-waiter-active-wal-33208-1794960867724098500\data-root\database\.work.db.init.lock
+r3-02: creator holds lock with active WAL before waiter acquires it; main_db_bytes=20480 wal_bytes=8272
+r3-02-waiter-stdout: running 1 test
+r3-02-waiter: full Database::initialize observed real lock contention; acquired lock after creator; main_db_exists=true; opened_existing=true; orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1
+r3-02: PASS — waiter observed real lock contention in Database::initialize; creator created DB+active WAL while holding the lock; waiter acquired it after release and opened the existing DB (no orphaned-sidecar); canary preserved; integrity=ok; migrations=1
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.36s
+
+
+=== ROUND 8 exit=0 ===
+cmd :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.54s
+所在位置 行:1 字符: 651
++ ... instead_of_orphan_error --nocapture'; $out = cmd /c $cmd 2>&1 | Out-S ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.54s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d9105
+5ce50e.exe)
+
+running 1 test
+r3-02: waiter observed real lock contention: pid=4968 try_lock_exclusive=busy lock_file=D:\WorkManager-test-data\r2-01-waiter-active-wal-22984-1794960872017087200\data-root\database\.work.db.init.lock
+r3-02: creator holds lock with active WAL before waiter acquires it; main_db_bytes=20480 wal_bytes=8272
+r3-02-waiter-stdout: running 1 test
+r3-02-waiter: full Database::initialize observed real lock contention; acquired lock after creator; main_db_exists=true; opened_existing=true; orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1
+r3-02: PASS — waiter observed real lock contention in Database::initialize; creator created DB+active WAL while holding the lock; waiter acquired it after release and opened the existing DB (no orphaned-sidecar); canary preserved; integrity=ok; migrations=1
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.30s
+
+
+=== ROUND 9 exit=0 ===
+cmd :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.54s
+所在位置 行:1 字符: 651
++ ... instead_of_orphan_error --nocapture'; $out = cmd /c $cmd 2>&1 | Out-S ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.54s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d9105
+5ce50e.exe)
+
+running 1 test
+r3-02: waiter observed real lock contention: pid=33232 try_lock_exclusive=busy lock_file=D:\WorkManager-test-data\r2-01-waiter-active-wal-39708-1794960876237921200\data-root\database\.work.db.init.lock
+r3-02: creator holds lock with active WAL before waiter acquires it; main_db_bytes=20480 wal_bytes=8272
+r3-02-waiter-stdout: running 1 test
+r3-02-waiter: full Database::initialize observed real lock contention; acquired lock after creator; main_db_exists=true; opened_existing=true; orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1
+r3-02: PASS — waiter observed real lock contention in Database::initialize; creator created DB+active WAL while holding the lock; waiter acquired it after release and opened the existing DB (no orphaned-sidecar); canary preserved; integrity=ok; migrations=1
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.30s
+
+
+=== ROUND 10 exit=0 ===
+cmd :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.60s
+所在位置 行:1 字符: 651
++ ... instead_of_orphan_error --nocapture'; $out = cmd /c $cmd 2>&1 | Out-S ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.60s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/245c2d91055ce50e\out\workmanager_core-245c2d9105
+5ce50e.exe)
+
+running 1 test
+r3-02: waiter observed real lock contention: pid=39424 try_lock_exclusive=busy lock_file=D:\WorkManager-test-data\r2-01-waiter-active-wal-31460-1794960880467907600\data-root\database\.work.db.init.lock
+r3-02: creator holds lock with active WAL before waiter acquires it; main_db_bytes=20480 wal_bytes=8272
+r3-02-waiter-stdout: running 1 test
+r3-02-waiter: full Database::initialize observed real lock contention; acquired lock after creator; main_db_exists=true; opened_existing=true; orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1
+r3-02: PASS — waiter observed real lock contention in Database::initialize; creator created DB+active WAL while holding the lock; waiter acquired it after release and opened the existing DB (no orphaned-sidecar); canary preserved; integrity=ok; migrations=1
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.35s
+
+
