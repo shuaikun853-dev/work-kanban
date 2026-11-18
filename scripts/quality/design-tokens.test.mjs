@@ -22,6 +22,14 @@
  *   结果分支中的 Identifier 继续按 const 常量与别名链解析，test 中仅用于比较的字符串不扫描；
  * - 合法 Design Token 与无法静态求值的表达式（函数调用、逻辑表达式等）不得误报。
  *
+ * 对应第五轮独立审计 P2-01 专项修复（组件 style prop 误报）：
+ * - 检查器按 AST 节点语义区分原生 HTML 元素与 Svelte 组件，不再全局扫描 Attribute.name === 'style'；
+ * - <Widget style="color: #ffffff" /> 的 style / Style / STYLE 都是组件 prop，必须 PASS；
+ * - <div style="color: #ffffff"></div> 是原生 HTML inline style，必须 FAIL；
+ * - HTML 原生元素 style 属性名大小写不敏感（style / STYLE / Style / sTyLe）继续全部检查；
+ * - svelte:element / slot / title 等原生元素的内联 style 检查能力不得退化；
+ * - 组件 prop 与原生元素 style 混在同一文件时只报告原生元素，且不得重复报告。
+ *
  * 每项测试都通过真实启动检查器进程（node scripts/quality/check-design-tokens.mjs）
  * 来验证退出码、stdout/stderr 与（必要时的）机器可读报告，不直接测试正则/AST 辅助函数。
  */
@@ -788,4 +796,213 @@ test('条件表达式分支中无法静态求值的表达式仍按未知处理',
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
   assert.match(result.stdout, /violations=0/);
+});
+
+// ---------------------------------------------------------------------------
+// 第五轮审计 P2-01 专项修复：原生 HTML 元素与 Svelte 组件 style 的 AST 语义区分
+// ---------------------------------------------------------------------------
+
+test('HTML 原生元素小写 style 属性包含硬编码 HEX 导致检查失败', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/NativeLowerCaseStyle.svelte':
+      '<div style="color: #ffffff"></div>\n'
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(result.stderr, /NativeLowerCaseStyle\.svelte:1:\d+ hex/);
+  assert.match(result.stderr, /raw="#ffffff"/);
+  assert.match(result.stderr, /inline-style-attribute/);
+});
+
+test('Svelte 组件小写 style prop 包含 HEX 不得被识别为原生内联样式', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ComponentLowerCaseStyle.svelte':
+      '<Widget style="color: #ffffff" />\n'
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
+});
+
+test('组件 style prop 与原生 div style 属性得到不同的检查结果', () => {
+  const componentRoot = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/CriticalComponent.svelte': '<Widget style="color: #ffffff" />\n'
+  });
+  const nativeRoot = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/CriticalNative.svelte': '<div style="color: #ffffff"></div>\n'
+  });
+
+  const componentResult = runChecker(['--root', componentRoot]);
+  const nativeResult = runChecker(['--root', nativeRoot]);
+
+  assert.equal(componentResult.status, 0, `${componentResult.stderr}\n${componentResult.stdout}`);
+  assert.equal(nativeResult.status, 1, nativeResult.stderr);
+  assert.notEqual(
+    componentResult.status,
+    nativeResult.status,
+    '组件 style prop 与原生 style 属性必须得到不同检查结果'
+  );
+  assert.doesNotMatch(componentResult.stderr, /DESIGN_TOKEN_CHECK=FAIL/);
+  assert.match(nativeResult.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(nativeResult.stderr, /raw="#ffffff"/);
+});
+
+test('Svelte 组件动态 style prop 引用硬编码颜色常量不得误报', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ComponentDynamicStyle.svelte': `<script>
+  const rawColor = "#123456";
+</script>
+
+<Widget style={rawColor} />
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
+});
+
+test('Svelte 组件 Style 混合大小写 prop 包含 HEX 不得误报', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ComponentMixedCaseStyle.svelte':
+      '<Widget Style="color: #abcdef" />\n'
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
+});
+
+test('Svelte 组件 STYLE 大写 prop 包含 HEX 不得误报', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ComponentUpperCaseStyle.svelte':
+      '<Widget STYLE="color: #abcdef" />\n'
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
+});
+
+test('Svelte 组件合法普通自定义属性不得误报', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ComponentCustomProps.svelte': `<Widget
+  label="普通自定义属性"
+  color="#ffffff"
+  accent="rgba(1, 2, 3, 0.5)"
+  customStyle="color: #abcdef"
+/>
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
+});
+
+test('svelte:element 上的原生 style 属性仍会被检查', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/SvelteElementStyle.svelte':
+      '<svelte:element this={tag} style="color: #ffffff" />\n'
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(result.stderr, /raw="#ffffff"/);
+  assert.match(result.stderr, /inline-style-attribute/);
+});
+
+test('svelte:component 上的 style prop 不得被识别为原生内联样式', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/SvelteComponentStyleProp.svelte':
+      '<svelte:component this={Comp} style="color: #ffffff" />\n'
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
+});
+
+test('组件 style prop 与原生 style 属性同文件时只报告原生元素', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/MixedComponentAndNative.svelte': `<Widget style="color: #ffffff" />
+<Widget Style="color: #fedcba" />
+<div style="color: #abcdef"></div>
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(result.stderr, /raw="#abcdef"/);
+  assert.match(result.stderr, /MixedComponentAndNative\.svelte:3:\d+/);
+  assert.doesNotMatch(result.stderr, /raw="#ffffff"/);
+  assert.doesNotMatch(result.stderr, /raw="#fedcba"/);
+});
+
+test('原生元素 style 属性名大小写变体全部检查且不重复报告', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/NativeCaseVariants.svelte': `<div style="color: #111111"></div>
+<div STYLE="color: #222222"></div>
+<div Style="color: #333333"></div>
+<div sTyLe="color: #444444"></div>
+`
+  });
+
+  const reportPath = path.join(root, 'case-variants-report.json');
+  const result = runChecker(['--root', root, '--report', reportPath]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=4/);
+  for (const raw of ['#111111', '#222222', '#333333', '#444444']) {
+    assert.match(result.stderr, new RegExp(`raw="${raw}"`));
+  }
+
+  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+  assert.equal(report.violations.length, 4, '大小写变体不得重复报告');
+  assert.deepEqual(
+    report.violations.map((violation) => violation.raw),
+    ['#111111', '#222222', '#333333', '#444444']
+  );
+  assert.deepEqual(
+    report.violations.map((violation) => violation.source),
+    Array(4).fill('inline-style-attribute')
+  );
+});
+
+test('slot 与 title 原生元素的内联 style 检查能力不退化', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/SlotAndTitleStyle.svelte': `<slot style="color: #ffffff" />
+<svelte:head><title style="color: #abcdef">标题</title></svelte:head>
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=2/);
+  assert.match(result.stderr, /raw="#ffffff"/);
+  assert.match(result.stderr, /raw="#abcdef"/);
+  assert.match(result.stderr, /inline-style-attribute/);
 });

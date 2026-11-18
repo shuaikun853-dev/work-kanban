@@ -23,9 +23,12 @@
  * - 未被用于样式的普通字符串即使包含颜色文本也不会报错。
  * 无法静态求值的表达式（函数调用、逻辑表达式等）按未知处理，不误报；见函数注释边界。
  *
- * HTML 原生元素的 style 属性名大小写不敏感（STYLE / Style / style 都会被检查）；
+ * HTML 原生元素的 style 属性名大小写不敏感（style / STYLE / Style / sTyLe 都会被检查）；
  * Svelte Compiler 会把 HTML 原生元素的大小写变体编译为小写 style 属性，因此不能漏检。
- * 普通 Svelte 组件上的自定义属性（含大写 STYLE/Style）是组件 prop，不做大小写折叠，避免误报。
+ * Svelte 组件（如 <Widget style="..." />）上的 style / Style / STYLE 全部是组件 prop，
+ * 编译器生成的是 `Widget($$anchor, { style: '...' })`，并非原生 HTML inline style，不能按 CSS 颜色检查。
+ * 因此检查器按 AST 节点语义区分：只扫描 HTML 原生元素节点内的 attributes，
+ * 不再全局扫描 `Attribute.name === 'style'`（那会把组件 prop 误报为内联样式）。
  *
  * AST 解析失败不会被静默跳过：检查器以退出码 2 明确报错并指出文件与解析错误。
  *
@@ -58,10 +61,21 @@ const SCAN_EXTENSIONS = new Set(['.svelte', '.css']);
 const MUSTACHE_NODE_TYPES = new Set(['MustacheTag', 'ExpressionTag']);
 
 /**
- * HTML 原生元素节点类型（legacy AST 使用 `Element`；modern AST 使用 `RegularElement`，
- * `SvelteElement` 对应 `svelte:element`）。只有这些节点的 style 属性才按 HTML 规则大小写不敏感。
+ * HTML 原生元素节点类型集合（同时兼容 legacy AST 与 modern AST 的节点命名）：
+ * - legacy AST：`Element`（含 `svelte:element`）、`Title`、`Slot`；
+ * - modern AST：`RegularElement`、`SvelteElement`、`TitleElement`、`SlotElement`。
+ * 只有这些节点的 style 属性才是原生 HTML inline style，属性名大小写不敏感；
+ * Svelte 组件（`InlineComponent` / `Component` 等）上的 style 是组件 prop，不在本集合内。
  */
-const HTML_ELEMENT_NODE_TYPES = new Set(['Element', 'RegularElement', 'SvelteElement']);
+const HTML_ELEMENT_NODE_TYPES = new Set([
+  'Element',
+  'Title',
+  'Slot',
+  'RegularElement',
+  'SvelteElement',
+  'TitleElement',
+  'SlotElement'
+]);
 
 /** 条件表达式的结果分支属性名（ESTree / Svelte AST 通用术语）。 */
 const CONDITIONAL_BRANCH_KEYS = ['consequent', 'alternate'];
@@ -440,9 +454,10 @@ function scanInlineStyleAttribute(node, filePath, content, constants, violations
 }
 
 /**
- * 检查 HTML 原生元素上大小写变体的 style 属性（STYLE / Style / sTyLe）。
- * 小写 `style` 由通用 Attribute 分支处理，这里只补充大小写变体，避免重复报告。
- * 仅限 HTML 原生元素：Svelte 组件上的 `Style` / `STYLE` 是组件 prop，不能误报。
+ * 检查 HTML 原生元素上的内联 style 属性（属性名大小写不敏感：style / STYLE / Style / sTyLe）。
+ * 只遍历当前 HTML 原生元素节点的 attributes；Svelte 组件节点不会进入本函数，
+ * 组件上的 style / Style / STYLE 都是组件 prop，不能按 CSS 颜色检查。
+ * 每个 style 属性只在这里扫描一次，避免重复报告。
  */
 function scanHtmlElementStyleAttributes(node, filePath, content, constants, violations) {
   const attributes = Array.isArray(node.attributes) ? node.attributes : [];
@@ -452,7 +467,6 @@ function scanHtmlElementStyleAttributes(node, filePath, content, constants, viol
       typeof attribute === 'object' &&
       attribute.type === 'Attribute' &&
       typeof attribute.name === 'string' &&
-      attribute.name !== 'style' &&
       attribute.name.toLowerCase() === 'style'
     ) {
       scanInlineStyleAttribute(attribute, filePath, content, constants, violations);
@@ -505,7 +519,10 @@ function scanSvelteContent(relativeFile, content, violations) {
     }
   }
 
-  // 遍历模板 AST：style: 指令、HTML 原生元素 style 属性（大小写不敏感）与内联 style 属性。
+  // 遍历模板 AST：style: 指令在任意节点上都是 Svelte 样式指令；
+  // 内联 style 属性只在 HTML 原生元素节点内扫描（属性名大小写不敏感）。
+  // 不能全局扫描 `Attribute.name === 'style'`：Svelte 组件上的 style 是组件 prop，
+  // Compiler 生成的是 `Widget($$anchor, { style: '...' })`，不是原生 HTML style 属性。
   walkAst(ast.html, (node) => {
     if (node.type === 'StyleDirective') {
       scanStyleDirective(node, relativeFile, content, constants, violations);
@@ -513,8 +530,6 @@ function scanSvelteContent(relativeFile, content, violations) {
       // Svelte Compiler 会把 HTML 原生元素的 STYLE / Style 编译成小写 style 属性，
       // 因此大小写变体必须按真实内联样式检查；组件 prop 不在此范围。
       scanHtmlElementStyleAttributes(node, relativeFile, content, constants, violations);
-    } else if (node.type === 'Attribute' && node.name === 'style') {
-      scanInlineStyleAttribute(node, relativeFile, content, constants, violations);
     }
   });
 }
