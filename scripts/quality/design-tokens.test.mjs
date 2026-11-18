@@ -14,6 +14,14 @@
  * - 未被用于样式的普通字符串即使包含颜色文本也不得误报；
  * - Svelte AST 解析失败必须显式报错，不得静默跳过。
  *
+ * 对应第四轮独立审计 P2-01 专项修复：
+ * - HTML 原生元素 style 属性名大小写不敏感：STYLE / Style / sTyLe 都必须被检查
+ *   （Svelte Compiler 会把它们编译成小写 style 属性）；
+ * - 普通 Svelte 组件上的 Style / STYLE 是组件自定义 prop，不得误报；
+ * - 条件表达式（三元）的 consequent / alternate 结果分支必须递归检查（支持嵌套），
+ *   结果分支中的 Identifier 继续按 const 常量与别名链解析，test 中仅用于比较的字符串不扫描；
+ * - 合法 Design Token 与无法静态求值的表达式（函数调用、逻辑表达式等）不得误报。
+ *
  * 每项测试都通过真实启动检查器进程（node scripts/quality/check-design-tokens.mjs）
  * 来验证退出码、stdout/stderr 与（必要时的）机器可读报告，不直接测试正则/AST 辅助函数。
  */
@@ -473,4 +481,311 @@ test('Svelte AST 解析失败时检查器明确报错且退出码为 2', () => {
   assert.match(result.stderr, /DESIGN_TOKEN_CHECK=ERROR/);
   assert.match(result.stderr, /Svelte AST 解析失败/);
   assert.match(result.stderr, /Broken\.svelte/);
+});
+
+// ---------------------------------------------------------------------------
+// 第四轮审计 P2-01 专项修复：HTML 原生元素 style 属性名大小写不敏感
+// ---------------------------------------------------------------------------
+
+test('HTML 元素上的 STYLE 大写属性包含硬编码 HEX 导致检查失败', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/UpperCaseStyle.svelte':
+      '<div STYLE="color: #ffffff">测试</div>\n'
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(result.stderr, /UpperCaseStyle\.svelte:1:\d+ hex/);
+  assert.match(result.stderr, /raw="#ffffff"/);
+  assert.match(result.stderr, /inline-style-attribute/);
+});
+
+test('HTML 元素上的 Style 混合大小写属性包含硬编码 HEX 导致检查失败', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/MixedCaseStyle.svelte': `<div>其他内容</div>
+<div Style="background-color: #abcdef">测试</div>
+`
+  });
+
+  const reportPath = path.join(root, 'mixed-case-style-report.json');
+  const result = runChecker(['--root', root, '--report', reportPath]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(result.stderr, /raw="#abcdef"/);
+
+  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+  assert.equal(report.pass, false);
+  assert.equal(report.violations.length, 1);
+  const violation = report.violations[0];
+  assert.equal(violation.file, 'src/lib/features/demo/MixedCaseStyle.svelte');
+  assert.equal(violation.line, 2);
+  assert.ok(Number.isInteger(violation.column) && violation.column > 0);
+  assert.equal(violation.kind, 'hex');
+  assert.equal(violation.raw, '#abcdef');
+  assert.equal(violation.source, 'inline-style-attribute');
+});
+
+test('大小写变体 style 属性使用合法 Design Token 通过检查', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/CaseVariantToken.svelte': `<script>
+  const tokenColor = "var(--color-text-primary)";
+</script>
+
+<div STYLE="color: var(--color-text-primary)">a</div>
+<div Style="background-color: var(--color-surface)">b</div>
+<div sTyLe="border-color: var(--color-accent)">c</div>
+<div style="color: var(--color-text-primary)">d</div>
+<div STYLE={tokenColor}>e</div>
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
+});
+
+test('普通 Svelte 组件自定义属性 Style/STYLE 不得误报', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ComponentCustomProp.svelte':
+      '<Widget Style="color: #ffffff" STYLE="background-color: #abcdef" customStyle="rgba(1, 2, 3, 0.5)" />\n'
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
+});
+
+test('大写 STYLE 的动态表达式保留原有常量检测能力', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/UpperCaseDynamicStyle.svelte': `<script>
+  const rawColor = "#ffffff";
+</script>
+
+<div STYLE={rawColor}>测试</div>
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(result.stderr, /UpperCaseDynamicStyle\.svelte:5:\d+ hex/);
+  assert.match(result.stderr, /raw="#ffffff"/);
+  assert.match(result.stderr, /inline-style-attribute-dynamic/);
+  assert.match(result.stderr, /constant=rawColor/);
+});
+
+// ---------------------------------------------------------------------------
+// 第四轮审计 P2-01 专项修复：条件表达式（三元）结果分支检查
+// ---------------------------------------------------------------------------
+
+test('三元表达式包含硬编码 HEX 分支导致检查失败', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ConditionalLiteral.svelte': `<script>
+  let dark = true;
+</script>
+
+<div style:color={dark ? "#ffffff" : "var(--color-text-primary)"} />
+`
+  });
+
+  const reportPath = path.join(root, 'conditional-literal-report.json');
+  const result = runChecker(['--root', root, '--report', reportPath]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(result.stderr, /raw="#ffffff"/);
+  assert.match(result.stderr, /svelte-style-directive-dynamic/);
+  assert.match(result.stderr, /conditionalBranch=consequent/);
+  assert.match(result.stderr, /条件表达式 consequent 分支/);
+
+  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+  assert.equal(report.violations.length, 1);
+  const violation = report.violations[0];
+  assert.equal(violation.file, 'src/lib/features/demo/ConditionalLiteral.svelte');
+  assert.equal(violation.line, 5);
+  assert.equal(violation.kind, 'hex');
+  assert.equal(violation.raw, '#ffffff');
+  assert.deepEqual(violation.conditionalBranch, ['consequent']);
+  assert.match(violation.message, /条件表达式/);
+  assert.match(violation.message, /consequent/);
+});
+
+test('三元表达式两个结果分支均为硬编码颜色导致检查失败', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ConditionalBothBranches.svelte':
+      '<div style:color={dark ? "#ffffff" : "rgba(0, 0, 0, 0.5)"} />\n'
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=2/);
+  assert.match(result.stderr, /raw="#ffffff"/);
+  assert.match(result.stderr, /raw="rgba\(0, 0, 0, 0\.5\)"/);
+  assert.match(result.stderr, /conditionalBranch=consequent/);
+  assert.match(result.stderr, /conditionalBranch=alternate/);
+});
+
+test('三元表达式结果分支引用硬编码 const 导致检查失败', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ConditionalConstant.svelte': `<script>
+  const rawColor = "#ffffff";
+  let dark = true;
+</script>
+
+<div style:color={dark ? rawColor : "var(--color-text-primary)"} />
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(result.stderr, /raw="#ffffff"/);
+  assert.match(result.stderr, /conditionalBranch=consequent/);
+  assert.match(result.stderr, /constant=rawColor/);
+  assert.match(result.stderr, /常量定义于 2:9/);
+});
+
+test('三元表达式结果分支引用 const 别名链导致检查失败', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ConditionalAlias.svelte': `<script>
+  const rawColor = "#abcdef";
+  const aliasColor = rawColor;
+  let dark = true;
+</script>
+
+<div style:color={dark ? "var(--color-text-primary)" : aliasColor} />
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(result.stderr, /raw="#abcdef"/);
+  assert.match(result.stderr, /conditionalBranch=alternate/);
+  assert.match(result.stderr, /constant=aliasColor/);
+  assert.match(result.stderr, /resolvedConstant=rawColor/);
+  assert.match(result.stderr, /aliasColor → rawColor/);
+});
+
+test('嵌套条件表达式结果分支包含硬编码颜色导致检查失败', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ConditionalNested.svelte': `<script>
+  const rawColor = "#ff0000";
+  let dark = true;
+  let compact = false;
+</script>
+
+<div style:color={dark ? "var(--color-text-primary)" : compact ? rawColor : "var(--color-surface)"} />
+`
+  });
+
+  const reportPath = path.join(root, 'conditional-nested-report.json');
+  const result = runChecker(['--root', root, '--report', reportPath]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(result.stderr, /raw="#ff0000"/);
+  assert.match(result.stderr, /conditionalBranch=alternate\.consequent/);
+
+  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+  assert.equal(report.violations.length, 1);
+  assert.deepEqual(report.violations[0].conditionalBranch, ['alternate', 'consequent']);
+  assert.equal(report.violations[0].constant, 'rawColor');
+});
+
+test('条件判断比较字符串包含 HEX 但结果分支全部为 Token 时通过检查', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ConditionalTestString.svelte': `<script>
+  let mode = "light";
+</script>
+
+<div style:color={mode === "#ffffff" ? "var(--color-text-primary)" : "var(--color-text-secondary)"} />
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
+});
+
+test('三元表达式两个结果分支都是合法 Token 时通过检查', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ConditionalTokenBranches.svelte': `<script>
+  let dark = true;
+</script>
+
+<div style:color={dark ? "var(--color-text-primary)" : "var(--color-surface)"} />
+<div style:background-color={dark ? "var(--color-canvas)" : "var(--color-surface)"} />
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
+});
+
+test('条件表达式与无关普通字符串共存时通过检查', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ConditionalUnrelatedString.svelte': `<script>
+  const description = "颜色说明：#ffffff 与 rgba(0, 0, 0, 0.5)";
+  let dark = true;
+</script>
+
+<div style:color={dark ? "var(--color-text-primary)" : "var(--color-surface)"} title={description}>{description}</div>
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
+});
+
+test('内联 style 属性中的三元表达式硬编码分支导致检查失败', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ConditionalInlineStyle.svelte': `<script>
+  let dark = true;
+</script>
+
+<div style={dark ? "#ffffff" : "var(--color-text-primary)"}>测试</div>
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /DESIGN_TOKEN_CHECK=FAIL violations=1/);
+  assert.match(result.stderr, /raw="#ffffff"/);
+  assert.match(result.stderr, /inline-style-attribute-dynamic/);
+  assert.match(result.stderr, /conditionalBranch=consequent/);
+});
+
+test('条件表达式分支中无法静态求值的表达式仍按未知处理', () => {
+  const root = makeRoot({
+    ...makeTokenRoot(),
+    'src/lib/features/demo/ConditionalUnknown.svelte': `<div style:color={dark ? pickColor() : "var(--color-text-primary)"} />
+<div style:color={dark && "#ffffff"} />
+`
+  });
+
+  const result = runChecker(['--root', root]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /DESIGN_TOKEN_CHECK=PASS/);
+  assert.match(result.stdout, /violations=0/);
 });

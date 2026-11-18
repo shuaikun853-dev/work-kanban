@@ -19,8 +19,13 @@
  * - `const rawColor = "#fff"; style:color={rawColor}` → 违规；
  * - `const alias = rawColor; style:color={alias}` → 违规（别名链）；
  * - `const token = "var(--color-text)"; style:color={token}` → 通过（Design Token）；
+ * - 条件表达式（三元）递归检查 consequent / alternate 两个结果分支，test 只参与比较、不扫描；
  * - 未被用于样式的普通字符串即使包含颜色文本也不会报错。
- * 无法静态求值的表达式（函数调用、条件表达式等）按未知处理，不误报；见函数注释边界。
+ * 无法静态求值的表达式（函数调用、逻辑表达式等）按未知处理，不误报；见函数注释边界。
+ *
+ * HTML 原生元素的 style 属性名大小写不敏感（STYLE / Style / style 都会被检查）；
+ * Svelte Compiler 会把 HTML 原生元素的大小写变体编译为小写 style 属性，因此不能漏检。
+ * 普通 Svelte 组件上的自定义属性（含大写 STYLE/Style）是组件 prop，不做大小写折叠，避免误报。
  *
  * AST 解析失败不会被静默跳过：检查器以退出码 2 明确报错并指出文件与解析错误。
  *
@@ -51,6 +56,15 @@ const SCAN_EXTENSIONS = new Set(['.svelte', '.css']);
 
 /** Svelte 模板中承载动态值的节点类型（不同 Svelte 5 AST 版本命名不同）。 */
 const MUSTACHE_NODE_TYPES = new Set(['MustacheTag', 'ExpressionTag']);
+
+/**
+ * HTML 原生元素节点类型（legacy AST 使用 `Element`；modern AST 使用 `RegularElement`，
+ * `SvelteElement` 对应 `svelte:element`）。只有这些节点的 style 属性才按 HTML 规则大小写不敏感。
+ */
+const HTML_ELEMENT_NODE_TYPES = new Set(['Element', 'RegularElement', 'SvelteElement']);
+
+/** 条件表达式的结果分支属性名（ESTree / Svelte AST 通用术语）。 */
+const CONDITIONAL_BRANCH_KEYS = ['consequent', 'alternate'];
 
 /** 仅用于简单表达式求值的 TypeScript / 括号包装节点。 */
 const TRANSPARENT_EXPRESSION_NODE_TYPES = new Set([
@@ -269,21 +283,76 @@ function walkAst(node, visitor, visited = new WeakSet()) {
   }
 }
 
+/** 把条件分支路径格式化为 `consequent` 或 `alternate → consequent`。 */
+function formatBranchPath(branchPath) {
+  return branchPath.join(' → ');
+}
+
 /**
  * 分析被用于样式的动态表达式：
  * - 直接字面量（如 style:color={"#fff"}）→ 违规；
  * - 局部 const 字符串常量 / 别名链（如 style:color={rawColor}）→ 违规；
  * - Design Token 字符串（如 "var(--color-text)"）→ 通过；
+ * - 条件表达式：递归检查 consequent / alternate 两个结果分支（支持嵌套），
+ *   test 只参与条件比较（如 `dark === "#ffffff"`），其中的字符串不作为样式值扫描；
  * - 其它无法静态求值的表达式 → 未知，不误报。
  */
 function analyzeStyleExpression(expression, filePath, content, constants, violations, options) {
+  analyzeStyleExpressionNode(
+    unwrapExpression(expression),
+    filePath,
+    content,
+    constants,
+    violations,
+    options,
+    []
+  );
+}
+
+/**
+ * analyzeStyleExpression 的递归实现。`branchPath` 记录当前节点位于哪些条件结果分支中：
+ * 为空表示非条件表达式，报告文案与原有“动态表达式”格式保持一致；
+ * 非空时在报告中附加 `conditionalBranch` 路径，便于审计定位到具体分支。
+ */
+function analyzeStyleExpressionNode(
+  expression,
+  filePath,
+  content,
+  constants,
+  violations,
+  options,
+  branchPath
+) {
   if (!expression) {
     return;
   }
   const usage = locate(content, expression.start);
+  const conditionalExtra = branchPath.length > 0 ? { conditionalBranch: branchPath.slice() } : {};
   const dynamicExtra = {
-    ...(options.styleDirective !== undefined ? { styleDirective: options.styleDirective } : {})
+    ...(options.styleDirective !== undefined ? { styleDirective: options.styleDirective } : {}),
+    ...conditionalExtra
   };
+  const expressionScope =
+    branchPath.length > 0 ? `条件表达式 ${formatBranchPath(branchPath)} 分支` : '动态表达式';
+
+  if (expression.type === 'ConditionalExpression') {
+    // 只检查结果分支；test 中用于比较的字符串（可能包含 HEX）不参与样式值扫描。
+    for (const branchKey of CONDITIONAL_BRANCH_KEYS) {
+      const branch = unwrapExpression(expression[branchKey]);
+      if (branch !== null) {
+        analyzeStyleExpressionNode(
+          branch,
+          filePath,
+          content,
+          constants,
+          violations,
+          options,
+          [...branchPath, branchKey]
+        );
+      }
+    }
+    return;
+  }
 
   const staticValue = extractStaticString(expression);
   if (staticValue !== null) {
@@ -295,7 +364,7 @@ function analyzeStyleExpression(expression, filePath, content, constants, violat
         kind: match.kind,
         raw: match.raw,
         source: options.source,
-        message: `${options.label}中的动态表达式直接包含原始颜色 ${JSON.stringify(match.raw)}；请改用 src/lib/ui/tokens.css 中的语义 Token`,
+        message: `${options.label}中的${expressionScope}直接包含原始颜色 ${JSON.stringify(match.raw)}；请改用 src/lib/ui/tokens.css 中的语义 Token`,
         ...dynamicExtra
       });
     }
@@ -323,7 +392,7 @@ function analyzeStyleExpression(expression, filePath, content, constants, violat
       resolvedConstant: resolved.holderName,
       constantLocation: resolved.definition,
       message:
-        `${options.label}中的动态表达式引用常量 ${reference.name}` +
+        `${options.label}中的${expressionScope}引用常量 ${reference.name}` +
         `（解析链 ${chainText}）包含原始颜色 ${JSON.stringify(match.raw)}；` +
         `常量定义于 ${resolved.definition.line}:${resolved.definition.column}，` +
         '请改用 src/lib/ui/tokens.css 中的语义 Token',
@@ -366,6 +435,27 @@ function scanInlineStyleAttribute(node, filePath, content, constants, violations
         source: 'inline-style-attribute-dynamic',
         label: '内联 style 属性'
       });
+    }
+  }
+}
+
+/**
+ * 检查 HTML 原生元素上大小写变体的 style 属性（STYLE / Style / sTyLe）。
+ * 小写 `style` 由通用 Attribute 分支处理，这里只补充大小写变体，避免重复报告。
+ * 仅限 HTML 原生元素：Svelte 组件上的 `Style` / `STYLE` 是组件 prop，不能误报。
+ */
+function scanHtmlElementStyleAttributes(node, filePath, content, constants, violations) {
+  const attributes = Array.isArray(node.attributes) ? node.attributes : [];
+  for (const attribute of attributes) {
+    if (
+      attribute !== null &&
+      typeof attribute === 'object' &&
+      attribute.type === 'Attribute' &&
+      typeof attribute.name === 'string' &&
+      attribute.name !== 'style' &&
+      attribute.name.toLowerCase() === 'style'
+    ) {
+      scanInlineStyleAttribute(attribute, filePath, content, constants, violations);
     }
   }
 }
@@ -415,10 +505,14 @@ function scanSvelteContent(relativeFile, content, violations) {
     }
   }
 
-  // 遍历模板 AST：style: 指令与内联 style 属性。
+  // 遍历模板 AST：style: 指令、HTML 原生元素 style 属性（大小写不敏感）与内联 style 属性。
   walkAst(ast.html, (node) => {
     if (node.type === 'StyleDirective') {
       scanStyleDirective(node, relativeFile, content, constants, violations);
+    } else if (HTML_ELEMENT_NODE_TYPES.has(node.type)) {
+      // Svelte Compiler 会把 HTML 原生元素的 STYLE / Style 编译成小写 style 属性，
+      // 因此大小写变体必须按真实内联样式检查；组件 prop 不在此范围。
+      scanHtmlElementStyleAttributes(node, relativeFile, content, constants, violations);
     } else if (node.type === 'Attribute' && node.name === 'style') {
       scanInlineStyleAttribute(node, relativeFile, content, constants, violations);
     }
@@ -562,6 +656,9 @@ function main() {
       const extra = [
         violation.source,
         violation.styleDirective !== undefined ? `styleDirective=${violation.styleDirective}` : null,
+        violation.conditionalBranch !== undefined
+          ? `conditionalBranch=${violation.conditionalBranch.join('.')}`
+          : null,
         violation.constant !== undefined ? `constant=${violation.constant}` : null,
         violation.resolvedConstant !== undefined ? `resolvedConstant=${violation.resolvedConstant}` : null,
         violation.constantLocation !== undefined
