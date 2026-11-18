@@ -494,19 +494,26 @@ fn remove_file_if_exists(path: &Path) {
 }
 
 // ---------------------------------------------------------------------------
-// 审计 R2-01 专项测试：等待初始化锁的进程遇到活动 WAL
+// 审计 R2-01 / R3-02 专项测试：等待初始化锁的进程遇到活动 WAL
 //
-// 测试用真实独立子进程（不是线程模拟）复现审计场景：
-//   1. 父进程创建隔离的便携数据目录（不含数据库）；
-//   2. 进程 A（creator 子进程）先取得跨进程初始化锁，然后等待 B 完成初次检查；
-//   3. 进程 B（waiter 子进程）初次检查正式主库不存在，写出信号后阻塞在初始化锁上；
-//   4. A 在持锁状态下创建正式数据库、进入 WAL 模式、写入虚构 canary（产生非空 WAL），
-//      释放初始化锁；
-//   5. B 取得锁后调用生产代码 `open_or_create_after_lock`：
-//      必须先重检主库，正常打开，绝不能返回 `database-orphaned-sidecar`；
-//   6. 父进程复核 canary 保留、integrity_check=ok、migration 只执行一次。
+// 使用真实独立子进程（不是线程模拟），并用“真实锁竞争观察点”保证同步确定性：
+//   1. 父进程创建隔离便携目录（不含数据库），启动 creator；
+//   2. creator 取得跨进程初始化锁并写 a-has-lock；在收到 waiter 的真实锁竞争确认之前
+//      绝不创建任何数据库文件；
+//   3. waiter 调用完整的 `Database::initialize()`：初次检查主库不存在 → 进入首次安装
+//      分支 → 调用 `InitializationLock::acquire()`；测试构建在底层 `LockFileEx` 明确返回
+//      锁竞争（ERROR_LOCK_VIOLATION）时通过 `#[cfg(test)]` 观察点写 b-lock-contention
+//      信号（只有真实竞争发生后才可能出现），随后继续正常等待锁；
+//   4. creator 收到 b-lock-contention 后才创建正式数据库、进入 WAL 模式、写入虚构 canary
+//      （WAL 非空），写 a-created 并继续持锁等待父进程释放指令；
+//   5. 父进程确认主库与活动 WAL 已存在且 creator 仍在运行（仍持锁）后写 parent-release-lock；
+//   6. creator 释放锁；waiter 取得锁后由生产代码 `open_or_create_after_lock()` 先重检主库：
+//      正常打开已有数据库，绝不因活动 WAL 返回 database-orphaned-sidecar；
+//   7. 父进程复核 canary 保留、integrity_check=ok、migration 只执行一次。
 //
-// 顺序由“文件信号 + 跨进程锁”保证，不依赖 sleep 时长。
+// 顺序由“真实锁竞争信号 + 跨进程锁 + 文件信号”保证，不依赖固定 sleep 调度；
+// 所有等待都有超时，子进程守卫在 panic 时强制清理。观察点仅在 #[cfg(test)] 构建存在，
+// 不进入生产二进制、不是 IPC，也不改变生产锁语义。
 // ---------------------------------------------------------------------------
 #[cfg(test)]
 mod r2_01_tests {
@@ -539,7 +546,8 @@ mod r2_01_tests {
         }
     }
 
-    /// 进程 A：持有初始化锁 → 等待 B 初次检查 → 创建正式库并写入 canary → 释放锁。
+    /// 进程 A：持有初始化锁 → 等待 B 的真实锁竞争确认 → 创建正式库并写入 canary →
+    /// 等待父进程释放指令后释放锁。
     fn creator_child(data_root: &Path, marker_dir: &Path) {
         let paths = prepare_paths(data_root);
         let lock = InitializationLock::acquire(&paths.database_dir, Duration::from_secs(60))
@@ -549,9 +557,15 @@ mod r2_01_tests {
             format!("pid={}", std::process::id()),
         )
         .expect("写 a-has-lock 信号");
+
+        // 关键同步（R3-02）：只有 waiter 在真实锁竞争中确认后，creator 才创建数据库。
+        // 若 waiter 提前写信号或从未观察竞争，这里会等待超时失败。
         assert!(
-            wait_for_marker(&marker_dir.join("b-inspected"), Duration::from_secs(120)),
-            "creator 等待 waiter 初次检查信号超时"
+            wait_for_marker(
+                &marker_dir.join("b-lock-contention"),
+                Duration::from_secs(120)
+            ),
+            "creator 等待 waiter 真实锁竞争确认超时"
         );
 
         // A 在持锁状态下执行与生产首次初始化相同的步骤：创建正式库 → 打开并进入 WAL。
@@ -580,7 +594,14 @@ mod r2_01_tests {
         )
         .expect("写 a-created 信号");
 
-        // 释放初始化锁：waiter 可以在主库存在且有活动 WAL 的情况下取得锁。
+        // 保持锁与数据库连接：父进程确认主库/活动 WAL 已存在并允许后才释放初始化锁。
+        assert!(
+            wait_for_marker(
+                &marker_dir.join("parent-release-lock"),
+                Duration::from_secs(120)
+            ),
+            "creator 等待父进程释放锁指令超时"
+        );
         drop(lock);
         assert!(
             wait_for_marker(&marker_dir.join("b-done"), Duration::from_secs(120)),
@@ -591,27 +612,55 @@ mod r2_01_tests {
         std::process::exit(0);
     }
 
-    /// 进程 B：初次检查主库不存在 → 等待初始化锁 → 调用生产代码处理锁后状态。
+    /// 进程 B：调用完整 `Database::initialize()`；只有底层锁操作真实返回锁竞争时才发出
+    /// b-lock-contention 信号，随后继续正常等待锁并打开 creator 已创建的数据库。
     fn waiter_child(data_root: &Path, marker_dir: &Path) {
-        let paths = prepare_paths(data_root);
-        // 模拟 B 在 Database::initialize 中的初次检查结果（主库不存在）。
-        assert!(
-            fs::symlink_metadata(&paths.database_file).is_err(),
-            "waiter 初次检查必须看到正式主库不存在：{}",
-            paths.database_file.display()
-        );
-        fs::write(
-            marker_dir.join("b-inspected"),
-            format!("pid={} main_missing=true", std::process::id()),
-        )
-        .expect("写 b-inspected 信号");
+        use std::sync::Arc;
+        use std::sync::atomic::{AtomicBool, Ordering};
 
-        // 阻塞等待 A 释放初始化锁。
-        let lock = InitializationLock::acquire(&paths.database_dir, Duration::from_secs(120))
-            .expect("waiter 必须取得初始化锁");
-        // 审计 R2-01 的生产代码路径：先重检主库，只有确实缺失才检查孤儿 sidecar。
-        let database = Database::open_or_create_after_lock(&paths, &lock)
-            .expect("waiter 必须正常打开 A 已创建的数据库，不得返回 database-orphaned-sidecar");
+        use super::init_lock::test_contention_observer;
+
+        let paths = prepare_paths(data_root);
+        let contention_marker = marker_dir.join("b-lock-contention");
+        let observed = Arc::new(AtomicBool::new(false));
+        let observed_in_callback = Arc::clone(&observed);
+        let marker_in_callback = contention_marker.clone();
+        // 测试专用观察点：只在底层 LockFileEx 明确返回锁竞争时被调用。
+        test_contention_observer::install(move |lock_path: &Path| {
+            if observed_in_callback.swap(true, Ordering::SeqCst) {
+                return;
+            }
+            let _ = fs::write(
+                &marker_in_callback,
+                format!(
+                    "pid={} try_lock_exclusive=busy lock_file={}",
+                    std::process::id(),
+                    lock_path.display()
+                ),
+            );
+        });
+
+        // 完整生产初始化路径：初次检查主库不存在 → 等待初始化锁 → 重检主库并打开。
+        let database = match Database::initialize(&paths) {
+            Ok(database) => database,
+            Err(error) => {
+                eprintln!(
+                    "r2-01-waiter: Database::initialize 失败 code={} error={error}",
+                    error.code()
+                );
+                std::process::exit(22);
+            }
+        };
+        test_contention_observer::clear();
+
+        assert!(
+            observed.load(Ordering::SeqCst),
+            "waiter 必须在 Database::initialize 的锁获取过程中观察到真实锁竞争"
+        );
+        assert!(
+            contention_marker.is_file(),
+            "waiter 必须在真实锁竞争后写出 b-lock-contention 信号"
+        );
         assert!(
             !database.created_new(),
             "waiter 不得重新创建数据库（A 已经创建）"
@@ -640,11 +689,10 @@ mod r2_01_tests {
         assert_eq!(health.integrity_check, "ok");
         assert_eq!(health.applied_migrations.len(), 1);
         println!(
-            "r2-01-waiter: acquired lock after creator; main_db_exists=true; \
-             opened_existing=true; orphaned_sidecar=false; canary_preserved=true; \
-             integrity=ok; migrations=1"
+            "r3-02-waiter: full Database::initialize observed real lock contention; \
+             acquired lock after creator; main_db_exists=true; opened_existing=true; \
+             orphaned_sidecar=false; canary_preserved=true; integrity=ok; migrations=1"
         );
-        drop(lock);
         fs::write(
             marker_dir.join("b-done"),
             format!("pid={}", std::process::id()),
@@ -834,7 +882,8 @@ mod r2_01_tests {
         path.is_file()
     }
 
-    /// R2-01 回归：等待初始化锁的进程必须识别另一个进程已创建的数据库和活动 WAL。
+    /// R2-01 / R3-02 回归：等待初始化锁的进程必须**先观察到真实锁竞争**，然后才能识别
+    /// 另一个进程已创建的数据库和活动 WAL，不得误判为孤儿文件。
     #[test]
     fn waiting_process_opens_database_with_active_wal_instead_of_orphan_error() {
         let dir = IsolatedTestDir::new("r2-01-waiter-active-wal");
@@ -849,20 +898,53 @@ mod r2_01_tests {
         let marker_dir = dir.join("markers");
         fs::create_dir_all(&marker_dir).expect("create marker dir");
 
-        // A 先启动并取得初始化锁；A 在 B 完成初次检查之前不会创建数据库。
+        // A 先启动并取得初始化锁；在 B 证明观察到真实锁竞争之前，A 不创建数据库。
         let mut creator = ChildGuard::spawn("creator", &data_root, &marker_dir);
         assert!(
             wait_for_marker(&marker_dir.join("a-has-lock"), Duration::from_secs(120)),
             "进程 A 未在超时内取得初始化锁"
         );
-        // B 此时启动：初次检查看到主库不存在，然后阻塞在跨进程锁上。
+        assert!(
+            !paths.database_file.exists(),
+            "A 取得初始化锁后、B 观察竞争之前不得创建数据库"
+        );
+
+        // B 启动并调用完整 Database::initialize()：只有在底层锁操作真实返回 busy 后，
+        // 才会写 b-lock-contention 信号（不是提前写 b-inspected 再靠调度）。
         let mut waiter = ChildGuard::spawn("waiter", &data_root, &marker_dir);
+        assert!(
+            wait_for_marker(
+                &marker_dir.join("b-lock-contention"),
+                Duration::from_secs(120)
+            ),
+            "waiter 未在真实锁竞争后发出确认信号"
+        );
+        let contention_content = fs::read_to_string(marker_dir.join("b-lock-contention"))
+            .expect("读取 b-lock-contention 信号");
+        println!("r3-02: waiter observed real lock contention: {contention_content}");
+        assert!(
+            contention_content.contains("try_lock_exclusive=busy"),
+            "锁竞争信号必须来自底层 LockFileEx 竞争结果：{contention_content}"
+        );
+
+        // A 收到真实竞争确认后才创建数据库并产生活动 WAL。
         assert!(
             wait_for_marker(&marker_dir.join("a-created"), Duration::from_secs(120)),
             "进程 A 未在超时内创建数据库并发信号"
         );
+        let creator_still_running = creator
+            .child
+            .as_mut()
+            .expect("creator child present")
+            .try_wait()
+            .expect("try_wait creator")
+            .is_none();
+        assert!(
+            creator_still_running,
+            "父进程确认活动 WAL 前 creator 必须仍持锁运行（尚未释放初始化锁）"
+        );
 
-        // 证据：B 取得锁之前，正式主库已存在，且 WAL 属于 A 的活动连接。
+        // 证据：waiter 取得锁之前，正式主库已存在，且 WAL 属于 A 的活动连接。
         let main_bytes = fs::metadata(&paths.database_file)
             .map(|meta| meta.len())
             .unwrap_or(0);
@@ -875,9 +957,13 @@ mod r2_01_tests {
             wal_path.display()
         );
         println!(
-            "r2-01: creator holds active WAL before waiter acquires lock; \
+            "r3-02: creator holds lock with active WAL before waiter acquires it; \
              main_db_bytes={main_bytes} wal_bytes={wal_bytes}"
         );
+
+        // 父进程确认后允许 creator 释放初始化锁；waiter 的 acquire 随后才能成功。
+        fs::write(marker_dir.join("parent-release-lock"), b"release")
+            .expect("写 parent-release-lock 信号");
 
         let waiter_exit = waiter.wait_with_timeout(Duration::from_secs(120));
         waiter_exit.assert_success("waiter");
@@ -886,7 +972,12 @@ mod r2_01_tests {
             "等待者不得返回 database-orphaned-sidecar；实际 stderr：\n{}",
             waiter_exit.stderr
         );
-        println!("r2-01-waiter-stdout: {}", waiter_exit.stdout.trim());
+        assert!(
+            waiter_exit.stdout.contains("r3-02-waiter"),
+            "waiter 必须通过完整 Database::initialize 并输出 R3-02 证据；stdout：\n{}",
+            waiter_exit.stdout
+        );
+        println!("r3-02-waiter-stdout: {}", waiter_exit.stdout.trim());
 
         let creator_exit = creator.wait_with_timeout(Duration::from_secs(120));
         creator_exit.assert_success("creator");
@@ -922,8 +1013,10 @@ mod r2_01_tests {
             "schema_migrations 只应有一条记录"
         );
         println!(
-            "r2-01: PASS — waiter recognized existing database with active WAL; \
-             no database-orphaned-sidecar; canary preserved; integrity=ok; migrations=1"
+            "r3-02: PASS — waiter observed real lock contention in Database::initialize; \
+             creator created DB+active WAL while holding the lock; waiter acquired it after \
+             release and opened the existing DB (no orphaned-sidecar); canary preserved; \
+             integrity=ok; migrations=1"
         );
     }
 

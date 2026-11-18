@@ -35,6 +35,51 @@ const RETRY_INTERVAL: Duration = Duration::from_millis(50);
 /// 锁定的字节范围长度（锁定首字节即可表达跨进程独占）。
 const LOCK_BYTE_RANGE_LENGTH: u32 = 1;
 
+/// 测试专用锁竞争观察点（审计 R3-02）。
+///
+/// 仅在 `cfg(test)` 构建中存在，不是生产 API、IPC 或配置开关；未安装回调时为无操作，
+/// **不改变加锁/等待语义**。双进程测试用它在“底层 `LockFileEx` 明确返回锁竞争
+/// （`ERROR_LOCK_VIOLATION`）”时得到确定性通知，从而证明 waiter 确实在锁被持有时尝试
+/// 获取过锁，而不是提前写信号后依赖操作系统调度。
+#[cfg(test)]
+pub(crate) mod test_contention_observer {
+    use std::path::Path;
+    use std::sync::{Mutex, OnceLock};
+
+    type Callback = Box<dyn Fn(&Path) + Send + 'static>;
+
+    fn slot() -> &'static Mutex<Option<Callback>> {
+        static SLOT: OnceLock<Mutex<Option<Callback>>> = OnceLock::new();
+        SLOT.get_or_init(|| Mutex::new(None))
+    }
+
+    /// 安装观察回调（仅测试进程使用）。
+    pub(crate) fn install(callback: impl Fn(&Path) + Send + 'static) {
+        let mut guard = slot()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        *guard = Some(Box::new(callback));
+    }
+
+    /// 移除观察回调，避免影响同一进程后续测试。
+    pub(crate) fn clear() {
+        let mut guard = slot()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        *guard = None;
+    }
+
+    /// 底层锁操作观察到真实竞争时通知已安装的回调。
+    pub(crate) fn notify(path: &Path) {
+        let guard = slot()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some(callback) = guard.as_ref() {
+            callback(path);
+        }
+    }
+}
+
 /// 已取得的数据库初始化锁；Drop 时释放。
 #[derive(Debug)]
 pub struct InitializationLock {
@@ -56,6 +101,10 @@ impl InitializationLock {
             match try_lock_exclusive(&file) {
                 Ok(true) => return Ok(Self { file, path }),
                 Ok(false) => {
+                    // 测试专用观察点：此处是底层 LockFileEx 明确返回“锁被占用”的时刻，
+                    // 只有真实观察到竞争才会通知（审计 R3-02）。生产构建不包含该分支。
+                    #[cfg(test)]
+                    test_contention_observer::notify(&path);
                     let waited = started.elapsed();
                     if waited >= wait {
                         return Err(DatabaseError::InitializationLockBusy {
@@ -84,7 +133,12 @@ impl InitializationLock {
         let file = open_lock_file(&path)?;
         match try_lock_exclusive(&file) {
             Ok(true) => Ok(Some(Self { file, path })),
-            Ok(false) => Ok(None),
+            Ok(false) => {
+                // 测试专用观察点：非阻塞加锁明确返回锁被占用（审计 R3-02）。
+                #[cfg(test)]
+                test_contention_observer::notify(&path);
+                Ok(None)
+            }
             Err(error) => Err(DatabaseError::InitializationLockFailed {
                 lock_path: path,
                 detail: error.to_string(),
