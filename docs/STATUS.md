@@ -2,8 +2,9 @@
 
 **更新日期：** 2026-11-18  
 **当前阶段：** 阶段 1：基础架构与工作事项  
-**当前任务：** T1-01 正式工程骨架与 SQLite 基础设施  
-**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 第三轮独立审计 R3 返工：R3-01（D 根卷信任锚验证缺口，P1）与 R3-02（真实双进程初始化锁测试同步确定性，P2）均已修复并通过完整回归；TOCTOU 残余风险按 DEC-029 由用户接受并延期至独立安全加固 Issue #2（未修复、不作绝对 C 盘写入保证）。当前状态：**独立审计通过，待用户验收**。最新代码提交：R3-01 `ae1eb65`、R3-02 `4942eb0`；分支 `task/T1-01-sqlite-foundation`，PR #1 保持打开、不合并；T1-02 未开始。
+**最近完成任务：** T1-01 正式工程骨架与 SQLite 基础设施（用户验收完成）  
+**下一候选任务：** T1-02 项目创建、编辑、归档（尚未开始，等待单独启动指示）  
+**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 的 R3-01（P1）与 R3-02（P2）已修复，第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。TOCTOU 按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复，不作绝对 C 盘写入保证。分支 `task/T1-01-sqlite-foundation`；PR #1 保持打开、未合并；main 未修改；T1-02 未开始。
 
 ## 最新产品决策
 
@@ -15,7 +16,7 @@
 - 保留数据库事务、版本化 migration、异常保护和备份恢复。
 - 接受普通 SQLite 文件可被拥有文件访问权限的人直接读取的风险。
 
-2026-11-18，用户确认 DEC-029：接受当前路径校验与后续路径字符串写入之间的 TOCTOU 残余风险，T1-01 不实施完整句柄相对改造/custom SQLite VFS；该风险转入[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)。风险未修复，程序不得宣称绝对不会写入 C 盘；禁止静默回退 C 盘和已检测违规 fail-closed 规则不变。R3-01 P1 与 R3-02 P2 仍需处理后重新独立审计。
+2026-11-18，用户确认 DEC-029：接受当前路径校验与后续路径字符串写入之间的 TOCTOU 残余风险，T1-01 不实施完整句柄相对改造/custom SQLite VFS；该风险转入[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)。风险未修复，程序不得宣称绝对不会写入 C 盘；禁止静默回退 C 盘和已检测违规 fail-closed 规则不变。R3-01/R3-02 已经修复并通过第四轮独立审计；用户于 2026-11-18 明确验收 T1-01。
 
 ## 阶段 0：技术验证
 
@@ -40,7 +41,7 @@
 
 | 任务 | 内容 | 状态 |
 |---|---|---|
-| T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | 独立审计通过，待用户验收（R3-01/R3-02 已复核通过；TOCTOU 按 DEC-029 接受并延期至 Issue #2；PR #1 不合并） |
+| T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | **验收完成**（用户 2026-11-18 确认；PR #1 仍待单独合并；TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
 | T1-02 | 项目创建、编辑、归档 | 未开始 |
 | T1-03 | 工作事项快速创建和待安排区域 | 未开始 |
 | T1-04 | 多项目独立副本创建 | 未开始 |
@@ -48,9 +49,9 @@
 | T1-06 | 六位数字应用密码与锁屏 | 取消 |
 | T1-07 | 首次初始化与 SQLite 异常保护 | 未开始 |
 
-**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[R3 专项修复报告](testing/reports/T1-01-R3-FIX-REPORT.md)、[R3 机器可读证据](testing/reports/T1-01-R3-FIX-evidence.json)、第二轮返工报告与证据、[第三轮独立审计报告](testing/reports/T1-01-THIRD-AUDIT-REPORT.md)、[TOCTOU 后续安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)、历史审计/返工报告、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（独立审计通过，待用户验收；保持打开、不合并）；[第四轮独立审计报告](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)。
+**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[R3 专项修复报告](testing/reports/T1-01-R3-FIX-REPORT.md)、[R3 机器可读证据](testing/reports/T1-01-R3-FIX-evidence.json)、第二轮返工报告与证据、[第三轮独立审计报告](testing/reports/T1-01-THIRD-AUDIT-REPORT.md)、[TOCTOU 后续安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)、历史审计/返工报告、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（独立审计通过，待用户验收；保持打开、不合并）；[第四轮独立审计报告](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)、[T1-01 用户验收记录](testing/reports/T1-01-USER-ACCEPTANCE.md)。
 
-### T1-01 交付摘要（2026-11-17，第二轮返工后）
+### T1-01 历史交付摘要（2026-11-17，第二轮返工后；R3 最终结果见下文）
 
 - 正式 Tauri 2 + Svelte 5 + TypeScript + Vite 工程可构建；`workmanager-core`（Rust Core，不依赖 Tauri）与 `src-tauri`（Tauri 适配层）职责分离。
 - Release 数据目录跟随 EXE：`<exe目录>/data/database/work.db`；WebView2 绝对数据目录 `<data>/cache/webview2`；仅 D 盘、无 C 盘/AppData/Temp 回退；已实现 Win32 真实最终路径和目标卷身份校验，实测拒绝 D→C Junction，并实测 SUBST Q:→C: 场景。**D 根卷自身的独立信任锚验证仍有 R3-01 待修复；映射网络盘、真实跨卷挂载点未实机验证。**
@@ -102,7 +103,7 @@
 
 **回归结果（R3 返工后）：** `cargo test --workspace` **68 passed / 0 failed**（上轮 62，新增 6 项）；Release 便携验证 **106 项 PASS 90 / FAIL 0**；异常注入 **73 项 PASS 64 / FAIL 0**；真实窗口 UI/IPC/CSP **21/21、CSP 0 违规**；Release EXE **9,993,216 字节**，SHA-256 **`41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800`**。
 
-**第三轮审计当时的门禁（历史记录）：** 当时 T1-01 尚待独立审计；第四轮复核现已通过，当前等待用户验收。PR #1 仍不合并、main 不修改、T1-02 不开始。TOCTOU 按 DEC-029 作为已接受但未修复的残余风险单独追踪。
+**第三轮审计当时的门禁（历史记录）：** 当时 T1-01 尚待独立审计；第四轮复核及用户验收现已通过，T1-01 当前为验收完成。PR #1 仍未合并，main 未修改；T1-02 未开始。TOCTOU 按 DEC-029 作为已接受但未修复的残余风险单独追踪。
 
 - [ ] 阶段 2：计划、优先级与当前工作。
 - [ ] 阶段 3：每日复盘与提醒。
@@ -129,8 +130,8 @@
 
 ## 下一步安排
 
-- T1-01 第四轮独立审计已通过，当前状态 **独立审计通过，待用户验收**；R3-01/R3-02 代码与证据复核通过。审计报告见 [T1-01-FOURTH-AUDIT-REPORT.md](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)。PR #1 保持打开、不合并，main 不修改，T1-02 不得开始。
-- 当前只等待用户验收；用户明确验收前，不得标记 T1-01 为验收完成、不得合并 PR #1、不得开始 T1-02。
+- T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；R3-01/R3-02 代码与证据复核通过。审计报告见 [T1-01-FOURTH-AUDIT-REPORT.md](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户验收记录见 [T1-01-USER-ACCEPTANCE.md](testing/reports/T1-01-USER-ACCEPTANCE.md)。PR #1 保持打开、未合并，main 未修改，T1-02 尚未开始。
+- T1-01 已验收完成；PR #1 合并和 T1-02 启动均作为独立执行步骤，等待单独指示。
 - TOCTOU 残余风险按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复、不得宣称绝不写入 C 盘；未经用户另行授权不得开始完整句柄相对改造/custom SQLite VFS。
 - 重新审计通过并同步更新开发计划后，才决定是否进入 T1-02；开发代理不得自行开始 T1-02。
 - T0-05 不再安排开发；T0-06 延期至阶段 6，不得从最终发布验收清单中删除。
@@ -150,5 +151,14 @@
 - R3-01：生产信任锚调用链、D/C 卷 GUID 比较、QueryDosDevice 映射检查及 fail-closed 顺序通过复核。
 - R3-02：观察器仅在 `cfg(test)` 编译；仅底层 `LockFileEx` 明确返回锁竞争时通知；waiter 走完整 `Database::initialize()`；10/10 稳定性日志通过复核。
 - 审计证据来自已提交 Windows 10 脱敏日志；本轮未在开发机独立重放，GitHub 当前无 Actions/status checks。
-- **当前状态：独立审计通过，待用户验收。** PR #1 保持打开、不合并；main 不修改；T1-02 不开始。
+- **当前状态：T1-01 验收完成（用户于 2026-11-18 明确确认）。** PR #1 保持打开、未合并；main 未修改；T1-02 尚未开始。
 - TOCTOU 按 DEC-029 接受并延期至 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复；其余未实机验证场景详见第四轮审计报告。
+
+
+## T1-01 用户验收结果（2026-11-18）
+
+- 用户明确回复“接受”，确认接受 T1-01 当前交付，包括第四轮独立审计结论及 DEC-029 中已接受但未修复的 TOCTOU 残余风险。
+- **T1-01：验收完成。** 验收记录见 [T1-01-USER-ACCEPTANCE.md](testing/reports/T1-01-USER-ACCEPTANCE.md)。
+- PR #1 仍保持 Open、未合并；本次验收记录不自动执行合并，main 保持不变。
+- T1-02 尚未开始，等待单独启动指示。
+- TOCTOU 继续由 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2) 跟踪，仍未修复；不得宣称绝对不会写入 C 盘。
