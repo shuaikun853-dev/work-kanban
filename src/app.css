@@ -69,7 +69,7 @@ pre {
 }
 
 ::selection {
-  background-color: rgba(0, 122, 255, 0.18);
+  background-color: var(--color-selection-bg);
 }
 
 :focus-visible {

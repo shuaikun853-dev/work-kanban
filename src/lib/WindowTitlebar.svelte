@@ -187,7 +187,7 @@
     min-height: 60px;
     padding: 0 20px;
     border-bottom: 1px solid var(--color-border);
-    background: #fbfcfe;
+    background-color: var(--color-titlebar);
     user-select: none;
     -webkit-user-select: none;
   }
@@ -239,15 +239,15 @@
   }
 
   .window-control--close {
-    background: #ff5f57;
+    background: var(--color-window-close);
   }
 
   .window-control--minimize {
-    background: #febc2e;
+    background: var(--color-window-minimize);
   }
 
   .window-control--maximize {
-    background: #28c840;
+    background: var(--color-window-maximize);
   }
 
   .window-titlebar__app-name {

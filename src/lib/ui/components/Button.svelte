@@ -73,7 +73,7 @@
   .button--primary {
     border-color: var(--color-accent);
     background-color: var(--color-accent);
-    color: #ffffff;
+    color: var(--color-text-inverse);
   }
 
   .button--primary:hover:not(:disabled) {
@@ -105,8 +105,8 @@
   .button-spinner {
     width: 13px;
     height: 13px;
-    border: 2px solid rgba(255, 255, 255, 0.45);
-    border-top-color: #ffffff;
+    border: 2px solid var(--color-spinner-track-inverse);
+    border-top-color: var(--color-text-inverse);
     border-radius: 50%;
     animation: button-spin 0.75s linear infinite;
   }

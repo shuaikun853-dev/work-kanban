@@ -45,6 +45,36 @@
   --color-danger-text: #b42318;
   --color-danger-bg: #fef4f3;
 
+  /*
+   * 语义颜色补充（T1-02 第一轮独立审计 P2-01 返工）。
+   *
+   * 这些 Token 把 Feature 页面与通用 UI 组件中散落的原始颜色收敛到唯一来源，
+   * 取值与收敛前的实际渲染值完全一致（不改变现有视觉效果）。
+   * 用途名称表达语义，组件不得再出现 raw hex/rgb/rgba。
+   */
+  --color-backdrop: rgba(15, 23, 42, 0.28); /* 模态遮罩 */
+  --color-nav-hover-bg: rgba(0, 122, 255, 0.07); /* 侧边导航悬停背景 */
+  --color-selection-bg: rgba(0, 122, 255, 0.18); /* 文本选择背景 */
+  --color-text-inverse: #ffffff; /* 强调色/危险色实底上的反向文字与图标 */
+  --color-spinner-track-inverse: rgba(255, 255, 255, 0.45); /* 强调色按钮内 spinner 轨道 */
+  --color-spinner-track-inverse-soft: rgba(255, 255, 255, 0.42); /* T1-01 诊断页既有 spinner 轨道（保持原值） */
+  --color-spinner-track: #cbd5e1; /* 浅色底上的加载 spinner 轨道 */
+  --color-danger-border: #f3c6c1; /* 错误面板/错误提示边框 */
+  --color-danger-border-strong: #f0b4ad; /* 错误码等强错误边框 */
+  --color-danger-text-strong: #7f1d1d; /* 错误详情强文字 */
+  --color-success-border: #bfe8cc; /* 成功状态徽标边框 */
+  --color-warning-border: #f2d9a5; /* 警告状态徽标边框 */
+  --color-text-secondary-strong: #4b5563; /* 比次级文字更强的说明文字 */
+  --color-code-text: #334155; /* 等宽代码/路径文本 */
+  --color-divider-subtle: #eef1f6; /* 表格行细分隔线 */
+  --color-surface-hover: #fbfcfe; /* 表格行悬停背景 */
+  --color-focus-ring-strong: #1e3a8a; /* 强调色实底按钮上的深色焦点环 */
+
+  /* DEC-032 三个彩色窗口控制圆点：固定语义色，不得改为装饰或其它颜色。 */
+  --color-window-close: #ff5f57;
+  --color-window-minimize: #febc2e;
+  --color-window-maximize: #28c840;
+
   /* 兼容别名：仅用于保持 T1-01 诊断页既有视觉，不用于新业务组件。 */
   --color-text: var(--color-text-primary);
   --color-text-muted: var(--color-text-secondary);

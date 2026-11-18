@@ -95,7 +95,7 @@
   }
 
   .confirm-dialog::backdrop {
-    background-color: rgba(15, 23, 42, 0.28);
+    background-color: var(--color-backdrop);
   }
 
   .dialog-body {
@@ -128,7 +128,7 @@
   .dialog-error {
     margin-top: var(--space-3);
     padding: var(--space-2) var(--space-3);
-    border: 1px solid #f3c6c1;
+    border: 1px solid var(--color-danger-border);
     border-radius: var(--radius-sm);
     background-color: var(--color-danger-bg);
     color: var(--color-danger-text);

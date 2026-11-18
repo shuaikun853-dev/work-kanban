@@ -268,7 +268,7 @@
     gap: var(--space-3);
     margin-bottom: var(--space-4);
     padding: var(--space-4);
-    border: 1px solid #f3c6c1;
+    border: 1px solid var(--color-danger-border);
     border-radius: var(--radius-lg);
     background-color: var(--color-danger-bg);
   }

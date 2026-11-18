@@ -120,7 +120,7 @@
   }
 
   .nav-item:hover {
-    background-color: rgba(0, 122, 255, 0.07);
+    background-color: var(--color-nav-hover-bg);
   }
 
   .nav-item--active {
