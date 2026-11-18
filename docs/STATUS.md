@@ -3,8 +3,8 @@
 **更新日期：** 2026-11-18  
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **最近完成任务：** T1-01 正式工程骨架与 SQLite 基础设施（用户验收完成）  
-**当前任务：** T1-02 项目创建、编辑、归档（**待审计**：开发与自测完成，2026-11-18）  
-**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01 已验收完成并合并到 main。T1-02 已完成代码、migration 0002、Rust Core 项目领域、typed Tauri IPC、项目 UI、自动化测试与 Release 实跑验证；本地回归 90 项 Rust 测试通过、Release UI/IPC 检查 0 失败，**当前状态为待审计**（[PR #7](https://github.com/shuaikun853-dev/work-kanban/pull/7)），独立审计与用户验收前不得标记验收完成、不合并 PR。TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。分支 `task/T1-02-project-management`；T1-03 未开始。
+**当前任务：** T1-02 项目创建、编辑、归档（**返工**：独立审计发现 P2-01 UI Design Token 规范问题，2026-11-18）  
+**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01 已验收完成并合并到 main。T1-02 已完成代码、migration 0002、Rust Core 项目领域、typed Tauri IPC、项目 UI、自动化测试与 Release 实跑验证；本地回归 90 项 Rust 测试通过、Release UI/IPC 主流程整体成立，但独立审计发现 P2-01 UI Design Token 规范问题，**当前状态为返工**（[PR #7](https://github.com/shuaikun853-dev/work-kanban/pull/7)），独立审计与用户验收前不得标记验收完成、不合并 PR。TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。分支 `task/T1-02-project-management`；T1-03 未开始。
 
 ## 最新产品决策
 
@@ -25,7 +25,7 @@
 - 首页优先展示今日要做、今日已完成、当前工作；复盘与待跟进降为次级信息；禁止堆叠统计图表和无关指标。
 - 前端组件分层、Design Tokens、typed Bridge、CSS 隔离和 UI 回归规则已写入 UI 规范、技术架构和 AGENTS.md。
 - **T1-02 已进入开发：项目 CRUD + UI 基础应用壳/导航 + 项目管理页面。**
-- **T1-02 当前状态：待审计。** 代码、schema v2 migration、Rust Core、typed IPC、项目 UI、Release 证据已完成；见 [T1-02 测试与交付报告](testing/reports/T1-02-REPORT.md)。
+- **T1-02 当前状态：待审计。** 代码、schema v2 migration、Rust Core、typed IPC、项目 UI、Release 证据已完成；见 [T1-02 测试与交付报告](testing/reports/T1-02-REPORT.md)、[T1-02 独立审计报告](testing/reports/T1-02-INDEPENDENT-AUDIT-REPORT.md)。
 
 ## 阶段 0：技术验证
 
@@ -51,7 +51,7 @@
 | 任务 | 内容 | 状态 |
 |---|---|---|
 | T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | **验收完成**（用户 2026-11-18 确认；PR #1 已合并到 main，commit `260e6c0`；TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
-| T1-02 | 项目创建、编辑、归档 | **待审计**（代码 + migration 0002 + Rust Core + IPC + UI + 自测 + Release 证据完成；独立审计与用户验收前不得标记完成） |
+| T1-02 | 项目创建、编辑、归档 | **返工**（独立审计发现 P2-01 UI Design Token 规范问题；修复后重新审计） |
 | T1-03 | 工作事项快速创建和待安排区域 | 未开始 |
 | T1-04 | 多项目独立副本创建 | 未开始 |
 | T1-05 | 工作事项状态流转和历史记录 | 未开始 |
