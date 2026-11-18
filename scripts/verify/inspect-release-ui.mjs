@@ -1,15 +1,16 @@
 /**
- * WorkManager T1-01 Release 窗口 UI/IPC 端到端检查。
+ * WorkManager Release 窗口数据库诊断页 UI/IPC 端到端检查（T1-01 检查脚本，T1-02 适配新应用壳）。
  *
  * 前提：Release 进程已用 `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=<port>`
  * 启动，且 WebView2 已加载页面。
  *
  * 做法：通过 Chromium DevTools Protocol 连接真实 WebView2 页面：
- * 1. 读取渲染后的 DOM 文本（证明前端真实渲染，而非仅启动进程）；
- * 2. 直接调用 window.__TAURI_INTERNALS__.invoke('get_database_health')，
+ * 1. 从默认“工作总览”页移动到“设置 → 数据库诊断”；
+ * 2. 读取渲染后的 DOM 文本（证明前端真实渲染，而非仅启动进程）；
+ * 3. 直接调用 window.__TAURI_INTERNALS__.invoke('get_database_health')，
  *    证明受限 Rust IPC 命令在 Release 中真实可用并返回数据库状态；
- * 3. 截图保存视觉证据；
- * 4. 所有断言写入 evidence JSON，任一失败退出码 1。
+ * 4. 截图保存视觉证据；
+ * 5. 所有断言写入 evidence JSON，任一失败退出码 1。
  *
  * 用法：node scripts/verify/inspect-release-ui.mjs <port> <outputDir>
  */
@@ -131,6 +132,37 @@ document.addEventListener('securitypolicyviolation', (event) => {
 await send('Page.reload', { ignoreCache: true });
 await sleep(500);
 
+// T1-02：数据库诊断页位于“设置 → 数据库诊断”。先等待应用壳渲染，再导航。
+for (let attempt = 0; attempt < 80; attempt += 1) {
+  const ready = await evaluate(
+    `document.querySelector('.app-shell') !== null && document.querySelectorAll('nav button').length >= 6`
+  ).catch(() => false);
+  if (ready) {
+    break;
+  }
+  await sleep(250);
+}
+
+const clickedSettings = await evaluate(`(() => {
+  const button = Array.from(document.querySelectorAll('nav button')).find((item) =>
+    (item.textContent || '').includes('设置')
+  );
+  if (!button) return false;
+  button.click();
+  return true;
+})()`);
+await sleep(250);
+
+const clickedDiagnostics = await evaluate(`(() => {
+  const button = Array.from(document.querySelectorAll('main button')).find((item) =>
+    (item.textContent || '').includes('打开数据库诊断')
+  );
+  if (!button) return false;
+  button.click();
+  return true;
+})()`);
+await sleep(400);
+
 const readUiState = () =>
   evaluate(`(() => {
     const text = (selector) => {
@@ -141,8 +173,12 @@ const readUiState = () =>
       title: document.title,
       href: location.href,
       readyState: document.readyState,
-      versionPill: text('.version-pill'),
+      titlebarAppName: text('.window-titlebar__app-name'),
+      windowControlCount: document.querySelectorAll('.window-control').length,
       heading: text('h1'),
+      navLabels: Array.from(document.querySelectorAll('nav button')).map((element) =>
+        (element.textContent || '').replace(/\\s+/g, ' ').trim()
+      ),
       badges: Array.from(document.querySelectorAll('.badge')).map((element) =>
         element.innerText.replace(/\\s+/g, ' ').trim()
       ),
@@ -152,8 +188,7 @@ const readUiState = () =>
       migrationRows: Array.from(document.querySelectorAll('table tbody tr')).map((row) =>
         Array.from(row.querySelectorAll('td')).map((cell) => cell.innerText.trim())
       ),
-      footerScope: text('.footer-scope'),
-      footerNote: text('.footer-note'),
+      footerScope: text('.diagnostic-note'),
       hasErrorAlert: document.querySelector('[role="alert"]') !== null,
       bodyText: document.body ? document.body.innerText.replace(/\\s+/g, ' ').trim().slice(0, 3000) : ''
     };
@@ -210,19 +245,28 @@ const database = ipcResult && ipcResult.database ? ipcResult.database : null;
 
 const assertions = {
   pageLoaded: uiState !== null && uiState.readyState === 'complete',
+  navigationReachedDiagnostics:
+    clickedSettings === true && clickedDiagnostics === true,
   cspCollectorInstalled: Array.isArray(cspViolations),
   noCspViolations: Array.isArray(cspViolations) && cspViolations.length === 0,
   uiRenderedHealth: uiState !== null && uiState.badges.some((badge) => badge.includes('正常（ok）')),
   noErrorAlert: uiState !== null && uiState.hasErrorAlert === false,
-  appNameRendered: uiState !== null && uiState.heading === 'WorkManager',
-  versionRendered: uiState !== null && /版本 0\.1\.0/.test(uiState.versionPill ?? ''),
-  footerScopeRendered:
-    uiState !== null && (uiState.footerScope ?? '').includes('T1-01 基础设施预览'),
+  appNameRendered: uiState !== null && uiState.titlebarAppName === 'WorkManager',
+  windowControlsRendered: uiState !== null && uiState.windowControlCount === 3,
+  sidebarNavigationRendered:
+    uiState !== null &&
+    uiState.navLabels.length === 6 &&
+    uiState.navLabels.some((label) => label.includes('工作总览')) &&
+    uiState.navLabels.some((label) => label.includes('今日工作')) &&
+    uiState.navLabels.some((label) => label.includes('设置')),
+  diagnosticsHeadingRendered: uiState !== null && uiState.heading === '数据库诊断',
+  diagnosticsNoteRendered:
+    uiState !== null && (uiState.footerScope ?? '').includes('未加密'),
   ipcCommandSucceeded: ipcError === null && database !== null,
   ipcAppName: ipcResult !== null && ipcResult.appName === 'WorkManager',
   ipcAppVersion: ipcResult !== null && ipcResult.appVersion === '0.1.0',
   ipcRuntimeModeRelease: ipcResult !== null && ipcResult.runtimeMode === 'release',
-  ipcSchemaVersion: database !== null && database.schemaVersion === 1,
+  ipcSchemaVersion: database !== null && database.schemaVersion === 2,
   ipcIntegrityOk: database !== null && database.integrityCheck === 'ok',
   ipcJournalModeWal: database !== null && String(database.journalMode).toLowerCase() === 'wal',
   ipcForeignKeysEnabled: database !== null && database.foreignKeys === true,
@@ -231,8 +275,9 @@ const assertions = {
   ipcMigrationRecorded:
     database !== null &&
     Array.isArray(database.appliedMigrations) &&
-    database.appliedMigrations.length === 1 &&
-    database.appliedMigrations[0].version === 1,
+    database.appliedMigrations.length === 2 &&
+    database.appliedMigrations[0].version === 1 &&
+    database.appliedMigrations[1].version === 2,
   ipcDatabasePathPortable:
     database !== null &&
     String(database.databasePath).toLowerCase().endsWith('\\app\\data\\database\\work.db'),
