@@ -11,7 +11,7 @@
 **用户验收记录：** [T1-01-USER-ACCEPTANCE.md](../../testing/reports/T1-01-USER-ACCEPTANCE.md) \
 **第二轮机器可读证据：** [T1-01-AUDIT-FIX-evidence.json](../../testing/reports/T1-01-AUDIT-FIX-evidence.json)（历史） \
 **测试报告：** [T1-01-REPORT.md](../../testing/reports/T1-01-REPORT.md)（返工前历史证据） \
-**Pull Request：** [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（指向 main，保持打开、不合并；开发代理未合并）
+**Pull Request：** [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（已于 2026-11-18 10:07（北京时间） 合并至 main；合并提交 `260e6c07802a297529d8bda1e2d9239fca90fc10`）
 **任务阶段：** 阶段 1：基础架构与工作事项  
 **执行方式：** 用户 Windows 10 本机 DeepSeek Agent  
 **授权日期：** 2026-11-17  
@@ -249,7 +249,7 @@
 - R3-01 P1：通过代码与证据复核。生产路径确实执行 D 根卷信任锚验证；真实 D 盘、真实 Q:→C: SUBST 和注入负向测试证据已核对。
 - R3-02 P2：通过代码与证据复核。观察器仅在 `cfg(test)` 存在，只在底层锁操作明确返回竞争时通知；waiter 走完整 `Database::initialize()`；10/10 轮日志已核对。
 - 本轮未在开发代理 Windows 10 主机独立重放测试；仓库当前没有 GitHub Actions/status checks。证据边界和非阻塞观察项详见[第四轮独立审计报告](../../testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)。
-- 当前状态：**T1-01 验收完成**（用户于 2026-11-18 明确确认）。PR #1 保持 Open、未合并，main 未修改；T1-02 尚未开始。
+- 当前状态：**T1-01 验收完成**（用户于 2026-11-18 明确确认）。PR #1 已于 2026-11-18 10:07（北京时间） 合并至 main（`260e6c07802a297529d8bda1e2d9239fca90fc10`）；T1-02 尚未开始。
 - TOCTOU 仍未修复，按 DEC-029 接受并延期至 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)；不得宣称绝对 D 盘写入保证。
 
 
@@ -258,6 +258,11 @@
 用户明确回复“接受”，确认接受 T1-01 当前交付结果，包括第四轮独立审计通过结论，以及 DEC-029 中已接受但未修复的 TOCTOU 残余风险。T1-01 正式标记为**验收完成**。
 
 - 验收记录：[T1-01-USER-ACCEPTANCE.md](../../testing/reports/T1-01-USER-ACCEPTANCE.md)
-- PR #1 保持打开、未合并；本次验收不自动执行合并。
-- main 未修改；T1-02 未开始，等待单独启动指示。
+- PR #1 已于 2026-11-18 10:07（北京时间） 按用户明确授权合并至 main，采用 Merge commit；合并提交 `260e6c07802a297529d8bda1e2d9239fca90fc10`。
+- T1-02 未开始，等待单独启动指示。
 - TOCTOU 仍由 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2) 跟踪，未修复。
+
+
+## PR 合并记录（2026-11-18）
+
+用户随后明确授权合并 PR #1。GitHub 已确认合并成功，PR 状态 Closed / Merged；采用 Merge commit，保留完整提交历史。合并提交：`260e6c07802a297529d8bda1e2d9239fca90fc10`。T1-02 尚未开始，等待单独启动指示；TOCTOU 仍由 Issue #2 跟踪，未修复。

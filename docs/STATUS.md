@@ -4,7 +4,7 @@
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **最近完成任务：** T1-01 正式工程骨架与 SQLite 基础设施（用户验收完成）  
 **下一候选任务：** T1-02 项目创建、编辑、归档（尚未开始，等待单独启动指示）  
-**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 的 R3-01（P1）与 R3-02（P2）已修复，第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。TOCTOU 按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复，不作绝对 C 盘写入保证。分支 `task/T1-01-sqlite-foundation`；PR #1 保持打开、未合并；main 未修改；T1-02 未开始。
+**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 的 R3-01（P1）与 R3-02（P2）已修复，第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。TOCTOU 按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复，不作绝对 C 盘写入保证。PR #1 已于 2026-11-18 10:07（北京时间） 合并至 main；合并提交 `260e6c07802a297529d8bda1e2d9239fca90fc10`；T1-02 未开始，等待单独启动指示。
 
 ## 最新产品决策
 
@@ -41,7 +41,7 @@
 
 | 任务 | 内容 | 状态 |
 |---|---|---|
-| T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | **验收完成**（用户 2026-11-18 确认；PR #1 仍待单独合并；TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
+| T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | **验收完成并已合并至 main**（2026-11-18；合并提交 `260e6c0`；TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
 | T1-02 | 项目创建、编辑、归档 | 未开始 |
 | T1-03 | 工作事项快速创建和待安排区域 | 未开始 |
 | T1-04 | 多项目独立副本创建 | 未开始 |
@@ -49,7 +49,7 @@
 | T1-06 | 六位数字应用密码与锁屏 | 取消 |
 | T1-07 | 首次初始化与 SQLite 异常保护 | 未开始 |
 
-**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[R3 专项修复报告](testing/reports/T1-01-R3-FIX-REPORT.md)、[R3 机器可读证据](testing/reports/T1-01-R3-FIX-evidence.json)、第二轮返工报告与证据、[第三轮独立审计报告](testing/reports/T1-01-THIRD-AUDIT-REPORT.md)、[TOCTOU 后续安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)、历史审计/返工报告、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（T1-01 已用户验收；PR 保持打开、未合并，等待单独合并指示）；[第四轮独立审计报告](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)、[T1-01 用户验收记录](testing/reports/T1-01-USER-ACCEPTANCE.md)。
+**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[R3 专项修复报告](testing/reports/T1-01-R3-FIX-REPORT.md)、[R3 机器可读证据](testing/reports/T1-01-R3-FIX-evidence.json)、第二轮返工报告与证据、[第三轮独立审计报告](testing/reports/T1-01-THIRD-AUDIT-REPORT.md)、[TOCTOU 后续安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)、历史审计/返工报告、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（T1-01 已验收并于 2026-11-18 合并至 main）；[第四轮独立审计报告](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)、[T1-01 用户验收记录](testing/reports/T1-01-USER-ACCEPTANCE.md)。
 
 ### T1-01 历史交付摘要（2026-11-17，第二轮返工后；R3 最终结果见下文）
 
@@ -130,7 +130,7 @@
 
 ## 下一步安排
 
-- T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；R3-01/R3-02 代码与证据复核通过。审计报告见 [T1-01-FOURTH-AUDIT-REPORT.md](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户验收记录见 [T1-01-USER-ACCEPTANCE.md](testing/reports/T1-01-USER-ACCEPTANCE.md)。PR #1 保持打开、未合并，main 未修改，T1-02 尚未开始。
+- T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；R3-01/R3-02 代码与证据复核通过。审计报告见 [T1-01-FOURTH-AUDIT-REPORT.md](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户验收记录见 [T1-01-USER-ACCEPTANCE.md](testing/reports/T1-01-USER-ACCEPTANCE.md)。PR #1 已于 2026-11-18 10:07（北京时间） 合并至 main（`260e6c07802a297529d8bda1e2d9239fca90fc10`），T1-02 尚未开始。
 - T1-01 已验收完成；PR #1 合并和 T1-02 启动均作为独立执行步骤，等待单独指示。
 - TOCTOU 残余风险按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复、不得宣称绝不写入 C 盘；未经用户另行授权不得开始完整句柄相对改造/custom SQLite VFS。
 - 重新审计通过并同步更新开发计划后，才决定是否进入 T1-02；开发代理不得自行开始 T1-02。
@@ -151,7 +151,7 @@
 - R3-01：生产信任锚调用链、D/C 卷 GUID 比较、QueryDosDevice 映射检查及 fail-closed 顺序通过复核。
 - R3-02：观察器仅在 `cfg(test)` 编译；仅底层 `LockFileEx` 明确返回锁竞争时通知；waiter 走完整 `Database::initialize()`；10/10 稳定性日志通过复核。
 - 审计证据来自已提交 Windows 10 脱敏日志；本轮未在开发机独立重放，GitHub 当前无 Actions/status checks。
-- **当前状态：T1-01 验收完成（用户于 2026-11-18 明确确认）。** PR #1 保持打开、未合并；main 未修改；T1-02 尚未开始。
+- **当前状态：T1-01 已验收并合并至 main。** PR #1 于 2026-11-18 10:07（北京时间） 合并，合并提交 `260e6c07802a297529d8bda1e2d9239fca90fc10`；T1-02 尚未开始。
 - TOCTOU 按 DEC-029 接受并延期至 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复；其余未实机验证场景详见第四轮审计报告。
 
 
@@ -159,6 +159,16 @@
 
 - 用户明确回复“接受”，确认接受 T1-01 当前交付，包括第四轮独立审计结论及 DEC-029 中已接受但未修复的 TOCTOU 残余风险。
 - **T1-01：验收完成。** 验收记录见 [T1-01-USER-ACCEPTANCE.md](testing/reports/T1-01-USER-ACCEPTANCE.md)。
-- PR #1 仍保持 Open、未合并；本次验收记录不自动执行合并，main 保持不变。
+- 验收当时 PR #1 仍为 Open、未合并；随后用户于 2026-11-18 10:07（北京时间） 明确授权合并，现已合并至 main（`260e6c07802a297529d8bda1e2d9239fca90fc10`）。
 - T1-02 尚未开始，等待单独启动指示。
 - TOCTOU 继续由 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2) 跟踪，仍未修复；不得宣称绝对不会写入 C 盘。
+
+
+## T1-01 合并结果（2026-11-18）
+
+- 用户明确授权合并 PR #1；GitHub 确认合并成功，PR 状态为 Closed / Merged。
+- 合并方式：Merge commit，保留完整提交历史。
+- 合并提交：`260e6c07802a297529d8bda1e2d9239fca90fc10`；main 当前已指向该提交。
+- PR：[T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施](https://github.com/shuaikun853-dev/work-kanban/pull/1)。
+- T1-01：验收完成并已合并；T1-02：未开始，等待单独启动指示。
+- TOCTOU 仍未修复，按 DEC-029 由 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2) 跟踪。

@@ -17,7 +17,7 @@
 ## 验收后的仓库状态
 
 - T1-01：**验收完成**。
-- PR #1：保持 Open、未合并；本次“接受”记录不自动执行合并。
+- 验收时 PR #1 保持 Open、未合并；用户随后于 2026-11-18 授权合并，现已合并至 main。
 - `main`：保持原提交，不修改。
 - T1-02：未开始；本次验收不自动启动下一任务。
 - TOCTOU：继续由 Issue #2 跟踪，未经另行授权不得启动完整安全加固。
@@ -28,3 +28,15 @@
 - [R3 专项修复报告](T1-01-R3-FIX-REPORT.md)
 - [R3 机器可读证据](T1-01-R3-FIX-evidence.json)
 - [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)
+
+
+## 合并记录（2026-11-18）
+
+用户随后明确授权合并 PR #1。GitHub 已确认合并成功：
+
+- PR 状态：Closed / Merged
+- 合并方式：Merge commit（保留完整提交历史）
+- 合并提交：`260e6c07802a297529d8bda1e2d9239fca90fc10`
+- main 已更新至该合并提交
+- T1-02 尚未开始，等待单独启动指示
+- TOCTOU 仍未修复，继续由 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2) 跟踪
