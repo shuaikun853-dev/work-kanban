@@ -1,11 +1,14 @@
 # T1-02：项目创建、编辑、归档
 
-**任务状态：** 开发中  
+**任务状态：** 待审计（开发代理自测完成；未经验收，不得标记验收完成）  
 **启动日期：** 2026-11-18  
+**自测完成日期：** 2026-11-18  
 **所属阶段：** 阶段 1：基础架构与工作事项  
 **前置任务：** T1-01 已验收完成并已合并到 main  
 **开发分支：** `task/T1-02-project-management`  
-**目标分支：** `main`
+**目标分支：** `main`  
+**测试报告：** [T1-02-REPORT.md](../../testing/reports/T1-02-REPORT.md)  
+**机器可读证据：** [T1-02-evidence.json](../../testing/reports/T1-02-evidence.json)
 
 ## 1. 权威依据
 
@@ -62,6 +65,12 @@ T1-02 至少完成：
 8. 归档后的项目仍可用于历史数据展示，但不能作为新工作事项的正常可选项目（具体行为必须以 PRD/后续任务定义为准，不得提前扩展工作事项业务）。
 
 **不要在本任务实现 T1-03 工作事项创建、T1-04 多项目创建或 T1-05 状态流转。**
+
+### 3.1 全局窗口标题栏（DEC-032，UI Shell 前置切片）
+
+- 按用户 2026-11-18 确认的 DEC-032，Windows 10 主窗口使用 Tauri 2 自定义无边框标题栏（`decorations: false`）。
+- 红/黄/绿三个圆点分别真实调用关闭、最小化、最大化/还原窗口 API；保留拖动、双击最大化、窗口缩放、最小尺寸和键盘可访问性。
+- 该切片在本次 T1-02 分支中保留并完成 Release 实测：最大化视口 1100→1920→1100；点击关闭按钮后进程真实退出（退出码 0）。
 
 ## 4. 数据与业务边界
 
@@ -180,3 +189,25 @@ UI 变更必须提供：
 - 不把“代码完成”写成“验收完成”。
 
 **完成代码和自测后停止，等待独立审计。**
+
+---
+
+## 9. 实际交付结果（2026-11-18，待审计）
+
+**代码提交：** `b8962b5`（Core + migration）、`2b3035d`（Tauri IPC）、`14a542e`（UI）、`30666c8`（验证脚本）。
+
+**实际完成：**
+
+- migration 0002：`projects` 表（id、name、is_archived、created_at、updated_at），schema version 1 → 2；T1-01 migration 历史未修改。
+- Rust Core `projects/` 模块：模型、名称校验、参数化 SQL 仓储、应用服务、`IMMEDIATE` 写事务与失败回滚。
+- Tauri typed IPC：`list_projects` / `create_project` / `update_project` / `archive_project`；请求 DTO 拒绝未知字段；无任意 SQL / 任意文件接口。
+- 前端：Design Tokens、AppShell、Sidebar、navigation、typed Bridge、DTO Contracts；项目管理列表/新建/编辑/归档/loading/空/错误/长名称/归档态；诊断页迁移且功能不变。
+- 归档为 UPDATE 标记，不删除项目记录；已归档项目只读并保留在列表；重复归档幂等。
+- 测试：`cargo test --workspace` 90 passed / 0 failed；`npm run check` / `npm run build` / `cargo fmt --check` / `cargo check` 均通过。
+- Release：`target\release\workmanager.exe` 10,230,272 字节，SHA-256 `DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8`。
+- Release UI/IPC：主检查 73/73、最小窗口 11/11、关闭按钮真实退出；继承便携验证 106 项 0 FAIL、异常注入 73 项 0 FAIL；诊断页 24/24。
+- 截图与日志：`docs/testing/reports/T1-02-assets/`。
+
+**未实现（保持任务边界）：** T1-03 工作事项、T1-04 多项目副本、T1-05 状态流转、每日计划、复盘、报表、附件、备份恢复、TOCTOU 加固。
+
+**结论：** 开发与自测完成，**状态为待审计**；不得自行标记验收完成。独立审计通过并完成用户验收前，不开始 T1-03。

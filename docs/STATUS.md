@@ -3,8 +3,8 @@
 **更新日期：** 2026-11-18  
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **最近完成任务：** T1-01 正式工程骨架与 SQLite 基础设施（用户验收完成）  
-**当前任务：** T1-02 项目创建、编辑、归档（开发中，2026-11-18 启动）  
-**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 的 R3-01（P1）与 R3-02（P2）已修复，第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。用户同日确认 UI 原型与前端架构基线（DEC-030），UI 设计文档已通过 PR #4 合并到 main（commit `938f21c`），**T1-02 已正式进入 UI + 业务纵向开发**。TOCTOU 按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复，不作绝对 C 盘写入保证。分支 `task/T1-01-sqlite-foundation`；PR #1 已于 2026-11-18 合并到 main（commit `260e6c0`）；UI 设计文档 PR #4 也已合并（commit `938f21c`）；T1-02 未开始。
+**当前任务：** T1-02 项目创建、编辑、归档（**待审计**：开发与自测完成，2026-11-18）  
+**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01 已验收完成并合并到 main。T1-02 已完成代码、migration 0002、Rust Core 项目领域、typed Tauri IPC、项目 UI、自动化测试与 Release 实跑验证；本地回归 90 项 Rust 测试通过、Release UI/IPC 检查 0 失败，**当前状态为待审计**，独立审计与用户验收前不得标记验收完成。TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。分支 `task/T1-02-project-management`；T1-03 未开始。
 
 ## 最新产品决策
 
@@ -25,6 +25,7 @@
 - 首页优先展示今日要做、今日已完成、当前工作；复盘与待跟进降为次级信息；禁止堆叠统计图表和无关指标。
 - 前端组件分层、Design Tokens、typed Bridge、CSS 隔离和 UI 回归规则已写入 UI 规范、技术架构和 AGENTS.md。
 - **T1-02 已进入开发：项目 CRUD + UI 基础应用壳/导航 + 项目管理页面。**
+- **T1-02 当前状态：待审计。** 代码、schema v2 migration、Rust Core、typed IPC、项目 UI、Release 证据已完成；见 [T1-02 测试与交付报告](testing/reports/T1-02-REPORT.md)。
 
 ## 阶段 0：技术验证
 
@@ -50,14 +51,14 @@
 | 任务 | 内容 | 状态 |
 |---|---|---|
 | T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | **验收完成**（用户 2026-11-18 确认；PR #1 已合并到 main，commit `260e6c0`；TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
-| T1-02 | 项目创建、编辑、归档 | **开发中** |
+| T1-02 | 项目创建、编辑、归档 | **待审计**（代码 + migration 0002 + Rust Core + IPC + UI + 自测 + Release 证据完成；独立审计与用户验收前不得标记完成） |
 | T1-03 | 工作事项快速创建和待安排区域 | 未开始 |
 | T1-04 | 多项目独立副本创建 | 未开始 |
 | T1-05 | 工作事项状态流转和历史记录 | 未开始 |
 | T1-06 | 六位数字应用密码与锁屏 | 取消 |
 | T1-07 | 首次初始化与 SQLite 异常保护 | 未开始 |
 
-**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[R3 专项修复报告](testing/reports/T1-01-R3-FIX-REPORT.md)、[R3 机器可读证据](testing/reports/T1-01-R3-FIX-evidence.json)、第二轮返工报告与证据、[第三轮独立审计报告](testing/reports/T1-01-THIRD-AUDIT-REPORT.md)、[TOCTOU 后续安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)、历史审计/返工报告、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（T1-01 已用户验收；PR 保持打开、未合并，等待单独合并指示）；[第四轮独立审计报告](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)、[T1-01 用户验收记录](testing/reports/T1-01-USER-ACCEPTANCE.md)。
+**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[T1-02 开发任务说明](development/tasks/T1-02-Project-Management.md)、[T1-02 测试与交付报告](testing/reports/T1-02-REPORT.md)、[T1-02 机器可读证据](testing/reports/T1-02-evidence.json)、[R3 专项修复报告](testing/reports/T1-01-R3-FIX-REPORT.md)、[R3 机器可读证据](testing/reports/T1-01-R3-FIX-evidence.json)、第二轮返工报告与证据、[第三轮独立审计报告](testing/reports/T1-01-THIRD-AUDIT-REPORT.md)、[TOCTOU 后续安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)、历史审计/返工报告、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（T1-01 已用户验收并合并）；[第四轮独立审计报告](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)、[T1-01 用户验收记录](testing/reports/T1-01-USER-ACCEPTANCE.md)。
 
 ### T1-01 历史交付摘要（2026-11-17，第二轮返工后；R3 最终结果见下文）
 
@@ -138,12 +139,12 @@
 
 ## 下一步安排
 
-- T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；R3-01/R3-02 代码与证据复核通过。审计报告见 [T1-01-FOURTH-AUDIT-REPORT.md](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户验收记录见 [T1-01-USER-ACCEPTANCE.md](testing/reports/T1-01-USER-ACCEPTANCE.md)。PR #1 已合并到 main（commit `260e6c0`）；UI 设计文档 PR #4 已合并（commit `938f21c`）；T1-02 开发中（2026-11-18 启动）。
-- T1-01 已验收完成，PR #1 已合并；T1-02 项目创建、编辑、归档仍是独立执行步骤，已获得用户启动指示并进入开发。
+- T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；T1-01 代码与 UI 设计文档均已合并到 main。
+- **T1-02 项目管理：代码、migration、Rust Core、IPC、UI、自动化测试和 Release 证据已完成，状态“待审计”**；等待独立审计统筹复核，开发代理不得自行标记验收完成。
+- T1-02 审计通过并获用户验收前，**不开始 T1-03**。
 - TOCTOU 残余风险按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复、不得宣称绝不写入 C 盘；未经用户另行授权不得开始完整句柄相对改造/custom SQLite VFS。
-- 重新审计通过并同步更新开发计划后，才决定是否进入 T1-02；开发代理不得自行开始 T1-02。
-- T0-05 不再安排开发；T0-06 延期至阶段 6，不得从最终发布验收清单中删除。
 - 备份策略（OPEN-001/002/003）未确认前，不实施、也不宣称自动备份。
+- 最小化提醒/Toast、托盘、单实例等系统集成仍按计划在阶段 6（T6-07）验收。
 
 ## 进度口径
 
@@ -177,3 +178,43 @@
 - T1-01 用户验收完成后，PR #1 于 2026-11-18 10:07（北京时间）合并到 main。
 - 合并提交：`260e6c07802a297529d8bda1e2d9239fca90fc10`。
 - **T1-01 代码现已进入 main；T1-02 已于 2026-11-18 启动开发。**
+
+## T1-02 交付结果（2026-11-18，待审计）
+
+**任务：** 项目创建、编辑、归档。  
+**分支：** `task/T1-02-project-management`（基于 main `0cafde6`）；PR 待创建/待审计。  
+**状态：** **待审计**。开发代理自测完成，未自行标记验收完成。
+
+### 实现范围
+
+- **Migration：** 新增 `0002_projects.sql`，schema version 1 → 2；`projects(id, name, is_archived, created_at, updated_at)`；沿用 T1-01 的 `user_version` + 事务化 migration，未修改 0001 历史。
+- **Rust Core：** `crates/workmanager-core/src/projects/`（model/repository/service/error）；`Database::write_transaction` 提供 `IMMEDIATE` 写事务与失败回滚；项目 ID 由 Core 生成 UUID；归档为 UPDATE 标记，不删除记录；已归档项目只读并保留在列表。
+- **Tauri IPC：** `list_projects`、`create_project`、`update_project`、`archive_project`，typed 请求/响应 DTO + 稳定 `{code,message}` 错误；无任意 SQL / 任意文件接口。
+- **前端：** Design Tokens、AppShell、Sidebar、navigation、typed Bridge/DTO Contracts；设置 → 项目管理页面含列表、新建、编辑、归档、loading/空/错误状态、长名称处理；数据库诊断页迁移后功能保留；工作总览/今日工作为结构页并明确标注业务数据未接入（不展示虚构数据）。
+- **保留整合：** 会话开始前工作区未提交的 DEC-032 自定义标题栏实现已纳入分支并在 Release 实测（最大化/还原、关闭按钮真实退出）。
+- **未实现：** T1-03 / T1-04 / T1-05、每日计划、复盘、报表、附件、备份恢复、TOCTOU 加固。
+
+### 验证结果（详见 [T1-02-REPORT.md](testing/reports/T1-02-REPORT.md)）
+
+| 项目 | 结果 |
+|---|---|
+| `cargo fmt --all -- --check` | PASS |
+| `cargo check --workspace --all-targets` | PASS（无 warning） |
+| `cargo test --workspace` | **90 passed / 0 failed** |
+| `npm run check` | 0 errors / 0 warnings |
+| `npm run build` | PASS |
+| `npm run tauri build -- --no-bundle` | PASS |
+| Release UI/IPC（真实窗口 + 真实 IPC） | **73/73 + 最小窗口 11/11**，关闭按钮真实退出 |
+| 继承便携验证 | **106 项，90 PASS / 0 FAIL / 1 WARN（既有 EBWebView 历史目录）** |
+| 继承异常注入 | **73 项，64 PASS / 0 FAIL** |
+| T1-01 诊断页 UI 回归 | 24/24 |
+| Release EXE | 10,230,272 字节；SHA-256 `DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8` |
+
+### 已知风险 / 未覆盖
+
+- 独立审计尚未进行；本状态只能为“待审计”。
+- 项目名称唯一性、删除/恢复、排序偏好等 PRD 未定义行为未实现。
+- 归档历史关联测试使用测试探针表模拟未来 work_items；正式关联属于 T1-03。
+- 仓库仍无前端组件测试/视觉回归框架；UI 证据来自真实 Release CDP 脚本与截图。
+- TOCTOU 按 DEC-029 未修复，延期至 Issue #2；普通 SQLite 未加密；备份策略未确认。
+- **T1-03 未开始。**

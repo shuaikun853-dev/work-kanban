@@ -1,0 +1,183 @@
+{
+  "task": "T1-02",
+  "taskName": "项目创建、编辑、归档",
+  "status": "待审计",
+  "generatedAt": "2026-11-18T13:12:00+08:00",
+  "baseline": {
+    "branch": "task/T1-02-project-management",
+    "baseMainCommit": "0cafde61078c8d428a37cd509a349e4db8f4096e",
+    "codeCommits": [
+      "b8962b5",
+      "2b3035d",
+      "14a542e",
+      "30666c8"
+    ],
+    "preservedPriorShellCommits": [
+      "e6da283",
+      "a9e73f1",
+      "951d0b4",
+      "8605cc2"
+    ]
+  },
+  "environment": {
+    "os": "Windows 10 19045 (DESKTOP-U5GCI7T)",
+    "rustc": "1.100.0 (0ef1bc386 2026-11-09)",
+    "cargo": "1.100.0 (3acc79c0c 2026-11-05)",
+    "node": "v22.20.0",
+    "npm": "10.9.3",
+    "powershell": "5.1.19041.6456 Desktop",
+    "dataRoot": "D:\\WorkManager-test-data（隔离目录，非正式 D:\\WorkManager）"
+  },
+  "commands": [
+    {
+      "command": "cargo fmt --all -- --check",
+      "exitCode": 0,
+      "result": "PASS（无输出）",
+      "log": "logs/cargo-fmt-check.log.txt"
+    },
+    {
+      "command": "cargo check --workspace --all-targets",
+      "exitCode": 0,
+      "result": "PASS（无 warning）",
+      "log": "logs/cargo-check.log.txt"
+    },
+    {
+      "command": "cargo test --workspace",
+      "exitCode": 0,
+      "result": "PASS：90 passed / 0 failed / 0 ignored（含 doc-tests 0）",
+      "log": "logs/cargo-test-workspace.log.txt"
+    },
+    {
+      "command": "npm run check",
+      "exitCode": 0,
+      "result": "PASS：svelte-check 0 errors / 0 warnings",
+      "log": "logs/npm-check.log.txt"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "result": "PASS：Vite 构建成功（dist/assets 96.13 kB JS / 25.61 kB CSS）",
+      "log": "logs/npm-build.log.txt"
+    },
+    {
+      "command": "npm run tauri build -- --no-bundle",
+      "exitCode": 0,
+      "result": "PASS：Release 构建成功",
+      "log": "logs/tauri-build.log.txt"
+    },
+    {
+      "command": "powershell -File scripts\\verify\\verify-t1-02-ui.ps1",
+      "exitCode": 0,
+      "result": "PASS：主 UI/IPC 73/73；最小窗口 11/11；关闭按钮真实退出；0 失败",
+      "log": "logs/verify-t1-02-ui.log.txt"
+    },
+    {
+      "command": "powershell -File scripts\\verify\\verify-release-portable.ps1",
+      "exitCode": 0,
+      "result": "PASS：TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15",
+      "log": "logs/verify-release-portable.log.txt"
+    },
+    {
+      "command": "powershell -File scripts\\verify\\verify-release-faults.ps1",
+      "exitCode": 0,
+      "result": "PASS：TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9",
+      "log": "logs/verify-release-faults.log.txt"
+    },
+    {
+      "command": "node scripts\\verify\\inspect-release-ui.mjs（T1-01 诊断页回归脚本，已适配新应用壳）",
+      "exitCode": 0,
+      "result": "PASS：24/24 断言，CSP 0 违规，数据库诊断页功能未破坏",
+      "log": "logs/inspect-release-ui.log.txt"
+    }
+  ],
+  "rustTests": {
+    "totalPassed": 90,
+    "totalFailed": 0,
+    "newProjectIntegrationTests": 15,
+    "newProjectModelUnitTests": 4,
+    "newTauriAdapterTests": 3,
+    "updatedFoundationTests": "schema version 期望从 1 更新到 2，并保留全部原有断言",
+    "projectTestNames": [
+      "creates_and_lists_project_with_stable_core_generated_id",
+      "persists_project_across_restart",
+      "updates_project_name_and_keeps_identity",
+      "archives_project_without_deleting_record",
+      "archiving_is_idempotent_and_keeps_original_archive_timestamp",
+      "archive_does_not_delete_existing_history_associations",
+      "multiple_projects_are_isolated",
+      "rejects_empty_names_without_writing_rows",
+      "rejects_unknown_project_ids",
+      "rejects_editing_archived_project",
+      "project_write_failure_rolls_back_transaction",
+      "new_database_runs_all_migrations_and_integrity_checks",
+      "upgrades_schema_version_1_database_and_preserves_existing_data",
+      "failed_migration_after_projects_rolls_back_without_touching_project_data",
+      "project_operations_keep_integrity_and_foreign_key_checks_clean"
+    ]
+  },
+  "release": {
+    "path": "target/release/workmanager.exe",
+    "sizeBytes": 10230272,
+    "sha256": "df4469ea067dee39e10e49f0592fd4a9dab076f4186ff3e8cf60f8f72eabb7e8",
+    "schemaVersion": 2,
+    "runtimeMode": "release"
+  },
+  "releaseUi": {
+    "mainChecks": { "total": 73, "passed": 73, "failed": 0 },
+    "minWindowChecks": { "total": 11, "passed": 11, "failed": 0 },
+    "minimumWindowViewport": "844x632（外部窗口请求 860x640，受 Windows 边框影响）",
+    "titlebarMaximizeVerified": "1100 → 1920 → 1100（真实窗口 API）",
+    "closeButtonVerified": "点击红色关闭圆点后进程退出，退出码 0",
+    "cspViolations": 0,
+    "uncaughtPageErrors": 0,
+    "evidence": [
+      "t1-02-ui-evidence.json",
+      "t1-02-min-window-evidence.json",
+      "t1-02-ui-orchestration.json"
+    ]
+  },
+  "inheritedReleaseSuites": {
+    "portable": { "total": 106, "pass": 90, "fail": 0, "warn": 1, "info": 15 },
+    "faults": { "total": 73, "pass": 64, "fail": 0, "warn": 0, "info": 9 },
+    "diagnosticsUi": { "total": 24, "failed": 0 }
+  },
+  "screenshots": [
+    "screenshots/overview-normal.png",
+    "screenshots/today-normal.png",
+    "screenshots/settings-normal.png",
+    "screenshots/projects-loading.png",
+    "screenshots/projects-empty.png",
+    "screenshots/projects-list.png",
+    "screenshots/projects-archive-confirm.png",
+    "screenshots/projects-archived.png",
+    "screenshots/projects-error.png",
+    "screenshots/diagnostics.png",
+    "screenshots/overview-min.png",
+    "screenshots/projects-min.png",
+    "screenshots/projects-dialog-min.png",
+    "screenshots/diagnostics-t1-01-check.png"
+  ],
+  "uncovered": [
+    "未新增前端组件单元测试/视觉回归框架；仓库当前没有该类基础设施。",
+    "项目名称唯一性、项目删除/恢复（取消归档）、项目排序规则 PRD 未定义，因此未实现。",
+    "archive_does_not_delete_existing_history_associations 使用测试专用数据库探针表模拟未来工作事项关联；正式 work_items 表属于 T1-03。",
+    "未在真实 Windows 10 物理机重新执行 D 盘拔盘/Process Monitor 级审计；这些属 T6-03/T6-04。",
+    "TOCTOU 残余风险按 DEC-029 接受并延期至 Issue #2，本任务未修复。"
+  ],
+  "newDependencies": [
+    {
+      "name": "uuid",
+      "version": "1.29.3",
+      "license": "MIT OR Apache-2.0",
+      "usage": "Rust Core 生成本地稳定项目 ID",
+      "note": "技术设计 1.3 已列为主键生成候选；Cargo.lock 原本已包含该 crate。"
+    },
+    {
+      "name": "serde_json",
+      "version": "1.0.154",
+      "license": "MIT OR Apache-2.0",
+      "usage": "仅 src-tauri 测试断言 DTO camelCase 契约",
+      "note": "测试专用依赖；Cargo.lock 原本已包含该 crate。"
+    }
+  ]
+}

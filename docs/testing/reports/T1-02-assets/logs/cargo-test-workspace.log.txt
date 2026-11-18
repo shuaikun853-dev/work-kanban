@@ -1,0 +1,226 @@
+cargo :     Finished `test` profile [unoptimized + debuginfo] target(s) in 1.53s
+所在位置 行:1 字符: 487
++ ... STEXITCODE; cargo test --workspace > "$logDir\final-cargo-test.log" 2 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 1.53s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+     Running unittests src\lib.rs (target\debug\build\workmanager/7bb58b45189e1f85\out\workmanager_lib-7bb58b45189e1f85
+.exe)
+
+running 4 tests
+test commands::projects::tests::project_response_serializes_camel_case_contract ... ok
+test commands::projects::tests::request_contracts_accept_camel_case_and_reject_unknown_fields ... ok
+test app_state::tests::health_check_runs_on_blocking_pool_and_returns_unchanged_contract ... ok
+test app_state::tests::project_context_runs_real_project_lifecycle_against_database ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running unittests src\main.rs (target\debug\build\workmanager/f36774016d5e1fae\out\workmanager-f36774016d5e1fae.ex
+e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/ea8961106d8cf425\out\workmanager_core-ea8961106d
+8cf425.exe)
+
+running 25 tests
+test database::r2_01_tests::r2_01_child_helper ... ok
+test portable_paths::tests::parent_dir_components_are_rejected ... ok
+test portable_paths::tests::non_d_and_non_drive_paths_are_rejected ... ok
+test portable_paths::tests::only_fixed_and_removable_volumes_are_allowed ... ok
+test portable_paths::tests::r3_01_trust_anchor_rejects_d_root_same_volume_as_c ... ok
+test portable_paths::tests::d_drive_volume_identity_matches_independent_mount_point_api ... ok
+test portable_paths::tests::r3_01_trust_anchor_rejects_mount_point_guid_mismatch ... ok
+test portable_paths::tests::real_final_path_drive_letters_are_parsed_conservatively ... ok
+test portable_paths::tests::relative_debug_root_is_rejected ... ok
+test portable_paths::tests::r3_01_trust_anchor_rejects_dos_device_alias_and_device_mismatch ... ok
+test portable_paths::tests::r3_01_trust_anchor_fails_closed_on_api_unavailable ... ok
+test portable_paths::tests::release_mode_ignores_test_root_environment ... ok
+test portable_paths::tests::select_debug_root_filters_empty_values ... ok
+test portable_paths::tests::debug_mode_rejects_formal_release_root ... ok
+test portable_paths::tests::release_mode_uses_exe_adjacent_data ... ok
+test projects::model::tests::empty_name_error_does_not_echo_user_input ... ok
+test portable_paths::tests::r3_01_trust_anchor_passes_for_real_d_drive_and_differs_from_c ... ok
+test portable_paths::tests::debug_mode_requires_test_root ... ok
+test projects::model::tests::keeps_inner_whitespace_and_long_names ... ok
+test projects::model::tests::normalizes_surrounding_whitespace_only ... ok
+test projects::model::tests::rejects_empty_and_whitespace_only_names ... ok
+test database::r2_01_tests::r2_01_fixtures_stay_inside_isolated_test_dir ... ok
+test portable_paths::tests::r3_01_trust_anchor_rejects_real_subst_candidate_root ... ok
+test portable_paths::tests::subst_drive_to_c_volume_is_detected_by_handle_volume_identity ... ok
+test database::r2_01_tests::waiting_process_opens_database_with_active_wal_instead_of_orphan_error ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s
+
+     Running tests\database_fail_closed.rs (target\debug\build\workmanager-core/311acbe413beb047\out\database_fail_clos
+ed-311acbe413beb047.exe)
+
+running 8 tests
+test data_directory_blocked_by_file_fails_without_fallback ... ok
+test webview2_directory_blocked_by_file_fails_without_fallback ... ok
+test database_directory_blocked_by_file_fails_without_fallback ... ok
+test database_path_that_is_a_directory_fails_closed ... ok
+test garbage_database_file_is_never_overwritten ... ok
+test schema_version_newer_than_application_fails_closed_and_keeps_data ... ok
+test corrupted_database_image_is_never_overwritten ... ok
+test acl::unwritable_database_directory_fails_closed_and_recovers_after_acl_restore ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+     Running tests\database_lifecycle.rs (target\debug\build\workmanager-core/a2aab4a9e3de45db\out\database_lifecycle-a
+2aab4a9e3de45db.exe)
+
+running 5 tests
+test initializes_empty_database_with_latest_schema_and_safe_pragmas ... ok
+test data_persists_across_restart ... ok
+test health_check_is_read_only_and_does_not_change_schema_version ... ok
+test repeated_initialize_is_idempotent_and_does_not_rerun_migrations ... ok
+test clean_shutdown_checkpoints_wal_and_keeps_single_valid_database_file ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests\database_precheck_order.rs (target\debug\build\workmanager-core/3f0bc25ecd279793\out\database_preche
+ck_order-3f0bc25ecd279793.exe)
+
+running 3 tests
+test version_too_new_delete_mode_database_is_not_modified ... ok
+test healthy_delete_mode_database_is_upgraded_only_after_passing_prechecks ... ok
+test corrupted_delete_mode_database_is_not_modified_by_prechecks ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s
+
+     Running tests\foreign_keys.rs (target\debug\build\workmanager-core/86a42f94a7443132\out\foreign_keys-86a42f94a7443
+132.exe)
+
+running 2 tests
+test foreign_keys_are_really_enforced_on_production_connection ... ok
+test foreign_key_check_detects_violations_written_while_enforcement_disabled ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running tests\formal_root_protection.rs (target\debug\build\workmanager-core/e0de32f59b679f8c\out\formal_root_prot
+ection-e0de32f59b679f8c.exe)
+
+running 5 tests
+test default_protected_root_keeps_rejecting_formal_paths ... ok
+Junction created for D:\WorkManager-test-data\formal-root-junction-resolve-28612-3-1794978340542864900\alias-to-formal <<===>> D:\WorkManager-test-data\formal-root-junction-resolve-28612-3-1794978340542864900\formal-sim\WorkManager
+test release_mode_ignores_injected_protected_roots ... ok
+Junction created for D:\WorkManager-test-data\formal-root-junction-ensure-28612-1-1794978340542733000\data-root <<===>> D:\WorkManager-test-data\formal-root-junction-ensure-28612-1-1794978340542733000\formal-sim\WorkManager
+Junction created for D:\WorkManager-test-data\formal-root-db-boundary-28612-0-1794978340542554300\data-root <<===>> D:\WorkManager-test-data\formal-root-db-boundary-28612-0-1794978340542554300\formal-sim\WorkManager
+test resolve_rejects_junction_alias_to_protected_root ... ok
+test ensure_directories_rejects_junction_created_after_resolve ... ok
+test database_initialize_rejects_swapped_junction_before_creating_lock_or_database ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests\init_concurrency.rs (target\debug\build\workmanager-core/d14b5e2b25a74e6a\out\init_concurrency-d14b5
+e2b25a74e6a.exe)
+
+running 3 tests
+test child_helper ... ok
+
+running 1 test
+
+running 1 test
+
+running 1 test
+child-initialize-ok pid=35952 created_new=true schema=2
+child-initialize-ok pid=24976 created_new=false schema=2
+test two_processes_concurrent_first_initialization_is_safe ... ok
+test active_process_temp_database_is_never_deleted_and_lock_recovers_after_kill ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.84s
+
+     Running tests\migration_rollback.rs (target\debug\build\workmanager-core/6a58cf20e517773b\out\migration_rollback-6
+a58cf20e517773b.exe)
+
+running 5 tests
+test embedded_migrations_do_not_manage_transactions ... ok
+test invalid_migration_set_is_rejected_before_touching_database ... ok
+test failure_in_first_migration_leaves_empty_schema_and_version_zero ... ok
+test latest_schema_creates_projects_table_but_no_premature_business_tables ... ok
+test failed_migration_rolls_back_and_keeps_previous_version ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running tests\portable_paths.rs (target\debug\build\workmanager-core/b012ce2c27960f4b\out\portable_paths-b012ce2c2
+7960f4b.exe)
+
+running 5 tests
+test test_base_directory_is_d_drive_and_outside_formal_release_root ... ok
+test debug_root_inside_formal_release_root_is_rejected ... ok
+test release_resolution_ignores_test_root_argument ... ok
+test release_layout_is_created_next_to_exe ... ok
+test debug_test_roots_are_isolated_from_each_other ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+     Running tests\projects.rs (target\debug\build\workmanager-core/83d63de02874085c\out\projects-83d63de02874085c.exe)
+
+running 15 tests
+test failed_migration_after_projects_rolls_back_without_touching_project_data ... ok
+test rejects_editing_archived_project ... ok
+test archives_project_without_deleting_record ... ok
+test archive_does_not_delete_existing_history_associations ... ok
+test persists_project_across_restart ... ok
+test creates_and_lists_project_with_stable_core_generated_id ... ok
+test new_database_runs_all_migrations_and_integrity_checks ... ok
+test rejects_empty_names_without_writing_rows ... ok
+test multiple_projects_are_isolated ... ok
+test project_write_failure_rolls_back_transaction ... ok
+test project_operations_keep_integrity_and_foreign_key_checks_clean ... ok
+test archiving_is_idempotent_and_keeps_original_archive_timestamp ... ok
+test rejects_unknown_project_ids ... ok
+test updates_project_name_and_keeps_identity ... ok
+test upgrades_schema_version_1_database_and_preserves_existing_data ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s
+
+     Running tests\windows_real_paths.rs (target\debug\build\workmanager-core/217ef647c7a0da46\out\windows_real_paths-2
+17ef647c7a0da46.exe)
+
+running 4 tests
+Junction created for D:\WorkManager-test-data\realpath-junction-ancestor-30740-0-1794978342208627600\app\link-ancestor <<===>> C:\Users\13013\AppData\Local\WorkManager-junction-test-30740-0-1794978342210421500
+test normal_d_drive_layout_passes_real_path_validation ... ok
+Junction created for D:\WorkManager-test-data\realpath-junction-same-volume-30740-3-1794978342208967000\link-within-d <<===>> D:\WorkManager-test-data\realpath-junction-same-volume-30740-3-1794978342208967000\real-target
+Junction created for D:\WorkManager-test-data\realpath-junction-c-attack-30740-1-1794978342208893800\app\portable-root-link <<===>> C:\Users\13013\AppData\Local\WorkManager-junction-test-30740-1-1794978342210799400
+test junction_above_exe_directory_is_rejected_via_ancestor_chain ... ok
+test junction_from_d_to_c_is_rejected_without_writing_c_drive ... ok
+test junction_within_d_drive_is_allowed_when_real_target_stays_on_d ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests\zero_byte_database.rs (target\debug\build\workmanager-core/5bc34af4073e7716\out\zero_byte_database-5
+bc34af4073e7716.exe)
+
+running 6 tests
+test child_writer_helper ... ok
+test main_database_missing_but_journal_leftover_fails_closed ... ok
+
+running 1 test
+
+running 1 test
+child-crash-wal-writer main=4096 wal=16512
+child-crash-wal-writer main=4096 wal=16512
+test zero_byte_existing_database_is_not_treated_as_first_install ... ok
+test main_database_missing_but_wal_leftover_fails_closed ... ok
+test zero_byte_database_with_wal_leftover_fails_closed_and_preserves_wal ... ok
+test stale_shm_without_database_is_cleaned_before_first_initialization ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+   Doc-tests workmanager_lib
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests workmanager_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

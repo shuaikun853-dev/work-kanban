@@ -1,0 +1,19 @@
+WorkManager T1-02 Release 产物证据
+==================================
+
+构建命令：npm run tauri build -- --no-bundle
+构建时间：2026-11-18 12:54（Asia/Shanghai）
+产物路径：target/release/workmanager.exe
+文件大小：10,230,272 字节
+SHA-256：DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8
+
+说明：
+- 产物为 Cargo 包名小写 workmanager.exe；Tauri --no-bundle 不改名。
+- 正式便携包命名与目录组装属于 T6-01。
+- 本任务 UI/Release 验证将产物复制为 WorkManager.exe 到
+  D:\WorkManager-test-data\...\app 隔离目录运行，未写入正式目录 D:\WorkManager。
+- 同一 SHA-256 的产物在以下验证中复用：
+  - verify-t1-02-ui.ps1：主 UI/IPC 73/73、最小窗口 11/11、关闭按钮退出码 0；
+  - verify-release-portable.ps1：106 项，90 PASS / 0 FAIL；
+  - verify-release-faults.ps1：73 项，64 PASS / 0 FAIL；
+  - inspect-release-ui.mjs：24/24 断言，CSP 0 违规。

@@ -1,0 +1,122 @@
+{
+  "generatedAt": "2026-11-18T05:05:26.604Z",
+  "method": "CDP Runtime.evaluate against real Release WebView2 (DOM state + direct Tauri IPC invoke + CSP violation capture after reload + screenshot)",
+  "port": 9340,
+  "target": {
+    "id": "D1B91AFA9ADC1592CC04A81C2E10841E",
+    "title": "工作总览 · WorkManager",
+    "url": "http://tauri.localhost/",
+    "type": "page"
+  },
+  "uiState": {
+    "title": "数据库诊断 · WorkManager",
+    "href": "http://tauri.localhost/",
+    "readyState": "complete",
+    "titlebarAppName": "WorkManager",
+    "windowControlCount": 3,
+    "heading": "数据库诊断",
+    "navLabels": [
+      "工作总览",
+      "今日工作",
+      "未来 7 天",
+      "历史记录",
+      "报告",
+      "设置"
+    ],
+    "badges": [
+      "正常（ok）",
+      "通过（ok）",
+      "正式便携模式"
+    ],
+    "pathValues": [
+      "D:\\WorkManager-test-data\\t1-02-ui-final\\app\\data",
+      "D:\\WorkManager-test-data\\t1-02-ui-final\\app\\data\\database\\work.db",
+      "D:\\WorkManager-test-data\\t1-02-ui-final\\app\\data\\cache\\webview2"
+    ],
+    "migrationRows": [
+      [
+        "1",
+        "0001_initial_foundation",
+        "2026/11/18 13:04:12"
+      ],
+      [
+        "2",
+        "0002_projects",
+        "2026/11/18 13:04:12"
+      ]
+    ],
+    "footerScope": "数据库为普通 SQLite 文件，未加密；拥有文件访问权限的人可以读取其中内容。",
+    "hasErrorAlert": false,
+    "bodyText": "WorkManager 工作总览 今日工作 未来 7 天 历史记录 报告 设置 本地工作管理 · 数据不上传 数据库诊断 只读检查 SQLite 连接、完整性、PRAGMA 配置与便携路径；不会修改业务数据。 重新检查 数据库健康 SQLite 连接、完整性检查与 PRAGMA 配置快照（命令 get_database_health） 数据库状态 正常（ok） 当前 Schema 版本 2 已是最新 最新 Schema 版本 2 完整性检查 integrity_check 通过（ok） 日志模式 journal_mode wal 同步级别 synchronous 2 外键约束 foreign_keys 已启用 等待超时 busy_timeout 5000 毫秒 临时存储 temp_store 2 外键违规数 0 条 数据库文件大小 32.0 KB 32,768 字节 检查时间（北京时间） 2026/11/18 13:05:26 便携路径诊断 数据库、缓存、日志与 WebView2 数据必须位于 D 盘便携目录；以下路径文本可选中复制。 运行模式 正式便携模式 数据目录跟随 WorkManager.exe 所在目录，应用目录整体移动后自动重新定位。 数据根目录 D:\\WorkManager-test-data\\t1-02-ui-final\\app\\data 数据库路径 D:\\WorkManager-test-data\\t1-02-ui-final\\app\\data\\database\\work.db WebView2 数据目录 D:\\WorkManager-test-data\\t1-02-ui-final\\app\\data\\cache\\webview2 已应用的 Migration 按版本顺序记录数据库 schema 变更历史，只读展示。 2 条 已应用的数据库 migration 记录 版本 名称 应用时间（北京时间） 1 0001_initial_foundation 2026/11/18 13:04:12 2 0002_projects 2026/11/18 13:04:12 数据库为普通 SQLite 文件，未加密；拥有文件访问权限的人可以读取其中内容。"
+  },
+  "csp": {
+    "checkedAfterReload": true,
+    "violations": []
+  },
+  "ipc": {
+    "ok": true,
+    "error": null,
+    "result": {
+      "appName": "WorkManager",
+      "appVersion": "0.1.0",
+      "runtimeMode": "release",
+      "dataRoot": "D:\\WorkManager-test-data\\t1-02-ui-final\\app\\data",
+      "databasePath": "D:\\WorkManager-test-data\\t1-02-ui-final\\app\\data\\database\\work.db",
+      "webview2DataDir": "D:\\WorkManager-test-data\\t1-02-ui-final\\app\\data\\cache\\webview2",
+      "database": {
+        "status": "ok",
+        "schemaVersion": 2,
+        "latestSchemaVersion": 2,
+        "databasePath": "D:\\WorkManager-test-data\\t1-02-ui-final\\app\\data\\database\\work.db",
+        "databaseFileSizeBytes": 32768,
+        "integrityCheck": "ok",
+        "foreignKeyViolations": 0,
+        "journalMode": "wal",
+        "synchronous": 2,
+        "foreignKeys": true,
+        "busyTimeoutMs": 5000,
+        "tempStore": 2,
+        "appliedMigrations": [
+          {
+            "version": 1,
+            "name": "0001_initial_foundation",
+            "appliedAt": "2026-11-18T05:04:12Z"
+          },
+          {
+            "version": 2,
+            "name": "0002_projects",
+            "appliedAt": "2026-11-18T05:04:12Z"
+          }
+        ],
+        "checkedAt": "2026-11-18T05:05:26Z"
+      }
+    }
+  },
+  "assertions": {
+    "pageLoaded": true,
+    "navigationReachedDiagnostics": true,
+    "cspCollectorInstalled": true,
+    "noCspViolations": true,
+    "uiRenderedHealth": true,
+    "noErrorAlert": true,
+    "appNameRendered": true,
+    "windowControlsRendered": true,
+    "sidebarNavigationRendered": true,
+    "diagnosticsHeadingRendered": true,
+    "diagnosticsNoteRendered": true,
+    "ipcCommandSucceeded": true,
+    "ipcAppName": true,
+    "ipcAppVersion": true,
+    "ipcRuntimeModeRelease": true,
+    "ipcSchemaVersion": true,
+    "ipcIntegrityOk": true,
+    "ipcJournalModeWal": true,
+    "ipcForeignKeysEnabled": true,
+    "ipcBusyTimeout": true,
+    "ipcSynchronousFull": true,
+    "ipcMigrationRecorded": true,
+    "ipcDatabasePathPortable": true,
+    "ipcWebview2DirPortable": true
+  },
+  "screenshotPath": "D:\\WorkManager-test-data\\t1-02-diagnostics-check\\release-window.png"
+}

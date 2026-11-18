@@ -1,0 +1,31 @@
+{
+  "evidencePath": "D:\\WorkManager-test-data\\t1-02-diagnostics-check\\release-ui-ipc-evidence.json",
+  "screenshotPath": "D:\\WorkManager-test-data\\t1-02-diagnostics-check\\release-window.png",
+  "assertions": {
+    "pageLoaded": true,
+    "navigationReachedDiagnostics": true,
+    "cspCollectorInstalled": true,
+    "noCspViolations": true,
+    "uiRenderedHealth": true,
+    "noErrorAlert": true,
+    "appNameRendered": true,
+    "windowControlsRendered": true,
+    "sidebarNavigationRendered": true,
+    "diagnosticsHeadingRendered": true,
+    "diagnosticsNoteRendered": true,
+    "ipcCommandSucceeded": true,
+    "ipcAppName": true,
+    "ipcAppVersion": true,
+    "ipcRuntimeModeRelease": true,
+    "ipcSchemaVersion": true,
+    "ipcIntegrityOk": true,
+    "ipcJournalModeWal": true,
+    "ipcForeignKeysEnabled": true,
+    "ipcBusyTimeout": true,
+    "ipcSynchronousFull": true,
+    "ipcMigrationRecorded": true,
+    "ipcDatabasePathPortable": true,
+    "ipcWebview2DirPortable": true
+  }
+}
+T1_01_RELEASE_UI_IPC_CHECK=PASS

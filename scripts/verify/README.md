@@ -1,4 +1,4 @@
-# Release 运行时验证脚本（T1-01）
+# Release 运行时验证脚本（T1-01 / T1-02）
 
 本目录保存 WorkManager 正式 Release 构建的**运行时**验证工具。单元/集成测试由
 `cargo test` 覆盖，这里验证"真实 EXE + 真实 WebView2 窗口 + 真实便携目录"的行为。
@@ -17,9 +17,12 @@
 | 文件 | 用途 |
 |---|---|
 | `VerifyCommon.ps1` | 公共库：进程启动/停止、主窗口等待、UI Automation 读取并关闭原生错误对话框、截图、目录快照、SHA-256、python SQLite 只读探针、summary/report 汇总。 |
-| `verify-release-portable.ps1` | 成功路径（106 项检查）：便携目录创建、WebView2 `EBWebView` profile、SQLite PRAGMA/版本/完整性、正常关闭、重启持久化（虚构 canary）、Release 忽略 `WORKMANAGER_TEST_PORTABLE_ROOT`、C 盘边界抽查。 |
-| `verify-release-faults.ps1` | 异常路径（59 项检查）：垃圾数据库文件、`data` 被文件阻塞、`work.db` 为同名目录、数据库目录 ACL 拒绝写入。要求启动失败、显示"WorkManager 启动失败"对话框、退出码非 0、原文件字节不变、无初始化临时文件残留。 |
-| `inspect-release-ui.mjs` | 通过 WebView2 远程调试端口（CDP）检查真实 Release 窗口：读取渲染后 DOM、直接调用 `get_database_health` IPC 命令、截图并输出 JSON 断言。 |
+| `verify-release-portable.ps1` | 成功路径（106 项检查）：便携目录创建、WebView2 `EBWebView` profile、SQLite PRAGMA/版本/完整性、正常关闭、重启持久化（虚构 canary）、Release 忽略 `WORKMANAGER_TEST_PORTABLE_ROOT`、C 盘边界抽查。schema 版本期望为 **2**。 |
+| `verify-release-faults.ps1` | 异常路径（73 项检查）：垃圾数据库文件、`data` 被文件阻塞、`work.db` 为同名目录、数据库目录 ACL 拒绝写入。要求启动失败、显示"WorkManager 启动失败"对话框、退出码非 0、原文件字节不变、无初始化临时文件残留。 |
+| `inspect-release-ui.mjs` | T1-01 诊断页回归：通过 CDP 从应用壳进入“设置 → 数据库诊断”，读取渲染后 DOM、调用 `get_database_health` IPC、截图并输出 JSON 断言（24 项）。 |
+| `verify-t1-02-ui.ps1` | **T1-02 真实 Release UI/IPC 端到端编排**：启动 Release → 主检查（73 项）→ 调整到最小窗口 860×640 → 最小窗口检查（11 项）并点击关闭按钮 → 验证进程退出；输出截图与 JSON 证据。 |
+| `inspect-t1-02-ui.mjs` | T1-02 主 UI/IPC 检查（由编排脚本调用）：应用壳/导航/标题栏、loading/空/错误态、真实 UI 创建/编辑/归档、长名称、归档后操作消失、诊断页、CSP、最大化/还原窗口 API。 |
+| `inspect-t1-02-min-window.mjs` | T1-02 最小窗口检查（由编排脚本调用）：视口/布局无横向溢出、弹窗完整可见、点击红色关闭圆点后真实退出。 |
 
 ## 用法
 
@@ -46,23 +49,33 @@ node scripts\verify\inspect-release-ui.mjs 9333 D:\WorkManager-test-data\ui-chec
 $null = $process.CloseMainWindow(); $process.WaitForExit(20000)
 ```
 
+T1-02 完整 Release UI/IPC 验证（一条命令编排，包含截图、最小窗口与关闭按钮退出检查）：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-t1-02-ui.ps1
+# 也可指定：-OutputDir D:\WorkManager-test-data\t1-02-ui-manual -Port 9341
+```
+
+说明：Windows PowerShell 5.1 读取无 BOM 的 UTF-8 脚本时可能误解析中文；本目录新增/修改的 `.ps1` 均以 UTF-8 with BOM 保存。
+
 退出码约定：`0` = 全部检查通过（允许 WARN/INFO）；`1` = 存在 FAIL；`2` = 前置条件不满足
 （EXE 不存在、python 不可用、输出目录非法）。脚本不会伪造 PASS：无法执行的检查会
 如实记录为 FAIL/INFO，并保留可复核证据。
 
-## 当前验证结果（2026-11-17，T1-01 审计修复后）
+## 当前验证结果（2026-11-18，T1-02 待审计）
 
-Release 产物：`target\release\workmanager.exe`，9,962,496 字节，
-SHA-256 `C863CAC5DEE29CD7A5DB25DA3B4610023CB8C4BF59DD97534764BC7D96FA67F4`。
+Release 产物：`target\release\workmanager.exe`，10,230,272 字节，
+SHA-256 `DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8`。
 
 | 脚本 | 退出码 | 结果 |
 |---|---|---|
+| `verify-t1-02-ui.ps1` | 0 | 主 UI/IPC **73/73**；最小窗口 **11/11**；关闭按钮后进程退出码 0 |
 | `verify-release-portable.ps1` | 0 | TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15 |
-| `verify-release-faults.ps1` | 0 | TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9（新增“已存在 0 字节 work.db”故障用例） |
-| `inspect-release-ui.mjs` | 0 | 21/21 断言通过（真实窗口渲染 + 真实 IPC 返回 + CSP 违规 0 + 截图） |
+| `verify-release-faults.ps1` | 0 | TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9 |
+| `inspect-release-ui.mjs`（诊断页） | 0 | 24/24 断言通过（真实窗口渲染 + 真实 IPC 返回 + CSP 0 违规 + 截图） |
 
-说明：审计修复后应用会在数据库目录保留跨进程初始化锁文件 `.work.db.init.lock`
-（仅 PID/时间戳诊断），异常路径检查允许该文件存在；`.work.db.init-*` 临时数据库仍必须为空。
-`inspect-release-ui.mjs` 现会在页面重载后收集 `securitypolicyviolation` 事件，断言生产 CSP 无违规。
+说明：schema 版本期望已更新为 **2**（0001 foundation + 0002 projects）；审计修复后应用会在数据库目录保留跨进程初始化锁文件
+`.work.db.init.lock`（仅 PID/时间戳诊断），异常路径检查允许该文件存在；`.work.db.init-*` 临时数据库仍必须为空。
 
-详细结果与已知 WARN 见 `docs/testing/reports/T1-01-AUDIT-FIX-REPORT.md`。
+T1-02 的截图、JSON 证据与日志见 `docs/testing/reports/T1-02-assets/`；详细结果见
+`docs/testing/reports/T1-02-REPORT.md`。

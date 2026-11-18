@@ -1,0 +1,718 @@
+{
+    "script":  "verify-release-faults",
+    "overall":  "PASS",
+    "started_at":  "2026-11-18T13:05:00.4573149+08:00",
+    "finished_at":  "2026-11-18T13:05:09.8462367+08:00",
+    "duration_seconds":  9.4,
+    "output_dir":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2",
+    "exe_path":  "D:\\工作事项看板\\target\\release\\workmanager.exe",
+    "exe_size_bytes":  10230272,
+    "exe_sha256":  "DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8",
+    "fatal_error":  "",
+    "counts":  {
+                   "total":  73,
+                   "pass":  64,
+                   "fail":  0,
+                   "warn":  0,
+                   "info":  9
+               },
+    "environment":  {
+                        "computer_name":  "DESKTOP-U5GCI7T",
+                        "user_name":  "13013",
+                        "user_identity":  "DESKTOP-U5GCI7T\\13013",
+                        "powershell_version":  "5.1.19041.6456",
+                        "powershell_edition":  "Desktop",
+                        "os_version":  "Microsoft Windows NT 10.0.19045.0",
+                        "is_64_bit_process":  true,
+                        "process_id":  38104,
+                        "current_directory":  "D:\\工作事项看板",
+                        "test_data_root":  "D:\\WorkManager-test-data",
+                        "output_dir":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2",
+                        "python":  null
+                    },
+    "artifacts":  [
+                      {
+                          "label":  "用例沙箱目录 fault-corrupt-db",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-corrupt-db",
+                          "kind":  "directory",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-corrupt-db 对话框 UI 内容 JSON",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-corrupt-db-dialog.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-corrupt-db 对话框截图",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-corrupt-db-dialog.png",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-corrupt-db 标准输出日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-corrupt-db-stdout.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-corrupt-db 标准错误日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-corrupt-db-stderr.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-corrupt-db 数据库目录快照",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-corrupt-db-database-dir-snapshot.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "用例沙箱目录 fault-zero-byte-db",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-zero-byte-db",
+                          "kind":  "directory",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-zero-byte-db 对话框 UI 内容 JSON",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-zero-byte-db-dialog.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-zero-byte-db 对话框截图",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-zero-byte-db-dialog.png",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-zero-byte-db 标准输出日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-zero-byte-db-stdout.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-zero-byte-db 标准错误日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-zero-byte-db-stderr.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-zero-byte-db 数据库目录快照",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-zero-byte-db-database-dir-snapshot.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "用例沙箱目录 fault-data-blocked-by-file",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-data-blocked-by-file",
+                          "kind":  "directory",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-data-blocked-by-file 对话框 UI 内容 JSON",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-data-blocked-by-file-dialog.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-data-blocked-by-file 对话框截图",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-data-blocked-by-file-dialog.png",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-data-blocked-by-file 标准输出日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-data-blocked-by-file-stdout.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-data-blocked-by-file 标准错误日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-data-blocked-by-file-stderr.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "用例沙箱目录 fault-db-is-directory",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-db-is-directory",
+                          "kind":  "directory",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-db-is-directory 对话框 UI 内容 JSON",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-db-is-directory-dialog.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-db-is-directory 对话框截图",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-db-is-directory-dialog.png",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-db-is-directory 标准输出日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-db-is-directory-stdout.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-db-is-directory 标准错误日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-db-is-directory-stderr.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "用例沙箱目录 fault-acl-denied",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-acl-denied",
+                          "kind":  "directory",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-acl-denied 对话框 UI 内容 JSON",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-acl-denied-dialog.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-acl-denied 对话框截图",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-acl-denied-dialog.png",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-acl-denied 标准输出日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-acl-denied-stdout.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-acl-denied 标准错误日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-acl-denied-stderr.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "fault-acl-denied 数据库目录快照",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\evidence\\fault-acl-denied-database-dir-snapshot.json",
+                          "kind":  "file",
+                          "exists":  true
+                      }
+                  ],
+    "checks":  [
+                   {
+                       "name":  "precondition.release_exe",
+                       "status":  "INFO",
+                       "detail":  "path=D:\\工作事项看板\\target\\release\\workmanager.exe；size_bytes=10230272；sha256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8",
+                       "checked_at":  "2026-11-18T13:05:00.6204399+08:00"
+                   },
+                   {
+                       "name":  "precondition.output_dir",
+                       "status":  "INFO",
+                       "detail":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2",
+                       "checked_at":  "2026-11-18T13:05:00.6214403+08:00"
+                   },
+                   {
+                       "name":  "precondition.current_identity",
+                       "status":  "INFO",
+                       "detail":  "DESKTOP-U5GCI7T\\13013",
+                       "checked_at":  "2026-11-18T13:05:00.6244424+08:00"
+                   },
+                   {
+                       "name":  "precondition.icacls_available",
+                       "status":  "PASS",
+                       "detail":  "C:\\WINDOWS\\System32\\icacls.exe",
+                       "checked_at":  "2026-11-18T13:05:00.6264422+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.exe_copy_sha256_matches",
+                       "status":  "PASS",
+                       "detail":  "sha256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8",
+                       "checked_at":  "2026-11-18T13:05:00.6874410+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.fixture_created",
+                       "status":  "PASS",
+                       "detail":  "size_bytes=1024；sha256=6FD682CA9CBE8BA33EB92935E2AE3027434CF7D0D733A8887CF697AC1BC35CF4；内容标记=NOT-A-SQLITE-DB: WorkManager fault-injection fixture (fictitious data).",
+                       "checked_at":  "2026-11-18T13:05:00.7504424+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.failure_dialog_found",
+                       "status":  "PASS",
+                       "detail":  "title=WorkManager 启动失败；texts=数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-not-a-database\n数据库文件不是有效的 SQLite 数据库：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-corrupt-db\\data\\database\\work.db；详情：file is not a database。已停止启动，不会删除、重建或覆盖原文件。",
+                       "checked_at":  "2026-11-18T13:05:02.7205936+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.failure_dialog_title",
+                       "status":  "PASS",
+                       "detail":  "对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）",
+                       "checked_at":  "2026-11-18T13:05:02.7225891+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.failure_dialog_message",
+                       "status":  "PASS",
+                       "detail":  "对话框文本包含预期关键字 “数据库”：数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-not-a-database\n数据库文件不是有效的 SQLite 数据库：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-corrupt-db\\data\\database\\work.db；详情：file is not a database。已停止启动，不会删除、重建或覆盖原文件。",
+                       "checked_at":  "2026-11-18T13:05:02.7264401+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.process_exited",
+                       "status":  "PASS",
+                       "detail":  "对话框关闭后进程已退出；close_method=CloseMainWindow",
+                       "checked_at":  "2026-11-18T13:05:02.7323714+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.exit_code_nonzero",
+                       "status":  "PASS",
+                       "detail":  "exit_code=1",
+                       "checked_at":  "2026-11-18T13:05:02.7343719+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.dialog_dismissed_cleanly",
+                       "status":  "PASS",
+                       "detail":  "对话框关闭后应用自行退出，未强制结束",
+                       "checked_at":  "2026-11-18T13:05:02.7373691+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.stderr_output",
+                       "status":  "INFO",
+                       "detail":  "stderr（启动日志证据）=[WorkManager][fatal] 数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-not-a-database\n数据库文件不是有效的 SQLite 数据库：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-corrupt-db\\data\\database\\work.db；详情：file is not a database。已停止启动，不会删除、重建或覆盖原文件。",
+                       "checked_at":  "2026-11-18T13:05:02.7423792+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.no_init_temp_files",
+                       "status":  "PASS",
+                       "detail":  "未发现 .work.db.init-* 初始化临时文件残留",
+                       "checked_at":  "2026-11-18T13:05:02.7659003+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.original_still_file",
+                       "status":  "PASS",
+                       "detail":  "原数据库文件仍存在：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-corrupt-db\\data\\database\\work.db",
+                       "checked_at":  "2026-11-18T13:05:02.7829001+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.original_bytes_unchanged",
+                       "status":  "PASS",
+                       "detail":  "size=1024；sha256=6FD682CA9CBE8BA33EB92935E2AE3027434CF7D0D733A8887CF697AC1BC35CF4",
+                       "checked_at":  "2026-11-18T13:05:02.7898979+08:00"
+                   },
+                   {
+                       "name":  "fault.corrupt_db.no_new_database_files",
+                       "status":  "PASS",
+                       "detail":  "数据库目录中除原 work.db 与初始化锁文件外没有新增文件（未创建空库/临时库）",
+                       "checked_at":  "2026-11-18T13:05:02.8229024+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.exe_copy_sha256_matches",
+                       "status":  "PASS",
+                       "detail":  "sha256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8",
+                       "checked_at":  "2026-11-18T13:05:02.8912319+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.fixture_created",
+                       "status":  "PASS",
+                       "detail":  "size_bytes=0；sha256=E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855；期望 size=0",
+                       "checked_at":  "2026-11-18T13:05:02.8999884+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.failure_dialog_found",
+                       "status":  "PASS",
+                       "detail":  "title=WorkManager 启动失败；texts=数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-empty-existing-file\n检测到已存在的数据库文件为 0 字节（异常空文件）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-zero-byte-db\\data\\database\\work.db。已停止启动，未删除、截断或覆盖原文件；不会把异常空文件当作首次安装，也不会自动重建。请从备份恢复，或在确认数据不可恢复后由用户手动处理后重试。",
+                       "checked_at":  "2026-11-18T13:05:04.3870048+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.failure_dialog_title",
+                       "status":  "PASS",
+                       "detail":  "对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）",
+                       "checked_at":  "2026-11-18T13:05:04.3890094+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.failure_dialog_message",
+                       "status":  "PASS",
+                       "detail":  "对话框文本包含预期关键字 “0 字节”：数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-empty-existing-file\n检测到已存在的数据库文件为 0 字节（异常空文件）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-zero-byte-db\\data\\database\\work.db。已停止启动，未删除、截断或覆盖原文件；不会把异常空文件当作首次安装，也不会自动重建。请从备份恢复，或在确认数据不可恢复后由用户手动处理后重试。",
+                       "checked_at":  "2026-11-18T13:05:04.3930080+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.process_exited",
+                       "status":  "PASS",
+                       "detail":  "对话框关闭后进程已退出；close_method=CloseMainWindow",
+                       "checked_at":  "2026-11-18T13:05:04.3970069+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.exit_code_nonzero",
+                       "status":  "PASS",
+                       "detail":  "exit_code=1",
+                       "checked_at":  "2026-11-18T13:05:04.3990082+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.dialog_dismissed_cleanly",
+                       "status":  "PASS",
+                       "detail":  "对话框关闭后应用自行退出，未强制结束",
+                       "checked_at":  "2026-11-18T13:05:04.4020063+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.stderr_output",
+                       "status":  "INFO",
+                       "detail":  "stderr（启动日志证据）=[WorkManager][fatal] 数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-empty-existing-file\n检测到已存在的数据库文件为 0 字节（异常空文件）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-zero-byte-db\\data\\database\\work.db。已停止启动，未删除、截断或覆盖原文件；不会把异常空文件当作首次安装，也不会自动重建。请从备份恢复，或在确认数据不可恢复后由用户手动处理后重试。",
+                       "checked_at":  "2026-11-18T13:05:04.4040056+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.no_init_temp_files",
+                       "status":  "PASS",
+                       "detail":  "未发现 .work.db.init-* 初始化临时文件残留",
+                       "checked_at":  "2026-11-18T13:05:04.4190068+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.original_still_file",
+                       "status":  "PASS",
+                       "detail":  "原 0 字节数据库文件仍存在：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-zero-byte-db\\data\\database\\work.db",
+                       "checked_at":  "2026-11-18T13:05:04.4210156+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.original_bytes_unchanged",
+                       "status":  "PASS",
+                       "detail":  "size=0；sha256=E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855；文件保持 0 字节",
+                       "checked_at":  "2026-11-18T13:05:04.4310057+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.no_sidecars_created",
+                       "status":  "PASS",
+                       "detail":  "未创建 WAL/SHM 文件（未把 0 字节文件交给 SQLite 打开）",
+                       "checked_at":  "2026-11-18T13:05:04.4330076+08:00"
+                   },
+                   {
+                       "name":  "fault.zero_byte_db.no_schema_created",
+                       "status":  "PASS",
+                       "detail":  "数据库目录中只有原 work.db（0 字节）与初始化锁文件，没有生成任何 schema/数据库文件",
+                       "checked_at":  "2026-11-18T13:05:04.4650057+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.exe_copy_sha256_matches",
+                       "status":  "PASS",
+                       "detail":  "sha256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8",
+                       "checked_at":  "2026-11-18T13:05:04.5471708+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.fixture_created",
+                       "status":  "PASS",
+                       "detail":  "size_bytes=122；sha256=CF5C29B83DA5F046CDB07B88D3240CB5CD92FC21275CCF1830259E492C6EAF67",
+                       "checked_at":  "2026-11-18T13:05:04.5641670+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.failure_dialog_found",
+                       "status":  "PASS",
+                       "detail":  "title=WorkManager 启动失败；texts=便携数据目录不可用，已停止启动。\n\n错误码：path-not-directory\ndata 数据根目录 路径已存在但不是普通目录（可能是文件或符号链接）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-data-blocked-by-file\\data。已停止启动，不会删除或覆盖该路径，也不会回退到 C 盘、AppData 或系统 Temp。",
+                       "checked_at":  "2026-11-18T13:05:06.0852977+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.failure_dialog_title",
+                       "status":  "PASS",
+                       "detail":  "对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）",
+                       "checked_at":  "2026-11-18T13:05:06.0872954+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.failure_dialog_message",
+                       "status":  "PASS",
+                       "detail":  "对话框文本包含预期关键字 “便携数据目录”：便携数据目录不可用，已停止启动。\n\n错误码：path-not-directory\ndata 数据根目录 路径已存在但不是普通目录（可能是文件或符号链接）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-data-blocked-by-file\\data。已停止启动，不会删除或覆盖该路径，也不会回退到 C 盘、AppData 或系统 Temp。",
+                       "checked_at":  "2026-11-18T13:05:06.0923007+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.process_exited",
+                       "status":  "PASS",
+                       "detail":  "对话框关闭后进程已退出；close_method=CloseMainWindow",
+                       "checked_at":  "2026-11-18T13:05:06.0953045+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.exit_code_nonzero",
+                       "status":  "PASS",
+                       "detail":  "exit_code=1",
+                       "checked_at":  "2026-11-18T13:05:06.0983029+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.dialog_dismissed_cleanly",
+                       "status":  "PASS",
+                       "detail":  "对话框关闭后应用自行退出，未强制结束",
+                       "checked_at":  "2026-11-18T13:05:06.1012982+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.stderr_output",
+                       "status":  "INFO",
+                       "detail":  "stderr（启动日志证据）=[WorkManager][fatal] 便携数据目录不可用，已停止启动。\n\n错误码：path-not-directory\ndata 数据根目录 路径已存在但不是普通目录（可能是文件或符号链接）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-data-blocked-by-file\\data。已停止启动，不会删除或覆盖该路径，也不会回退到 C 盘、AppData 或系统 Temp。",
+                       "checked_at":  "2026-11-18T13:05:06.1053006+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.no_init_temp_files",
+                       "status":  "PASS",
+                       "detail":  "未发现 .work.db.init-* 初始化临时文件残留",
+                       "checked_at":  "2026-11-18T13:05:06.1112991+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.still_regular_file",
+                       "status":  "PASS",
+                       "detail":  "阻塞文件仍为普通文件：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-data-blocked-by-file\\data",
+                       "checked_at":  "2026-11-18T13:05:06.1163009+08:00"
+                   },
+                   {
+                       "name":  "fault.data_blocker.original_bytes_unchanged",
+                       "status":  "PASS",
+                       "detail":  "size=122；sha256=CF5C29B83DA5F046CDB07B88D3240CB5CD92FC21275CCF1830259E492C6EAF67",
+                       "checked_at":  "2026-11-18T13:05:06.1252993+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.exe_copy_sha256_matches",
+                       "status":  "PASS",
+                       "detail":  "sha256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8",
+                       "checked_at":  "2026-11-18T13:05:06.2191279+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.fixture_created",
+                       "status":  "PASS",
+                       "detail":  "已创建同名目录：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-db-is-directory\\data\\database\\work.db",
+                       "checked_at":  "2026-11-18T13:05:06.2261202+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.failure_dialog_found",
+                       "status":  "PASS",
+                       "detail":  "title=WorkManager 启动失败；texts=数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-path-not-file\n数据库路径已存在但不是普通文件，已停止启动：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-db-is-directory\\data\\database\\work.db。不会删除或覆盖该路径。",
+                       "checked_at":  "2026-11-18T13:05:07.8916489+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.failure_dialog_title",
+                       "status":  "PASS",
+                       "detail":  "对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）",
+                       "checked_at":  "2026-11-18T13:05:07.8946458+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.failure_dialog_message",
+                       "status":  "PASS",
+                       "detail":  "对话框文本包含预期关键字 “数据库”：数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-path-not-file\n数据库路径已存在但不是普通文件，已停止启动：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-db-is-directory\\data\\database\\work.db。不会删除或覆盖该路径。",
+                       "checked_at":  "2026-11-18T13:05:07.9006504+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.process_exited",
+                       "status":  "PASS",
+                       "detail":  "对话框关闭后进程已退出；close_method=CloseMainWindow",
+                       "checked_at":  "2026-11-18T13:05:07.9036472+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.exit_code_nonzero",
+                       "status":  "PASS",
+                       "detail":  "exit_code=1",
+                       "checked_at":  "2026-11-18T13:05:07.9076526+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.dialog_dismissed_cleanly",
+                       "status":  "PASS",
+                       "detail":  "对话框关闭后应用自行退出，未强制结束",
+                       "checked_at":  "2026-11-18T13:05:07.9096482+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.stderr_output",
+                       "status":  "INFO",
+                       "detail":  "stderr（启动日志证据）=[WorkManager][fatal] 数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-path-not-file\n数据库路径已存在但不是普通文件，已停止启动：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-db-is-directory\\data\\database\\work.db。不会删除或覆盖该路径。",
+                       "checked_at":  "2026-11-18T13:05:07.9126490+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.no_init_temp_files",
+                       "status":  "PASS",
+                       "detail":  "未发现 .work.db.init-* 初始化临时文件残留",
+                       "checked_at":  "2026-11-18T13:05:07.9257618+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.still_directory",
+                       "status":  "PASS",
+                       "detail":  "work.db 仍为目录：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-db-is-directory\\data\\database\\work.db",
+                       "checked_at":  "2026-11-18T13:05:07.9286662+08:00"
+                   },
+                   {
+                       "name":  "fault.db_directory.not_replaced_by_database",
+                       "status":  "PASS",
+                       "detail":  "work.db 目录内没有写入任何条目（未覆盖/替换为数据库文件）",
+                       "checked_at":  "2026-11-18T13:05:07.9356738+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.exe_copy_sha256_matches",
+                       "status":  "PASS",
+                       "detail":  "sha256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8",
+                       "checked_at":  "2026-11-18T13:05:08.0076649+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.deny_applied",
+                       "status":  "PASS",
+                       "detail":  "icacls /deny DESKTOP-U5GCI7T\\13013:(W) 执行成功",
+                       "checked_at":  "2026-11-18T13:05:08.0486677+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.deny_enforced",
+                       "status":  "PASS",
+                       "detail":  "ACL 实际阻止当前用户写入数据库目录（自检探测文件创建失败）",
+                       "checked_at":  "2026-11-18T13:05:08.0576678+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.failure_dialog_found",
+                       "status":  "PASS",
+                       "detail":  "title=WorkManager 启动失败；texts=便携数据目录不可用，已停止启动。\n\n错误码：directory-inspect-failed\n检查路径的真实存储位置失败（拒绝访问）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-acl-denied\\data\\database；系统错误：拒绝访问。 (os error 5)。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。",
+                       "checked_at":  "2026-11-18T13:05:09.6344131+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.failure_dialog_title",
+                       "status":  "PASS",
+                       "detail":  "对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）",
+                       "checked_at":  "2026-11-18T13:05:09.6374139+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.failure_dialog_message",
+                       "status":  "PASS",
+                       "detail":  "对话框文本包含预期关键字 “便携数据目录”：便携数据目录不可用，已停止启动。\n\n错误码：directory-inspect-failed\n检查路径的真实存储位置失败（拒绝访问）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-acl-denied\\data\\database；系统错误：拒绝访问。 (os error 5)。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。",
+                       "checked_at":  "2026-11-18T13:05:09.6399447+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.process_exited",
+                       "status":  "PASS",
+                       "detail":  "对话框关闭后进程已退出；close_method=CloseMainWindow",
+                       "checked_at":  "2026-11-18T13:05:09.6470163+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.exit_code_nonzero",
+                       "status":  "PASS",
+                       "detail":  "exit_code=1",
+                       "checked_at":  "2026-11-18T13:05:09.6513019+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.dialog_dismissed_cleanly",
+                       "status":  "PASS",
+                       "detail":  "对话框关闭后应用自行退出，未强制结束",
+                       "checked_at":  "2026-11-18T13:05:09.6545396+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.stderr_output",
+                       "status":  "INFO",
+                       "detail":  "stderr（启动日志证据）=[WorkManager][fatal] 便携数据目录不可用，已停止启动。\n\n错误码：directory-inspect-failed\n检查路径的真实存储位置失败（拒绝访问）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-acl-denied\\data\\database；系统错误：拒绝访问。 (os error 5)。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。",
+                       "checked_at":  "2026-11-18T13:05:09.6575433+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.deny_removed_in_finally",
+                       "status":  "PASS",
+                       "detail":  "icacls /remove:d DESKTOP-U5GCI7T\\13013 执行成功（finally 中恢复）",
+                       "checked_at":  "2026-11-18T13:05:09.6943604+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.write_restored",
+                       "status":  "PASS",
+                       "detail":  "ACL 恢复后当前用户可正常写入数据库目录",
+                       "checked_at":  "2026-11-18T13:05:09.7094774+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.database_dir_still_exists",
+                       "status":  "PASS",
+                       "detail":  "数据库目录仍存在：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-acl-denied\\data\\database",
+                       "checked_at":  "2026-11-18T13:05:09.7117255+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.no_database_created",
+                       "status":  "PASS",
+                       "detail":  "ACL 拒绝写入时未创建 work.db",
+                       "checked_at":  "2026-11-18T13:05:09.7147228+08:00"
+                   },
+                   {
+                       "name":  "fault.acl_denied.no_init_temp_files",
+                       "status":  "PASS",
+                       "detail":  "未发现 .work.db.init-* 初始化临时文件残留",
+                       "checked_at":  "2026-11-18T13:05:09.7387499+08:00"
+                   },
+                   {
+                       "name":  "cleanup.process_cleanup",
+                       "status":  "PASS",
+                       "detail":  "没有遗留的被测进程",
+                       "checked_at":  "2026-11-18T13:05:09.7486416+08:00"
+                   },
+                   {
+                       "name":  "cleanup.case_directories",
+                       "status":  "PASS",
+                       "detail":  "已删除本脚本创建的用例沙箱目录（证据在 evidence/ 与 summary/report 中保留）",
+                       "checked_at":  "2026-11-18T13:05:09.8400798+08:00"
+                   },
+                   {
+                       "name":  "cleanup.evidence_retained",
+                       "status":  "INFO",
+                       "detail":  "证据与汇总保留在：D:\\WorkManager-test-data\\t1-02-release-faults-v2",
+                       "checked_at":  "2026-11-18T13:05:09.8432389+08:00"
+                   }
+               ],
+    "release_exe":  {
+                        "path":  "D:\\工作事项看板\\target\\release\\workmanager.exe",
+                        "size_bytes":  10230272,
+                        "sha256":  "DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8"
+                    },
+    "python_available":  true,
+    "keep_case_directories":  false,
+    "case_results":  [
+                         {
+                             "case":  "fault-corrupt-db",
+                             "directory":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-corrupt-db",
+                             "database_path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-corrupt-db\\data\\database\\work.db",
+                             "database_sha256_before":  "6FD682CA9CBE8BA33EB92935E2AE3027434CF7D0D733A8887CF697AC1BC35CF4",
+                             "database_sha256_after":  "6FD682CA9CBE8BA33EB92935E2AE3027434CF7D0D733A8887CF697AC1BC35CF4",
+                             "database_size_before":  1024,
+                             "database_size_after":  1024,
+                             "dialog_title":  "WorkManager 启动失败",
+                             "dialog_texts":  [
+                                                  "数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-not-a-database\n数据库文件不是有效的 SQLite 数据库：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-corrupt-db\\data\\database\\work.db；详情：file is not a database。已停止启动，不会删除、重建或覆盖原文件。"
+                                              ],
+                             "exit_code":  1
+                         },
+                         {
+                             "case":  "fault-zero-byte-db",
+                             "directory":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-zero-byte-db",
+                             "database_path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-zero-byte-db\\data\\database\\work.db",
+                             "database_sha256_before":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+                             "database_sha256_after":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+                             "database_size_before":  0,
+                             "database_size_after":  0,
+                             "dialog_title":  "WorkManager 启动失败",
+                             "dialog_texts":  [
+                                                  "数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-empty-existing-file\n检测到已存在的数据库文件为 0 字节（异常空文件）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-zero-byte-db\\data\\database\\work.db。已停止启动，未删除、截断或覆盖原文件；不会把异常空文件当作首次安装，也不会自动重建。请从备份恢复，或在确认数据不可恢复后由用户手动处理后重试。"
+                                              ],
+                             "exit_code":  1
+                         },
+                         {
+                             "case":  "fault-data-blocked-by-file",
+                             "directory":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-data-blocked-by-file",
+                             "blocker_path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-data-blocked-by-file\\data",
+                             "blocker_sha256_before":  "CF5C29B83DA5F046CDB07B88D3240CB5CD92FC21275CCF1830259E492C6EAF67",
+                             "blocker_sha256_after":  "CF5C29B83DA5F046CDB07B88D3240CB5CD92FC21275CCF1830259E492C6EAF67",
+                             "dialog_title":  "WorkManager 启动失败",
+                             "dialog_texts":  [
+                                                  "便携数据目录不可用，已停止启动。\n\n错误码：path-not-directory\ndata 数据根目录 路径已存在但不是普通目录（可能是文件或符号链接）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-data-blocked-by-file\\data。已停止启动，不会删除或覆盖该路径，也不会回退到 C 盘、AppData 或系统 Temp。"
+                                              ],
+                             "exit_code":  1
+                         },
+                         {
+                             "case":  "fault-db-is-directory",
+                             "directory":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-db-is-directory",
+                             "blocked_path":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-db-is-directory\\data\\database\\work.db",
+                             "dialog_title":  "WorkManager 启动失败",
+                             "dialog_texts":  [
+                                                  "数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-path-not-file\n数据库路径已存在但不是普通文件，已停止启动：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-db-is-directory\\data\\database\\work.db。不会删除或覆盖该路径。"
+                                              ],
+                             "exit_code":  1
+                         },
+                         {
+                             "case":  "fault-acl-denied",
+                             "directory":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-acl-denied",
+                             "database_directory":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-acl-denied\\data\\database",
+                             "denied_identity":  "DESKTOP-U5GCI7T\\13013",
+                             "deny_applied":  true,
+                             "deny_enforced":  true,
+                             "deny_removed":  true,
+                             "write_restored":  true,
+                             "case_exception":  false,
+                             "dialog_title":  "WorkManager 启动失败",
+                             "dialog_texts":  [
+                                                  "便携数据目录不可用，已停止启动。\n\n错误码：directory-inspect-failed\n检查路径的真实存储位置失败（拒绝访问）：D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-acl-denied\\data\\database；系统错误：拒绝访问。 (os error 5)。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。"
+                                              ],
+                             "exit_code":  1
+                         }
+                     ]
+}
