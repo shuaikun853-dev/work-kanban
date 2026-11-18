@@ -113,7 +113,13 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn Error>> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![commands::get_database_health])
+        .invoke_handler(tauri::generate_handler![
+            commands::get_database_health,
+            commands::projects::list_projects,
+            commands::projects::create_project,
+            commands::projects::update_project,
+            commands::projects::archive_project,
+        ])
         .setup(|app| {
             setup_app(app)?;
             Ok(())

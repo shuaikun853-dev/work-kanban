@@ -1,14 +1,19 @@
 //! Tauri 命令（最小受限 IPC）。
 //!
-//! 当前只暴露数据库健康检查。刻意不提供：
-//! `execute_sql`、`query_sql`、任意文件读写或任意命令执行接口（TD 6.1）。
+//! 当前暴露：
+//! - 数据库健康检查（T1-01）；
+//! - 项目列表 / 创建 / 编辑 / 归档（T1-02）。
+//!
+//! 刻意不提供：`execute_sql`、`query_sql`、任意文件读写或任意命令执行接口（TD 6.1）。
 //!
 //! 数据库健康检查会在阻塞线程池中执行（`spawn_blocking`），避免完整
 //! `PRAGMA integrity_check` 阻塞 UI/主线程（审计 P2）。IPC DTO 契约保持不变。
 
+pub mod projects;
+
 use serde::Serialize;
 use tauri::Manager;
-use workmanager_core::DatabaseError;
+use workmanager_core::{DatabaseError, ProjectError};
 
 use crate::app_state::{AppState, DatabaseHealthResponse};
 
@@ -22,6 +27,15 @@ pub struct CommandError {
 
 impl From<DatabaseError> for CommandError {
     fn from(error: DatabaseError) -> Self {
+        Self {
+            code: error.code().to_string(),
+            message: error.to_string(),
+        }
+    }
+}
+
+impl From<ProjectError> for CommandError {
+    fn from(error: ProjectError) -> Self {
         Self {
             code: error.code().to_string(),
             message: error.to_string(),
