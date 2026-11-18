@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
+  import WindowTitlebar from './app/WindowTitlebar.svelte';
   import { DatabaseHealthError, fetchDatabaseHealth } from './lib/bridge/databaseHealth';
   import { DATABASE_HEALTH_COMMAND } from './lib/contracts/databaseHealth';
   import type { DatabaseHealthResponse } from './lib/contracts/databaseHealth';
@@ -28,9 +29,6 @@
   const database = $derived(health === null ? null : health.database);
   const migrations = $derived(database === null ? [] : database.appliedMigrations);
   const runtimeMode = $derived(health === null ? null : describeRuntimeMode(health.runtimeMode));
-  const versionLabel = $derived(
-    health === null ? (loading ? '版本读取中…' : '版本未知') : `版本 ${health.appVersion}`
-  );
 
   function toLoadFailure(cause: unknown): HealthLoadFailure {
     if (cause instanceof DatabaseHealthError) {
@@ -87,18 +85,7 @@
 </svelte:head>
 
 <div class="app-shell">
-  <header class="app-header">
-    <div class="header-inner">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">WM</span>
-        <div class="brand-text">
-          <h1>{health === null ? 'WorkManager' : health.appName}</h1>
-          <p class="subtitle">本地工作管理 · 绿色便携版</p>
-        </div>
-      </div>
-      <p class="version-pill">{versionLabel}</p>
-    </div>
-  </header>
+  <WindowTitlebar />
 
   <main class="page-main">
     <div class="content">
@@ -380,77 +367,6 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-  }
-
-  .app-header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    border-bottom: 1px solid var(--color-border);
-    background-color: rgba(255, 255, 255, 0.92);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-  }
-
-  .header-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    width: min(100%, 1040px);
-    margin: 0 auto;
-    padding: 16px 24px;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    min-width: 0;
-  }
-
-  .brand-mark {
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
-    color: #ffffff;
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-  }
-
-  .brand-text {
-    min-width: 0;
-  }
-
-  h1 {
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    line-height: 1.25;
-  }
-
-  .subtitle {
-    margin-top: 2px;
-    color: var(--color-text-muted);
-    font-size: 12.5px;
-  }
-
-  .version-pill {
-    flex-shrink: 0;
-    padding: 5px 12px;
-    border: 1px solid var(--color-accent-soft-border);
-    border-radius: 999px;
-    background-color: var(--color-accent-soft);
-    color: var(--color-accent-strong);
-    font-size: 12.5px;
-    font-weight: 600;
-    white-space: nowrap;
   }
 
   .page-main {
@@ -917,10 +833,6 @@
   }
 
   @media (max-width: 820px) {
-    .header-inner {
-      padding: 14px 18px;
-    }
-
     .page-main {
       padding: 18px 16px 28px;
     }
