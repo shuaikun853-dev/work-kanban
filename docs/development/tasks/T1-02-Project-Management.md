@@ -1,0 +1,182 @@
+# T1-02：项目创建、编辑、归档
+
+**任务状态：** 开发中  
+**启动日期：** 2026-11-18  
+**所属阶段：** 阶段 1：基础架构与工作事项  
+**前置任务：** T1-01 已验收完成并已合并到 main  
+**开发分支：** `task/T1-02-project-management`  
+**目标分支：** `main`
+
+## 1. 权威依据
+
+开发前必须阅读并以以下文档为准：
+
+1. `docs/requirements/PRD.md`
+2. `docs/architecture/TECHNICAL_DESIGN.md`
+3. `docs/decisions/DECISIONS.md`
+4. `docs/design/UI-DESIGN-SPEC.md`
+5. `docs/design/assets/workmanager-ui-prototype.svg`
+6. `docs/development/DEVELOPMENT_PLAN.md`
+7. `docs/STATUS.md`
+8. `AGENTS.md`
+
+如文档与当前代码冲突，先核对最新已确认决策；不得自行改变 PRD、DEC 决策或 UI 基线。
+
+## 2. 本任务目标
+
+交付“项目创建、编辑、归档”的完整纵向切片，包括：
+
+- SQLite migration / 数据模型
+- Rust Core 项目领域逻辑
+- Tauri typed IPC / DTO
+- Svelte UI
+- 自动化测试
+- Windows Release 实际运行验证
+- GitHub 开发进度、测试证据和 PR
+
+项目归档不得删除项目历史，也不得删除或自动修改其已有工作事项历史。
+
+## 3. UI 实施范围
+
+本任务正式开始 UI 业务开发，但**不得重新设计 UI**。
+
+必须直接采用已确认的 UI 设计系统：
+
+- 浅色桌面 UI；
+- 已确认的 Design Tokens；
+- 固定应用壳与左侧一级导航；
+- Windows 原生桌面形态；
+- 紧凑、模块化、信息密度克制；
+- 通用组件、Feature 页面、typed Bridge 分层；
+- 不增加未经确认的仪表盘、图表、统计卡片或装饰模块。
+
+T1-02 至少完成：
+
+1. 稳定的 AppShell / Sidebar / navigation 基础结构；
+2. Design Tokens 和基础通用组件的最小集合；
+3. 项目管理 Feature 页面；
+4. 新建项目；
+5. 编辑项目；
+6. 归档项目；
+7. 项目列表中的空状态、加载状态、错误状态；
+8. 归档后的项目仍可用于历史数据展示，但不能作为新工作事项的正常可选项目（具体行为必须以 PRD/后续任务定义为准，不得提前扩展工作事项业务）。
+
+**不要在本任务实现 T1-03 工作事项创建、T1-04 多项目创建或 T1-05 状态流转。**
+
+## 4. 数据与业务边界
+
+- Rust Core 是项目状态和业务规则的唯一权威来源。
+- 前端不得直接访问 SQLite。
+- 不允许任意 SQL IPC。
+- 项目 CRUD 必须通过 typed Bridge / DTO 调用 Rust Core。
+- 项目 ID 必须稳定、不可使用前端数组下标作为业务身份。
+- 项目归档必须保留项目记录及已有历史关联。
+- 不得因为归档项目而删除、覆盖或重建已有工作历史。
+- 不得提前实现工作事项、每日计划、复盘、报表等未授权业务。
+- 不得引入新的云服务、遥测、账户体系或第三方同步能力。
+- 不得引入未经授权的新依赖；如确有必要，先在报告中说明必要性、许可证、Windows 兼容性和替代方案。
+
+## 5. Migration
+
+T1-01 的 schema version 1 保持兼容。
+
+本任务新增项目相关 migration，必须：
+
+- 使用现有 migration 机制；
+- 在事务中执行；
+- 升级失败时回滚；
+- 不修改或破坏已有数据库；
+- 升级后执行完整性 / 外键检查；
+- 新旧数据库均可正常启动。
+
+项目表结构以技术设计中的项目模型为基础。未在 PRD/技术设计中定义的业务字段不要擅自扩展；如果实现确实需要新的纯技术字段，应在测试报告和 PR 中说明原因。
+
+## 6. 测试要求
+
+至少覆盖：
+
+### Core / 数据库
+
+- 创建项目成功；
+- 查询项目；
+- 编辑项目；
+- 归档项目；
+- 归档不删除项目记录；
+- 归档不删除已有历史关联；
+- 重启后项目数据保持；
+- migration 从 T1-01 schema version 1 正确升级；
+- migration 失败回滚；
+- 非法/空项目名称等输入边界按正式业务规则处理；
+- 多项目 CRUD 操作互不污染。
+
+### UI / IPC
+
+- 项目列表真实读取 Rust Core 数据；
+- 新建、编辑、归档均通过 typed IPC；
+- 加载 / 空状态 / 错误状态可见；
+- 不存在任意 SQL IPC；
+- AppShell / Sidebar / navigation 不破坏现有诊断页面；
+- 长项目名称、无项目数据、归档项目等边界布局正常。
+
+### Release
+
+至少运行：
+
+`cargo fmt --all -- --check`  
+`cargo check --workspace --all-targets`  
+`cargo test --workspace`  
+`npm run check`  
+`npm run build`  
+`npm run tauri build -- --no-bundle`
+
+并进行 Windows Release 实际运行验证。
+
+UI 变更必须提供：
+
+- 工作总览截图；
+- 今日工作截图；
+- 项目管理页面截图；
+- 固定窗口尺寸和最小支持窗口尺寸检查；
+- 无横向溢出、遮挡、错位、不可点击区域。
+
+如果当前工作总览/今日工作仍未具备真实业务数据能力，不得伪造完成截图；可记录“结构回归截图/尚未接入业务数据”，并保持事实准确。
+
+## 7. GitHub 交付
+
+- 从最新 `main` 创建 `task/T1-02-project-management`；
+- 不直接推送 `main`；
+- 不修改或重写 T1-01 历史；
+- 不开始 T1-03；
+- 完成代码后提交测试报告：`docs/testing/reports/T1-02-REPORT.md`；
+- 更新 `docs/STATUS.md`、`docs/development/DEVELOPMENT_PLAN.md` 和本任务说明；
+- 推送任务分支；
+- 创建 PR 指向 `main`；
+- PR 合并前状态只能为“待审计”，不得自行标记“验收完成”。
+
+最终报告必须提供：
+
+- 实际实现范围；
+- 修改文件；
+- migration 版本；
+- 测试命令、退出码、实际结果；
+- Release SHA-256；
+- commit SHA；
+- PR 链接 / HEAD；
+- UI 截图；
+- 未覆盖测试；
+- 遗留风险。
+
+## 8. 明确禁止
+
+- 不重新设计已经确认的 UI；
+- 不把网页 UI 做成网页站点式布局；
+- 不复制第三方项目代码；
+- 不实现 T1-03/T1-04/T1-05；
+- 不修改 PRD 和已确认 DEC；
+- 不删除已有测试；
+- 不降低测试标准；
+- 不推送 main；
+- 不合并自己的 PR；
+- 不把“代码完成”写成“验收完成”。
+
+**完成代码和自测后停止，等待独立审计。**
