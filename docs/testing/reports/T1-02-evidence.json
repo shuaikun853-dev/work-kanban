@@ -6,6 +6,10 @@
   "baseline": {
     "branch": "task/T1-02-project-management",
     "baseMainCommit": "0cafde61078c8d428a37cd509a349e4db8f4096e",
+    "pullRequest": {
+      "number": 7,
+      "url": "https://github.com/shuaikun853-dev/work-kanban/pull/7"
+    },
     "codeCommits": [
       "b8962b5",
       "2b3035d",

@@ -491,3 +491,4 @@
 | 2026-11-18 | UI 设计文档 PR #4 合并 | UI 原型、设计规范和 AI 前端架构约束已合入 main，合并提交 `938f21c`；T1-02 未开始。 |
 | 2026-11-18 | T1-02 开发启动（进行中） | 用户指示启动 T1-02；分支 `task/T1-02-project-management` 基于最新 main `0cafde6`；保留并整合会话前工作区未提交的 DEC-032 自定义标题栏变更。 |
 | 2026-11-18 | T1-02 代码与自测完成（待审计） | 提交 `b8962b5`（migration 0002 + Rust Core 项目领域 + 测试）、`2b3035d`（typed Tauri IPC）、`14a542e`（Design Tokens/AppShell/项目管理 UI/诊断页迁移）、`30666c8`（Release 验证脚本）。`cargo test --workspace` 90 passed / 0 failed；`npm run check` / `npm run build` / Release 构建通过；Release UI/IPC 73/73 + 最小窗口 11/11；继承便携 106 项、异常注入 73 项 0 FAIL；EXE 10,230,272 字节，SHA-256 `DF4469EA…B7E8`。TOCTOU 按 DEC-029 未修复；状态置为**待审计**，不开始 T1-03。报告：`docs/testing/reports/T1-02-REPORT.md`。 |
+| 2026-11-18 | 创建 T1-02 Pull Request #7 | 推送分支 `task/T1-02-project-management` 并创建 [PR #7](https://github.com/shuaikun853-dev/work-kanban/pull/7) 指向 main；PR 保持 Open、不合并；等待独立审计；不开始 T1-03。 |

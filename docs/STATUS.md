@@ -4,7 +4,7 @@
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **最近完成任务：** T1-01 正式工程骨架与 SQLite 基础设施（用户验收完成）  
 **当前任务：** T1-02 项目创建、编辑、归档（**待审计**：开发与自测完成，2026-11-18）  
-**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01 已验收完成并合并到 main。T1-02 已完成代码、migration 0002、Rust Core 项目领域、typed Tauri IPC、项目 UI、自动化测试与 Release 实跑验证；本地回归 90 项 Rust 测试通过、Release UI/IPC 检查 0 失败，**当前状态为待审计**，独立审计与用户验收前不得标记验收完成。TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。分支 `task/T1-02-project-management`；T1-03 未开始。
+**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01 已验收完成并合并到 main。T1-02 已完成代码、migration 0002、Rust Core 项目领域、typed Tauri IPC、项目 UI、自动化测试与 Release 实跑验证；本地回归 90 项 Rust 测试通过、Release UI/IPC 检查 0 失败，**当前状态为待审计**（[PR #7](https://github.com/shuaikun853-dev/work-kanban/pull/7)），独立审计与用户验收前不得标记验收完成、不合并 PR。TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。分支 `task/T1-02-project-management`；T1-03 未开始。
 
 ## 最新产品决策
 
@@ -182,7 +182,7 @@
 ## T1-02 交付结果（2026-11-18，待审计）
 
 **任务：** 项目创建、编辑、归档。  
-**分支：** `task/T1-02-project-management`（基于 main `0cafde6`）；PR 待创建/待审计。  
+**分支：** `task/T1-02-project-management`（基于 main `0cafde6`）；[PR #7](https://github.com/shuaikun853-dev/work-kanban/pull/7)，**待审计、未合并**。  
 **状态：** **待审计**。开发代理自测完成，未自行标记验收完成。
 
 ### 实现范围

@@ -8,6 +8,7 @@
 **开发分支：** `task/T1-02-project-management`  
 **目标分支：** `main`  
 **基线 main：** `0cafde61078c8d428a37cd509a349e4db8f4096e`  
+**Pull Request：** [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)（待审计，未合并）  
 **代码提交：** `b8962b5`（Core + migration）、`2b3035d`（Tauri IPC）、`14a542e`（UI）、`30666c8`（验证脚本）  
 **机器可读证据：** [T1-02-evidence.json](T1-02-evidence.json)
 
