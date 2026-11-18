@@ -1,12 +1,14 @@
 # T1-01：正式工程骨架、便携路径接入与 SQLite 基础设施
 
-**任务状态：** **独立审计通过，待用户验收**（2026-11-18 第四轮独立审计复核 R3-01/R3-02 通过；TOCTOU 按 DEC-029 接受并延期至 Issue #2，未修复；未标记验收完成） \
+**任务状态：** **验收完成**（用户于 2026-11-18 明确接受第四轮独立审计交付及 DEC-029 中已接受但未修复的 TOCTOU 残余风险） \
 **第一轮返工报告：** [T1-01-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-AUDIT-FIX-REPORT.md)（历史修复与测试记录） \
 **第二轮独立审计：** [T1-01-SECOND-AUDIT-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-REPORT.md)（历史） \
 **第二轮返工修复报告：** [T1-01-SECOND-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md)（历史） \
 **第三轮独立审计报告：** [T1-01-THIRD-AUDIT-REPORT.md](../../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)（R3 修复依据） \
 **第三轮 R3 修复报告：** [T1-01-R3-FIX-REPORT.md](../../testing/reports/T1-01-R3-FIX-REPORT.md)（R3-01/R3-02 修复、测试与剩余风险） \
-**第三轮机读证据：** [T1-01-R3-FIX-evidence.json](../../testing/reports/T1-01-R3-FIX-evidence.json) \
+**第三轮机读证据：** [T1-01-R3-FIX-evidence.json](../../testing/reports/T1-01-R3-FIX-evidence.json) \\
+**第四轮独立审计报告：** [T1-01-FOURTH-AUDIT-REPORT.md](../../testing/reports/T1-01-FOURTH-AUDIT-REPORT.md) \\
+**用户验收记录：** [T1-01-USER-ACCEPTANCE.md](../../testing/reports/T1-01-USER-ACCEPTANCE.md) \
 **第二轮机器可读证据：** [T1-01-AUDIT-FIX-evidence.json](../../testing/reports/T1-01-AUDIT-FIX-evidence.json)（历史） \
 **测试报告：** [T1-01-REPORT.md](../../testing/reports/T1-01-REPORT.md)（返工前历史证据） \
 **Pull Request：** [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（指向 main，保持打开、不合并；开发代理未合并）
@@ -239,7 +241,7 @@
 
 **完整回归：** `cargo test --workspace` **68 passed / 0 failed**（上轮 62，新增 6 项 R3-01 测试）；Release 便携验证 **106 项 0 FAIL**；异常注入 **73 项 0 FAIL**；真实窗口 UI/IPC/CSP **21/21、CSP 违规 0**；Release EXE **9,993,216 字节**，SHA-256 `41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800`。修复代码提交：R3-01 `ae1eb65`、R3-02 `4942eb0`。
 
-**第三轮审计当时的门禁（历史记录）：** 当时 T1-01 尚待独立审计；第四轮复核现已通过，当前等待用户验收。用户明确验收前，不得标记验收完成、不得合并 PR #1、不得修改 main、不得开始 T1-02。证据见 [T1-01-R3-FIX-REPORT.md](../../testing/reports/T1-01-R3-FIX-REPORT.md) 与 [T1-01-R3-FIX-evidence.json](../../testing/reports/T1-01-R3-FIX-evidence.json)。
+**第三轮审计当时的门禁（历史记录）：** 当时 T1-01 尚待独立审计；第四轮复核及用户验收现已通过，T1-01 当前为验收完成。PR #1 仍未合并，main 未修改；T1-02 未开始。证据见 [T1-01-R3-FIX-REPORT.md](../../testing/reports/T1-01-R3-FIX-REPORT.md) 与 [T1-01-R3-FIX-evidence.json](../../testing/reports/T1-01-R3-FIX-evidence.json)。
 
 
 ## 第四轮独立审计结论（2026-11-18）
@@ -247,5 +249,15 @@
 - R3-01 P1：通过代码与证据复核。生产路径确实执行 D 根卷信任锚验证；真实 D 盘、真实 Q:→C: SUBST 和注入负向测试证据已核对。
 - R3-02 P2：通过代码与证据复核。观察器仅在 `cfg(test)` 存在，只在底层锁操作明确返回竞争时通知；waiter 走完整 `Database::initialize()`；10/10 轮日志已核对。
 - 本轮未在开发代理 Windows 10 主机独立重放测试；仓库当前没有 GitHub Actions/status checks。证据边界和非阻塞观察项详见[第四轮独立审计报告](../../testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)。
-- 当前状态：**独立审计通过，待用户验收**。PR #1 不合并，main 不修改，T1-02 不开始。
+- 当前状态：**T1-01 验收完成**（用户于 2026-11-18 明确确认）。PR #1 保持 Open、未合并，main 未修改；T1-02 尚未开始。
 - TOCTOU 仍未修复，按 DEC-029 接受并延期至 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)；不得宣称绝对 D 盘写入保证。
+
+
+## 用户验收记录（2026-11-18）
+
+用户明确回复“接受”，确认接受 T1-01 当前交付结果，包括第四轮独立审计通过结论，以及 DEC-029 中已接受但未修复的 TOCTOU 残余风险。T1-01 正式标记为**验收完成**。
+
+- 验收记录：[T1-01-USER-ACCEPTANCE.md](../../testing/reports/T1-01-USER-ACCEPTANCE.md)
+- PR #1 保持打开、未合并；本次验收不自动执行合并。
+- main 未修改；T1-02 未开始，等待单独启动指示。
+- TOCTOU 仍由 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2) 跟踪，未修复。
