@@ -1,0 +1,29 @@
+   Compiling workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.47s
+     Running tests\formal_root_protection.rs (target\debug\build\workmanager-core/dad04a38b020b0f2\out\formal_root_protection-dad04a38b020b0f2.exe)
+
+running 5 tests
+test database_initialize_rejects_swapped_junction_before_creating_lock_or_database ... Junction created for D:\WorkManager-test-data\formal-root-db-boundary-37264-0-1794960991028698900\data-root <<===>> D:\WorkManager-test-data\formal-root-db-boundary-37264-0-1794960991028698900\formal-sim\WorkManager
+[db-boundary] code = database-directory-boundary-violation
+[db-boundary] message = 数据库目录存储边界校验失败（debug-root-is-formal-release）：拒绝把 Debug/Test data 数据根目录 指向正式便携目录（真实最终路径（Junction/符号链接解析后） 检查命中）：D:\WorkManager-test-data\formal-root-db-boundary-37264-0-1794960991028698900\data-root；受保护目录：D:\WorkManager-test-data\formal-root-db-boundary-37264-0-1794960991028698900\formal-sim\WorkManager。该路径可能通过 Junction/符号链接等别名指向正式运行数据；已停止启动，未创建任何目录、写探针、初始化锁或数据库。请改用独立的 D 盘测试目录。。已停止启动，未创建初始化锁或数据库，不会回退到 C 盘、AppData 或系统 Temp。
+[db-boundary] PASS：锁/数据库创建前拒绝被替换路径；受保护目录零写入，真实正式目录未变化
+ok
+test default_protected_root_keeps_rejecting_formal_paths ... [default-protected] PASS：D:\WorkManager 字符串规则保持有效，真实目录未变化
+ok
+test ensure_directories_rejects_junction_created_after_resolve ... Junction created for D:\WorkManager-test-data\formal-root-junction-ensure-37264-1-1794960991128871600\data-root <<===>> D:\WorkManager-test-data\formal-root-junction-ensure-37264-1-1794960991128871600\formal-sim\WorkManager
+[ensure-junction] code = debug-root-is-formal-release
+[ensure-junction] message = [debug-root-is-formal-release] 拒绝把 Debug/Test data 数据根目录 指向正式便携目录（真实最终路径（Junction/符号链接解析后） 检查命中）：D:\WorkManager-test-data\formal-root-junction-ensure-37264-1-1794960991128871600\data-root；受保护目录：D:\WorkManager-test-data\formal-root-junction-ensure-37264-1-1794960991128871600\formal-sim\WorkManager。该路径可能通过 Junction/符号链接等别名指向正式运行数据；已停止启动，未创建任何目录、写探针、初始化锁或数据库。请改用独立的 D 盘测试目录。
+[ensure-junction] PASS：创建前 Junction 复验拒绝，受保护目录与真实正式目录均未被写入
+ok
+test release_mode_ignores_injected_protected_roots ... [release-unchanged] PASS：Release 数据目录仍为 EXE 同级 data，受保护目录零写入
+ok
+test resolve_rejects_junction_alias_to_protected_root ... Junction created for D:\WorkManager-test-data\formal-root-junction-resolve-37264-3-1794960991228993700\alias-to-formal <<===>> D:\WorkManager-test-data\formal-root-junction-resolve-37264-3-1794960991228993700\formal-sim\WorkManager
+[resolve-junction] code = debug-root-is-formal-release
+[resolve-junction] message = [debug-root-is-formal-release] 拒绝把 Debug/Test WORKMANAGER_TEST_PORTABLE_ROOT 指向正式便携目录（真实最终路径（Junction/符号链接解析后） 检查命中）：D:\WorkManager-test-data\formal-root-junction-resolve-37264-3-1794960991228993700\alias-to-formal；受保护目录：D:\WorkManager-test-data\formal-root-junction-resolve-37264-3-1794960991228993700\formal-sim\WorkManager。该路径可能通过 Junction/符号链接等别名指向正式运行数据；已停止启动，未创建任何目录、写探针、初始化锁或数据库。请改用独立的 D 盘测试目录。
+[resolve-junction-nested] code = debug-root-is-formal-release
+[resolve-junction-nested] message = [debug-root-is-formal-release] 拒绝把 Debug/Test WORKMANAGER_TEST_PORTABLE_ROOT 指向正式便携目录（真实最终路径（Junction/符号链接解析后） 检查命中）：D:\WorkManager-test-data\formal-root-junction-resolve-37264-3-1794960991228993700\alias-to-formal；受保护目录：D:\WorkManager-test-data\formal-root-junction-resolve-37264-3-1794960991228993700\formal-sim\WorkManager。该路径可能通过 Junction/符号链接等别名指向正式运行数据；已停止启动，未创建任何目录、写探针、初始化锁或数据库。请改用独立的 D 盘测试目录。
+[resolve-junction] PASS：Junction 别名被真实最终路径检查拒绝，受保护目录零写入
+ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s
+

@@ -1,0 +1,334 @@
+
+==================== WorkManager T1-01 Release 启动异常路径（fail-closed）验证（task-2） ====================
+
+==================== 0. 环境与 Release EXE 记录 ====================
+[08:22:13][INFO] Release EXE：<repo>\target\release\workmanager.exe
+[08:22:13][INFO] 大小（字节）：9993216
+[08:22:13][INFO] SHA-256：41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800
+[08:22:13][INFO] 输出目录：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212
+[08:22:13][INFO] PowerShell：5.1.19041.6456，OS：Microsoft Windows NT 10.0.19045.0
+[08:22:13][INFO] python（本脚本不强制依赖）：E:\Python314\python.exe 3.14.5
+[08:22:13][INFO] precondition.release_exe :: path=<repo>\target\release\workmanager.exe；size_bytes=9993216；sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800
+[08:22:13][INFO] precondition.output_dir :: D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212
+[08:22:13][INFO] precondition.current_identity :: <machine>\<redacted>
+[08:22:13][PASS] precondition.icacls_available :: C:\WINDOWS\System32\icacls.exe
+
+==================== 用例 A：数据库文件为非 SQLite 垃圾内容 → 启动必须失败且原文件不变 ====================
+[08:22:13][PASS] fault.corrupt_db.exe_copy_sha256_matches :: sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800
+[08:22:13][STEP] 已写入非 SQLite 垃圾数据库文件：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-corrupt-db\data\database\work.db；size=1024；sha256=6FD682CA9CBE8BA33EB92935E2AE3027434CF7D0D733A8887CF697AC1BC35CF4
+[08:22:13][PASS] fault.corrupt_db.fixture_created :: size_bytes=1024；sha256=6FD682CA9CBE8BA33EB92935E2AE3027434CF7D0D733A8887CF697AC1BC35CF4；内容标记=NOT-A-SQLITE-DB: WorkManager fault-injection fixture (fictitious data).
+[08:22:14][STEP] fault-corrupt-db 检测到启动失败对话框：title=WorkManager 启动失败；elapsed_ms=462
+[08:22:14][EVID] --- JSON 证据开始: fault-corrupt-db 启动失败对话框 UI 内容 ---
+[08:22:14][EVID]     {
+[08:22:14][EVID]         "title":  "WorkManager 启动失败",
+[08:22:14][EVID]         "class_name":  "#32770",
+[08:22:14][EVID]         "button_names":  [
+[08:22:14][EVID]                              "确定"
+[08:22:14][EVID]                          ],
+[08:22:14][EVID]         "text_details":  [
+[08:22:14][EVID]                              {
+[08:22:14][EVID]                                  "name":  "数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-not-a-database\n数据库文件不是有效的 SQLite 数据库：D:\\WorkManager-test-data\\release-verify-faults-r3-20261118-082212\\fault-corrupt-db\\data\\database\\work.db；详情：file is not a database。已停止启动，不会删除、重建或覆盖原文件。",
+[08:22:14][EVID]                                  "control_type":  "ControlType.Pane",
+[08:22:14][EVID]                                  "class_name":  "Static",
+[08:22:14][EVID]                                  "automation_id":  "65535"
+[08:22:14][EVID]                              }
+[08:22:14][EVID]                          ]
+[08:22:14][EVID]     }
+[08:22:14][EVID] --- JSON 证据结束: fault-corrupt-db 启动失败对话框 UI 内容 ---
+[08:22:15][INFO] fault-corrupt-db 对话框关闭方式：CloseMainWindow
+[08:22:15][INFO] fault-corrupt-db 进程输出捕获：stdout 0 字符；stderr 253 字符；读取错误=
+[08:22:15][PASS] fault.corrupt_db.failure_dialog_found :: title=WorkManager 启动失败；texts=数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。
+
+错误码：database-not-a-database
+数据库文件不是有效的 SQLite 数据库：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-corrupt-db\data\database\work.db；详情：file is not a database。已停止启动，不会删除、重建或覆盖原文件。
+[08:22:15][PASS] fault.corrupt_db.failure_dialog_title :: 对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）
+[08:22:15][PASS] fault.corrupt_db.failure_dialog_message :: 对话框文本包含预期关键字 “数据库”：数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。
+
+错误码：database-not-a-database
+数据库文件不是有效的 SQLite 数据库：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-corrupt-db\data\database\work.db；详情：file is not a database。已停止启动，不会删除、重建或覆盖原文件。
+[08:22:15][PASS] fault.corrupt_db.process_exited :: 对话框关闭后进程已退出；close_method=CloseMainWindow
+[08:22:15][PASS] fault.corrupt_db.exit_code_nonzero :: exit_code=1
+[08:22:15][PASS] fault.corrupt_db.dialog_dismissed_cleanly :: 对话框关闭后应用自行退出，未强制结束
+[08:22:15][INFO] fault.corrupt_db.stderr_output :: stderr（启动日志证据）=[WorkManager][fatal] 数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。
+
+错误码：database-not-a-database
+数据库文件不是有效的 SQLite 数据库：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-corrupt-db\data\database\work.db；详情：file is not a database。已停止启动，不会删除、重建或覆盖原文件。
+[08:22:15][PASS] fault.corrupt_db.no_init_temp_files :: 未发现 .work.db.init-* 初始化临时文件残留
+[08:22:15][PASS] fault.corrupt_db.original_still_file :: 原数据库文件仍存在：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-corrupt-db\data\database\work.db
+[08:22:15][PASS] fault.corrupt_db.original_bytes_unchanged :: size=1024；sha256=6FD682CA9CBE8BA33EB92935E2AE3027434CF7D0D733A8887CF697AC1BC35CF4
+[08:22:15][PASS] fault.corrupt_db.no_new_database_files :: 数据库目录中除原 work.db 与初始化锁文件外没有新增文件（未创建空库/临时库）
+
+==================== 用例 A2：已存在 0 字节 work.db → 启动必须失败且原文件不变 ====================
+[08:22:15][PASS] fault.zero_byte_db.exe_copy_sha256_matches :: sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800
+[08:22:15][STEP] 已写入 0 字节 work.db：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-zero-byte-db\data\database\work.db；size=0；sha256=E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
+[08:22:15][PASS] fault.zero_byte_db.fixture_created :: size_bytes=0；sha256=E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855；期望 size=0
+[08:22:16][STEP] fault-zero-byte-db 检测到启动失败对话框：title=WorkManager 启动失败；elapsed_ms=451
+[08:22:16][EVID] --- JSON 证据开始: fault-zero-byte-db 启动失败对话框 UI 内容 ---
+[08:22:16][EVID]     {
+[08:22:16][EVID]         "title":  "WorkManager 启动失败",
+[08:22:16][EVID]         "class_name":  "#32770",
+[08:22:16][EVID]         "button_names":  [
+[08:22:16][EVID]                              "确定"
+[08:22:16][EVID]                          ],
+[08:22:16][EVID]         "text_details":  [
+[08:22:16][EVID]                              {
+[08:22:16][EVID]                                  "name":  "数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-empty-existing-file\n检测到已存在的数据库文件为 0 字节（异常空文件）：D:\\WorkManager-test-data\\release-verify-faults-r3-20261118-082212\\fault-zero-byte-db\\data\\database\\work.db。已停止启动，未删除、截断或覆盖原文件；不会把异常空文件当作首次安装，也不会自动重建。请从备份恢复，或在确认数据不可恢复后由用户手动处理后重试。",
+[08:22:16][EVID]                                  "control_type":  "ControlType.Pane",
+[08:22:16][EVID]                                  "class_name":  "Static",
+[08:22:16][EVID]                                  "automation_id":  "65535"
+[08:22:16][EVID]                              }
+[08:22:16][EVID]                          ]
+[08:22:16][EVID]     }
+[08:22:16][EVID] --- JSON 证据结束: fault-zero-byte-db 启动失败对话框 UI 内容 ---
+[08:22:17][INFO] fault-zero-byte-db 对话框关闭方式：CloseMainWindow
+[08:22:17][INFO] fault-zero-byte-db 进程输出捕获：stdout 0 字符；stderr 289 字符；读取错误=
+[08:22:17][PASS] fault.zero_byte_db.failure_dialog_found :: title=WorkManager 启动失败；texts=数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。
+
+错误码：database-empty-existing-file
+检测到已存在的数据库文件为 0 字节（异常空文件）：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-zero-byte-db\data\database\work.db。已停止启动，未删除、截断或覆盖原文件；不会把异常空文件当作首次安装，也不会自动重建。请从备份恢复，或在确认数据不可恢复后由用户手动处理后重试。
+[08:22:17][PASS] fault.zero_byte_db.failure_dialog_title :: 对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）
+[08:22:17][PASS] fault.zero_byte_db.failure_dialog_message :: 对话框文本包含预期关键字 “0 字节”：数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。
+
+错误码：database-empty-existing-file
+检测到已存在的数据库文件为 0 字节（异常空文件）：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-zero-byte-db\data\database\work.db。已停止启动，未删除、截断或覆盖原文件；不会把异常空文件当作首次安装，也不会自动重建。请从备份恢复，或在确认数据不可恢复后由用户手动处理后重试。
+[08:22:17][PASS] fault.zero_byte_db.process_exited :: 对话框关闭后进程已退出；close_method=CloseMainWindow
+[08:22:17][PASS] fault.zero_byte_db.exit_code_nonzero :: exit_code=1
+[08:22:17][PASS] fault.zero_byte_db.dialog_dismissed_cleanly :: 对话框关闭后应用自行退出，未强制结束
+[08:22:17][INFO] fault.zero_byte_db.stderr_output :: stderr（启动日志证据）=[WorkManager][fatal] 数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。
+
+错误码：database-empty-existing-file
+检测到已存在的数据库文件为 0 字节（异常空文件）：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-zero-byte-db\data\database\work.db。已停止启动，未删除、截断或覆盖原文件；不会把异常空文件当作首次安装，也不会自动重建。请从备份恢复，或在确认数据不可恢复后由用户手动处理后重试。
+[08:22:17][PASS] fault.zero_byte_db.no_init_temp_files :: 未发现 .work.db.init-* 初始化临时文件残留
+[08:22:17][PASS] fault.zero_byte_db.original_still_file :: 原 0 字节数据库文件仍存在：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-zero-byte-db\data\database\work.db
+[08:22:17][PASS] fault.zero_byte_db.original_bytes_unchanged :: size=0；sha256=E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855；文件保持 0 字节
+[08:22:17][PASS] fault.zero_byte_db.no_sidecars_created :: 未创建 WAL/SHM 文件（未把 0 字节文件交给 SQLite 打开）
+[08:22:17][PASS] fault.zero_byte_db.no_schema_created :: 数据库目录中只有原 work.db（0 字节）与初始化锁文件，没有生成任何 schema/数据库文件
+
+==================== 用例 B：data/ 被同名文件阻塞 → 启动必须失败且阻塞文件不变 ====================
+[08:22:17][PASS] fault.data_blocker.exe_copy_sha256_matches :: sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800
+[08:22:17][STEP] 已创建阻塞文件：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-data-blocked-by-file\data；size=122；sha256=CF5C29B83DA5F046CDB07B88D3240CB5CD92FC21275CCF1830259E492C6EAF67
+[08:22:17][PASS] fault.data_blocker.fixture_created :: size_bytes=122；sha256=CF5C29B83DA5F046CDB07B88D3240CB5CD92FC21275CCF1830259E492C6EAF67
+[08:22:18][STEP] fault-data-blocked-by-file 检测到启动失败对话框：title=WorkManager 启动失败；elapsed_ms=502
+[08:22:18][EVID] --- JSON 证据开始: fault-data-blocked-by-file 启动失败对话框 UI 内容 ---
+[08:22:18][EVID]     {
+[08:22:18][EVID]         "title":  "WorkManager 启动失败",
+[08:22:18][EVID]         "class_name":  "#32770",
+[08:22:18][EVID]         "button_names":  [
+[08:22:18][EVID]                              "确定"
+[08:22:18][EVID]                          ],
+[08:22:18][EVID]         "text_details":  [
+[08:22:18][EVID]                              {
+[08:22:18][EVID]                                  "name":  "便携数据目录不可用，已停止启动。\n\n错误码：path-not-directory\ndata 数据根目录 路径已存在但不是普通目录（可能是文件或符号链接）：D:\\WorkManager-test-data\\release-verify-faults-r3-20261118-082212\\fault-data-blocked-by-file\\data。已停止启动，不会删除或覆盖该路径，也不会回退到 C 盘、AppData 或系统 Temp。",
+[08:22:18][EVID]                                  "control_type":  "ControlType.Pane",
+[08:22:18][EVID]                                  "class_name":  "Static",
+[08:22:18][EVID]                                  "automation_id":  "65535"
+[08:22:18][EVID]                              }
+[08:22:18][EVID]                          ]
+[08:22:18][EVID]     }
+[08:22:18][EVID] --- JSON 证据结束: fault-data-blocked-by-file 启动失败对话框 UI 内容 ---
+[08:22:18][INFO] fault-data-blocked-by-file 对话框关闭方式：CloseMainWindow
+[08:22:19][INFO] fault-data-blocked-by-file 进程输出捕获：stdout 0 字符；stderr 242 字符；读取错误=
+[08:22:19][PASS] fault.data_blocker.failure_dialog_found :: title=WorkManager 启动失败；texts=便携数据目录不可用，已停止启动。
+
+错误码：path-not-directory
+data 数据根目录 路径已存在但不是普通目录（可能是文件或符号链接）：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-data-blocked-by-file\data。已停止启动，不会删除或覆盖该路径，也不会回退到 C 盘、AppData 或系统 Temp。
+[08:22:19][PASS] fault.data_blocker.failure_dialog_title :: 对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）
+[08:22:19][PASS] fault.data_blocker.failure_dialog_message :: 对话框文本包含预期关键字 “便携数据目录”：便携数据目录不可用，已停止启动。
+
+错误码：path-not-directory
+data 数据根目录 路径已存在但不是普通目录（可能是文件或符号链接）：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-data-blocked-by-file\data。已停止启动，不会删除或覆盖该路径，也不会回退到 C 盘、AppData 或系统 Temp。
+[08:22:19][PASS] fault.data_blocker.process_exited :: 对话框关闭后进程已退出；close_method=CloseMainWindow
+[08:22:19][PASS] fault.data_blocker.exit_code_nonzero :: exit_code=1
+[08:22:19][PASS] fault.data_blocker.dialog_dismissed_cleanly :: 对话框关闭后应用自行退出，未强制结束
+[08:22:19][INFO] fault.data_blocker.stderr_output :: stderr（启动日志证据）=[WorkManager][fatal] 便携数据目录不可用，已停止启动。
+
+错误码：path-not-directory
+data 数据根目录 路径已存在但不是普通目录（可能是文件或符号链接）：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-data-blocked-by-file\data。已停止启动，不会删除或覆盖该路径，也不会回退到 C 盘、AppData 或系统 Temp。
+[08:22:19][PASS] fault.data_blocker.no_init_temp_files :: 未发现 .work.db.init-* 初始化临时文件残留
+[08:22:19][PASS] fault.data_blocker.still_regular_file :: 阻塞文件仍为普通文件：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-data-blocked-by-file\data
+[08:22:19][PASS] fault.data_blocker.original_bytes_unchanged :: size=122；sha256=CF5C29B83DA5F046CDB07B88D3240CB5CD92FC21275CCF1830259E492C6EAF67
+
+==================== 用例 C：work.db 为同名目录 → 启动必须失败且目录仍存在 ====================
+[08:22:19][PASS] fault.db_directory.exe_copy_sha256_matches :: sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800
+[08:22:19][PASS] fault.db_directory.fixture_created :: 已创建同名目录：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-db-is-directory\data\database\work.db
+[08:22:19][STEP] fault-db-is-directory 检测到启动失败对话框：title=WorkManager 启动失败；elapsed_ms=623
+[08:22:19][EVID] --- JSON 证据开始: fault-db-is-directory 启动失败对话框 UI 内容 ---
+[08:22:19][EVID]     {
+[08:22:19][EVID]         "title":  "WorkManager 启动失败",
+[08:22:19][EVID]         "class_name":  "#32770",
+[08:22:19][EVID]         "button_names":  [
+[08:22:19][EVID]                              "确定"
+[08:22:19][EVID]                          ],
+[08:22:19][EVID]         "text_details":  [
+[08:22:19][EVID]                              {
+[08:22:19][EVID]                                  "name":  "数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。\n\n错误码：database-path-not-file\n数据库路径已存在但不是普通文件，已停止启动：D:\\WorkManager-test-data\\release-verify-faults-r3-20261118-082212\\fault-db-is-directory\\data\\database\\work.db。不会删除或覆盖该路径。",
+[08:22:19][EVID]                                  "control_type":  "ControlType.Pane",
+[08:22:19][EVID]                                  "class_name":  "Static",
+[08:22:19][EVID]                                  "automation_id":  "65535"
+[08:22:19][EVID]                              }
+[08:22:19][EVID]                          ]
+[08:22:19][EVID]     }
+[08:22:19][EVID] --- JSON 证据结束: fault-db-is-directory 启动失败对话框 UI 内容 ---
+[08:22:20][INFO] fault-db-is-directory 对话框关闭方式：CloseMainWindow
+[08:22:20][INFO] fault-db-is-directory 进程输出捕获：stdout 0 字符；stderr 222 字符；读取错误=
+[08:22:20][PASS] fault.db_directory.failure_dialog_found :: title=WorkManager 启动失败；texts=数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。
+
+错误码：database-path-not-file
+数据库路径已存在但不是普通文件，已停止启动：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-db-is-directory\data\database\work.db。不会删除或覆盖该路径。
+[08:22:20][PASS] fault.db_directory.failure_dialog_title :: 对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）
+[08:22:20][PASS] fault.db_directory.failure_dialog_message :: 对话框文本包含预期关键字 “数据库”：数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。
+
+错误码：database-path-not-file
+数据库路径已存在但不是普通文件，已停止启动：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-db-is-directory\data\database\work.db。不会删除或覆盖该路径。
+[08:22:20][PASS] fault.db_directory.process_exited :: 对话框关闭后进程已退出；close_method=CloseMainWindow
+[08:22:20][PASS] fault.db_directory.exit_code_nonzero :: exit_code=1
+[08:22:20][PASS] fault.db_directory.dialog_dismissed_cleanly :: 对话框关闭后应用自行退出，未强制结束
+[08:22:20][INFO] fault.db_directory.stderr_output :: stderr（启动日志证据）=[WorkManager][fatal] 数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。
+
+错误码：database-path-not-file
+数据库路径已存在但不是普通文件，已停止启动：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-db-is-directory\data\database\work.db。不会删除或覆盖该路径。
+[08:22:20][PASS] fault.db_directory.no_init_temp_files :: 未发现 .work.db.init-* 初始化临时文件残留
+[08:22:20][PASS] fault.db_directory.still_directory :: work.db 仍为目录：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-db-is-directory\data\database\work.db
+[08:22:20][PASS] fault.db_directory.not_replaced_by_database :: work.db 目录内没有写入任何条目（未覆盖/替换为数据库文件）
+
+==================== 用例 D：数据库目录 ACL 拒绝写入 → 启动必须失败（finally 恢复 ACL） ====================
+[08:22:20][PASS] fault.acl_denied.exe_copy_sha256_matches :: sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800
+[08:22:20][STEP] icacls /deny <machine>\<redacted>:(W) D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-acl-denied\data\database：exit_code=0；processed file: D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-acl-denied\data\database
+Successfully processed 1 files; Failed processing 0 files
+[08:22:20][PASS] fault.acl_denied.deny_applied :: icacls /deny <machine>\<redacted>:(W) 执行成功
+[08:22:20][PASS] fault.acl_denied.deny_enforced :: ACL 实际阻止当前用户写入数据库目录（自检探测文件创建失败）
+[08:22:21][STEP] fault-acl-denied 检测到启动失败对话框：title=WorkManager 启动失败；elapsed_ms=457
+[08:22:21][EVID] --- JSON 证据开始: fault-acl-denied 启动失败对话框 UI 内容 ---
+[08:22:21][EVID]     {
+[08:22:21][EVID]         "title":  "WorkManager 启动失败",
+[08:22:21][EVID]         "class_name":  "#32770",
+[08:22:21][EVID]         "button_names":  [
+[08:22:21][EVID]                              "确定"
+[08:22:21][EVID]                          ],
+[08:22:21][EVID]         "text_details":  [
+[08:22:21][EVID]                              {
+[08:22:21][EVID]                                  "name":  "便携数据目录不可用，已停止启动。\n\n错误码：directory-inspect-failed\n检查路径的真实存储位置失败（拒绝访问）：D:\\WorkManager-test-data\\release-verify-faults-r3-20261118-082212\\fault-acl-denied\\data\\database；系统错误：拒绝访问。 (os error 5)。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。",
+[08:22:21][EVID]                                  "control_type":  "ControlType.Pane",
+[08:22:21][EVID]                                  "class_name":  "Static",
+[08:22:21][EVID]                                  "automation_id":  "65535"
+[08:22:21][EVID]                              }
+[08:22:21][EVID]                          ]
+[08:22:21][EVID]     }
+[08:22:21][EVID] --- JSON 证据结束: fault-acl-denied 启动失败对话框 UI 内容 ---
+[08:22:22][INFO] fault-acl-denied 对话框关闭方式：CloseMainWindow
+[08:22:22][INFO] fault-acl-denied 进程输出捕获：stdout 0 字符；stderr 243 字符；读取错误=
+[08:22:22][PASS] fault.acl_denied.failure_dialog_found :: title=WorkManager 启动失败；texts=便携数据目录不可用，已停止启动。
+
+错误码：directory-inspect-failed
+检查路径的真实存储位置失败（拒绝访问）：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-acl-denied\data\database；系统错误：拒绝访问。 (os error 5)。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。
+[08:22:22][PASS] fault.acl_denied.failure_dialog_title :: 对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）
+[08:22:22][PASS] fault.acl_denied.failure_dialog_message :: 对话框文本包含预期关键字 “便携数据目录”：便携数据目录不可用，已停止启动。
+
+错误码：directory-inspect-failed
+检查路径的真实存储位置失败（拒绝访问）：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-acl-denied\data\database；系统错误：拒绝访问。 (os error 5)。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。
+[08:22:22][PASS] fault.acl_denied.process_exited :: 对话框关闭后进程已退出；close_method=CloseMainWindow
+[08:22:22][PASS] fault.acl_denied.exit_code_nonzero :: exit_code=1
+[08:22:22][PASS] fault.acl_denied.dialog_dismissed_cleanly :: 对话框关闭后应用自行退出，未强制结束
+[08:22:22][INFO] fault.acl_denied.stderr_output :: stderr（启动日志证据）=[WorkManager][fatal] 便携数据目录不可用，已停止启动。
+
+错误码：directory-inspect-failed
+检查路径的真实存储位置失败（拒绝访问）：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-acl-denied\data\database；系统错误：拒绝访问。 (os error 5)。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。
+[08:22:22][STEP] icacls /remove:d <machine>\<redacted> D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-acl-denied\data\database：exit_code=0；processed file: D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-acl-denied\data\database
+Successfully processed 1 files; Failed processing 0 files
+[08:22:22][PASS] fault.acl_denied.deny_removed_in_finally :: icacls /remove:d <machine>\<redacted> 执行成功（finally 中恢复）
+[08:22:22][PASS] fault.acl_denied.write_restored :: ACL 恢复后当前用户可正常写入数据库目录
+[08:22:22][PASS] fault.acl_denied.database_dir_still_exists :: 数据库目录仍存在：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-acl-denied\data\database
+[08:22:22][PASS] fault.acl_denied.no_database_created :: ACL 拒绝写入时未创建 work.db
+[08:22:22][PASS] fault.acl_denied.no_init_temp_files :: 未发现 .work.db.init-* 初始化临时文件残留
+
+==================== 清理 ====================
+[08:22:22][PASS] cleanup.process_cleanup :: 没有遗留的被测进程
+[08:22:22][INFO] 清理：已删除用例目录 fault-corrupt-db：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-corrupt-db
+[08:22:22][INFO] 清理：已删除用例目录 fault-zero-byte-db：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-zero-byte-db
+[08:22:22][INFO] 清理：已删除用例目录 fault-data-blocked-by-file：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-data-blocked-by-file
+[08:22:22][INFO] 清理：已删除用例目录 fault-db-is-directory：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-db-is-directory
+[08:22:22][INFO] 清理：已删除用例目录 fault-acl-denied：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-acl-denied
+[08:22:22][PASS] cleanup.case_directories :: 已删除本脚本创建的用例沙箱目录（证据在 evidence/ 与 summary/report 中保留）
+[08:22:22][INFO] cleanup.evidence_retained :: 证据与汇总保留在：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212
+
+
+==================== verify-release-faults 检查汇总 ====================
+
+status name                                        detail                                                                                                                                                                                                           
+------ ----                                        ------                                                                                                                                                                                                           
+INFO   precondition.release_exe                    path=<repo>\target\release\workmanager.exe；size_bytes=9993216；sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800                                                                         
+INFO   precondition.output_dir                     D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212                                                                                                                                                
+INFO   precondition.current_identity               <machine>\<redacted>                                                                                                                                                                                            
+PASS   precondition.icacls_available               C:\WINDOWS\System32\icacls.exe                                                                                                                                                                                   
+PASS   fault.corrupt_db.exe_copy_sha256_matches    sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800                                                                                                                                          
+PASS   fault.corrupt_db.fixture_created            size_bytes=1024；sha256=6FD682CA9CBE8BA33EB92935E2AE3027434CF7D0D733A8887CF697AC1BC35CF4；内容标记=NOT-A-SQLITE-DB: WorkManager fault-injection fixture (fictitious data).                                             
+PASS   fault.corrupt_db.failure_dialog_found       title=WorkManager 启动失败；texts=数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。...                                                                                                                                                     
+PASS   fault.corrupt_db.failure_dialog_title       对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）                                                                                                                                                                   
+PASS   fault.corrupt_db.failure_dialog_message     对话框文本包含预期关键字 “数据库”：数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。...                                                                                                                                                               
+PASS   fault.corrupt_db.process_exited             对话框关闭后进程已退出；close_method=CloseMainWindow                                                                                                                                                                         
+PASS   fault.corrupt_db.exit_code_nonzero          exit_code=1                                                                                                                                                                                                      
+PASS   fault.corrupt_db.dialog_dismissed_cleanly   对话框关闭后应用自行退出，未强制结束                                                                                                                                                                                               
+INFO   fault.corrupt_db.stderr_output              stderr（启动日志证据）=[WorkManager][fatal] 数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。...                                                                                                                                              
+PASS   fault.corrupt_db.no_init_temp_files         未发现 .work.db.init-* 初始化临时文件残留                                                                                                                                                                                    
+PASS   fault.corrupt_db.original_still_file        原数据库文件仍存在：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-corrupt-db\data\database\work.db                                                                                               
+PASS   fault.corrupt_db.original_bytes_unchanged   size=1024；sha256=6FD682CA9CBE8BA33EB92935E2AE3027434CF7D0D733A8887CF697AC1BC35CF4                                                                                                                                
+PASS   fault.corrupt_db.no_new_database_files      数据库目录中除原 work.db 与初始化锁文件外没有新增文件（未创建空库/临时库）                                                                                                                                                                       
+PASS   fault.zero_byte_db.exe_copy_sha256_matches  sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800                                                                                                                                          
+PASS   fault.zero_byte_db.fixture_created          size_bytes=0；sha256=E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855；期望 size=0                                                                                                                   
+PASS   fault.zero_byte_db.failure_dialog_found     title=WorkManager 启动失败；texts=数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。...                                                                                                                                                     
+PASS   fault.zero_byte_db.failure_dialog_title     对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）                                                                                                                                                                   
+PASS   fault.zero_byte_db.failure_dialog_message   对话框文本包含预期关键字 “0 字节”：数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。...                                                                                                                                                              
+PASS   fault.zero_byte_db.process_exited           对话框关闭后进程已退出；close_method=CloseMainWindow                                                                                                                                                                         
+PASS   fault.zero_byte_db.exit_code_nonzero        exit_code=1                                                                                                                                                                                                      
+PASS   fault.zero_byte_db.dialog_dismissed_cleanly 对话框关闭后应用自行退出，未强制结束                                                                                                                                                                                               
+INFO   fault.zero_byte_db.stderr_output            stderr（启动日志证据）=[WorkManager][fatal] 数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。...                                                                                                                                              
+PASS   fault.zero_byte_db.no_init_temp_files       未发现 .work.db.init-* 初始化临时文件残留                                                                                                                                                                                    
+PASS   fault.zero_byte_db.original_still_file      原 0 字节数据库文件仍存在：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-zero-byte-db\data\database\work.db                                                                                        
+PASS   fault.zero_byte_db.original_bytes_unchanged size=0；sha256=E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855；文件保持 0 字节                                                                                                                         
+PASS   fault.zero_byte_db.no_sidecars_created      未创建 WAL/SHM 文件（未把 0 字节文件交给 SQLite 打开）                                                                                                                                                                            
+PASS   fault.zero_byte_db.no_schema_created        数据库目录中只有原 work.db（0 字节）与初始化锁文件，没有生成任何 schema/数据库文件                                                                                                                                                               
+PASS   fault.data_blocker.exe_copy_sha256_matches  sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800                                                                                                                                          
+PASS   fault.data_blocker.fixture_created          size_bytes=122；sha256=CF5C29B83DA5F046CDB07B88D3240CB5CD92FC21275CCF1830259E492C6EAF67                                                                                                                           
+PASS   fault.data_blocker.failure_dialog_found     title=WorkManager 启动失败；texts=便携数据目录不可用，已停止启动。...                                                                                                                                                                 
+PASS   fault.data_blocker.failure_dialog_title     对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）                                                                                                                                                                   
+PASS   fault.data_blocker.failure_dialog_message   对话框文本包含预期关键字 “便携数据目录”：便携数据目录不可用，已停止启动。...                                                                                                                                                                        
+PASS   fault.data_blocker.process_exited           对话框关闭后进程已退出；close_method=CloseMainWindow                                                                                                                                                                         
+PASS   fault.data_blocker.exit_code_nonzero        exit_code=1                                                                                                                                                                                                      
+PASS   fault.data_blocker.dialog_dismissed_cleanly 对话框关闭后应用自行退出，未强制结束                                                                                                                                                                                               
+INFO   fault.data_blocker.stderr_output            stderr（启动日志证据）=[WorkManager][fatal] 便携数据目录不可用，已停止启动。...                                                                                                                                                          
+PASS   fault.data_blocker.no_init_temp_files       未发现 .work.db.init-* 初始化临时文件残留                                                                                                                                                                                    
+PASS   fault.data_blocker.still_regular_file       阻塞文件仍为普通文件：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-data-blocked-by-file\data                                                                                                     
+PASS   fault.data_blocker.original_bytes_unchanged size=122；sha256=CF5C29B83DA5F046CDB07B88D3240CB5CD92FC21275CCF1830259E492C6EAF67                                                                                                                                 
+PASS   fault.db_directory.exe_copy_sha256_matches  sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800                                                                                                                                          
+PASS   fault.db_directory.fixture_created          已创建同名目录：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-db-is-directory\data\database\work.db                                                                                            
+PASS   fault.db_directory.failure_dialog_found     title=WorkManager 启动失败；texts=数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。...                                                                                                                                                     
+PASS   fault.db_directory.failure_dialog_title     对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）                                                                                                                                                                   
+PASS   fault.db_directory.failure_dialog_message   对话框文本包含预期关键字 “数据库”：数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。...                                                                                                                                                               
+PASS   fault.db_directory.process_exited           对话框关闭后进程已退出；close_method=CloseMainWindow                                                                                                                                                                         
+PASS   fault.db_directory.exit_code_nonzero        exit_code=1                                                                                                                                                                                                      
+PASS   fault.db_directory.dialog_dismissed_cleanly 对话框关闭后应用自行退出，未强制结束                                                                                                                                                                                               
+INFO   fault.db_directory.stderr_output            stderr（启动日志证据）=[WorkManager][fatal] 数据库初始化失败，已停止启动，原始数据库未被删除或覆盖。...                                                                                                                                              
+PASS   fault.db_directory.no_init_temp_files       未发现 .work.db.init-* 初始化临时文件残留                                                                                                                                                                                    
+PASS   fault.db_directory.still_directory          work.db 仍为目录：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-db-is-directory\data\database\work.db                                                                                       
+PASS   fault.db_directory.not_replaced_by_database work.db 目录内没有写入任何条目（未覆盖/替换为数据库文件）                                                                                                                                                                                
+PASS   fault.acl_denied.exe_copy_sha256_matches    sha256=41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800                                                                                                                                          
+PASS   fault.acl_denied.deny_applied               icacls /deny <machine>\<redacted>:(W) 执行成功                                                                                                                                                                      
+PASS   fault.acl_denied.deny_enforced              ACL 实际阻止当前用户写入数据库目录（自检探测文件创建失败）                                                                                                                                                                                  
+PASS   fault.acl_denied.failure_dialog_found       title=WorkManager 启动失败；texts=便携数据目录不可用，已停止启动。...                                                                                                                                                                 
+PASS   fault.acl_denied.failure_dialog_title       对话框标题=WorkManager 启动失败（要求含 “WorkManager 启动失败”）                                                                                                                                                                   
+PASS   fault.acl_denied.failure_dialog_message     对话框文本包含预期关键字 “便携数据目录”：便携数据目录不可用，已停止启动。...                                                                                                                                                                        
+PASS   fault.acl_denied.process_exited             对话框关闭后进程已退出；close_method=CloseMainWindow                                                                                                                                                                         
+PASS   fault.acl_denied.exit_code_nonzero          exit_code=1                                                                                                                                                                                                      
+PASS   fault.acl_denied.dialog_dismissed_cleanly   对话框关闭后应用自行退出，未强制结束                                                                                                                                                                                               
+INFO   fault.acl_denied.stderr_output              stderr（启动日志证据）=[WorkManager][fatal] 便携数据目录不可用，已停止启动。...                                                                                                                                                          
+PASS   fault.acl_denied.deny_removed_in_finally    icacls /remove:d <machine>\<redacted> 执行成功（finally 中恢复）                                                                                                                                                         
+PASS   fault.acl_denied.write_restored             ACL 恢复后当前用户可正常写入数据库目录                                                                                                                                                                                            
+PASS   fault.acl_denied.database_dir_still_exists  数据库目录仍存在：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\fault-acl-denied\data\database                                                                                                        
+PASS   fault.acl_denied.no_database_created        ACL 拒绝写入时未创建 work.db                                                                                                                                                                                             
+PASS   fault.acl_denied.no_init_temp_files         未发现 .work.db.init-* 初始化临时文件残留                                                                                                                                                                                    
+PASS   cleanup.process_cleanup                     没有遗留的被测进程                                                                                                                                                                                                        
+PASS   cleanup.case_directories                    已删除本脚本创建的用例沙箱目录（证据在 evidence/ 与 summary/report 中保留）                                                                                                                                                              
+INFO   cleanup.evidence_retained                   证据与汇总保留在：D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212
+TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9 OVERALL=PASS
+SUMMARY=D:\WorkManager-test-data\release-verify-faults-r3-20261118-082212\summary.json
+结论：全部检查通过（允许 WARN/INFO），退出码 0。

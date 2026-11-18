@@ -1,0 +1,101 @@
+{
+  "generatedAt": "2026-11-18T00:22:34.150Z",
+  "method": "CDP Runtime.evaluate against real Release WebView2 (DOM state + direct Tauri IPC invoke + CSP violation capture after reload + screenshot)",
+  "port": 9336,
+  "target": {
+    "id": "1C0B2D5A3E6CC24ECF33D2CE153C37E8",
+    "title": "WorkManager · 数据库健康检查",
+    "url": "http://tauri.localhost/",
+    "type": "page"
+  },
+  "uiState": {
+    "title": "WorkManager · 数据库健康检查",
+    "href": "http://tauri.localhost/",
+    "readyState": "complete",
+    "versionPill": "版本 0.1.0",
+    "heading": "WorkManager",
+    "badges": [
+      "正常（ok）",
+      "通过（ok）",
+      "正式便携模式"
+    ],
+    "pathValues": [
+      "D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\app\\data",
+      "D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\app\\data\\database\\work.db",
+      "D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\app\\data\\cache\\webview2"
+    ],
+    "migrationRows": [
+      [
+        "1",
+        "0001_initial_foundation",
+        "2026/11/18 08:22:32"
+      ]
+    ],
+    "footerScope": "T1-01 基础设施预览：当前仅提供数据库健康检查，项目管理、工作事项、每日复盘等业务功能尚未实现。",
+    "footerNote": "数据库为普通 SQLite 文件，未加密；拥有文件访问权限的人可以读取其中内容。",
+    "hasErrorAlert": false,
+    "bodyText": "WM WorkManager 本地工作管理 · 绿色便携版 版本 0.1.0 数据库健康 SQLite 连接、完整性检查与 PRAGMA 配置快照（命令 get_database_health） 重新检查 数据库状态 正常（ok） 当前 Schema 版本 1 已是最新 最新 Schema 版本 1 完整性检查 integrity_check 通过（ok） 日志模式 journal_mode wal 同步级别 synchronous 2 外键约束 foreign_keys 已启用 等待超时 busy_timeout 5000 毫秒 临时存储 temp_store 2 外键违规数 0 条 数据库文件大小 20.0 KB 20,480 字节 检查时间（北京时间） 2026/11/18 08:22:33 便携路径诊断 数据库、缓存、日志与 WebView2 数据必须位于 D 盘便携目录；以下路径文本可选中复制。 运行模式 正式便携模式 数据目录跟随 WorkManager.exe 所在目录，应用目录整体移动后自动重新定位。 数据根目录 D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\app\\data 数据库路径 D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\app\\data\\database\\work.db WebView2 数据目录 D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\app\\data\\cache\\webview2 已应用的 Migration 按版本顺序记录数据库 schema 变更历史，只读展示。 1 条 已应用的数据库 migration 记录 版本 名称 应用时间（北京时间） 1 0001_initial_foundation 2026/11/18 08:22:32 T1-01 基础设施预览：当前仅提供数据库健康检查，项目管理、工作事项、每日复盘等业务功能尚未实现。 数据库为普通 SQLite 文件，未加密；拥有文件访问权限的人可以读取其中内容。"
+  },
+  "csp": {
+    "checkedAfterReload": true,
+    "violations": []
+  },
+  "ipc": {
+    "ok": true,
+    "error": null,
+    "result": {
+      "appName": "WorkManager",
+      "appVersion": "0.1.0",
+      "runtimeMode": "release",
+      "dataRoot": "D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\app\\data",
+      "databasePath": "D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\app\\data\\database\\work.db",
+      "webview2DataDir": "D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\app\\data\\cache\\webview2",
+      "database": {
+        "status": "ok",
+        "schemaVersion": 1,
+        "latestSchemaVersion": 1,
+        "databasePath": "D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\app\\data\\database\\work.db",
+        "databaseFileSizeBytes": 20480,
+        "integrityCheck": "ok",
+        "foreignKeyViolations": 0,
+        "journalMode": "wal",
+        "synchronous": 2,
+        "foreignKeys": true,
+        "busyTimeoutMs": 5000,
+        "tempStore": 2,
+        "appliedMigrations": [
+          {
+            "version": 1,
+            "name": "0001_initial_foundation",
+            "appliedAt": "2026-11-18T00:22:32Z"
+          }
+        ],
+        "checkedAt": "2026-11-18T00:22:34Z"
+      }
+    }
+  },
+  "assertions": {
+    "pageLoaded": true,
+    "cspCollectorInstalled": true,
+    "noCspViolations": true,
+    "uiRenderedHealth": true,
+    "noErrorAlert": true,
+    "appNameRendered": true,
+    "versionRendered": true,
+    "footerScopeRendered": true,
+    "ipcCommandSucceeded": true,
+    "ipcAppName": true,
+    "ipcAppVersion": true,
+    "ipcRuntimeModeRelease": true,
+    "ipcSchemaVersion": true,
+    "ipcIntegrityOk": true,
+    "ipcJournalModeWal": true,
+    "ipcForeignKeysEnabled": true,
+    "ipcBusyTimeout": true,
+    "ipcSynchronousFull": true,
+    "ipcMigrationRecorded": true,
+    "ipcDatabasePathPortable": true,
+    "ipcWebview2DirPortable": true
+  },
+  "screenshotPath": "D:\\WorkManager-test-data\\release-ui-r2-20261118-082232\\evidence\\release-window.png"
+}

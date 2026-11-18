@@ -1,11 +1,13 @@
 # T1-01：正式工程骨架、便携路径接入与 SQLite 基础设施
 
-**任务状态：** 返工中 / R3-01 P1 + R3-02 P2 待处理（2026-11-18 第三轮独立审计；TOCTOU 残余风险已由用户按 DEC-029 接受并延期至 Issue #2；未标记验收完成） \
+**任务状态：** **待独立审计**（2026-11-18 第三轮审计 R3-01/R3-02 已修复并通过完整回归；TOCTOU 残余风险已由用户按 DEC-029 接受并延期至 Issue #2，未修复；未标记验收完成） \
 **第一轮返工报告：** [T1-01-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-AUDIT-FIX-REPORT.md)（历史修复与测试记录） \
-**第二轮独立审计：** [T1-01-SECOND-AUDIT-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-REPORT.md)（本轮修复依据） \
-**第二轮返工修复报告：** [T1-01-SECOND-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md)（本轮修复、测试与剩余风险） \
-**第三轮独立审计报告：** [T1-01-THIRD-AUDIT-REPORT.md](../../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)（当前最新审计结论与未关闭问题） \\
-**返工后机器可读证据：** [T1-01-AUDIT-FIX-evidence.json](../../testing/reports/T1-01-AUDIT-FIX-evidence.json) \
+**第二轮独立审计：** [T1-01-SECOND-AUDIT-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-REPORT.md)（历史） \
+**第二轮返工修复报告：** [T1-01-SECOND-AUDIT-FIX-REPORT.md](../../testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md)（历史） \
+**第三轮独立审计报告：** [T1-01-THIRD-AUDIT-REPORT.md](../../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)（R3 修复依据） \
+**第三轮 R3 修复报告：** [T1-01-R3-FIX-REPORT.md](../../testing/reports/T1-01-R3-FIX-REPORT.md)（R3-01/R3-02 修复、测试与剩余风险） \
+**第三轮机读证据：** [T1-01-R3-FIX-evidence.json](../../testing/reports/T1-01-R3-FIX-evidence.json) \
+**第二轮机器可读证据：** [T1-01-AUDIT-FIX-evidence.json](../../testing/reports/T1-01-AUDIT-FIX-evidence.json)（历史） \
 **测试报告：** [T1-01-REPORT.md](../../testing/reports/T1-01-REPORT.md)（返工前历史证据） \
 **Pull Request：** [PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（指向 main，保持打开、不合并；开发代理未合并）
 **任务阶段：** 阶段 1：基础架构与工作事项  
@@ -201,7 +203,7 @@
 
 ## 第二轮独立审计返工执行记录（2026-11-17，开发代理）
 
-**历史状态：** 第二轮返工当时仍在等待 TOCTOU 处置决定；2026-11-18 用户已按 DEC-029 接受该残余风险并延期至 Issue #2。当前 T1-01 仍因 R3-01 P1 与 R3-02 P2 待处理而处于返工中。
+**历史状态：** 第二轮返工当时仍在等待 TOCTOU 处置决定；2026-11-18 用户已按 DEC-029 接受该残余风险并延期至 Issue #2。R3-01/R3-02 已在后续第三轮返工中处理（见文末 R3 执行记录）。
 
 | 审计问题 | 处理结果 | 专项测试 |
 |---|---|---|
@@ -212,7 +214,7 @@
 
 完整回归：`cargo test --workspace` 62 passed / 0 failed；Release 便携验证 106 项 0 FAIL；异常注入 73 项 0 FAIL；真实窗口 UI/IPC/CSP 21/21；Release EXE SHA-256 `849E803D2456B28DF8BABFE201E187FB0FC45B7104A5E2CD2FD34B1D4366019E`。
 
-**当前门禁：** TOCTOU 残余风险已按 DEC-029 接受并延期，不再单独阻塞 T1-01；R3-01 P1 必须修复、R3-02 P2 测试同步证据必须补强并重新独立审计。完成前不得标记验收完成、不得合并 PR #1、不得开始 T1-02。
+**历史门禁（第二轮返工）：** TOCTOU 残余风险已按 DEC-029 接受并延期，不再单独阻塞 T1-01；R3-01/R3-02 已在第三轮返工中修复，见文末记录。
 
 
 ## 第三轮独立审计与用户风险决策（2026-11-18）
@@ -221,4 +223,20 @@
 - 用户明确选择接受现有 TOCTOU 残余风险：不要求在 T1-01 内实施完整句柄相对改造/custom SQLite VFS。该决定记录为 DEC-029。
 - TOCTOU 仍然未修复，不能声称任何情况下都不会写入 C 盘；禁止静默回退 C 盘和已检测边界违规 fail-closed 规则不变。
 - 后续完整加固单独跟踪：[Security Hardening Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)。仅建立跟踪项，不代表已授权立即实施。
-- 当前 T1-01 的剩余工作：修复 R3-01、补强 R3-02，随后重新独立审计。PR #1 保持打开、不合并；main 不修改；T1-02 不得开始。
+- 当前 T1-01 的剩余工作（当时）：修复 R3-01、补强 R3-02，随后重新独立审计。PR #1 保持打开、不合并；main 不修改；T1-02 不得开始。
+
+---
+
+## 第三轮审计 R3 返工执行记录（2026-11-18，开发代理）
+
+**当前状态：** **待独立审计**（R3-01/R3-02 已修复并通过完整回归；TOCTOU 按 DEC-029 接受延期、未修复；开发代理自测不等同独立审计通过）。
+
+| 审计问题 | 处理结果 | 专项测试 |
+|---|---|---|
+| R3-01 D 盘根卷作为信任锚但自身未独立验证（P1） | 已修复：生产路径独立验证 D 根为真实卷挂载点（`GetVolumeNameForVolumeMountPointW`）、挂载点 GUID 与根目录句柄 `VOLUME_NAME_GUID` 一致、`QueryDosDeviceW` 映射为真实 NT 设备卷且与句柄 `VOLUME_NAME_NT` 一致、D 根与 C 根不同卷；任一步失败 `path-root-trust-anchor-invalid`，在创建目录/写探针/初始化锁/数据库之前 fail-closed；保留原有卷类型白名单、真实路径、目标卷身份与 Junction 检查 | 6 项 PASS：真实 D 盘（挂载点 GUID=`\\?\volume{519fbe4e-…}` 与句柄一致、NT=`\device\harddiskvolume4`、D≠C）；真实 SUBST Q:→C: 候选根在信任锚阶段拒绝；注入模拟 GUID 不一致/D==C/DOS 别名拒绝；API 失败 fail-closed |
+| R3-02 真实双进程初始化锁测试同步确定性不足（P2） | 已修复：`#[cfg(test)]` 锁竞争观察点只在 `LockFileEx` 明确返回锁竞争时通知；waiter 走完整 `Database::initialize()`，真实竞争后才写 `b-lock-contention`；creator 收到确认后才创建数据库与活动 WAL；父进程确认后才放锁。观察点不进入生产构建、不是 IPC、不改变锁语义 | 专项测试 3 项 PASS；**10/10 连续多轮真实进程运行通过**；主库 20480 B / 活动 WAL 8272 B；无 orphaned-sidecar；integrity=ok；migrations=1 |
+| TOCTOU（R2-03 遗留） | 按 DEC-029 **接受并延期，未修复**：不实施完整句柄相对改造/custom SQLite VFS，转入 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)；不得宣称绝不写入 C 盘 | 不在本轮范围 |
+
+**完整回归：** `cargo test --workspace` **68 passed / 0 failed**（上轮 62，新增 6 项 R3-01 测试）；Release 便携验证 **106 项 0 FAIL**；异常注入 **73 项 0 FAIL**；真实窗口 UI/IPC/CSP **21/21、CSP 违规 0**；Release EXE **9,993,216 字节**，SHA-256 `41A8F6B4759107625487FE605820FAABF20D312A560AE9765949027D100F7800`。修复代码提交：R3-01 `ae1eb65`、R3-02 `4942eb0`。
+
+**当前门禁：** T1-01 状态为**待独立审计**；独立审计通过并得到用户验收前，不得标记验收完成、不得合并 PR #1、不得修改 main、不得开始 T1-02。证据见 [T1-01-R3-FIX-REPORT.md](../../testing/reports/T1-01-R3-FIX-REPORT.md) 与 [T1-01-R3-FIX-evidence.json](../../testing/reports/T1-01-R3-FIX-evidence.json)。

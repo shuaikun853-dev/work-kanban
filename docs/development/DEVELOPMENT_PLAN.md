@@ -2,10 +2,10 @@
 
 **文档版本：** V1.2  
 **编制日期：** 2026-11-18  
-**文档状态：** 开发执行基线（阶段 0 已放行；T1-01 第三轮独立审计未通过；TOCTOU 按 DEC-029 接受并延期，R3-01/R3-02 待处理） \
+**文档状态：** 开发执行基线（阶段 0 已放行；T1-01 第三轮审计 R3 返工完成，当前待独立审计；TOCTOU 按 DEC-029 接受并延期） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；T1-01 第三轮独立审计未通过；用户按 DEC-029 接受 TOCTOU 残余风险并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)；R3-01 P1 D 根信任锚验证与 R3-02 P2 waiter 测试同步精度仍待处理；PR #1 保持打开、不合并，T1-02 不得开始
+**当前进度：** 阶段 0 已放行；T1-01 第三轮审计 R3 返工完成：R3-01（D 根卷信任锚验证）与 R3-02（双进程锁竞争测试确定性）已修复并通过完整回归（68 项 Rust 测试、Release 便携/异常注入/UI 验证），TOCTOU 残余风险按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)；T1-01 当前状态 **待独立审计**；PR #1 保持打开、不合并，T1-02 不得开始
 
 ---
 
@@ -86,7 +86,7 @@
 | 阶段 | 名称 | 主要交付 | 当前状态 |
 |---|---|---|---|
 | 0 | 技术验证 | 桌面壳、便携路径、WebView2 基础验证 | 已放行；SQLCipher/DPAPI 取消，系统集成验证延期至阶段 6 |
-| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 进行中；T1-01 返工中 / R3-01 P1、R3-02 P2 待处理；TOCTOU 按 DEC-029 接受并延期至 Issue #2 |
+| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 进行中；T1-01 待独立审计（R3-01/R3-02 已修复并通过回归；TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
 | 2 | 计划、优先级与当前工作 | 每日计划、全局排序、当前工作和切换记录 | 未开始 |
 | 3 | 每日复盘与提醒 | 工作日历、复盘、补录、提醒调度 | 未开始 |
 | 4 | 日志、搜索与报表 | 工作日志、历史搜索、日报、周报、月报 | 未开始 |
@@ -176,7 +176,7 @@
 
 ### T1-01 详细范围
 
-**当前状态（2026-11-18）：** 第三轮独立审计未通过。R2-01/R2-02/R2-04 修复逻辑复核成立；TOCTOU 残余风险未修复，但用户已按 DEC-029 接受延期至[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，不作为 T1-01 单独阻塞项；R3-01 D 根卷信任锚未在生产路径独立验证（P1）仍须修复，R3-02 waiter 测试同步精度（P2）仍须补强。详见 [T1-01-THIRD-AUDIT-REPORT.md](../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)。R3-01/R3-02 处理并重新独立审计通过前，PR #1 不合并、不得标记验收完成、不得进入 T1-02。
+**当前状态（2026-11-18）：** 第三轮独立审计 R3 返工完成，当前 **待独立审计**。R2-01/R2-02/R2-04 修复逻辑复核成立；R3-01（D 根卷信任锚未独立验证，P1）已修复：生产路径用 `GetVolumeNameForVolumeMountPointW` + 根目录句柄 `VOLUME_NAME_GUID/NT` + `QueryDosDeviceW` + D/C 同卷拒绝独立验证 D 根，失败返回 `path-root-trust-anchor-invalid` 并 fail-closed；R3-02（真实双进程初始化锁测试同步确定性，P2）已修复：waiter 只在底层 `LockFileEx` 明确返回锁竞争后才发信号，并走完整 `Database::initialize()`，creator 收到确认后才建库，10/10 多轮真实进程测试通过。修复代码提交：R3-01 `ae1eb65`、R3-02 `4942eb0`。TOCTOU 残余风险未修复，但用户已按 DEC-029 接受延期至[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，不作为 T1-01 单独阻塞项。详见 [T1-01-R3-FIX-REPORT.md](../testing/reports/T1-01-R3-FIX-REPORT.md) 与 [第三轮独立审计报告](../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)。独立审计通过前，PR #1 不合并、不得标记验收完成、不得进入 T1-02。
 
 **实际实现范围：**
 
@@ -185,6 +185,8 @@
 - 便携路径：Release 数据根目录跟随 EXE（`<exe目录>/data`）；Debug/Test 必须显式设置 `WORKMANAGER_TEST_PORTABLE_ROOT`；仅允许 D 盘；不静默回退到 AppData/LocalAppData/Temp/C 盘；目录被文件阻塞、不可写、符号链接或含 `..` 时 fail-closed。
 - 二次返工新增：Debug/Test 正式目录保护同时比较规范化输入路径与 Win32 真实最终路径（受保护根目录可注入测试，测试用 D 盘隔离目录模拟正式根，绝不触碰真实 `D:\WorkManager`）；真实物理卷身份用句柄 `VOLUME_NAME_GUID` / `VOLUME_NAME_NT` 与 `D:\` 根卷比对（不再只比较盘符），并在 `resolve()`、`ensure_directories()`、`Database::initialize()` 的目录创建/写探针/初始化锁/数据库写入之前 fail-closed。
 - 二次返工新增：首次初始化取得跨进程锁后**先重新检查正式主库**，只有主库确实缺失时才检查孤儿 WAL/journal；等待锁进程不会把另一个进程已创建数据库的活动 WAL 误判为孤儿（确定性真实双进程测试覆盖）。
+- 三次返工新增（R3-01）：D 盘根卷作为信任锚被独立验证——生产函数 `volume_mount_point_guid()`（`GetVolumeNameForVolumeMountPointW`）要求 D 根是真实卷挂载点，根目录句柄 `VOLUME_NAME_GUID` 必须与挂载点 GUID 一致，`query_dos_device_target()`（`QueryDosDeviceW`）必须映射到 `\Device\HarddiskVolumeN` 真实 NT 设备卷且与句柄 `VOLUME_NAME_NT` 一致，D 根卷 GUID 不得等于 C 根卷 GUID；任一步失败返回 `path-root-trust-anchor-invalid`，在创建目录/写探针/初始化锁/数据库之前 fail-closed。该检查由 `validate_real_storage_path()` → `ensure_volume_is_d_volume()` → `verify_root_volume_trust()` 生产调用链使用。
+- 三次返工新增（R3-02）：真实双进程初始化锁测试改为“底层锁竞争确认”同步——`#[cfg(test)]` 观察点只在 `LockFileEx` 明确返回锁竞争时通知，waiter 走完整 `Database::initialize()` 并在真实竞争后才发信号；creator 收到竞争确认后才创建数据库与活动 WAL，父进程确认后才放锁；专项测试 10/10 多轮稳定通过，观察点不进入生产构建、不是 IPC、不改变锁语义。
 - WebView2 使用 Rust 侧绝对数据目录 `<data>/cache/webview2`（运行时验证 `EBWebView` profile 真实创建于该目录）。
 - SQLite：`rusqlite` 0.43.0 + bundled SQLite 3.54.1；WAL、`foreign_keys=ON`、`synchronous=FULL`、`busy_timeout=5000`、`temp_store=MEMORY`；启动时 `PRAGMA integrity_check` 与 `foreign_key_check`；正常退出时显式关闭连接并清理 WAL/SHM。
 - schema 版本 1（`0001_initial_foundation`：`schema_migrations`、`settings`）；`PRAGMA user_version` + 每个 migration 独立 IMMEDIATE 事务，失败回滚；首次初始化在临时数据库完成 schema 与检查后用硬链接原子安装，绝不覆盖已有数据库。
@@ -426,8 +428,10 @@
 | 2026-11-17 | T1-01 进入返工 | 独立审计提出 2 项 P1、3 项 P2 与 1 项可选 CSP 加固问题：零字节数据库保护、D 盘真实卷/重解析点校验、已有数据库预检查顺序、初始化跨进程锁、数据库命令异步化、CSP；保留原始提交历史，在 `task/T1-01-sqlite-foundation` 新增修复提交 |
 | 2026-11-17 | T1-01 返工完成（待重新审计） | 修复提交 `abf3e5a`；新增专项测试，Rust 测试报告 52 项通过；Release 复验报告通过；等待重新独立审计 |
 | 2026-11-17 | T1-01 第二轮独立审计未通过 | 最新审计基准 PR #1 HEAD `892b25f`；发现初始化锁后 WAL 检查顺序竞争、Debug/Test Junction 可绕过正式目录保护、真实卷身份/TOCTOU 未充分关闭、PR/机器证据/状态文档过期；记录见 `docs/testing/reports/T1-01-SECOND-AUDIT-REPORT.md`；任务重新进入返工，PR 不合并，不开始 T1-02 |
-| 2026-11-17 | T1-01 第二轮审计返工修复（返工中 / R2-03 阻塞） | 修复代码提交 `a148f0d`：R2-01/R2-02/R2-04 返工与 62 项 Rust 测试、Release 复验通过；R2-03 TOCTOU 未关闭 |\n| 2026-11-18 | T1-01 第三轮独立审计未通过 | 代码提交 `a148f0d`、审计对象 PR HEAD `eaf6ef7`；R2-01/R2-02/R2-04 修复逻辑复核成立；TOCTOU 未修复，后由用户 DEC-029 接受并延期至 Issue #2；R3-01 P1、R3-02 P2 仍待处理；报告 `docs/testing/reports/T1-01-THIRD-AUDIT-REPORT.md`；PR 不合并，不开始 T1-02 |
+| 2026-11-17 | T1-01 第二轮审计返工修复（返工中 / R2-03 阻塞） | 修复代码提交 `a148f0d`：R2-01/R2-02/R2-04 返工与 62 项 Rust 测试、Release 复验通过；R2-03 TOCTOU 未关闭 |
+| 2026-11-18 | T1-01 第三轮独立审计未通过 | 代码提交 `a148f0d`、审计对象 PR HEAD `eaf6ef7`；R2-01/R2-02/R2-04 修复逻辑复核成立；TOCTOU 未修复，后由用户 DEC-029 接受并延期至 Issue #2；R3-01 P1、R3-02 P2 仍待处理；报告 `docs/testing/reports/T1-01-THIRD-AUDIT-REPORT.md`；PR 不合并，不开始 T1-02 |
 | 2026-11-18 | 用户接受 T1-01 TOCTOU 残余风险（DEC-029） | 不在 T1-01 内实施完整句柄相对改造/custom SQLite VFS；风险保留并转入独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)。R3-01 P1 与 R3-02 P2 仍须处理后重新独立审计 |
+| 2026-11-18 | T1-01 第三轮审计 R3 返工完成（待独立审计） | R3-01 修复提交 `ae1eb65`：生产路径独立验证 D 根卷信任锚（真实卷挂载点 GUID + 句柄 GUID/NT + QueryDosDevice NT 设备映射 + D/C 同卷拒绝），失败 `path-root-trust-anchor-invalid` fail-closed；R3-02 修复提交 `4942eb0`：双进程测试改为“底层锁竞争确认信号 + 完整 Database::initialize”，10/10 多轮稳定通过。完整回归 `cargo test --workspace` 68 passed；Release 便携 106 项、异常注入 73 项 0 FAIL；UI/IPC/CSP 21/21；EXE 9,993,216 字节、SHA-256 `41A8F6B4…7800`。TOCTOU 按 DEC-029 接受延期（未修复）；任务状态置为待独立审计，PR 不合并，不开始 T1-02 |
 
 后续每次阶段、任务状态变化，都应追加记录，并同步更新 docs/STATUS.md。历史记录不得通过覆盖方式抹去。
 
@@ -435,9 +439,9 @@
 
 ## 17. 当前执行结论
 
-- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 第三轮独立审计未通过；TOCTOU 残余风险按 DEC-029 接受并延期至 Issue #2；R3-01 P1 和 R3-02 P2 仍待处理并重新独立审计；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并，不得开始 T1-02。
+- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 第三轮审计 R3 返工完成，当前 **待独立审计**（R3-01/R3-02 已修复并通过完整回归；TOCTOU 按 DEC-029 接受并延期至 Issue #2）；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并，不得开始 T1-02。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
-- 当前首个开发任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**；任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；本轮返工证据见 `docs/testing/reports/T1-01-SECOND-AUDIT-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-AUDIT-FIX-evidence.json`。
+- 当前首个开发任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**；任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；本轮 R3 返工证据见 `docs/testing/reports/T1-01-R3-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-R3-FIX-evidence.json`。
 - 第一版采用普通 SQLite，不实现应用密码、SQLCipher 或 DPAPI。
 - D 盘本地存储、不上传数据、事务、版本化 migration、异常保护和备份恢复仍是必须要求。
 - 本计划书定义未来工作，不表示尚未开发的功能已经实现。
