@@ -1,6 +1,6 @@
 # WorkManager
 
-Windows 本地工作管理软件（绿色便携版）。当前进度：**T1-01 正式工程骨架、便携路径与 SQLite 基础设施已完成，独立审计提出的 P1/P2 问题已全部修复并通过回归/Release 复验，等待重新独立审计**（修复提交 `abf3e5a`，[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)，[审计修复报告](docs/testing/reports/T1-01-AUDIT-FIX-REPORT.md)）。项目管理、工作事项、每日复盘、报表、附件等业务功能尚未实现；本仓库不表示这些功能已经可用。
+Windows 本地工作管理软件（绿色便携版）。当前进度：**T1-01 第四轮独立审计通过，待用户验收**。R3-01/R3-02 修复提交分别为 `ae1eb65`、`4942eb0`；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 保持打开、不合并；审计结论见[第四轮独立审计报告](docs/testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，修复证据见[R3 专项修复报告](docs/testing/reports/T1-01-R3-FIX-REPORT.md)。TOCTOU 按 DEC-029 接受并延期至独立[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复。项目管理、工作事项、每日复盘、报表、附件等业务功能尚未实现；本仓库不表示这些功能已经可用。
 
 ## 文档
 
