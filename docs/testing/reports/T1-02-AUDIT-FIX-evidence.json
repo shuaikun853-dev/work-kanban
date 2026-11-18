@@ -15,8 +15,15 @@
     "branch": "task/T1-02-project-management",
     "baseMainCommit": "0cafde61078c8d428a37cd509a349e4db8f4096e",
     "reworkStartHead": "54f025d0e2d4c95a53604e3d05b6e6764236e600",
-    "fixCommit": null,
-    "fixCommitNote": "修复提交 SHA 在提交后由文档同步提交回填；PR #7 Head 以 GitHub 页面为准。",
+    "fixCommit": "8e215f86f1b171d5dceb483938f60968375ec3d8",
+    "fixCommits": {
+      "p2-01": "881e755229bd35ac9ed2c24e0d791aa57d775b9a",
+      "p3-01": "c3593e6c0cd9a14281f65410f5830cbe5e51a3bf",
+      "p3-02": "a9e4198e1ee951bf49404c436a1f2ea4d1ba53b4",
+      "docsAndEvidence": "8e215f86f1b171d5dceb483938f60968375ec3d8"
+    },
+    "pullRequestHeadAtEvidenceCommit": "8e215f86f1b171d5dceb483938f60968375ec3d8",
+    "fixCommitNote": "代码修复提交 881e755（P2-01）、c3593e6（P3-01）、a9e4198（P3-02）；证据与文档提交 8e215f8。PR #7 保持 Open，文档同步提交不影响代码与证据内容。",
     "preservedExistingCommits": true,
     "forcePush": false,
     "mainModified": false,

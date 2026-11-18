@@ -21,8 +21,14 @@
       "14a542e",
       "30666c8"
     ],
-    "auditFixCommit": null,
-    "auditFixCommitNote": "修复提交 SHA 在提交后由文档同步提交回填。",
+    "auditFixCommit": "8e215f86f1b171d5dceb483938f60968375ec3d8",
+    "auditFixCommits": {
+      "p2-01": "881e755229bd35ac9ed2c24e0d791aa57d775b9a",
+      "p3-01": "c3593e6c0cd9a14281f65410f5830cbe5e51a3bf",
+      "p3-02": "a9e4198e1ee951bf49404c436a1f2ea4d1ba53b4",
+      "docsAndEvidence": "8e215f86f1b171d5dceb483938f60968375ec3d8"
+    },
+    "auditFixCommitNote": "代码修复提交 881e755/c3593e6/a9e4198，证据与文档提交 8e215f8；PR #7 保持 Open。",
     "preservedPriorShellCommits": [
       "e6da283",
       "a9e73f1",

@@ -200,6 +200,7 @@
 - **P3-01：** `src-tauri/src/lib.rs` 过期命令注释已更新为数据库健康检查 + 项目 CRUD；未改命令注册、IPC 或 DTO。
 - **P3-02：** Release UI E2E 改为确定性等待（reload 新文档 boot marker、应用壳 + Tauri IPC 就绪、项目 Loading 终态）并保留失败诊断；只改测试脚本，不改产品业务逻辑，空状态与最小窗口断言保留。
 - **统计口径：** 主检查 73 项正确；最小窗口实际执行 12 项（旧证据 JSON 因关闭按钮前写盘只持久化 11 项，审计报告 12/12 正确）；返工后 12 项全部写入证据 JSON，并由编排记录进程真实退出码。
+- **修复提交：** `881e755`（P2-01 Design Token）、`c3593e6`（P3-01 过期注释）、`a9e4198`（P3-02 E2E 稳定性）、`8e215f8`（证据与文档）。
 - 详细证据：[T1-02-AUDIT-FIX-REPORT.md](testing/reports/T1-02-AUDIT-FIX-REPORT.md)、[T1-02-AUDIT-FIX-evidence.json](testing/reports/T1-02-AUDIT-FIX-evidence.json)、[T1-02-AUDIT-FIX-assets/](testing/reports/T1-02-AUDIT-FIX-assets/README.md)。
 
 ### 验证结果（详见 [T1-02-REPORT.md](testing/reports/T1-02-REPORT.md)）

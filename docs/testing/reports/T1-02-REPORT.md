@@ -9,7 +9,7 @@
 **目标分支：** `main`  
 **基线 main：** `0cafde61078c8d428a37cd509a349e4db8f4096e`  
 **Pull Request：** [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)（保持 Open，不合并）  
-**代码提交：** `b8962b5`（Core + migration）、`2b3035d`（Tauri IPC）、`14a542e`（UI）、`30666c8`（验证脚本）；返工修复提交见分支最新提交  
+**代码提交：** `b8962b5`（Core + migration）、`2b3035d`（Tauri IPC）、`14a542e`（UI）、`30666c8`（验证脚本）；返工修复提交 `881e755`（P2-01）、`c3593e6`（P3-01）、`a9e4198`（P3-02）、`8e215f8`（证据与文档）  
 **机器可读证据：** [T1-02-evidence.json](T1-02-evidence.json)  
 **第一轮审计问题修复报告：** [T1-02-AUDIT-FIX-REPORT.md](T1-02-AUDIT-FIX-REPORT.md)  
 **返工修复机器可读证据：** [T1-02-AUDIT-FIX-evidence.json](T1-02-AUDIT-FIX-evidence.json)  

@@ -11,6 +11,7 @@
 **审计报告（不修改）：** [T1-02-INDEPENDENT-AUDIT-REPORT.md](T1-02-INDEPENDENT-AUDIT-REPORT.md)
 **第一轮审计基准 HEAD：** `a0aec0032cf3c3ef3ab87513ae93f7a4f4351f69`
 **本次返工起点 HEAD：** `54f025d0e2d4c95a53604e3d05b6e6764236e600`（仅状态文档对齐提交）
+**本次修复提交：** `881e755`（P2-01）、`c3593e6`（P3-01）、`a9e4198`（P3-02）、`8e215f8`（证据与文档）
 **机器可读修复证据：** [T1-02-AUDIT-FIX-evidence.json](T1-02-AUDIT-FIX-evidence.json)
 **证据资产目录：** [T1-02-AUDIT-FIX-assets/](T1-02-AUDIT-FIX-assets/README.md)
 **任务测试报告（已同步更新）：** [T1-02-REPORT.md](T1-02-REPORT.md)
@@ -434,8 +435,13 @@ Feature/通用组件目录来绕过检查。因此除审计点名的 9 处外，
 - PR：[#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)（保持 Open，不合并）
 - main：未修改
 - 推送方式：普通 `git push`，未强制推送
-- 修复提交与 PR Head SHA：见 [T1-02-AUDIT-FIX-evidence.json](T1-02-AUDIT-FIX-evidence.json) 的
-  `git` 字段及 PR #7 页面（提交后回填）。
+- 修复提交：
+  - `881e755229bd35ac9ed2c24e0d791aa57d775b9a`：P2-01 Design Token 收敛 + 静态检查与自测
+  - `c3593e6c0cd9a14281f65410f5830cbe5e51a3bf`：P3-01 Tauri 命令注释
+  - `a9e4198e1ee951bf49404c436a1f2ea4d1ba53b4`：P3-02 E2E 确定性等待与证据统计
+  - `8e215f86f1b171d5dceb483938f60968375ec3d8`：证据、报告与状态文档
+- 本轮证据对应的 PR Head：`8e215f86f1b171d5dceb483938f60968375ec3d8`；后续仅有文档同步提交，
+  PR Head 以 GitHub 页面为准。
 
 ---
 

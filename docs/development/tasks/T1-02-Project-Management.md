@@ -252,6 +252,8 @@ UI 变更必须提供：
 诊断页 24/24；CSP 0；未捕获异常 0。Release EXE 10,230,784 字节，
 SHA-256 `51BBBA8DD17103D742E1BD4A85B83377F7578D34584F2206F30EDFEC8D3DC7F6`。
 
+**修复提交：** `881e755`（P2-01）、`c3593e6`（P3-01）、`a9e4198`（P3-02）、`8e215f8`（证据与文档）。
+
 **证据：** [T1-02-AUDIT-FIX-REPORT.md](../../testing/reports/T1-02-AUDIT-FIX-REPORT.md)、
 [T1-02-AUDIT-FIX-evidence.json](../../testing/reports/T1-02-AUDIT-FIX-evidence.json)、
 [T1-02-AUDIT-FIX-assets/](../../testing/reports/T1-02-AUDIT-FIX-assets/README.md)。
