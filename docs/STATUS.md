@@ -49,19 +49,19 @@
 | T1-06 | 六位数字应用密码与锁屏 | 取消 |
 | T1-07 | 首次初始化与 SQLite 异常保护 | 未开始 |
 
-**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[R3 专项修复报告](testing/reports/T1-01-R3-FIX-REPORT.md)、[R3 机器可读证据](testing/reports/T1-01-R3-FIX-evidence.json)、第二轮返工报告与证据、[第三轮独立审计报告](testing/reports/T1-01-THIRD-AUDIT-REPORT.md)、[TOCTOU 后续安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)、历史审计/返工报告、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（独立审计通过，待用户验收；保持打开、不合并）；[第四轮独立审计报告](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)、[T1-01 用户验收记录](testing/reports/T1-01-USER-ACCEPTANCE.md)。
+**当前交付物：** [T1-01 开发任务说明](development/tasks/T1-01-SQLite-Foundation.md)、[R3 专项修复报告](testing/reports/T1-01-R3-FIX-REPORT.md)、[R3 机器可读证据](testing/reports/T1-01-R3-FIX-evidence.json)、第二轮返工报告与证据、[第三轮独立审计报告](testing/reports/T1-01-THIRD-AUDIT-REPORT.md)、[TOCTOU 后续安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)、历史审计/返工报告、[Pull Request #1](https://github.com/shuaikun853-dev/work-kanban/pull/1)（T1-01 已用户验收；PR 保持打开、未合并，等待单独合并指示）；[第四轮独立审计报告](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)、[T1-01 用户验收记录](testing/reports/T1-01-USER-ACCEPTANCE.md)。
 
 ### T1-01 历史交付摘要（2026-11-17，第二轮返工后；R3 最终结果见下文）
 
 - 正式 Tauri 2 + Svelte 5 + TypeScript + Vite 工程可构建；`workmanager-core`（Rust Core，不依赖 Tauri）与 `src-tauri`（Tauri 适配层）职责分离。
-- Release 数据目录跟随 EXE：`<exe目录>/data/database/work.db`；WebView2 绝对数据目录 `<data>/cache/webview2`；仅 D 盘、无 C 盘/AppData/Temp 回退；已实现 Win32 真实最终路径和目标卷身份校验，实测拒绝 D→C Junction，并实测 SUBST Q:→C: 场景。**D 根卷自身的独立信任锚验证仍有 R3-01 待修复；映射网络盘、真实跨卷挂载点未实机验证。**
+- Release 数据目录跟随 EXE：`<exe目录>/data/database/work.db`；WebView2 绝对数据目录 `<data>/cache/webview2`；仅 D 盘、无 C 盘/AppData/Temp 回退；已实现 Win32 真实最终路径和目标卷身份校验，实测拒绝 D→C Junction，并实测 SUBST Q:→C: 场景。**截至该历史快照，D 根卷自身的独立信任锚验证仍有 R3-01 待修复；该问题已在 R3 后续修复并经第四轮独立审计通过。映射网络盘、真实跨卷挂载点仍未实机验证。**
 - 普通 bundled SQLite 3.54.1：WAL、`foreign_keys=ON`、`synchronous=FULL`、`busy_timeout=5000`、`temp_store=MEMORY`；启动时完整性检查与外键检查；已有数据库先做只读预检查（版本/完整性/外键/兼容性）后才应用持久化 PRAGMA。
 - schema 版本 1（`schema_migrations`、`settings`）；`PRAGMA user_version` + 编号 SQL migration，每个 migration 独立事务、失败回滚；首次初始化临时库 + 硬链接原子安装 + 跨进程初始化锁；0 字节库/孤儿 WAL/journal 均 fail-closed 且保留原文件。
 - 最小健康检查窗口已实现并通过真实 Release WebView2 端到端验证（页面渲染 + 异步 `get_database_health` IPC 返回 + 截图 + CSP 0 违规）。
 - 已执行（第二轮返工后）：`cargo fmt --check` / `cargo check` / `cargo test --workspace`（**62 项通过**，新增 10 项）/ `npm run check` / `npm run build` / `npm run tauri build -- --no-bundle`（成功，EXE **9,980,928 字节**，SHA-256 **`849E803D…019E`**）/ Release 运行时专项验证（便携 106 项 PASS 90 / FAIL 0；异常注入 **73 项** PASS 64 / FAIL 0）/ 真实窗口 UI/IPC/CSP 21/21 / 重启持久化 / Release 忽略测试环境变量 / D 盘真实卷身份与 SUBST 卷别名测试。
 - 新增专项：R2-01 确定性真实双进程“等待锁进程遇到活动 WAL”测试；R2-02 正式目录 Junction 别名绕过测试（resolve / ensure_directories / Database::initialize 三阶段拒绝）；R2-03 卷 GUID 与 NT 设备卷身份交叉核验 + 真实 SUBST→C 实机测试。
 - **未实现**：项目与工作事项 CRUD、每日计划、复盘、日报/周报、附件、自动备份、密码/锁屏/SQLCipher/DPAPI。T1-01 只是基础设施，不代表业务功能已实现。
-- **已接受的残余风险（DEC-029）：** R2-03 TOCTOU 未关闭，用户接受 T1-01 暂不实施句柄相对改造，并转入[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)。这不是修复；不得宣称任何情况下都不会写入 C 盘。T1-01 当前仍需修复 R3-01 P1，并补强 R3-02 P2 后重新独立审计。
+- **已接受的残余风险（DEC-029）：** R2-03 TOCTOU 未关闭，用户接受 T1-01 暂不实施句柄相对改造，并转入[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)。这不是修复；不得宣称任何情况下都不会写入 C 盘。该历史快照形成时仍需修复 R3-01 P1、补强 R3-02 P2；两项后续均已修复并经第四轮独立审计通过，用户已验收 T1-01。
 
 ### T1-01 第一轮独立审计问题（2026-11-17，第一轮返工已完成；第二轮复审发现新问题）
 
