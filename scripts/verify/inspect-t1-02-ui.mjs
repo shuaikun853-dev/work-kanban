@@ -63,6 +63,7 @@ await new Promise((resolve, reject) => {
 let nextId = 1;
 const pending = new Map();
 const pageErrors = [];
+const deterministicWaits = [];
 
 socket.addEventListener('message', (event) => {
   let message;
@@ -132,8 +133,13 @@ function check(name, pass, detail = '') {
   return Boolean(pass);
 }
 
-async function waitFor(expression, timeoutMs = 12000, label = expression) {
+/**
+ * 轮询等待应用状态。第四参数 stateExpression 用于超时时保留最后一次页面状态，
+ * 避免只留下 “Timed out waiting for ...” 而无法定位页面当时处于 Loading / Error / 其它页面。
+ */
+async function waitFor(expression, timeoutMs = 12000, label = expression, stateExpression = null) {
   const deadline = Date.now() + timeoutMs;
+  let lastState = null;
   while (Date.now() < deadline) {
     try {
       if (await evaluate(expression)) {
@@ -142,9 +148,18 @@ async function waitFor(expression, timeoutMs = 12000, label = expression) {
     } catch {
       // 页面切换期间执行上下文可能短暂失效，继续轮询。
     }
+    if (stateExpression !== null) {
+      try {
+        lastState = await evaluate(stateExpression);
+      } catch {
+        // 保留上一轮快照即可。
+      }
+    }
     await sleep(120);
   }
-  throw new Error(`Timed out waiting for: ${label}`);
+  const stateSuffix =
+    lastState === null ? '' : `; lastState=${JSON.stringify(lastState).slice(0, 800)}`;
+  throw new Error(`Timed out waiting for: ${label}${stateSuffix}`);
 }
 
 async function screenshot(name) {
@@ -228,6 +243,138 @@ async function directIpc(command, args) {
   })()`);
 }
 
+/**
+ * 确定性等待 Tauri IPC 就绪：页面壳渲染不代表 IPC/DTO 已经可用，
+ * 必须在做项目管理状态断言前先确认受限命令真实可调用。
+ */
+async function waitForIpcReady(timeoutMs = 20000) {
+  const deadline = Date.now() + timeoutMs;
+  let lastProbe = null;
+  while (Date.now() < deadline) {
+    lastProbe = await directIpc('get_database_health');
+    if (
+      lastProbe.ok === true &&
+      lastProbe.value?.database?.status === 'ok' &&
+      lastProbe.value?.database?.schemaVersion === 2
+    ) {
+      return lastProbe;
+    }
+    await sleep(200);
+  }
+  throw new Error(
+    `Tauri IPC 未在 ${timeoutMs}ms 内就绪: ${JSON.stringify(lastProbe).slice(0, 600)}`
+  );
+}
+
+/**
+ * 项目管理页面的确定性终态探针：
+ * - page 尚未切到“项目管理”或仍在 Loading 时返回 ready=false；
+ * - Loading 结束后，一次返回空状态 / 列表 / 错误三者之一，供断言使用。
+ * 这样断言不再以“某段文本是否恰好出现”作为唯一超时依据。
+ */
+const projectsStateExpression = `(() => {
+  const main = document.querySelector('main');
+  if (main === null) {
+    return { mounted: false, ready: false, page: null };
+  }
+  const heading = ((document.querySelector('h1') || {}).textContent || '').trim();
+  if (heading !== '项目管理') {
+    return { mounted: true, ready: false, page: heading };
+  }
+  const text = main.innerText || '';
+  const loading = text.includes('正在读取项目');
+  const alertElement = main.querySelector('[role="alert"]');
+  return {
+    mounted: true,
+    ready: !loading,
+    page: heading,
+    loading,
+    empty: text.includes('暂无项目'),
+    rows: document.querySelectorAll('[data-project-id]').length,
+    error: alertElement !== null,
+    errorText: alertElement
+      ? (alertElement.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 300)
+      : null
+  };
+})()`;
+
+async function waitForProjectsSettled(timeoutMs = 20000) {
+  const deadline = Date.now() + timeoutMs;
+  let lastState = null;
+  while (Date.now() < deadline) {
+    try {
+      lastState = await evaluate(projectsStateExpression);
+    } catch {
+      await sleep(120);
+      continue;
+    }
+    if (lastState?.mounted === true && lastState.ready === true) {
+      return lastState;
+    }
+    await sleep(120);
+  }
+  throw new Error(
+    `Timed out waiting for: projects loading settled; lastState=${JSON.stringify(lastState).slice(0, 800)}`
+  );
+}
+
+/**
+ * 失败时保留页面状态、IPC、CSP/异常与截图，写入机器可读文件。
+ * 这是 P3-02 要求的“超时后保留有用的页面状态、IPC 和测试日志”，不改变产品行为。
+ */
+async function captureFailureDiagnostics(label) {
+  const diagnostics = {
+    generatedAt: new Date().toISOString(),
+    task: 'T1-02',
+    label,
+    outputDir,
+    target: { id: pageTarget.id, title: pageTarget.title, url: pageTarget.url },
+    page: null,
+    ipc: {},
+    pageErrors,
+    screenshot: null
+  };
+
+  try {
+    diagnostics.page = await evaluate(`(() => ({
+      readyState: document.readyState,
+      title: document.title,
+      location: location.href,
+      heading: ((document.querySelector('h1') || {}).textContent || '').trim(),
+      bodyText: (document.body.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 1200),
+      hasAppShell: document.querySelector('.app-shell') !== null,
+      navCount: document.querySelectorAll('nav.sidebar button').length,
+      loadingPanel: document.querySelector('.loading-panel') !== null,
+      errorPanel: document.querySelector('[role="alert"]') !== null,
+      projectRows: document.querySelectorAll('[data-project-id]').length,
+      dialogOpen: document.querySelector('dialog[open]') !== null,
+      tauriInternals: typeof window.__TAURI_INTERNALS__?.invoke === 'function'
+    }))()`);
+  } catch (error) {
+    diagnostics.page = { error: String(error) };
+  }
+
+  try {
+    diagnostics.ipc.listProjects = await directIpc('list_projects');
+  } catch (error) {
+    diagnostics.ipc.listProjects = { error: String(error) };
+  }
+  try {
+    diagnostics.ipc.databaseHealth = await directIpc('get_database_health');
+  } catch (error) {
+    diagnostics.ipc.databaseHealth = { error: String(error) };
+  }
+  try {
+    diagnostics.screenshot = await screenshot(`failure-${label}.png`);
+  } catch {
+    diagnostics.screenshot = null;
+  }
+
+  diagnostics.filePath = path.join(outputDir, `t1-02-ui-failure-${label}.json`);
+  fs.writeFileSync(diagnostics.filePath, JSON.stringify(diagnostics, null, 2), 'utf8');
+  return diagnostics;
+}
+
 async function setDialogInput(value) {
   return evaluate(`(() => {
     const input = document.querySelector('dialog[open] #project-name');
@@ -273,9 +420,14 @@ await send('Runtime.enable');
 await send('Page.enable');
 await send('Log.enable');
 
-// CSP 收集器必须在页面加载前注入；随后重载页面并等待应用壳渲染。
+// 确定 reload 后的新文档身份：addScriptToEvaluateOnNewDocument 只注入新文档，
+// 因此 boot marker 匹配即证明后续断言不在“旧文档尚未被 reload 替换”的窗口中执行。
+const bootMarker = `wm-t1-02-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+// CSP 收集器与 boot marker 都必须在页面加载前注入；随后重载页面并等待应用壳渲染。
 await send('Page.addScriptToEvaluateOnNewDocument', {
-  source: `window.__wmCspViolations = [];
+  source: `window.__wmBootMarker = ${JSON.stringify(bootMarker)};
+window.__wmCspViolations = [];
 document.addEventListener('securitypolicyviolation', (event) => {
   window.__wmCspViolations.push({
     blockedURI: event.blockedURI,
@@ -285,15 +437,46 @@ document.addEventListener('securitypolicyviolation', (event) => {
   });
 });`
 });
+
+// 先等待当前文档加载完成再主动 reload，避免在首次加载尚未稳定时发出 reload。
+await waitFor(
+  `document.readyState === 'complete'`,
+  15000,
+  'initial document readyState complete',
+  `({ readyState: document.readyState, hasAppShell: document.querySelector('.app-shell') !== null })`
+).catch(() => null);
+
 await send('Page.reload', { ignoreCache: true });
+
+const bootStateExpression = `(() => ({
+  readyState: document.readyState,
+  bootMarkerMatched: window.__wmBootMarker === ${JSON.stringify(bootMarker)},
+  hasAppShell: document.querySelector('.app-shell') !== null,
+  navCount: document.querySelectorAll('nav.sidebar button').length,
+  tauriInternals: typeof window.__TAURI_INTERNALS__?.invoke === 'function'
+}))()`;
 
 try {
   await waitFor(
-    `document.querySelector('.app-shell') !== null && document.querySelectorAll('nav button').length === 6`,
-    20000,
-    'app shell rendered'
+    `window.__wmBootMarker === ${JSON.stringify(bootMarker)} && document.readyState === 'complete'`,
+    30000,
+    'reloaded document boot marker',
+    bootStateExpression
   );
-  await sleep(400);
+  deterministicWaits.push('page.reloadNewDocumentBootMarker');
+
+  await waitFor(
+    `document.querySelector('.app-shell') !== null && document.querySelectorAll('nav button').length === 6 && typeof window.__TAURI_INTERNALS__?.invoke === 'function'`,
+    30000,
+    'app shell rendered in reloaded document',
+    bootStateExpression
+  );
+  deterministicWaits.push('appShell.renderedWithTauriInternals');
+
+  await waitForIpcReady(20000);
+  deterministicWaits.push('ipc.databaseHealthReady');
+
+  await sleep(300);
   check('shell.rendered', true);
 
   // 1. 应用壳 / 导航 / 标题栏。
@@ -392,8 +575,15 @@ try {
   }
   await send('Emulation.setCPUThrottlingRate', { rate: 1 });
 
-  await waitFor(`document.body.innerText.includes('暂无项目')`, 12000, 'projects empty state');
-  check('projects.emptyStateRendered', await evaluate(`document.body.innerText.includes('暂无项目')`));
+  // P3-02：不再直接等待“暂无项目”文本出现，而是先等待项目管理页面 Loading
+  // 确定性结束，再断言空状态；若终态是错误或列表，会带着页面状态失败。
+  const projectsState = await waitForProjectsSettled(20000);
+  deterministicWaits.push('projectsPage.loadingSettled');
+  check(
+    'projects.emptyStateRendered',
+    projectsState.empty === true,
+    JSON.stringify(projectsState)
+  );
   check(
     'projects.emptyStateCreateAction',
     (await evaluate(
@@ -654,6 +844,12 @@ try {
   );
 } catch (error) {
   check('script.completed', false, String(error));
+  const diagnostics = await captureFailureDiagnostics('script-error').catch((diagnosticsError) => ({
+    error: String(diagnosticsError)
+  }));
+  if (diagnostics?.filePath) {
+    console.error(`FAILURE_DIAGNOSTICS=${diagnostics.filePath}`);
+  }
   await screenshot('failure-state.png').catch(() => null);
 }
 
@@ -664,6 +860,8 @@ const evidence = {
   method:
     'CDP against real Release WebView2: shell/DOM assertions, real UI create/edit/archive flows, direct typed Tauri IPC checks, CPU-throttled real loading state capture, screenshots, CSP collection, maximize/restore window API check',
   port,
+  bootMarker,
+  deterministicWaits,
   target: {
     id: pageTarget.id,
     title: pageTarget.title,

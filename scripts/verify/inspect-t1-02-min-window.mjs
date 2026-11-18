@@ -188,14 +188,49 @@ await send('Runtime.enable');
 await send('Page.enable');
 
 let closeClicked = false;
+let viewport = null;
+let dialogLayout = null;
+
+/**
+ * 生成并写入机器可读证据。
+ * P3-02 / 统计口径修复：点击关闭按钮后 Node 进程仍在运行（页面销毁不影响 fs），
+ * 因此 12 项断言全部写入证据 JSON；进程真实退出由编排脚本通过 ExitCode 独立验证。
+ */
+function buildEvidence(extra = {}) {
+  const failed = checks.filter((item) => !item.pass).map((item) => item.name);
+  const evidence = {
+    generatedAt: new Date().toISOString(),
+    task: 'T1-02',
+    method:
+      'CDP at minimum supported window size; deterministic app-shell wait; viewport/dialog/layout checks; real titlebar close button click; process exit verified by orchestration',
+    port,
+    target: { id: pageTarget.id, title: pageTarget.title, url: pageTarget.url },
+    viewport,
+    dialogLayout,
+    checks,
+    failed,
+    checkCount: checks.length,
+    plannedCheckCount: 12,
+    closeClicked,
+    processExitVerifiedBy:
+      'scripts/verify/verify-t1-02-ui.ps1（t1-02-ui-orchestration.json closeExitCode）',
+    pass: failed.length === 0 && closeClicked === true,
+    ...extra
+  };
+  const evidencePath = path.join(outputDir, 't1-02-min-window-evidence.json');
+  fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2), 'utf8');
+  evidence.evidencePath = evidencePath;
+  return evidence;
+}
+
 try {
   await waitFor(
-    `document.querySelector('.app-shell') !== null && document.querySelectorAll('nav button').length === 6`,
+    `document.readyState === 'complete' && document.querySelector('.app-shell') !== null && document.querySelectorAll('nav button').length === 6`,
     15000,
     'app shell rendered'
   );
 
-  const viewport = await evaluate(`({
+  viewport = await evaluate(`({
     innerWidth: window.innerWidth,
     innerHeight: window.innerHeight,
     outerWidth: window.outerWidth,
@@ -257,7 +292,7 @@ try {
   // 新建项目对话框必须完整落在最小窗口内。
   check('minWindow.openCreateDialog', (await clickByText('main', '新建项目', false)) === true);
   await waitFor(`document.querySelector('dialog[open]') !== null`, 5000);
-  const dialogLayout = await evaluate(`(() => {
+  dialogLayout = await evaluate(`(() => {
     const dialog = document.querySelector('dialog[open]');
     if (!dialog) return null;
     const rect = dialog.getBoundingClientRect();
@@ -277,26 +312,7 @@ try {
   check('minWindow.cancelDialog', (await clickByText('dialog[open]', '取消')) === true);
   await waitFor(`document.querySelector('dialog[open]') === null`, 5000);
 
-  // 先写证据，再点击关闭按钮（点击后页面会立即销毁，无法继续写文件）。
-  const failed = checks.filter((item) => !item.pass).map((item) => item.name);
-  const evidence = {
-    generatedAt: new Date().toISOString(),
-    task: 'T1-02',
-    method: 'CDP at minimum supported window size + real titlebar close button click',
-    port,
-    target: { id: pageTarget.id, title: pageTarget.title, url: pageTarget.url },
-    viewport,
-    dialogLayout,
-    checks,
-    failed,
-    pass: failed.length === 0
-  };
-  fs.writeFileSync(
-    path.join(outputDir, 't1-02-min-window-evidence.json'),
-    JSON.stringify(evidence, null, 2),
-    'utf8'
-  );
-
+  // 最后点击真实窗口关闭按钮；点击后页面立即销毁，但 Node 进程仍可写证据文件。
   closeClicked = await evaluate(`(() => {
     const button = document.querySelector('.window-control--close');
     if (!button || button.disabled) return false;
@@ -304,10 +320,29 @@ try {
     return true;
   })()`).catch(() => false);
   check('minWindow.closeButtonClicked', closeClicked === true);
-  console.log(JSON.stringify({ total: checks.length, failed, pass: failed.length === 0 && closeClicked }, null, 2));
+
+  const evidence = buildEvidence();
+  console.log(
+    JSON.stringify(
+      {
+        total: evidence.checkCount,
+        failed: evidence.failed,
+        pass: evidence.pass,
+        evidencePath: evidence.evidencePath
+      },
+      null,
+      2
+    )
+  );
 } catch (error) {
   check('minWindow.scriptCompleted', false, String(error));
   await screenshot('min-window-failure.png').catch(() => null);
+  try {
+    const evidence = buildEvidence({ scriptError: String(error) });
+    console.error(`MIN_WINDOW_EVIDENCE=${evidence.evidencePath}`);
+  } catch {
+    // 证据写盘失败不应掩盖原始错误。
+  }
 }
 
 await sleep(500);
