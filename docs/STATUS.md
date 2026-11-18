@@ -21,7 +21,7 @@
 ## UI 设计基线（DEC-030，2026-11-18）
 
 - 用户已确认简洁 Apple 风格、Windows 原生桌面 UI 原型；以工作总览和今日工作作为两个核心页面。
-- 设计规范：[docs/design/UI-DESIGN-SPEC.md](design/UI-DESIGN-SPEC.md)；原型图：[workmanager-ui-prototype.svg](design/assets/workmanager-ui-prototype.svg)。
+- 设计规范：[UI 设计规范](design/UI-DESIGN-SPEC.md)；原型图：[workmanager-ui-prototype.svg](design/assets/workmanager-ui-prototype.svg)。
 - 首页优先展示今日要做、今日已完成、当前工作；复盘与待跟进降为次级信息；禁止堆叠统计图表和无关指标。
 - 前端组件分层、Design Tokens、typed Bridge、CSS 隔离和 UI 回归规则已写入 UI 规范、技术架构和 AGENTS.md。
 - **当前仅完成设计文档；UI 业务代码未开始。** T1-02 仍等待单独启动指示。
