@@ -138,8 +138,8 @@
 
 ## 下一步安排
 
-- T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；R3-01/R3-02 代码与证据复核通过。审计报告见 [T1-01-FOURTH-AUDIT-REPORT.md](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户验收记录见 [T1-01-USER-ACCEPTANCE.md](testing/reports/T1-01-USER-ACCEPTANCE.md)。PR #1 已合并到 main（commit `260e6c0`）；UI 设计文档 PR #4 已合并（commit `938f21c`）；T1-02 尚未开始。
-- T1-01 已验收完成，PR #1 已合并；T1-02 项目创建、编辑、归档仍是独立执行步骤，等待用户单独启动指示。
+- T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；R3-01/R3-02 代码与证据复核通过。审计报告见 [T1-01-FOURTH-AUDIT-REPORT.md](testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户验收记录见 [T1-01-USER-ACCEPTANCE.md](testing/reports/T1-01-USER-ACCEPTANCE.md)。PR #1 已合并到 main（commit `260e6c0`）；UI 设计文档 PR #4 已合并（commit `938f21c`）；T1-02 开发中（2026-11-18 启动）。
+- T1-01 已验收完成，PR #1 已合并；T1-02 项目创建、编辑、归档仍是独立执行步骤，已获得用户启动指示并进入开发。
 - TOCTOU 残余风险按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复、不得宣称绝不写入 C 盘；未经用户另行授权不得开始完整句柄相对改造/custom SQLite VFS。
 - 重新审计通过并同步更新开发计划后，才决定是否进入 T1-02；开发代理不得自行开始 T1-02。
 - T0-05 不再安排开发；T0-06 延期至阶段 6，不得从最终发布验收清单中删除。
