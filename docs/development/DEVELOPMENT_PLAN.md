@@ -447,7 +447,7 @@
 - 本计划书定义未来工作，不表示尚未开发的功能已经实现。
 
 
-| 2026-11-18 | T1-01 第四轮独立审计通过（待用户验收） | 复核 PR #1 HEAD `ae14bff`、R3-01/R3-02 代码提交、生产调用链、专项测试与脱敏日志；两项审计问题通过。TOCTOU 按 DEC-029 接受并延期、未修复。审计报告：`docs/testing/reports/T1-01-FOURTH-AUDIT-REPORT.md`。PR 保持打开、不合并；main 不修改；T1-02 不开始 |
+| 2026-11-18 | T1-01 第四轮独立审计通过（审计当时待用户验收） | 复核 PR #1 HEAD `ae14bff`、R3-01/R3-02 代码提交、生产调用链、专项测试与脱敏日志；两项审计问题通过。TOCTOU 按 DEC-029 接受并延期、未修复。审计报告：`docs/testing/reports/T1-01-FOURTH-AUDIT-REPORT.md`。PR 保持打开、不合并；main 不修改；T1-02 不开始 |
 
 
 | 2026-11-18 | T1-01 用户验收完成 | 用户明确回复“接受”，确认接受第四轮独立审计结论及 DEC-029 中已接受但未修复的 TOCTOU 残余风险。T1-01 标记验收完成；PR #1 仍 Open、未合并，main 不修改；T1-02 未开始，等待单独启动指示。验收记录：`docs/testing/reports/T1-01-USER-ACCEPTANCE.md` |
