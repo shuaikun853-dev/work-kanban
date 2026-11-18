@@ -1,11 +1,11 @@
 # WorkManager 开发计划书
 
-**文档版本：** V1.6  
+**文档版本：** V1.5  
 **编制日期：** 2026-11-18  
 **文档状态：** 开发执行基线（阶段 0 已放行；T1-01 第四轮独立审计通过并于 2026-11-18 经用户验收，任务验收完成；TOCTOU 按 DEC-029 接受并延期） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；T1-01 已于 2026-11-18 完成第四轮独立审计和用户验收，并合并到 main（commit `260e6c0`）。用户已确认 UI 最终基线 V1.1（DEC-031）。T1-02 项目管理已于 2026-11-18 获得明确启动授权，分支 `task/T1-02-project-management` 已从 main 基线 `8451a451` 创建，当前状态为**进行中**；本次已建立任务范围和验收文档，业务代码尚未修改。当前 Windows 开发机连接离线，Windows 实机构建与测试尚未执行。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。详见 [第四轮独立审计报告](../testing/reports/T1-01-FOURTH-AUDIT-REPORT.md) 与 [用户验收记录](../testing/reports/T1-01-USER-ACCEPTANCE.md)
+**当前进度：** 阶段 0 已放行；T1-01 第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。R3-01/R3-02 代码与证据复核通过；开发机回归日志记录 68 项 Rust 测试通过及 Release 便携/异常注入/UI 验证通过。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。PR #1 已于 2026-11-18 合并到 main（commit `260e6c0`）；UI 设计文档 PR #4 已合并（commit `938f21c`）；T1-02 尚未开始。详见 [第四轮独立审计报告](../testing/reports/T1-01-FOURTH-AUDIT-REPORT.md) 与 [用户验收记录](../testing/reports/T1-01-USER-ACCEPTANCE.md)
 
 ---
 
@@ -86,7 +86,7 @@
 | 阶段 | 名称 | 主要交付 | 当前状态 |
 |---|---|---|---|
 | 0 | 技术验证 | 桌面壳、便携路径、WebView2 基础验证 | 已放行；SQLCipher/DPAPI 取消，系统集成验证延期至阶段 6 |
-| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 进行中；**T1-01 已验收完成**，T1-02 项目管理进行中（TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
+| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 进行中；**T1-01 已验收完成**，**T1-02 开发中**（TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
 | 2 | 计划、优先级与当前工作 | 每日计划、全局排序、当前工作和切换记录 | 未开始 |
 | 3 | 每日复盘与提醒 | 工作日历、复盘、补录、提醒调度 | 未开始 |
 | 4 | 日志、搜索与报表 | 工作日志、历史搜索、日报、周报、月报 | 未开始 |
@@ -167,40 +167,26 @@
 | 任务 | 内容 | 核心验收 |
 |---|---|---|
 | T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | Tauri 2 + Svelte 5 + TypeScript + Rust 可构建；SQLite 初始化、user_version migration、外键、WAL、事务和测试通过 |
-| T1-02 | 项目创建、编辑、归档 | 项目 CRUD；归档不删除工作历史 | **进行中**（分支已建立，任务范围已细化；代码实施待 Windows 开发环境恢复） |
+| T1-02 | 项目创建、编辑、归档 | 项目 CRUD；归档不删除工作历史 | **开发中（2026-11-18 启动）** |
 | T1-03 | 工作事项快速创建和待安排区域 | 新建默认待安排；支持未归属项目 |
 | T1-04 | 多项目独立副本创建 | 多项目创建时每个项目有独立工作记录、状态、日志和附件关联 |
 | T1-05 | 工作事项状态流转和历史记录 | 待安排、未开始、进行中、已完成、已放弃规则正确；状态变更可追溯 |
 | T1-06 | 六位数字应用密码与锁屏 | 取消（DEC-028）；第一版不实现 |
 | T1-07 | 首次初始化与 SQLite 异常保护 | 初始化原子性；数据库损坏、migration 失败、磁盘不足时不覆盖原数据 |
 
-### UI 设计基线（DEC-030 / DEC-031，最终版 V1.1）
+### UI 设计基线（文档已确认，不是代码任务）
 
-**状态：** 2026-11-18 用户已确认最终双页面截图；UI 设计规范升级至 V1.1。该截图取代此前三种候选布局。
+**状态：** 2026-11-18 用户已确认 UI 原型和视觉方向；设计文档已建立，尚未实现业务 UI 代码。
 
-- 权威规范：[UI 设计规范](../design/UI-DESIGN-SPEC.md)；原型资产位于 `docs/design/assets/workmanager-ui-prototype.svg`。
-- 工作总览：日期问候、当前工作、今日要做/今日已完成双栏、上个工作日复盘/待跟进双栏。
-- 今日工作：标题及调整顺序/新增工作操作、当前工作、待完成清单、已完成清单。
-- 左侧导航固定为工作总览、今日工作、未来 7 天、历史记录、报告、设置；桌面内容区减少无效留白，清单采用紧凑行布局。
+- 权威规范：[UI 设计规范](../design/UI-DESIGN-SPEC.md)；原型图位于 `docs/design/assets/workmanager-ui-prototype.svg`。
+- 核心页面：工作总览、今日工作。首页首先让用户看清今天要做和今天已完成；当前工作单独突出；复盘和待跟进为次级信息。
 - 前端架构：应用壳、Design Tokens、通用组件、Feature 页面、typed Bridge、DTO Contracts、纯展示函数分层。
 - UI 实现并入对应业务纵向任务，不另造重复业务任务；每次只实现一个页面/一个可验证切片，附截图和回归结果。
-- 用户于 2026-11-18 明确确认采用截图中的红/黄/绿三个彩色按钮（DEC-032）；Windows 10 使用 Tauri 自定义无边框标题栏，按钮必须真实控制关闭、最小化和最大化/还原，并保留拖动、缩放及键盘可访问性。
-
-### T1-02 详细范围：项目创建、编辑、归档
-
-**状态：** 进行中；用户于 2026-11-18 明确授权。分支 `task/T1-02-project-management`，基线 main `8451a451`。
-
-- 按 PRD 5.1 和技术设计 5.1 实现项目创建、读取、编辑和归档；归档不得删除项目记录或破坏关联历史。
-- 新增版本化 SQLite migration；项目字段以技术设计为准：`id`、`name`、`is_archived`、创建/更新时间。未获确认前不擅自增加描述、颜色、图标、排序字段或唯一名称约束。
-- 业务规则由独立 Rust Core 负责；Tauri 仅提供类型安全命令和 DTO；前端不执行 SQL。
-- 项目管理 UI 不增加一级导航项，暂通过现有“设置”入口进入项目管理 Feature，避免改变 DEC-031 已确认的主导航。若实际界面集成发现冲突，先提交调整方案，不擅自改变主页面结构。
-- 不实现项目物理删除；归档仅改变归档状态。工作事项 CRUD、多项目创建、当前工作和每日计划不属于 T1-02。
-- 验收至少覆盖 migration v1→v2、创建/查询/编辑/归档、空白名称拒绝、归档记录保留、错误路径和数据库事务；同时完成前端契约、IPC 与 UI 状态回归。
-- Windows 实机验证至少运行 `cargo fmt --all -- --check`、`cargo check --workspace --all-targets`、`cargo test --workspace`、`npm run check`、`npm run build`，并启动 Tauri 应用验证 UI/IPC。开发机未在线前不得声称这些验证通过。
+- **本次文档确认不等于启动 T1-02 或其他业务代码任务。** T1-02 仍为未开始，等待用户单独启动指示；不得自行扩大授权。
 
 ### T1-01 详细范围
 
-**当前状态（2026-11-18）：** 第四轮独立审计通过，且用户已明确验收；**T1-01 验收完成**。R2-01/R2-02/R2-04 修复逻辑复核成立；R3-01（D 根卷信任锚未独立验证，P1）已修复：生产路径用 `GetVolumeNameForVolumeMountPointW` + 根目录句柄 `VOLUME_NAME_GUID/NT` + `QueryDosDeviceW` + D/C 同卷拒绝独立验证 D 根，失败返回 `path-root-trust-anchor-invalid` 并 fail-closed；R3-02（真实双进程初始化锁测试同步确定性，P2）已修复：waiter 只在底层 `LockFileEx` 明确返回锁竞争后才发信号，并走完整 `Database::initialize()`，creator 收到确认后才建库，10/10 多轮真实进程测试通过。修复代码提交：R3-01 `ae1eb65`、R3-02 `4942eb0`。TOCTOU 残余风险未修复，但用户已按 DEC-029 接受延期至[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，不作为 T1-01 单独阻塞项。详见 [T1-01-R3-FIX-REPORT.md](../testing/reports/T1-01-R3-FIX-REPORT.md) 与 [第三轮独立审计报告](../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)。用户已验收 T1-01。PR #1 已于 2026-11-18 合并到 main（commit `260e6c0`）；T1-02 已由用户于 2026-11-18 明确授权启动，当前在独立分支中进行；本节仅记录 T1-01 历史交付，不改变 T1-01 验收结论。
+**当前状态（2026-11-18）：** 第四轮独立审计通过，且用户已明确验收；**T1-01 验收完成**。R2-01/R2-02/R2-04 修复逻辑复核成立；R3-01（D 根卷信任锚未独立验证，P1）已修复：生产路径用 `GetVolumeNameForVolumeMountPointW` + 根目录句柄 `VOLUME_NAME_GUID/NT` + `QueryDosDeviceW` + D/C 同卷拒绝独立验证 D 根，失败返回 `path-root-trust-anchor-invalid` 并 fail-closed；R3-02（真实双进程初始化锁测试同步确定性，P2）已修复：waiter 只在底层 `LockFileEx` 明确返回锁竞争后才发信号，并走完整 `Database::initialize()`，creator 收到确认后才建库，10/10 多轮真实进程测试通过。修复代码提交：R3-01 `ae1eb65`、R3-02 `4942eb0`。TOCTOU 残余风险未修复，但用户已按 DEC-029 接受延期至[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，不作为 T1-01 单独阻塞项。详见 [T1-01-R3-FIX-REPORT.md](../testing/reports/T1-01-R3-FIX-REPORT.md) 与 [第三轮独立审计报告](../testing/reports/T1-01-THIRD-AUDIT-REPORT.md)。用户已验收 T1-01。PR #1 已于 2026-11-18 合并到 main（commit `260e6c0`）；T1-02 仍须作为独立执行步骤，未经用户明确启动指示不得开始。
 
 **实际实现范围：**
 
@@ -463,11 +449,11 @@
 
 ## 17. 当前执行结论
 
-- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 已验收完成并合并到 main（PR #1，commit `260e6c0`）。T1-02 项目创建、编辑、归档已于 2026-11-18 获得启动授权，分支 `task/T1-02-project-management` 已建立，当前进行中；任务说明见 `docs/development/tasks/T1-02-Project-Management.md`。业务代码尚未修改，等待 Windows 开发环境恢复后实施和验证。
+- 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 已于 2026-11-18 经第四轮独立审计、用户验收并合并到 main（PR #1，commit `260e6c0`），状态为**验收完成**。T1-02 尚未开始，等待单独启动指示。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
 - 最近完成任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**；任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；验收记录见 `docs/testing/reports/T1-01-USER-ACCEPTANCE.md`；R3 返工证据见 `docs/testing/reports/T1-01-R3-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-R3-FIX-evidence.json`。
 - 第一版采用普通 SQLite，不实现应用密码、SQLCipher 或 DPAPI。
-- UI 最终设计基线 V1.1 已按 DEC-031 确认，详见 [UI 设计规范](../design/UI-DESIGN-SPEC.md)；文档 PR #4 的旧基线已合并到 main（commit `938f21c`），当前 V1.1 更新位于 T1-02 分支。
+- UI 设计基线已按 DEC-030 确认，详见 [UI 设计规范](../design/UI-DESIGN-SPEC.md)；文档 PR #4 已合并到 main（commit `938f21c`），业务 UI 尚未实现，T1-02 仍等待单独启动指示。
 - D 盘本地存储、不上传数据、事务、版本化 migration、异常保护和备份恢复仍是必须要求。
 - 本计划书定义未来工作，不表示尚未开发的功能已经实现。
 
@@ -479,6 +465,3 @@
 | 2026-11-18 | 用户确认 UI 原型与前端架构基线（DEC-030） | 建立 `docs/design/UI-DESIGN-SPEC.md` 和原型图；更新 PRD、技术架构、AGENTS 与开发状态。仅完成文档，不代表 UI 代码或 T1-02 已启动；实现必须按用户授权的对应任务逐步进行。 |
 | 2026-11-18 | T1-01 PR #1 合并 | 用户验收后，PR #1 合并到 main，合并提交 `260e6c07802a297529d8bda1e2d9239fca90fc10`；T1-01 代码正式进入 main；T1-02 未开始。 |
 | 2026-11-18 | UI 设计文档 PR #4 合并 | UI 原型、设计规范和 AI 前端架构约束已合入 main，合并提交 `938f21c`；T1-02 未开始。 |
-
-
-| 2026-11-18 | 用户确认 UI 最终版并启动 T1-02 | 用户上传并确认双页面紧凑布局截图为最终 UI 基线 V1.1（DEC-031）；T1-02 获得明确启动授权，创建分支 `task/T1-02-project-management`（基线 main `8451a451`），建立项目管理任务说明和验收范围。Windows 开发机当前离线，业务代码与实机测试尚未开始；不将文档/分支启动误报为代码完成。 |
