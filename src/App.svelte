@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import WindowTitlebar from './app/WindowTitlebar.svelte';
+  import WindowTitlebar from './lib/WindowTitlebar.svelte';
   import { DatabaseHealthError, fetchDatabaseHealth } from './lib/bridge/databaseHealth';
   import { DATABASE_HEALTH_COMMAND } from './lib/contracts/databaseHealth';
   import type { DatabaseHealthResponse } from './lib/contracts/databaseHealth';

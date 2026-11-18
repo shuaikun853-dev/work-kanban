@@ -177,6 +177,9 @@
 
 <style>
   .window-titlebar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
     display: flex;
     align-items: center;
     flex: 0 0 60px;
