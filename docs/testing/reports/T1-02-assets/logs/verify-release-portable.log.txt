@@ -19,7 +19,7 @@ F4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8
 se；LOCALAPPDATA\EBWebView exists=True
 [13:04:53][INFO] c_drive.baseline :: LOCALAPPDATA\com.workmanager.portable exists=False；APPDATA\com.workmanager.portabl
 e exists=False；LOCALAPPDATA\EBWebView exists=True
-[13:04:53][WARN] C 盘路径启动前已存在：C:\Users\13013\AppData\Local\EBWebView；creation_time_utc=2024-07-15T07:29:20.1195506Z；last
+[13:04:53][WARN] C 盘路径启动前已存在：C:\Users\<user>\AppData\Local\EBWebView；creation_time_utc=2024-07-15T07:29:20.1195506Z；last
 _write_utc=2026-11-17T22:35:37.2504950Z；top_level_entries=25
 
 ==================== 用例 1：首次启动、便携目录、SQLite 基础检查 ====================
@@ -350,11 +350,11 @@ eys":0,"page_count":8,"page_size":4096,"synchronous":2,"temp_store":0}
 [13:04:59][INFO] cleanup.evidence_retained :: 证据与汇总保留在：D:\WorkManager-test-data\t1-02-release-portable-v2
 
 ==================== C 盘边界抽查（所有用例结束后） ====================
-[13:04:59][PASS] c_drive.LOCALAPPDATA_com.workmanager.portable :: C 盘路径不存在（符合便携边界预期）：path=C:\Users\13013\AppData\Local\
+[13:04:59][PASS] c_drive.LOCALAPPDATA_com.workmanager.portable :: C 盘路径不存在（符合便携边界预期）：path=C:\Users\<user>\AppData\Local\
 com.workmanager.portable；exists=False
-[13:04:59][PASS] c_drive.APPDATA_com.workmanager.portable :: C 盘路径不存在（符合便携边界预期）：path=C:\Users\13013\AppData\Roaming\com
+[13:04:59][PASS] c_drive.APPDATA_com.workmanager.portable :: C 盘路径不存在（符合便携边界预期）：path=C:\Users\<user>\AppData\Roaming\com
 .workmanager.portable；exists=False
-[13:04:59][WARN] c_drive.LOCALAPPDATA_EBWebView :: C 盘路径在验证开始前已存在且相同时刻/条目未变化（非本次验证创建，需人工确认来源）：path=C:\Users\13013\AppDa
+[13:04:59][WARN] c_drive.LOCALAPPDATA_EBWebView :: C 盘路径在验证开始前已存在且相同时刻/条目未变化（非本次验证创建，需人工确认来源）：path=C:\Users\<user>\AppDa
 ta\Local\EBWebView；exists=True；last_write_utc=2026-11-17T22:35:37.2504950Z；creation_time_utc=2024-07-15T07:29:20.119550
 6Z；top_level_entries=25
 [13:04:59][EVID] --- JSON 证据开始: C 盘边界快照（before/after） ---
@@ -365,7 +365,7 @@ ta\Local\EBWebView；exists=True；last_write_utc=2026-11-17T22:35:37.2504950Z�
 [13:04:59][EVID]                        "locations":  [
 [13:04:59][EVID]                                          {
 [13:04:59][EVID]                                              "name":  "LOCALAPPDATA\\com.workmanager.portable",
-[13:04:59][EVID]                                              "path":  "C:\\Users\\13013\\AppData\\Local\\com.workmanag
+[13:04:59][EVID]                                              "path":  "C:\\Users\\<user>\\AppData\\Local\\com.workmanag
 er.portable",
 [13:04:59][EVID]                                              "exists":  false,
 [13:04:59][EVID]                                              "is_directory":  false,
@@ -375,7 +375,7 @@ er.portable",
 [13:04:59][EVID]                                          },
 [13:04:59][EVID]                                          {
 [13:04:59][EVID]                                              "name":  "APPDATA\\com.workmanager.portable",
-[13:04:59][EVID]                                              "path":  "C:\\Users\\13013\\AppData\\Roaming\\com.workman
+[13:04:59][EVID]                                              "path":  "C:\\Users\\<user>\\AppData\\Roaming\\com.workman
 ager.portable",
 [13:04:59][EVID]                                              "exists":  false,
 [13:04:59][EVID]                                              "is_directory":  false,
@@ -385,7 +385,7 @@ ager.portable",
 [13:04:59][EVID]                                          },
 [13:04:59][EVID]                                          {
 [13:04:59][EVID]                                              "name":  "LOCALAPPDATA\\EBWebView",
-[13:04:59][EVID]                                              "path":  "C:\\Users\\13013\\AppData\\Local\\EBWebView",
+[13:04:59][EVID]                                              "path":  "C:\\Users\\<user>\\AppData\\Local\\EBWebView",
 [13:04:59][EVID]                                              "exists":  true,
 [13:04:59][EVID]                                              "is_directory":  true,
 [13:04:59][EVID]                                              "creation_time_utc":  "2024-07-15T07:29:20.1195506Z",
@@ -400,7 +400,7 @@ ager.portable",
 [13:04:59][EVID]                       "locations":  [
 [13:04:59][EVID]                                         {
 [13:04:59][EVID]                                             "name":  "LOCALAPPDATA\\com.workmanager.portable",
-[13:04:59][EVID]                                             "path":  "C:\\Users\\13013\\AppData\\Local\\com.workmanage
+[13:04:59][EVID]                                             "path":  "C:\\Users\\<user>\\AppData\\Local\\com.workmanage
 r.portable",
 [13:04:59][EVID]                                             "exists":  false,
 [13:04:59][EVID]                                             "is_directory":  false,
@@ -410,7 +410,7 @@ r.portable",
 [13:04:59][EVID]                                         },
 [13:04:59][EVID]                                         {
 [13:04:59][EVID]                                             "name":  "APPDATA\\com.workmanager.portable",
-[13:04:59][EVID]                                             "path":  "C:\\Users\\13013\\AppData\\Roaming\\com.workmana
+[13:04:59][EVID]                                             "path":  "C:\\Users\\<user>\\AppData\\Roaming\\com.workmana
 ger.portable",
 [13:04:59][EVID]                                             "exists":  false,
 [13:04:59][EVID]                                             "is_directory":  false,
@@ -420,7 +420,7 @@ ger.portable",
 [13:05:00][EVID]                                         },
 [13:05:00][EVID]                                         {
 [13:05:00][EVID]                                             "name":  "LOCALAPPDATA\\EBWebView",
-[13:05:00][EVID]                                             "path":  "C:\\Users\\13013\\AppData\\Local\\EBWebView",
+[13:05:00][EVID]                                             "path":  "C:\\Users\\<user>\\AppData\\Local\\EBWebView",
 [13:05:00][EVID]                                             "exists":  true,
 [13:05:00][EVID]                                             "is_directory":  true,
 [13:05:00][EVID]                                             "creation_time_utc":  "2024-07-15T07:29:20.1195506Z",
@@ -750,14 +750,14 @@ PASS   cleanup.case_directories                                 已删除本脚�
 INFO   cleanup.evidence_retained                                证据与汇总保留在：D:\WorkManager-test-data\t1-02-release-portabl
 e-v2                                                                                                                   
                       
-PASS   c_drive.LOCALAPPDATA_com.workmanager.portable            C 盘路径不存在（符合便携边界预期）：path=C:\Users\13013\AppData\Local\co
+PASS   c_drive.LOCALAPPDATA_com.workmanager.portable            C 盘路径不存在（符合便携边界预期）：path=C:\Users\<user>\AppData\Local\co
 m.workmanager.portable；exists=False                                                                                    
                       
-PASS   c_drive.APPDATA_com.workmanager.portable                 C 盘路径不存在（符合便携边界预期）：path=C:\Users\13013\AppData\Roaming\
+PASS   c_drive.APPDATA_com.workmanager.portable                 C 盘路径不存在（符合便携边界预期）：path=C:\Users\<user>\AppData\Roaming\
 com.workmanager.portable；exists=False                                                                                  
                       
 WARN   c_drive.LOCALAPPDATA_EBWebView                           C 盘路径在验证开始前已存在且相同时刻/条目未变化（非本次验证创建，需人工确认来源）：path=C:\User
-s\13013\AppData\Local\EBWebView；exists=True；last_write_utc=2026-11-17T22:35:37.2504950Z；creation_time_utc=2024-07-15T07
+s\<user>\AppData\Local\EBWebView；exists=True；last_write_utc=2026-11-17T22:35:37.2504950Z；creation_time_utc=2024-07-15T07
 :29:20.1195506Z；top...
 TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15 OVERALL=PASS
 SUMMARY=D:\WorkManager-test-data\t1-02-release-portable-v2\summary.json

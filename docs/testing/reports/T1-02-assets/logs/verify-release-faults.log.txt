@@ -11,7 +11,7 @@
 [13:05:00][INFO] precondition.release_exe :: path=D:\工作事项看板\target\release\workmanager.exe；size_bytes=10230272；sha256=D
 F4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8
 [13:05:00][INFO] precondition.output_dir :: D:\WorkManager-test-data\t1-02-release-faults-v2
-[13:05:00][INFO] precondition.current_identity :: DESKTOP-U5GCI7T\13013
+[13:05:00][INFO] precondition.current_identity :: <host>\<user>
 [13:05:00][PASS] precondition.icacls_available :: C:\WINDOWS\System32\icacls.exe
 
 ==================== 用例 A：数据库文件为非 SQLite 垃圾内容 → 启动必须失败且原文件不变 ====================
@@ -233,11 +233,11 @@ ult-db-is-directory\data\database\work.db
 ==================== 用例 D：数据库目录 ACL 拒绝写入 → 启动必须失败（finally 恢复 ACL） ====================
 [13:05:08][PASS] fault.acl_denied.exe_copy_sha256_matches :: sha256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF6
 0F8F72EABB7E8
-[13:05:08][STEP] icacls /deny DESKTOP-U5GCI7T\13013:(W) D:\WorkManager-test-data\t1-02-release-faults-v2\fault-acl-deni
+[13:05:08][STEP] icacls /deny <host>\<user>:(W) D:\WorkManager-test-data\t1-02-release-faults-v2\fault-acl-deni
 ed\data\database：exit_code=0；processed file: D:\WorkManager-test-data\t1-02-release-faults-v2\fault-acl-denied\data\dat
 abase
 Successfully processed 1 files; Failed processing 0 files
-[13:05:08][PASS] fault.acl_denied.deny_applied :: icacls /deny DESKTOP-U5GCI7T\13013:(W) 执行成功
+[13:05:08][PASS] fault.acl_denied.deny_applied :: icacls /deny <host>\<user>:(W) 执行成功
 [13:05:08][PASS] fault.acl_denied.deny_enforced :: ACL 实际阻止当前用户写入数据库目录（自检探测文件创建失败）
 [13:05:08][STEP] fault-acl-denied 检测到启动失败对话框：title=WorkManager 启动失败；elapsed_ms=534
 [13:05:08][EVID] --- JSON 证据开始: fault-acl-denied 启动失败对话框 UI 内容 ---
@@ -280,11 +280,11 @@ r 5)。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。
 错误码：directory-inspect-failed
 检查路径的真实存储位置失败（拒绝访问）：D:\WorkManager-test-data\t1-02-release-faults-v2\fault-acl-denied\data\database；系统错误：拒绝访问。 (os erro
 r 5)。已停止启动，不会回退到 C 盘、AppData 或系统 Temp。
-[13:05:09][STEP] icacls /remove:d DESKTOP-U5GCI7T\13013 D:\WorkManager-test-data\t1-02-release-faults-v2\fault-acl-deni
+[13:05:09][STEP] icacls /remove:d <host>\<user> D:\WorkManager-test-data\t1-02-release-faults-v2\fault-acl-deni
 ed\data\database：exit_code=0；processed file: D:\WorkManager-test-data\t1-02-release-faults-v2\fault-acl-denied\data\dat
 abase
 Successfully processed 1 files; Failed processing 0 files
-[13:05:09][PASS] fault.acl_denied.deny_removed_in_finally :: icacls /remove:d DESKTOP-U5GCI7T\13013 执行成功（finally 中恢复）
+[13:05:09][PASS] fault.acl_denied.deny_removed_in_finally :: icacls /remove:d <host>\<user> 执行成功（finally 中恢复）
 [13:05:09][PASS] fault.acl_denied.write_restored :: ACL 恢复后当前用户可正常写入数据库目录
 [13:05:09][PASS] fault.acl_denied.database_dir_still_exists :: 数据库目录仍存在：D:\WorkManager-test-data\t1-02-release-faults-v
 2\fault-acl-denied\data\database
@@ -318,7 +318,7 @@ a256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8
 INFO   precondition.output_dir                     D:\WorkManager-test-data\t1-02-release-faults-v2                    
                                                                                                                        
                       
-INFO   precondition.current_identity               DESKTOP-U5GCI7T\13013                                               
+INFO   precondition.current_identity               <host>\<user>                                               
                                                                                                                        
                       
 PASS   precondition.icacls_available               C:\WINDOWS\System32\icacls.exe                                      
@@ -480,7 +480,7 @@ PASS   fault.db_directory.not_replaced_by_database work.db 目录内没有写入
 PASS   fault.acl_denied.exe_copy_sha256_matches    sha256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB
 7E8                                                                                                                    
                       
-PASS   fault.acl_denied.deny_applied               icacls /deny DESKTOP-U5GCI7T\13013:(W) 执行成功                         
+PASS   fault.acl_denied.deny_applied               icacls /deny <host>\<user>:(W) 执行成功                         
                                                                                                                        
                       
 PASS   fault.acl_denied.deny_enforced              ACL 实际阻止当前用户写入数据库目录（自检探测文件创建失败）                                     
@@ -507,7 +507,7 @@ PASS   fault.acl_denied.dialog_dismissed_cleanly   对话框关闭后应用自�
 INFO   fault.acl_denied.stderr_output              stderr（启动日志证据）=[WorkManager][fatal] 便携数据目录不可用，已停止启动。...             
                                                                                                                        
                       
-PASS   fault.acl_denied.deny_removed_in_finally    icacls /remove:d DESKTOP-U5GCI7T\13013 执行成功（finally 中恢复）            
+PASS   fault.acl_denied.deny_removed_in_finally    icacls /remove:d <host>\<user> 执行成功（finally 中恢复）            
                                                                                                                        
                       
 PASS   fault.acl_denied.write_restored             ACL 恢复后当前用户可正常写入数据库目录                                               

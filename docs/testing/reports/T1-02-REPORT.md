@@ -134,7 +134,7 @@ src/
 
 | 项目 | 值 |
 |---|---|
-| 操作系统 | Windows 10 19045（DESKTOP-U5GCI7T） |
+| 操作系统 | Windows 10 19045（<host>） |
 | Rust | rustc 1.100.0 / cargo 1.100.0 |
 | Node / npm | v22.20.0 / 10.9.3 |
 | PowerShell | Windows PowerShell 5.1.19041.6456 |

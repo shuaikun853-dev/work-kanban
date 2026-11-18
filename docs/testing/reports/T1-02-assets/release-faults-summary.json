@@ -17,9 +17,9 @@
                    "info":  9
                },
     "environment":  {
-                        "computer_name":  "DESKTOP-U5GCI7T",
-                        "user_name":  "13013",
-                        "user_identity":  "DESKTOP-U5GCI7T\\13013",
+                        "computer_name":  "<host>",
+                        "user_name":  "<user>",
+                        "user_identity":  "<host>\\<user>",
                         "powershell_version":  "5.1.19041.6456",
                         "powershell_edition":  "Desktop",
                         "os_version":  "Microsoft Windows NT 10.0.19045.0",
@@ -216,7 +216,7 @@
                    {
                        "name":  "precondition.current_identity",
                        "status":  "INFO",
-                       "detail":  "DESKTOP-U5GCI7T\\13013",
+                       "detail":  "<host>\\<user>",
                        "checked_at":  "2026-11-18T13:05:00.6244424+08:00"
                    },
                    {
@@ -540,7 +540,7 @@
                    {
                        "name":  "fault.acl_denied.deny_applied",
                        "status":  "PASS",
-                       "detail":  "icacls /deny DESKTOP-U5GCI7T\\13013:(W) 执行成功",
+                       "detail":  "icacls /deny <host>\\<user>:(W) 执行成功",
                        "checked_at":  "2026-11-18T13:05:08.0486677+08:00"
                    },
                    {
@@ -594,7 +594,7 @@
                    {
                        "name":  "fault.acl_denied.deny_removed_in_finally",
                        "status":  "PASS",
-                       "detail":  "icacls /remove:d DESKTOP-U5GCI7T\\13013 执行成功（finally 中恢复）",
+                       "detail":  "icacls /remove:d <host>\\<user> 执行成功（finally 中恢复）",
                        "checked_at":  "2026-11-18T13:05:09.6943604+08:00"
                    },
                    {
@@ -702,7 +702,7 @@
                              "case":  "fault-acl-denied",
                              "directory":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-acl-denied",
                              "database_directory":  "D:\\WorkManager-test-data\\t1-02-release-faults-v2\\fault-acl-denied\\data\\database",
-                             "denied_identity":  "DESKTOP-U5GCI7T\\13013",
+                             "denied_identity":  "<host>\\<user>",
                              "deny_applied":  true,
                              "deny_enforced":  true,
                              "deny_removed":  true,

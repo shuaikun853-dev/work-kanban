@@ -183,10 +183,10 @@ test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fin
 17ef647c7a0da46.exe)
 
 running 4 tests
-Junction created for D:\WorkManager-test-data\realpath-junction-ancestor-30740-0-1794978342208627600\app\link-ancestor <<===>> C:\Users\13013\AppData\Local\WorkManager-junction-test-30740-0-1794978342210421500
+Junction created for D:\WorkManager-test-data\realpath-junction-ancestor-30740-0-1794978342208627600\app\link-ancestor <<===>> C:\Users\<user>\AppData\Local\WorkManager-junction-test-30740-0-1794978342210421500
 test normal_d_drive_layout_passes_real_path_validation ... ok
 Junction created for D:\WorkManager-test-data\realpath-junction-same-volume-30740-3-1794978342208967000\link-within-d <<===>> D:\WorkManager-test-data\realpath-junction-same-volume-30740-3-1794978342208967000\real-target
-Junction created for D:\WorkManager-test-data\realpath-junction-c-attack-30740-1-1794978342208893800\app\portable-root-link <<===>> C:\Users\13013\AppData\Local\WorkManager-junction-test-30740-1-1794978342210799400
+Junction created for D:\WorkManager-test-data\realpath-junction-c-attack-30740-1-1794978342208893800\app\portable-root-link <<===>> C:\Users\<user>\AppData\Local\WorkManager-junction-test-30740-1-1794978342210799400
 test junction_above_exe_directory_is_rejected_via_ancestor_chain ... ok
 test junction_from_d_to_c_is_rejected_without_writing_c_drive ... ok
 test junction_within_d_drive_is_allowed_when_real_target_stays_on_d ... ok

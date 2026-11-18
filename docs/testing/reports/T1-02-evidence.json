@@ -24,7 +24,7 @@
     ]
   },
   "environment": {
-    "os": "Windows 10 19045 (DESKTOP-U5GCI7T)",
+    "os": "Windows 10 19045 (<host>)",
     "rustc": "1.100.0 (0ef1bc386 2026-11-09)",
     "cargo": "1.100.0 (3acc79c0c 2026-11-05)",
     "node": "v22.20.0",

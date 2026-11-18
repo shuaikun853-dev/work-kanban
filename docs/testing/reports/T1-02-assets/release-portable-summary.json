@@ -17,9 +17,9 @@
                    "info":  15
                },
     "environment":  {
-                        "computer_name":  "DESKTOP-U5GCI7T",
-                        "user_name":  "13013",
-                        "user_identity":  "DESKTOP-U5GCI7T\\13013",
+                        "computer_name":  "<host>",
+                        "user_name":  "<user>",
+                        "user_identity":  "<host>\\<user>",
                         "powershell_version":  "5.1.19041.6456",
                         "powershell_edition":  "Desktop",
                         "os_version":  "Microsoft Windows NT 10.0.19045.0",
@@ -790,19 +790,19 @@
                    {
                        "name":  "c_drive.LOCALAPPDATA_com.workmanager.portable",
                        "status":  "PASS",
-                       "detail":  "C 盘路径不存在（符合便携边界预期）：path=C:\\Users\\13013\\AppData\\Local\\com.workmanager.portable；exists=False",
+                       "detail":  "C 盘路径不存在（符合便携边界预期）：path=C:\\Users\\<user>\\AppData\\Local\\com.workmanager.portable；exists=False",
                        "checked_at":  "2026-11-18T13:04:59.9061794+08:00"
                    },
                    {
                        "name":  "c_drive.APPDATA_com.workmanager.portable",
                        "status":  "PASS",
-                       "detail":  "C 盘路径不存在（符合便携边界预期）：path=C:\\Users\\13013\\AppData\\Roaming\\com.workmanager.portable；exists=False",
+                       "detail":  "C 盘路径不存在（符合便携边界预期）：path=C:\\Users\\<user>\\AppData\\Roaming\\com.workmanager.portable；exists=False",
                        "checked_at":  "2026-11-18T13:04:59.9081798+08:00"
                    },
                    {
                        "name":  "c_drive.LOCALAPPDATA_EBWebView",
                        "status":  "WARN",
-                       "detail":  "C 盘路径在验证开始前已存在且相同时刻/条目未变化（非本次验证创建，需人工确认来源）：path=C:\\Users\\13013\\AppData\\Local\\EBWebView；exists=True；last_write_utc=2026-11-17T22:35:37.2504950Z；creation_time_utc=2024-07-15T07:29:20.1195506Z；top_level_entries=25",
+                       "detail":  "C 盘路径在验证开始前已存在且相同时刻/条目未变化（非本次验证创建，需人工确认来源）：path=C:\\Users\\<user>\\AppData\\Local\\EBWebView；exists=True；last_write_utc=2026-11-17T22:35:37.2504950Z；creation_time_utc=2024-07-15T07:29:20.1195506Z；top_level_entries=25",
                        "checked_at":  "2026-11-18T13:04:59.9121732+08:00"
                    }
                ],
@@ -825,7 +825,7 @@
                                             "locations":  [
                                                               {
                                                                   "name":  "LOCALAPPDATA\\com.workmanager.portable",
-                                                                  "path":  "C:\\Users\\13013\\AppData\\Local\\com.workmanager.portable",
+                                                                  "path":  "C:\\Users\\<user>\\AppData\\Local\\com.workmanager.portable",
                                                                   "exists":  false,
                                                                   "is_directory":  false,
                                                                   "creation_time_utc":  null,
@@ -834,7 +834,7 @@
                                                               },
                                                               {
                                                                   "name":  "APPDATA\\com.workmanager.portable",
-                                                                  "path":  "C:\\Users\\13013\\AppData\\Roaming\\com.workmanager.portable",
+                                                                  "path":  "C:\\Users\\<user>\\AppData\\Roaming\\com.workmanager.portable",
                                                                   "exists":  false,
                                                                   "is_directory":  false,
                                                                   "creation_time_utc":  null,
@@ -843,7 +843,7 @@
                                                               },
                                                               {
                                                                   "name":  "LOCALAPPDATA\\EBWebView",
-                                                                  "path":  "C:\\Users\\13013\\AppData\\Local\\EBWebView",
+                                                                  "path":  "C:\\Users\\<user>\\AppData\\Local\\EBWebView",
                                                                   "exists":  true,
                                                                   "is_directory":  true,
                                                                   "creation_time_utc":  "2024-07-15T07:29:20.1195506Z",
@@ -858,7 +858,7 @@
                                            "locations":  [
                                                              {
                                                                  "name":  "LOCALAPPDATA\\com.workmanager.portable",
-                                                                 "path":  "C:\\Users\\13013\\AppData\\Local\\com.workmanager.portable",
+                                                                 "path":  "C:\\Users\\<user>\\AppData\\Local\\com.workmanager.portable",
                                                                  "exists":  false,
                                                                  "is_directory":  false,
                                                                  "creation_time_utc":  null,
@@ -867,7 +867,7 @@
                                                              },
                                                              {
                                                                  "name":  "APPDATA\\com.workmanager.portable",
-                                                                 "path":  "C:\\Users\\13013\\AppData\\Roaming\\com.workmanager.portable",
+                                                                 "path":  "C:\\Users\\<user>\\AppData\\Roaming\\com.workmanager.portable",
                                                                  "exists":  false,
                                                                  "is_directory":  false,
                                                                  "creation_time_utc":  null,
@@ -876,7 +876,7 @@
                                                              },
                                                              {
                                                                  "name":  "LOCALAPPDATA\\EBWebView",
-                                                                 "path":  "C:\\Users\\13013\\AppData\\Local\\EBWebView",
+                                                                 "path":  "C:\\Users\\<user>\\AppData\\Local\\EBWebView",
                                                                  "exists":  true,
                                                                  "is_directory":  true,
                                                                  "creation_time_utc":  "2024-07-15T07:29:20.1195506Z",
