@@ -16,6 +16,10 @@
 //!   `VOLUME_NAME_NT`），而不是只比较 DOS 盘符；卷身份与 D 盘根卷不一致（SUBST、卷挂载点、
 //!   映射网络盘等）一律 fail-closed。路径校验与后续写入之间仍存在 TOCTOU 残余窗口，
 //!   句柄相对写入改造未在本任务完成，详见返工报告。
+//! - 审计 R3-01：D 盘根卷作为信任锚必须被独立验证：`GetVolumeNameForVolumeMountPointW`
+//!   必须成功且与根目录句柄卷 GUID 一致、`QueryDosDeviceW` 映射必须是真实 NT 设备卷
+//!   （拒绝 SUBST 的 `\??\...` 别名）、根卷不得与 C 盘为同一物理卷；任何一步失败
+//!   fail-closed 返回 `path-root-trust-anchor-invalid`。
 //!
 //! 本模块不依赖 Tauri，可被普通 `cargo test` 覆盖。
 
@@ -35,8 +39,9 @@ use windows_sys::Win32::{
     Foundation::{CloseHandle, ERROR_ACCESS_DENIED, HANDLE, INVALID_HANDLE_VALUE},
     Storage::FileSystem::{
         CreateFileW, FILE_FLAG_BACKUP_SEMANTICS, FILE_READ_ATTRIBUTES, FILE_SHARE_DELETE,
-        FILE_SHARE_READ, FILE_SHARE_WRITE, GetDriveTypeW, GetFinalPathNameByHandleW, OPEN_EXISTING,
-        VOLUME_NAME_DOS, VOLUME_NAME_GUID, VOLUME_NAME_NT,
+        FILE_SHARE_READ, FILE_SHARE_WRITE, GetDriveTypeW, GetFinalPathNameByHandleW,
+        GetVolumeNameForVolumeMountPointW, OPEN_EXISTING, QueryDosDeviceW, VOLUME_NAME_DOS,
+        VOLUME_NAME_GUID, VOLUME_NAME_NT,
     },
 };
 
@@ -83,6 +88,9 @@ pub mod error_codes {
     pub const PATH_REAL_TARGET_NOT_D: &str = "path-real-target-not-d";
     /// 真实最终路径不是本地盘符，或所在卷类型不允许（映射网络盘、光驱、内存盘等）。
     pub const PATH_NOT_LOCAL_VOLUME: &str = "path-not-local-volume";
+    /// 根卷信任锚验证失败：D 根不是真实卷挂载点、挂载点 GUID 与句柄 GUID 不一致、
+    /// DOS 设备映射是 SUBST/别名、或 D 根与 C 根为同一物理卷（审计 R3-01）。
+    pub const PATH_ROOT_TRUST_ANCHOR_INVALID: &str = "path-root-trust-anchor-invalid";
 }
 
 /// 运行模式。
@@ -856,23 +864,23 @@ fn resolve_real_final_path(path: &Path) -> Result<PathBuf, PortablePathError> {
 }
 
 // ---------------------------------------------------------------------------
-// 审计 R2-03：真实物理卷身份校验
+// 审计 R2-03 / R3-01：真实物理卷身份校验与根卷信任锚
 //
 // 只比较最终 DOS 盘符仍可能被别名欺骗（SUBST 驱动器、目录卷挂载点等）。这里用同一
 // Win32 句柄查询 `VOLUME_NAME_GUID` 与 `VOLUME_NAME_NT`，取得目标对象实际所在物理卷的
-// 身份，再与 `D:\` 根目录句柄的卷身份比较；不一致即 fail-closed。
+// 身份，再与 D 盘根卷身份比较；D 盘根卷自身还必须先通过独立信任锚验证（见下文 R3-01）。
 //
-// 评估过的 API 及取舍：
-// - `GetFinalPathNameByHandleW(VOLUME_NAME_GUID)`：主校验。直接返回句柄背后对象的卷
-//   GUID，由对象管理器解析别名，适用于 Junction/SUBST/挂载点；
-// - `GetFinalPathNameByHandleW(VOLUME_NAME_NT)`：备用校验。返回 `\Device\HarddiskVolumeN`
-//   设备路径，在卷 GUID 不可用时仍可比较同一物理卷；
-// - `GetVolumeNameForVolumeMountPointW`：可把盘符/挂载点转换为卷 GUID；本实现用
-//   `D:\` 句柄直接取身份更统一，该 API 仅在专项测试中做独立交叉核验；
-// - `GetVolumePathNameW`：返回路径所在挂载点（盘符根或挂载点目录）；不提供物理卷身份，
-//   已评估但不作为主校验；
-// - `QueryDosDeviceW`：把 `D:` 等 DOS 设备名翻译为 NT 目标；可用于识别 SUBST 映射，
-//   本实现在 SUBST 专项测试中用其记录映射目标作为证据。
+// 评估/使用的 API：
+// - `GetFinalPathNameByHandleW(VOLUME_NAME_GUID)`：返回句柄背后对象的卷 GUID，由对象
+//   管理器解析 Junction/SUBST/挂载点别名，是物理卷身份主证据；
+// - `GetFinalPathNameByHandleW(VOLUME_NAME_NT)`：返回 `\Device\HarddiskVolumeN`，
+//   作为备用/交叉校验；
+// - `GetVolumeNameForVolumeMountPointW`：生产信任锚校验使用。只有真实卷挂载点才成功；
+//   SUBST 盘符失败，可作为“D: 是真实卷挂载点”的独立证据；
+// - `QueryDosDeviceW`：生产信任锚校验使用。真实卷返回 `\Device\HarddiskVolumeN`；
+//   SUBST 返回 `\??\C:\...` DOS 路径别名，必须拒绝；
+// - `GetVolumePathNameW`：返回路径所在挂载点（盘符根或挂载点目录），不提供物理卷身份，
+//   已评估但不作为主校验。
 // ---------------------------------------------------------------------------
 
 /// 物理卷身份：卷 GUID 分量与 NT 设备卷分量（任一可用即可比较）。
@@ -943,10 +951,239 @@ fn volume_identity_for_path(path: &Path) -> Result<VolumeIdentity, PortablePathE
     volume_identity_for_handle(handle.0, path)
 }
 
-/// `D:\` 根目录的物理卷身份（从真实卷句柄取得，而不是从盘符字符串推断）。
+// ---------------------------------------------------------------------------
+// 审计 R3-01：根卷信任锚（默认 D:\）独立验证
+//
+// R2-03 只证明“目标目录与当前 D:\ 根目录句柄指向同一卷”，但参考卷身份本身没有被
+// 独立验证：如果 D: 是 SUBST 之类的 DOS 设备别名，这个参考锚点就不可信。本节新增生产
+// 校验，独立证明 D:\ 是真实的本地卷挂载点、且与 C 盘不是同一物理卷：
+// 1. GetVolumeNameForVolumeMountPointW("D:\\") 必须成功返回卷 GUID（SUBST 会失败）；
+// 2. D:\ 根目录句柄的 VOLUME_NAME_GUID 必须与挂载点 GUID 一致；
+// 3. QueryDosDeviceW("D:") 的映射目标必须是 \Device\HarddiskVolumeN 形式的 NT 设备卷，
+//    且与根目录句柄的 VOLUME_NAME_NT 一致（SUBST 返回 \??\C:\... 的 DOS 路径，拒绝）；
+// 4. D 根卷 GUID 不得与 C 根卷 GUID 相同（产品要求 D 盘独立于 C 盘存储）；
+// 5. 保留根卷类型白名单（GetDriveTypeW 固定盘/可移动盘）。
+//
+// 这些函数同时供测试注入候选根（例如真实 SUBST Q:）验证拒绝逻辑，避免“测试通过但
+// 生产未使用”。任何一步失败都返回 `path-root-trust-anchor-invalid` 并 fail-closed。
+// ---------------------------------------------------------------------------
+
+/// 根卷信任锚失败：统一错误码，消息包含失败原因与根路径。
+#[cfg(windows)]
+fn trust_anchor_error(root: &Path, detail: impl fmt::Display) -> PortablePathError {
+    PortablePathError::new(
+        error_codes::PATH_ROOT_TRUST_ANCHOR_INVALID,
+        format!(
+            "根卷信任锚验证失败：{detail}；根路径：{}。\
+             无法证明该盘符是独立的本地 D 盘卷，已停止启动，\
+             不会回退到 C 盘、AppData 或系统 Temp。",
+            root.display()
+        ),
+    )
+}
+
+/// 生产函数：把盘符根或卷挂载点目录转换为卷 GUID 路径（`\\?\Volume{GUID}`）。
+///
+/// `GetVolumeNameForVolumeMountPointW` 只对真实的卷挂载点成功；SUBST 等 DOS 设备别名
+/// 会失败（实测 `ERROR_INVALID_PARAMETER`），因此可直接作为“D: 是真实卷挂载点”的
+/// 独立证据（审计 R3-01）。
+#[cfg(windows)]
+fn volume_mount_point_guid(mount_point: &Path) -> Result<String, PortablePathError> {
+    let wide = to_wide_null(mount_point);
+    let mut buffer = vec![0u16; 1024];
+    // SAFETY: wide 以 NUL 结尾；buffer 可写且长度与传入值一致。
+    let ok = unsafe {
+        GetVolumeNameForVolumeMountPointW(wide.as_ptr(), buffer.as_mut_ptr(), buffer.len() as u32)
+    };
+    if ok == 0 {
+        return Err(trust_anchor_error(
+            mount_point,
+            format!(
+                "GetVolumeNameForVolumeMountPointW 失败（系统错误：{}），该路径不是真实的卷挂载点",
+                io::Error::last_os_error()
+            ),
+        ));
+    }
+    let length = buffer
+        .iter()
+        .position(|&value| value == 0)
+        .unwrap_or(buffer.len());
+    let text = String::from_utf16_lossy(&buffer[..length]);
+    volume_guid_component(Path::new(&text)).ok_or_else(|| {
+        trust_anchor_error(
+            mount_point,
+            format!("卷挂载点 API 返回的卷名不是卷 GUID 路径：{text}"),
+        )
+    })
+}
+
+/// 生产函数：把 MS-DOS 设备名（如 `D:`）翻译为 NT 目标路径。
+///
+/// 真实卷挂载点返回 `\Device\HarddiskVolumeN`；SUBST 返回 `\??\C:\...` 形式的 DOS
+/// 路径别名（审计 R3-01）。
+#[cfg(windows)]
+fn query_dos_device_target(device: &str) -> Result<String, PortablePathError> {
+    let wide = to_wide_null(Path::new(device));
+    let mut buffer = vec![0u16; 4096];
+    // SAFETY: wide 以 NUL 结尾；buffer 可写且长度与传入值一致。
+    let length =
+        unsafe { QueryDosDeviceW(wide.as_ptr(), buffer.as_mut_ptr(), buffer.len() as u32) };
+    if length == 0 {
+        return Err(trust_anchor_error(
+            Path::new(device),
+            format!(
+                "QueryDosDeviceW 失败（系统错误：{}）",
+                io::Error::last_os_error()
+            ),
+        ));
+    }
+    // 返回值是 NUL 分隔的多字符串列表；取第一个目标即可。
+    let text = String::from_utf16_lossy(&buffer[..length as usize]);
+    text.split('\0')
+        .find(|segment| !segment.is_empty())
+        .map(str::to_string)
+        .ok_or_else(|| trust_anchor_error(Path::new(device), "QueryDosDeviceW 返回空映射"))
+}
+
+/// 纯校验：根卷挂载点 GUID 必须与根目录句柄的 `VOLUME_NAME_GUID` 一致。
+#[cfg(windows)]
+fn ensure_mount_point_guid_matches_handle(
+    mount_point_guid: &str,
+    identity: &VolumeIdentity,
+    root: &Path,
+) -> Result<(), PortablePathError> {
+    let handle_guid = identity
+        .volume_guid
+        .as_deref()
+        .ok_or_else(|| trust_anchor_error(root, "无法从根目录句柄取得 VOLUME_NAME_GUID 卷身份"))?;
+    if !mount_point_guid.eq_ignore_ascii_case(handle_guid) {
+        return Err(trust_anchor_error(
+            root,
+            format!(
+                "卷挂载点 GUID（{mount_point_guid}）与根目录句柄 GUID（{handle_guid}）不一致，\
+                 根卷身份存在歧义"
+            ),
+        ));
+    }
+    Ok(())
+}
+
+/// 纯校验：`QueryDosDeviceW` 的映射目标必须是 NT 设备卷路径，且与根目录句柄的
+/// `VOLUME_NAME_NT` 设备卷身份一致。
+///
+/// SUBST 的映射目标形如 `\??\C:\...`（DOS 路径别名），不是独立设备卷，必须拒绝。
+#[cfg(windows)]
+fn ensure_dos_device_maps_to_volume(
+    device_target: &str,
+    identity: &VolumeIdentity,
+    root: &Path,
+) -> Result<(), PortablePathError> {
+    let Some(mapped_device) = nt_device_component(Path::new(device_target)) else {
+        return Err(trust_anchor_error(
+            root,
+            format!(
+                "DOS 设备映射目标不是 NT 设备卷路径（可能是 SUBST/DOS 设备别名）：{device_target}"
+            ),
+        ));
+    };
+    let expected_device = identity.nt_device.as_deref().ok_or_else(|| {
+        trust_anchor_error(root, "无法从根目录句柄取得 VOLUME_NAME_NT 设备卷身份")
+    })?;
+    if mapped_device != expected_device {
+        return Err(trust_anchor_error(
+            root,
+            format!(
+                "DOS 设备映射目标（{mapped_device}）与根目录句柄设备卷身份（{expected_device}）不一致"
+            ),
+        ));
+    }
+    Ok(())
+}
+
+/// 纯校验：根卷不得与 C 盘根卷是同一物理卷（D 盘必须独立于 C 盘存储）。
+#[cfg(windows)]
+fn ensure_root_volume_differs_from_c(
+    root_mount_point_guid: &str,
+    c_mount_point_guid: &str,
+    root: &Path,
+) -> Result<(), PortablePathError> {
+    if root_mount_point_guid.eq_ignore_ascii_case(c_mount_point_guid) {
+        return Err(trust_anchor_error(
+            root,
+            format!(
+                "根卷与 C 盘根卷是同一物理卷（卷 GUID：{root_mount_point_guid}），\
+                 不满足数据必须位于独立 D 盘卷的要求"
+            ),
+        ));
+    }
+    Ok(())
+}
+
+/// 独立验证候选根卷（生产默认 `D:\`）是否是可信的真实本地卷挂载点。
+///
+/// 成功时返回根目录句柄的物理卷身份，供目标路径卷身份比较使用。
+/// 该函数接收可注入的根路径：生产固定传 `D:\`，测试可用真实 SUBST 盘符等候选根验证
+/// 拒绝逻辑（审计 R3-01）。
+#[cfg(windows)]
+fn verify_root_volume_trust(root: &Path) -> Result<VolumeIdentity, PortablePathError> {
+    if !root.is_absolute() {
+        return Err(trust_anchor_error(root, "根路径不是绝对路径"));
+    }
+    let Some(drive_letter) = drive_letter_of_local_path(root) else {
+        return Err(trust_anchor_error(root, "根路径不是本地盘符路径"));
+    };
+    // 信任锚必须是盘符根目录（例如 `D:\`），不接受任意子目录。
+    let mut components = root.components();
+    let is_drive_root = matches!(components.next(), Some(Component::Prefix(_)))
+        && matches!(components.next(), Some(Component::RootDir))
+        && components.next().is_none();
+    if !is_drive_root {
+        return Err(trust_anchor_error(
+            root,
+            "信任锚路径必须是盘符根目录（例如 D:\\）",
+        ));
+    }
+
+    // 1) 保留原有卷类型白名单：必须是本地固定盘或可移动盘。
+    let drive_type = query_drive_type(drive_letter);
+    if !is_allowed_volume_type(drive_type) {
+        return Err(trust_anchor_error(
+            root,
+            format!(
+                "根卷类型不在白名单（GetDriveTypeW={drive_type}；DRIVE_REMOTE=4 表示映射网络盘）"
+            ),
+        ));
+    }
+
+    // 2) 独立卷挂载点 GUID：SUBST/DOS 设备别名会在此失败。
+    let mount_point_guid = volume_mount_point_guid(root)?;
+
+    // 3) 根目录句柄身份必须与挂载点 GUID 一致。
+    let identity = volume_identity_for_path(root)
+        .map_err(|error| trust_anchor_error(root, format!("无法解析根目录句柄卷身份：{error}")))?;
+    ensure_mount_point_guid_matches_handle(&mount_point_guid, &identity, root)?;
+
+    // 4) DOS 设备映射必须是真实 NT 设备卷，而不是 SUBST 的 `\??\...` 路径别名。
+    let device_name = format!("{drive_letter}:");
+    let device_target = query_dos_device_target(&device_name)?;
+    ensure_dos_device_maps_to_volume(&device_target, &identity, root)?;
+
+    // 5) 根卷不得与 C 盘根卷是同一物理卷。
+    let c_mount_point_guid = volume_mount_point_guid(Path::new(r"C:\")).map_err(|error| {
+        trust_anchor_error(
+            root,
+            format!("无法解析 C 盘根卷身份，不能证明根卷独立于 C 盘：{error}"),
+        )
+    })?;
+    ensure_root_volume_differs_from_c(&mount_point_guid, &c_mount_point_guid, root)?;
+
+    Ok(identity)
+}
+
+/// `D:\` 根目录的物理卷身份：必须通过独立的根卷信任锚验证（审计 R3-01）。
 #[cfg(windows)]
 fn d_drive_volume_identity() -> Result<VolumeIdentity, PortablePathError> {
-    volume_identity_for_path(Path::new(r"D:\"))
+    verify_root_volume_trust(Path::new(r"D:\"))
 }
 
 /// 两个物理卷身份是否指向同一卷：优先比较卷 GUID；GUID 不可用时退回 NT 设备卷比较。
@@ -961,7 +1198,11 @@ fn volume_identities_match(left: &VolumeIdentity, right: &VolumeIdentity) -> boo
     false
 }
 
-/// 要求目标路径所在物理卷与 D 盘根卷一致（审计 R2-03）。
+/// 要求目标路径所在物理卷与 D 盘根卷一致（审计 R2-03 + R3-01）。
+///
+/// D 盘根卷身份来自 [`verify_root_volume_trust`]：在生产路径上必须通过独立信任锚验证
+/// （真实卷挂载点、挂载点/句柄 GUID 一致、DOS 设备映射为真实 NT 设备卷、独立于 C 盘）。
+/// 信任锚失败时原样返回 `path-root-trust-anchor-invalid`，不会继续比较或写入。
 #[cfg(windows)]
 fn ensure_volume_is_d_volume(
     real_path: &Path,
@@ -969,12 +1210,7 @@ fn ensure_volume_is_d_volume(
     original_path: &Path,
     label: &str,
 ) -> Result<(), PortablePathError> {
-    let d_drive_volume = d_drive_volume_identity().map_err(|_| {
-        real_location_unavailable(
-            Path::new(r"D:\"),
-            "无法解析 D 盘根目录的物理卷身份，无法证明数据落在 D 盘",
-        )
-    })?;
+    let d_drive_volume = d_drive_volume_identity()?;
     if volume_identities_match(volume, &d_drive_volume) {
         return Ok(());
     }
@@ -1025,10 +1261,12 @@ fn is_allowed_volume_type(drive_type: u32) -> bool {
 /// 且仍是 D 盘本地固定盘或可移动盘。
 ///
 /// 调用方必须保证 `path` 已存在；不存在时返回 `path-real-location-unavailable`。
-/// 步骤（审计 P1 + R2-03）：
+/// 步骤（审计 P1 + R2-03 + R3-01）：
+/// 0. 独立验证 D 盘根卷信任锚（真实卷挂载点、挂载点/句柄 GUID 一致、QueryDosDevice 映射
+///    为真实 NT 设备卷、根卷独立于 C 盘）；失败返回 `path-root-trust-anchor-invalid`；
 /// 1. 用句柄解析真实最终 DOS 路径（展开完整祖先链上的 Junction/符号链接/挂载点）；
-/// 2. 用同一句柄取卷 GUID / NT 设备卷身份，与 `D:\` 根卷身份比较；不一致即拒绝
-///    （SUBST、目录卷挂载点、D→C 别名等）；
+/// 2. 用同一句柄取卷 GUID / NT 设备卷身份，与已通过信任锚验证的 D 盘根卷身份比较；
+///    不一致即拒绝（SUBST、目录卷挂载点、D→C 别名等）；
 /// 3. 最终 DOS 路径必须仍是 D 盘本地盘符；
 /// 4. 盘符卷类型必须是本地固定盘或可移动盘（拒绝映射网络盘/光驱/内存盘）。
 #[cfg(windows)]
@@ -1371,54 +1609,11 @@ mod tests {
     }
 
     // -----------------------------------------------------------------------
-    // 审计 R2-03：真实物理卷身份（卷 GUID / NT 设备卷）
+    // 审计 R2-03 / R3-01：真实物理卷身份与根卷信任锚
+    //
+    // 生产函数 `volume_mount_point_guid()` / `query_dos_device_target()` 由测试直接调用，
+    // 保证“测试验证的检查就是生产路径真正使用的检查”。
     // -----------------------------------------------------------------------
-
-    /// `GetVolumeNameForVolumeMountPointW` 独立 API：把盘符卷挂载点转换为卷 GUID 路径。
-    #[cfg(windows)]
-    fn mount_point_volume_guid(root: &Path) -> Option<String> {
-        use windows_sys::Win32::Storage::FileSystem::GetVolumeNameForVolumeMountPointW;
-
-        let wide = to_wide_null(root);
-        let mut buffer = vec![0u16; 1024];
-        // SAFETY: wide 以 NUL 结尾；buffer 可写且长度与传入值一致。
-        let ok = unsafe {
-            GetVolumeNameForVolumeMountPointW(
-                wide.as_ptr(),
-                buffer.as_mut_ptr(),
-                buffer.len() as u32,
-            )
-        };
-        if ok == 0 {
-            return None;
-        }
-        let length = buffer
-            .iter()
-            .position(|&value| value == 0)
-            .unwrap_or(buffer.len());
-        let text = String::from_utf16_lossy(&buffer[..length]);
-        volume_guid_component(Path::new(&text))
-    }
-
-    /// `QueryDosDeviceW`：把 DOS 设备名（如 `Q:`）翻译为 NT 目标路径（SUBST 证据）。
-    #[cfg(windows)]
-    fn query_dos_device_target(device: &str) -> Option<String> {
-        use windows_sys::Win32::Storage::FileSystem::QueryDosDeviceW;
-
-        let wide = to_wide_null(Path::new(device));
-        let mut buffer = vec![0u16; 4096];
-        // SAFETY: wide 以 NUL 结尾；buffer 可写且长度与传入值一致。
-        let length =
-            unsafe { QueryDosDeviceW(wide.as_ptr(), buffer.as_mut_ptr(), buffer.len() as u32) };
-        if length == 0 {
-            return None;
-        }
-        // 返回值是 NUL 分隔的多字符串列表；取第一个目标即可。
-        let text = String::from_utf16_lossy(&buffer[..length as usize]);
-        text.split('\0')
-            .find(|segment| !segment.is_empty())
-            .map(str::to_string)
-    }
 
     /// 子进程级 SUBST 夹具：把空闲盘符映射到 C 盘测试目录；Drop 时删除映射与测试目录。
     ///
@@ -1498,7 +1693,7 @@ mod tests {
             .volume_guid
             .clone()
             .expect("D 盘根卷必须能取得卷 GUID（VOLUME_NAME_GUID）");
-        let api_guid = mount_point_volume_guid(Path::new(r"D:\"))
+        let api_guid = volume_mount_point_guid(Path::new(r"D:\"))
             .expect("GetVolumeNameForVolumeMountPointW(D:\\) 应成功");
         println!("[r2-03] D:\\ handle(VOLUME_NAME_GUID) = {handle_guid}");
         println!("[r2-03] D:\\ GetVolumeNameForVolumeMountPointW = {api_guid}");
@@ -1518,11 +1713,18 @@ mod tests {
         println!("[r2-03] PASS：D 盘卷身份由两个独立 Win32 API 交叉确认，非盘符字符串推断");
     }
 
+    /// 串行化使用 SUBST 盘符的测试：同一测试进程内并行运行会争抢空闲盘符。
+    #[cfg(windows)]
+    static SUBST_DRIVE_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
     /// R2-03：SUBST 驱动器（DOS 设备别名）指向非 D 盘卷时，句柄卷身份必须识别为 C 盘卷，
     /// 并且真实存储校验必须 fail-closed。
     #[cfg(windows)]
     #[test]
     fn subst_drive_to_c_volume_is_detected_by_handle_volume_identity() {
+        let _serial = SUBST_DRIVE_TEST_LOCK
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let fixture = SubstFixture::new();
         let subst_root = PathBuf::from(format!("{}:\\", fixture.letter));
         let probe = subst_root.join("r2-03-subst-probe.txt");
@@ -1555,20 +1757,23 @@ mod tests {
         );
 
         // QueryDosDeviceW 证据：SUBST 是 DOS 设备层别名，而不是卷挂载点。
-        let dos_device = query_dos_device_target(&format!("{}:", fixture.letter));
+        let dos_device = query_dos_device_target(&format!("{}:", fixture.letter))
+            .expect("QueryDosDeviceW 应返回 SUBST 映射目标");
         println!(
             "[r2-03] QueryDosDeviceW({}:) = {:?}",
             fixture.letter, dos_device
         );
-        assert!(
-            dos_device.is_some(),
-            "QueryDosDeviceW 应返回 SUBST 映射目标"
-        );
         // GetVolumeNameForVolumeMountPointW 期望卷挂载点；SUBST 盘符不是卷挂载点。
-        let mount_point_guid = mount_point_volume_guid(&subst_root);
+        let mount_point_error = volume_mount_point_guid(&subst_root)
+            .expect_err("SUBST 盘符不是卷挂载点，挂载点 API 必须失败");
         println!(
-            "[r2-03] GetVolumeNameForVolumeMountPointW({}:) = {:?}",
-            fixture.letter, mount_point_guid
+            "[r2-03] GetVolumeNameForVolumeMountPointW({}:) -> code = {}",
+            fixture.letter,
+            mount_point_error.code()
+        );
+        assert_eq!(
+            mount_point_error.code(),
+            error_codes::PATH_ROOT_TRUST_ANCHOR_INVALID
         );
 
         // 真实存储校验必须 fail-closed（物理卷不是 D 盘卷）。
@@ -1595,5 +1800,263 @@ mod tests {
 
         fs::remove_file(&probe).expect("删除 SUBST 测试探针");
         println!("[r2-03] PASS：SUBST 卷别名被物理卷身份识别并 fail-closed；映射与测试探针已清理");
+    }
+
+    // -----------------------------------------------------------------------
+    // 审计 R3-01：根卷信任锚独立验证
+    // -----------------------------------------------------------------------
+
+    /// 构造测试用卷身份（仅用于注入错误/不一致场景，不代表真实 API 结果）。
+    #[cfg(windows)]
+    fn synthetic_volume_identity(guid: &str, nt_device: &str) -> VolumeIdentity {
+        VolumeIdentity {
+            volume_guid: Some(guid.to_string()),
+            nt_device: Some(nt_device.to_string()),
+        }
+    }
+
+    /// R3-01 正常场景：真实 D 盘是独立的本地卷挂载点，两条独立证据链一致且与 C 盘不同卷。
+    #[cfg(windows)]
+    #[test]
+    fn r3_01_trust_anchor_passes_for_real_d_drive_and_differs_from_c() {
+        // 生产信任锚函数（目标路径卷身份比较实际使用的同一函数）。
+        let identity =
+            verify_root_volume_trust(Path::new(r"D:\")).expect("真实 D 盘根卷必须通过信任锚验证");
+        let mount_point_guid = volume_mount_point_guid(Path::new(r"D:\"))
+            .expect("GetVolumeNameForVolumeMountPointW(D:\\) 必须成功");
+        let dos_device_target =
+            query_dos_device_target("D:").expect("QueryDosDeviceW(D:) 必须返回 NT 设备映射");
+        let drive_type = query_drive_type('D');
+        let c_mount_point_guid =
+            volume_mount_point_guid(Path::new(r"C:\")).expect("C 盘根卷身份必须可解析");
+
+        println!("[r3-01] D:\\ mount-point GUID = {mount_point_guid}");
+        println!(
+            "[r3-01] D:\\ handle(VOLUME_NAME_GUID) = {:?}",
+            identity.volume_guid
+        );
+        println!(
+            "[r3-01] D:\\ handle(VOLUME_NAME_NT) = {:?}",
+            identity.nt_device
+        );
+        println!("[r3-01] QueryDosDeviceW(D:) = {dos_device_target}");
+        println!("[r3-01] D:\\ GetDriveTypeW = {drive_type}");
+        println!("[r3-01] C:\\ mount-point GUID = {c_mount_point_guid}");
+
+        assert_eq!(
+            identity.volume_guid.as_deref(),
+            Some(mount_point_guid.as_str()),
+            "D 根句柄 GUID 必须与独立卷挂载点 API 一致"
+        );
+        assert!(
+            dos_device_target.starts_with(r"\Device\"),
+            "真实 D 盘的 DOS 设备映射必须是 NT 设备路径，实际：{dos_device_target}"
+        );
+        ensure_dos_device_maps_to_volume(&dos_device_target, &identity, Path::new(r"D:\"))
+            .expect("真实 D 盘的 DOS 设备映射必须与根卷 NT 设备身份一致");
+        assert!(
+            is_allowed_volume_type(drive_type),
+            "D 盘卷类型必须属于本地固定盘/可移动盘白名单：{drive_type}"
+        );
+        assert_ne!(
+            mount_point_guid, c_mount_point_guid,
+            "真实 D 盘必须与 C 盘是不同物理卷"
+        );
+        ensure_root_volume_differs_from_c(
+            &mount_point_guid,
+            &c_mount_point_guid,
+            Path::new(r"D:\"),
+        )
+        .expect("真实 D 盘与 C 盘不同卷，信任锚应允许");
+
+        // 生产路径：普通 D 盘路径通过 validate_real_storage_path（内部调用信任锚）。
+        validate_real_storage_path(Path::new(r"D:\WorkManager-test-data"), "D 盘测试根目录")
+            .expect("真实 D 盘路径必须通过生产校验");
+        println!(
+            "[r3-01] PASS：D 根卷信任锚由挂载点 API、句柄 GUID/NT、QueryDosDevice 与 D/C 卷比较独立验证"
+        );
+    }
+
+    /// R3-01 负向实机场景：真实 SUBST 盘符作为候选信任锚必须在信任锚阶段被拒绝，
+    /// 且 QueryDosDevice 的 `\??\...` 别名映射被生产分类函数拒绝。
+    #[cfg(windows)]
+    #[test]
+    fn r3_01_trust_anchor_rejects_real_subst_candidate_root() {
+        let _serial = SUBST_DRIVE_TEST_LOCK
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let fixture = SubstFixture::new();
+        let subst_root = PathBuf::from(format!("{}:\\", fixture.letter));
+
+        // 生产信任锚函数直接拒绝 SUBST 候选根（不是靠目标路径最终盘符检查碰巧拒绝）。
+        let trust_error =
+            verify_root_volume_trust(&subst_root).expect_err("SUBST 盘符不能作为可信根卷");
+        println!(
+            "[r3-01] verify_root_volume_trust({}:) -> code = {}",
+            fixture.letter,
+            trust_error.code()
+        );
+        println!("[r3-01] message = {trust_error}");
+        assert_eq!(
+            trust_error.code(),
+            error_codes::PATH_ROOT_TRUST_ANCHOR_INVALID,
+            "SUBST 候选根必须返回 path-root-trust-anchor-invalid：{trust_error}"
+        );
+        assert!(
+            trust_error
+                .to_string()
+                .contains("GetVolumeNameForVolumeMountPointW"),
+            "SUBST 候选根应在挂载点 GUID 校验阶段失败：{trust_error}"
+        );
+
+        // QueryDosDevice 实机行为：SUBST 返回 `\??\...` DOS 路径别名，生产分类函数拒绝。
+        let dos_device_target = query_dos_device_target(&format!("{}:", fixture.letter))
+            .expect("QueryDosDeviceW 应返回 SUBST 映射目标");
+        println!(
+            "[r3-01] QueryDosDeviceW({}:) = {dos_device_target}",
+            fixture.letter
+        );
+        assert!(
+            dos_device_target.starts_with(r"\??\"),
+            "SUBST 的 DOS 设备映射应是 \\??\\ 路径别名，实际：{dos_device_target}"
+        );
+        let d_identity = d_drive_volume_identity().expect("D 盘根卷身份");
+        let dos_error =
+            ensure_dos_device_maps_to_volume(&dos_device_target, &d_identity, &subst_root)
+                .expect_err("SUBST 的 DOS 路径别名必须被生产分类函数拒绝");
+        println!(
+            "[r3-01] ensure_dos_device_maps_to_volume(SUBST) -> code = {}",
+            dos_error.code()
+        );
+        assert_eq!(
+            dos_error.code(),
+            error_codes::PATH_ROOT_TRUST_ANCHOR_INVALID
+        );
+
+        println!("[r3-01] PASS：真实 SUBST 候选根在信任锚阶段被拒绝；DOS 设备别名分类拒绝生效");
+    }
+
+    /// R3-01 注入模拟①：挂载点 GUID 与根目录句柄 GUID 不一致必须拒绝。
+    #[cfg(windows)]
+    #[test]
+    fn r3_01_trust_anchor_rejects_mount_point_guid_mismatch() {
+        let root = Path::new(r"D:\");
+        let identity = synthetic_volume_identity(
+            r"\\?\volume{11111111-1111-1111-1111-111111111111}",
+            r"\device\harddiskvolume4",
+        );
+        let mismatch = ensure_mount_point_guid_matches_handle(
+            r"\\?\volume{22222222-2222-2222-2222-222222222222}",
+            &identity,
+            root,
+        )
+        .expect_err("挂载点 GUID 与句柄 GUID 不一致必须拒绝");
+        println!(
+            "[r3-01] injected GUID mismatch -> code = {}",
+            mismatch.code()
+        );
+        assert_eq!(mismatch.code(), error_codes::PATH_ROOT_TRUST_ANCHOR_INVALID);
+
+        // 注入模拟：两者一致时通过（不代表真实实机结果）。
+        ensure_mount_point_guid_matches_handle(
+            r"\\?\volume{11111111-1111-1111-1111-111111111111}",
+            &identity,
+            root,
+        )
+        .expect("注入的相同 GUID 必须通过纯校验");
+        println!("[r3-01] PASS（注入模拟）：GUID 不一致拒绝、一致允许；非真实实机场景");
+    }
+
+    /// R3-01 注入模拟②：D 根与 C 根 GUID 相同必须拒绝（真实同卷环境未在本机构造）。
+    #[cfg(windows)]
+    #[test]
+    fn r3_01_trust_anchor_rejects_d_root_same_volume_as_c() {
+        let root = Path::new(r"D:\");
+        let same = r"\\?\volume{33333333-3333-3333-3333-333333333333}";
+        let error = ensure_root_volume_differs_from_c(same, same, root)
+            .expect_err("D 根与 C 根同一物理卷必须拒绝");
+        println!("[r3-01] injected D == C -> code = {}", error.code());
+        assert_eq!(error.code(), error_codes::PATH_ROOT_TRUST_ANCHOR_INVALID);
+
+        ensure_root_volume_differs_from_c(
+            r"\\?\volume{44444444-4444-4444-4444-444444444444}",
+            r"\\?\volume{55555555-5555-5555-5555-555555555555}",
+            root,
+        )
+        .expect("不同卷 GUID 必须通过纯校验");
+        println!("[r3-01] PASS（注入模拟）：D 与 C 同卷拒绝、不同卷允许；非真实实机场景");
+    }
+
+    /// R3-01 注入模拟③ + 实机：DOS 设备别名/设备不一致必须拒绝。
+    #[cfg(windows)]
+    #[test]
+    fn r3_01_trust_anchor_rejects_dos_device_alias_and_device_mismatch() {
+        let root = Path::new(r"D:\");
+        let d_identity = d_drive_volume_identity().expect("D 盘根卷身份");
+
+        // 注入模拟：SUBST 风格的 DOS 路径别名。
+        let alias_error =
+            ensure_dos_device_maps_to_volume(r"\??\C:\Users\Public", &d_identity, root)
+                .expect_err("DOS 路径别名必须被拒绝");
+        println!(
+            "[r3-01] injected DOS alias -> code = {}",
+            alias_error.code()
+        );
+        assert_eq!(
+            alias_error.code(),
+            error_codes::PATH_ROOT_TRUST_ANCHOR_INVALID
+        );
+
+        // 注入模拟：映射到其他 NT 设备卷。
+        let mismatch_error =
+            ensure_dos_device_maps_to_volume(r"\Device\HarddiskVolume99", &d_identity, root)
+                .expect_err("DOS 设备映射与根卷身份不一致必须拒绝");
+        assert_eq!(
+            mismatch_error.code(),
+            error_codes::PATH_ROOT_TRUST_ANCHOR_INVALID
+        );
+
+        // 实机：真实 D 盘的 QueryDosDevice 映射必须通过分类校验。
+        let real_target = query_dos_device_target("D:").expect("QueryDosDeviceW(D:)");
+        ensure_dos_device_maps_to_volume(&real_target, &d_identity, root)
+            .expect("真实 D 盘 DOS 设备映射必须通过");
+        println!(
+            "[r3-01] PASS：注入 DOS 别名/设备不一致拒绝；真实 D 盘映射允许（实机 API 证据 {real_target}）"
+        );
+    }
+
+    /// R3-01 fail-closed：根卷身份 API 不可用/路径不是真实卷挂载点时必须拒绝启动。
+    #[cfg(windows)]
+    #[test]
+    fn r3_01_trust_anchor_fails_closed_on_api_unavailable() {
+        // 真实 API 行为：普通子目录不是卷挂载点，GetVolumeNameForVolumeMountPointW 失败。
+        let mount_point_error = volume_mount_point_guid(Path::new(r"D:\WorkManager-test-data"))
+            .expect_err("普通目录不是卷挂载点，挂载点 API 必须失败");
+        println!(
+            "[r3-01] volume_mount_point_guid(普通目录) -> code = {}",
+            mount_point_error.code()
+        );
+        assert_eq!(
+            mount_point_error.code(),
+            error_codes::PATH_ROOT_TRUST_ANCHOR_INVALID
+        );
+
+        // 信任锚要求盘符根目录：普通子目录直接拒绝。
+        let non_root_error = verify_root_volume_trust(Path::new(r"D:\WorkManager-test-data"))
+            .expect_err("非盘符根目录不能作为信任锚");
+        assert_eq!(
+            non_root_error.code(),
+            error_codes::PATH_ROOT_TRUST_ANCHOR_INVALID
+        );
+
+        // 非本地盘符路径（UNC）不能作为信任锚。
+        let unc_error = verify_root_volume_trust(Path::new(r"\\server\share\"))
+            .expect_err("UNC 路径不能作为信任锚");
+        assert_eq!(
+            unc_error.code(),
+            error_codes::PATH_ROOT_TRUST_ANCHOR_INVALID
+        );
+
+        println!("[r3-01] PASS：挂载点 API 失败与非法信任锚路径均 fail-closed");
     }
 }
