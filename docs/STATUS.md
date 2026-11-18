@@ -4,7 +4,7 @@
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **最近完成任务：** T1-01 正式工程骨架与 SQLite 基础设施（用户验收完成）  
 **下一候选任务：** T1-02 项目创建、编辑、归档（尚未开始，等待单独启动指示）  
-**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 的 R3-01（P1）与 R3-02（P2）已修复，第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。TOCTOU 按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复，不作绝对 C 盘写入保证。分支 `task/T1-01-sqlite-foundation`；PR #1 保持打开、未合并；main 未修改；T1-02 未开始。
+**总体状态：** 阶段 0 已放行；阶段 1 已启动。T1-01 的 R3-01（P1）与 R3-02（P2）已修复，第四轮独立审计通过，用户于 2026-11-18 明确验收，**T1-01 验收完成**。用户同日确认 UI 原型与前端架构基线（DEC-030），文档已建立，业务 UI 尚未实现。TOCTOU 按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复，不作绝对 C 盘写入保证。分支 `task/T1-01-sqlite-foundation`；PR #1 保持打开、未合并；main 未修改；T1-02 未开始。
 
 ## 最新产品决策
 
@@ -17,6 +17,14 @@
 - 接受普通 SQLite 文件可被拥有文件访问权限的人直接读取的风险。
 
 2026-11-18，用户确认 DEC-029：接受当前路径校验与后续路径字符串写入之间的 TOCTOU 残余风险，T1-01 不实施完整句柄相对改造/custom SQLite VFS；该风险转入[独立安全加固 Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)。风险未修复，程序不得宣称绝对不会写入 C 盘；禁止静默回退 C 盘和已检测违规 fail-closed 规则不变。R3-01/R3-02 已经修复并通过第四轮独立审计；用户于 2026-11-18 明确验收 T1-01。
+
+## UI 设计基线（DEC-030，2026-11-18）
+
+- 用户已确认简洁 Apple 风格、Windows 原生桌面 UI 原型；以工作总览和今日工作作为两个核心页面。
+- 设计规范：[UI 设计规范](design/UI-DESIGN-SPEC.md)；原型图：[workmanager-ui-prototype.svg](design/assets/workmanager-ui-prototype.svg)。
+- 首页优先展示今日要做、今日已完成、当前工作；复盘与待跟进降为次级信息；禁止堆叠统计图表和无关指标。
+- 前端组件分层、Design Tokens、typed Bridge、CSS 隔离和 UI 回归规则已写入 UI 规范、技术架构和 AGENTS.md。
+- **当前仅完成设计文档；UI 业务代码未开始。** T1-02 仍等待单独启动指示。
 
 ## 阶段 0：技术验证
 

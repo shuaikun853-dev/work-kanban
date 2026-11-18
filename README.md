@@ -9,6 +9,7 @@ Windows 本地工作管理软件（绿色便携版）。当前进度：**T1-01 �
 - [已确认决策记录](docs/decisions/DECISIONS.md)
 - [开发计划书](docs/development/DEVELOPMENT_PLAN.md)
 - [开发状态](docs/STATUS.md)
+- [UI 设计规范与原型图](docs/design/UI-DESIGN-SPEC.md)
 - [开发与协作规范](AGENTS.md)
 - [T1-01 测试报告](docs/testing/reports/T1-01-REPORT.md)
 

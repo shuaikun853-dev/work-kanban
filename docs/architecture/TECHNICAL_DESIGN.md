@@ -1,6 +1,6 @@
 # WorkManager 技术架构设计说明书
 
-**版本：** V0.4.0（普通 SQLite 决策版）\
+**版本：** V0.4.1（普通 SQLite 决策版 + UI 架构基线）\
 **状态：** 开发设计基线（2026-11-17 已取消应用密码、SQLCipher 和 DPAPI；备份策略仍待确认）\
 **基线：**《WorkManager — Windows 本地工作管理软件 PRD V0.3（普通 SQLite 决策版）》\
 **目标平台：** Windows 10（建议最低版本 Windows 10 1803）\
@@ -26,8 +26,9 @@ Modules、ADR、Research、TDD、Vertical Slices）
 6. **数据存储策略：** 第一版采用普通 SQLite，不实现六位数字应用密码、应用锁屏、SQLCipher 或 DPAPI；接受数据库文件未加密的风险。
 7. **开源边界：** 项目采用完全自研方式；可以研究开源项目的架构和交互，但不复制、移植其源代码。
 8. **本地数据边界：** 工作数据、数据库、缓存、日志、临时文件及 WebView2 用户数据均放在 D 盘便携目录，不上传云端；不得静默写入 C 盘。
+9. **UI 原型与前端分层：** 采用用户于 2026-11-18 确认的简洁 Apple 风格、Windows 原生窗口 UI；工作总览和今日工作为两个核心页面，具体规则见 [UI 设计规范](../design/UI-DESIGN-SPEC.md)。
 
-仍待确认的事项包括自动备份、备份轮转和恢复策略，以及具体上班时间默认值、重复工作规则和最终 UI 细节。
+仍待确认的事项包括自动备份、备份轮转和恢复策略，以及具体上班时间默认值和重复工作规则；最终 UI 布局与视觉方向已按 DEC-030 确认。
 
 ---
 
@@ -279,6 +280,40 @@ WorkManager/
 -   `src` 只保存 UI 状态，不持有业务数据库。
 -   `data` 是运行时数据目录，不纳入源码版本管理。
 -   `docs/adr` 保存长期有效、难以逆转的技术决策。
+
+### 2.5 UI 组件化与状态边界
+
+用户确认的 UI 原型和具体视觉规则见 [UI 设计规范](../design/UI-DESIGN-SPEC.md)。前端按以下职责渐进组织：
+
+```text
+src/
+├── App.svelte                 # 应用组合入口，不承载业务规则
+├── app/                       # AppShell、Sidebar、navigation
+└── lib/
+    ├── ui/                    # tokens.css + 通用 UI 组件
+    ├── features/
+    │   ├── overview/          # 工作总览
+    │   ├── today/             # 今日工作
+    │   ├── work-items/        # 工作事项
+    │   ├── daily-review/      # 每日复盘
+    │   ├── reports/           # 报表
+    │   ├── history/           # 历史记录
+    │   └── diagnostics/       # 数据库健康检查等诊断页面
+    ├── bridge/                # 类型安全的 Tauri 命令封装
+    ├── contracts/             # 前后端 DTO 契约
+    └── presentation/          # 无副作用的展示格式化函数
+```
+
+约束：
+
+1. `App.svelte` 只负责应用级组合和页面切换；页面逻辑放在对应 Feature 页面容器中。
+2. `lib/ui` 只包含可复用视觉组件和 Design Tokens，不包含工作事项业务规则。
+3. Feature 页面拥有自己的页面状态和局部组件；禁止跨 Feature 直接依赖对方内部组件。
+4. 页面容器通过 `bridge` 调用类型安全的 Tauri 命令；展示组件只通过 typed props 和事件/callback 交互，不直接调用任意 IPC。
+5. Rust Core 是业务状态和规则的唯一权威来源；当前工作指针、工作事项生命周期和每日执行记录不能在多个前端页面重复维护。
+6. CSS 使用语义化 Token 和 Svelte scoped styles；`app.css` 只负责基础 reset、字体和 Token 引入，禁止全局样式侵入其他 Feature。
+7. 逐步迁移当前数据库健康检查界面：先保留其既有行为和诊断能力，再将其移入 diagnostics Feature；不得为了搭建新 UI 而一次性重写或删除已验收的 T1-01 逻辑。
+8. 采用小步改动：先稳定 Token 和应用壳，再逐个实现工作总览、今日工作；每次公共组件变更必须检查所有使用方并提供页面截图回归。
 
 ------------------------------------------------------------------------
 
@@ -1429,11 +1464,11 @@ ADR。
 
 第一版不实现应用锁定；提醒仍应遵守通用通知隐私原则，不在系统通知中展示工作标题、客户或项目名称。
 
-### Q11：重复工作与最终 UI
+### Q11：重复工作
 
 **待确认**
 
-周期任务规则、最终页面布局、主题和交互细节尚未确认。
+周期任务规则仍待确认。最终 UI 布局、主题和核心页面信息层级已由用户于 2026-11-18 按 DEC-030 确认，详见 [UI 设计规范](../design/UI-DESIGN-SPEC.md)。
 
 ## 20. 参考资料
 
@@ -1446,6 +1481,13 @@ ADR。
 -   [research](https://github.com/vinvcn/mattpocock-skills-zh-CN/tree/main/skills/engineering/research)
 -   [tdd](https://github.com/vinvcn/mattpocock-skills-zh-CN/tree/main/skills/engineering/tdd)
 -   [to-tickets](https://github.com/vinvcn/mattpocock-skills-zh-CN/tree/main/skills/engineering/to-tickets)
+
+### UI Design Skills
+
+- [macos-design-skill](https://github.com/ceorkm/macos-design-skill)（MIT）：桌面应用布局、渐进式披露、系统原生集成。
+- [claude-apple-design-system](https://github.com/rukkiecodes/claude-apple-design-system)（MIT）：语义化 Design Tokens、单一强调色、细分隔线和组件一致性。
+
+仅借鉴设计原则，不复制代码、素材或组件实现。
 
 ### 开源项目
 
