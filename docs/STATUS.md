@@ -25,7 +25,7 @@
 - 首页优先展示今日要做、今日已完成、当前工作；复盘与待跟进降为次级信息；禁止堆叠统计图表和无关指标。
 - 前端组件分层、Design Tokens、typed Bridge、CSS 隔离和 UI 回归规则已写入 UI 规范、技术架构和 AGENTS.md。
 - **T1-02 已进入开发：项目 CRUD + UI 基础应用壳/导航 + 项目管理页面。**
-- **T1-02 当前状态：待审计。** 代码、schema v2 migration、Rust Core、typed IPC、项目 UI、Release 证据已完成；见 [T1-02 测试与交付报告](testing/reports/T1-02-REPORT.md)、[T1-02 独立审计报告](testing/reports/T1-02-INDEPENDENT-AUDIT-REPORT.md)。
+- **T1-02 当前状态：返工。** 第一轮独立审计发现 P2-01 UI Design Token 规范问题；代码、schema v2 migration、Rust Core、typed IPC、项目 UI、Release 主流程整体成立。修复后重新审计。见 [T1-02 测试与交付报告](testing/reports/T1-02-REPORT.md)、[T1-02 独立审计报告](testing/reports/T1-02-INDEPENDENT-AUDIT-REPORT.md)。
 
 ## 阶段 0：技术验证
 
@@ -179,11 +179,11 @@
 - 合并提交：`260e6c07802a297529d8bda1e2d9239fca90fc10`。
 - **T1-01 代码现已进入 main；T1-02 已于 2026-11-18 启动开发。**
 
-## T1-02 交付结果（2026-11-18，待审计）
+## T1-02 交付结果（2026-11-18，第一轮独立审计未通过，返工中）
 
 **任务：** 项目创建、编辑、归档。  
 **分支：** `task/T1-02-project-management`（基于 main `0cafde6`）；[PR #7](https://github.com/shuaikun853-dev/work-kanban/pull/7)，**待审计、未合并**。  
-**状态：** **待审计**。开发代理自测完成，未自行标记验收完成。
+**状态：** **返工**。第一轮独立审计发现 P2-01，修复后重新审计。
 
 ### 实现范围
 
@@ -212,7 +212,7 @@
 
 ### 已知风险 / 未覆盖
 
-- 独立审计尚未进行；本状态只能为“待审计”。
+- 第一轮独立审计已完成；P2-01 UI Design Token 散落 raw color 未修复前，不得进入用户验收。
 - 项目名称唯一性、删除/恢复、排序偏好等 PRD 未定义行为未实现。
 - 归档历史关联测试使用测试探针表模拟未来 work_items；正式关联属于 T1-03。
 - 仓库仍无前端组件测试/视觉回归框架；UI 证据来自真实 Release CDP 脚本与截图。
