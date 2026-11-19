@@ -261,7 +261,8 @@ async function directIpc(command, args) {
  *
  * mode:
  * - 'reject'：返回 Tauri-Response: error + JSON 错误载荷（模拟加载失败）；
- * - 'malformed'：返回 Tauri-Response: ok + 不符合 DTO 契约的 JSON（验证 Bridge 运行时校验）。
+ * - 'malformed'：返回 Tauri-Response: ok + 不符合 DTO 契约的 JSON（验证 Bridge 运行时校验）；
+ * - 'delay'：真实转发请求并延迟 600ms 返回（用于观察“创建成功、列表正在刷新”的中间状态）。
  */
 async function installListPendingFault(mode) {
   return evaluate(`(() => {
@@ -299,6 +300,11 @@ async function installListPendingFault(mode) {
               status: 200,
               headers: { 'Content-Type': 'application/json', 'Tauri-Response': 'ok' }
             }));
+          }
+          if (window.__wmListFaultMode === 'delay') {
+            return new Promise((resolve) => {
+              setTimeout(() => resolve(window.__wmOriginalFetch(input, init)), 600);
+            });
           }
         }
         return window.__wmOriginalFetch(input, init);
@@ -340,12 +346,14 @@ const pendingStateExpression = `(() => {
   if (heading === null) return { mounted: true, ready: false, heading: null };
   const text = main.innerText || '';
   const loading = text.includes('正在读取待安排工作');
+  const refreshing = text.includes('正在同步待安排列表');
   const alertElement = main.querySelector('[role="alert"]');
   return {
     mounted: true,
-    ready: !loading,
+    ready: !loading && !refreshing,
     heading,
     loading,
+    refreshing,
     empty: text.includes('暂无待安排工作'),
     rows: document.querySelectorAll('[data-work-item-id]').length,
     error: alertElement !== null,
@@ -383,6 +391,18 @@ async function rowSnapshots() {
     meta: ((row.querySelector('.work-item-meta') || {}).innerText || '').replace(/\\s+/g, ' ').trim(),
     hasArchivedBadge: row.innerText.includes('项目已归档')
   })))()`);
+}
+
+/** 读取创建结果提示（P3-01：区分创建成功/刷新成功/刷新失败）。 */
+async function createOutcomeNotice() {
+  return evaluate(`(() => {
+    const element = document.querySelector('[data-create-outcome]');
+    if (element === null) return null;
+    return {
+      kind: element.getAttribute('data-create-outcome'),
+      text: (element.innerText || '').replace(/\\s+/g, ' ').trim()
+    };
+  })()`);
 }
 
 async function setDialogTitle(value) {
@@ -688,8 +708,41 @@ try {
   await screenshot('create-dialog.png');
 
   check('create.titleFilled', (await setDialogTitle('整理中核商品数据')) === true);
+  // P3-01：延迟列表刷新请求，验证“创建成功 → 正在刷新 → 刷新成功后更新”的提示时机。
+  check('create.refreshDelayInjected', (await installListPendingFault('delay')) === true);
   check('create.saved', (await submitDialogSave()) === true);
   await waitFor(`document.querySelector('dialog[open]') === null`, 10000, 'create dialog closed');
+  await waitFor(
+    `document.querySelector('[data-create-outcome]') !== null`,
+    5000,
+    'create outcome notice appeared'
+  );
+  const transientOutcome = await createOutcomeNotice();
+  check(
+    'create.refreshTransientNoticeShownBeforeRefreshCompletes',
+    transientOutcome !== null &&
+      transientOutcome.kind === 'success' &&
+      transientOutcome.text.includes('正在从数据库刷新') &&
+      !transientOutcome.text.includes('已从数据库更新'),
+    JSON.stringify(transientOutcome)
+  );
+  await waitFor(
+    `(() => {
+      const element = document.querySelector('[data-create-outcome]');
+      return element !== null && (element.innerText || '').includes('已从数据库更新');
+    })()`,
+    12000,
+    'create refresh success notice'
+  );
+  const finalOutcome = await createOutcomeNotice();
+  check(
+    'create.refreshSuccessNoticeOnlyAfterRefresh',
+    finalOutcome !== null &&
+      finalOutcome.kind === 'success' &&
+      finalOutcome.text.includes('已从数据库更新'),
+    JSON.stringify(finalOutcome)
+  );
+  await clearListPendingFault();
   await waitFor(`document.querySelectorAll('[data-work-item-id]').length === 1`, 10000);
   const firstRows = await rowSnapshots();
   check(
@@ -960,13 +1013,95 @@ try {
   const recoveredState = await waitForPendingSettled(15000);
   check('fault.recoveredAfterContractViolation', recoveredState.rows === 3, JSON.stringify(recoveredState));
 
-  // 12. 长标题布局：单行省略、保留 title 全文、正常窗口无横向溢出。
+  // 12. P3-01：创建成功 + 列表刷新失败 → 明确警告、不得重复创建、重新加载后恢复。
+  check('refreshFailure.openCreate', (await clickByText('main', '新增工作', false)) === true);
+  await waitFor(`document.querySelector('dialog[open] #work-item-title') !== null`, 5000);
+  check(
+    'refreshFailure.titleFilled',
+    (await setDialogTitle('创建成功但刷新失败验证')) === true
+  );
+  check('refreshFailure.faultInjected', (await installListPendingFault('reject')) === true);
+  check('refreshFailure.saved', (await submitDialogSave()) === true);
+  await waitFor(`document.querySelector('dialog[open]') === null`, 10000, 'refresh-failure dialog closed');
+  await waitFor(
+    `document.querySelector('[data-create-outcome="warning"]') !== null`,
+    12000,
+    'create refresh failure warning'
+  );
+  const warningOutcome = await createOutcomeNotice();
+  check(
+    'refreshFailure.warningNoticeShown',
+    warningOutcome !== null &&
+      warningOutcome.kind === 'warning' &&
+      warningOutcome.text.includes('工作已创建') &&
+      warningOutcome.text.includes('刷新失败'),
+    JSON.stringify(warningOutcome)
+  );
+  const refreshFailurePanel = await evaluate(`(() => {
+    const element = document.querySelector('main [role="alert"]');
+    if (element === null) return null;
+    return (element.innerText || '').replace(/\\s+/g, ' ').trim();
+  })()`);
+  check(
+    'refreshFailure.loadErrorPanelShown',
+    refreshFailurePanel !== null &&
+      refreshFailurePanel.includes('待安排工作加载失败') &&
+      refreshFailurePanel.includes('ipc-command-failed'),
+    JSON.stringify(refreshFailurePanel).slice(0, 400)
+  );
+  await screenshot('pending-create-refresh-failure.png');
+
+  // 恢复传输层后直接 IPC 核对：工作只创建了一条，刷新失败不得触发重复创建。
+  await clearListPendingFault();
+  const afterRefreshFailure = await directIpc('list_pending_work_items');
+  const refreshFailureTitleCount =
+    afterRefreshFailure.ok === true
+      ? afterRefreshFailure.value.filter((item) => item.title === '创建成功但刷新失败验证').length
+      : -1;
+  check(
+    'refreshFailure.createdExactlyOnce',
+    afterRefreshFailure.ok === true &&
+      afterRefreshFailure.value.length === 4 &&
+      refreshFailureTitleCount === 1,
+    `记录数=${afterRefreshFailure.value?.length}, 同标题=${refreshFailureTitleCount}`
+  );
+
+  check('refreshFailure.retryClicked', (await clickByText('main', '重新加载', true)) === true);
+  await waitFor(
+    `document.querySelectorAll('[data-work-item-id]').length === 4`,
+    15000,
+    'refresh-failure retry loaded 4 rows'
+  );
+  const retriedAfterFailure = await waitForPendingSettled(15000);
+  const recoveredOutcome = await createOutcomeNotice();
+  check(
+    'refreshFailure.retryRecoversList',
+    retriedAfterFailure.rows === 4,
+    JSON.stringify(retriedAfterFailure)
+  );
+  check(
+    'refreshFailure.noticeUpdatedAfterRetrySuccess',
+    recoveredOutcome !== null &&
+      recoveredOutcome.kind === 'success' &&
+      recoveredOutcome.text.includes('重新读取'),
+    JSON.stringify(recoveredOutcome)
+  );
+  const afterRetryList = await directIpc('list_pending_work_items');
+  check(
+    'refreshFailure.noDuplicateAfterRetry',
+    afterRetryList.ok === true &&
+      afterRetryList.value.length === 4 &&
+      afterRetryList.value.filter((item) => item.title === '创建成功但刷新失败验证').length === 1
+  );
+  await screenshot('pending-create-refresh-recovered.png');
+
+  // 13. 长标题布局：单行省略、保留 title 全文、正常窗口无横向溢出。
   check('long.openCreate', (await clickByText('main', '新增工作', false)) === true);
   await waitFor(`document.querySelector('dialog[open] #work-item-title') !== null`, 5000);
   check('long.titleFilled', (await setDialogTitle(longTitle)) === true);
   check('long.saved', (await submitDialogSave()) === true);
   await waitFor(`document.querySelector('dialog[open]') === null`, 10000);
-  await waitFor(`document.querySelectorAll('[data-work-item-id]').length === 4`, 10000);
+  await waitFor(`document.querySelectorAll('[data-work-item-id]').length === 5`, 10000);
   const longRows = await rowSnapshots();
   const longRow = longRows.find((row) => row.title === longTitle);
   check(
@@ -1003,7 +1138,7 @@ try {
   check(
     'persistence.prerequisiteState',
     finalList.ok === true &&
-      finalList.value.length === 4 &&
+      finalList.value.length === 5 &&
       finalProjects.ok === true &&
       finalProjects.value.length === 2 &&
       finalProjects.value.every((project) => project.isArchived === true),
@@ -1047,7 +1182,7 @@ const evidence = {
   generatedAt: new Date().toISOString(),
   task: 'T1-03',
   method:
-    'CDP against real Release WebView2: shell/nav assertions, real pending-view loading/empty/list states, real UI quick-create flows (unassigned + unarchived project), duplicate-submit double click, archived-project race error, direct typed IPC bypass checks, CDP transport-level fault injection for load failure/retry and bridge contract violation, long title layout, screenshots, CSP collection',
+    'CDP against real Release WebView2: shell/nav assertions, real pending-view loading/empty/list states, real UI quick-create flows (unassigned + unarchived project), create/refresh success-failure notice timing (P3-01), duplicate-submit double click, archived-project race error, direct typed IPC bypass checks, strict 10-field WorkItem DTO contract validation (P2-02), CDP transport-level fault injection for load failure/retry and bridge contract violation, long title layout, screenshots, CSP collection',
   port,
   bootMarker,
   deterministicWaits,

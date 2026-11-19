@@ -236,18 +236,19 @@ try {
   check('restart.navigateToday', (await clickByText('nav.sidebar', '今日工作', false)) === true);
   await waitFor(`(document.querySelector('h1') || {}).textContent === '今日工作'`, 8000);
   check('restart.pendingEntryVisible', (await clickByText('.view-switcher', '待安排', true)) === true);
-  await waitFor(`document.querySelectorAll('[data-work-item-id]').length === 4`, 20000);
+  await waitFor(`document.querySelectorAll('[data-work-item-id]').length === 5`, 20000);
   rowsAfterRestart = await rowSnapshots();
   check(
-    'restart.fourPendingWorkItemsPersisted',
-    rowsAfterRestart.length === 4,
+    'restart.fivePendingWorkItemsPersisted',
+    rowsAfterRestart.length === 5,
     JSON.stringify(rowsAfterRestart.map((row) => row.title))
   );
 
   const expectedTitles = [
     '整理中核商品数据',
     '重复提交保护验证',
-    '关联未归档项目的待安排工作'
+    '关联未归档项目的待安排工作',
+    '创建成功但刷新失败验证'
   ];
   check(
     'restart.expectedTitlesStillPresent',
@@ -278,7 +279,7 @@ try {
   check(
     'restart.ipcPendingListPersisted',
     ipcList.ok === true &&
-      ipcList.value.length === 4 &&
+      ipcList.value.length === 5 &&
       ipcList.value.every((item) => item.lifecycleStatus === 'pending'),
     JSON.stringify(ipcList.value?.length)
   );
@@ -317,12 +318,12 @@ try {
   check('restart.newTitleFilled', (await setDialogTitle('重启后新建的工作')) === true);
   check('restart.newWorkSaved', (await clickByText('dialog[open]', '保存', true)) === true);
   await waitFor(`document.querySelector('dialog[open]') === null`, 10000, 'create dialog closed');
-  await waitFor(`document.querySelectorAll('[data-work-item-id]').length === 5`, 15000);
+  await waitFor(`document.querySelectorAll('[data-work-item-id]').length === 6`, 15000);
   const createdAfterRestart = await directIpc('list_pending_work_items');
   check(
     'restart.newWorkItemPersistedToDatabase',
     createdAfterRestart.ok === true &&
-      createdAfterRestart.value.length === 5 &&
+      createdAfterRestart.value.length === 6 &&
       createdAfterRestart.value.some(
         (item) => item.title === '重启后新建的工作' && item.projectId === null
       ),

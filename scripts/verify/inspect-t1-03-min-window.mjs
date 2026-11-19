@@ -241,7 +241,7 @@ try {
   check('minWindow.navigateToday', (await clickByText('nav.sidebar', '今日工作', false)) === true);
   await waitFor(`(document.querySelector('h1') || {}).textContent === '今日工作'`, 5000);
   check('minWindow.pendingEntryVisible', (await clickByText('.view-switcher', '待安排', true)) === true);
-  await waitFor(`document.querySelectorAll('[data-work-item-id]').length === 4`, 15000);
+  await waitFor(`document.querySelectorAll('[data-work-item-id]').length === 5`, 15000);
   await sleep(400);
 
   const pendingProbe = await settledOverflowProbe();
@@ -275,7 +275,7 @@ try {
   })()`);
   check(
     'minWindow.pendingRowsVisible',
-    pendingLayout.rowCount === 4 && pendingLayout.archivedBadgeCount === 1,
+    pendingLayout.rowCount === 5 && pendingLayout.archivedBadgeCount === 1,
     JSON.stringify(pendingLayout)
   );
   check('minWindow.createButtonClickable', pendingLayout.createButtonVisible === true);

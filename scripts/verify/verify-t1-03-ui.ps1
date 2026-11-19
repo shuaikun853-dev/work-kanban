@@ -16,7 +16,12 @@
 # 5. 使用同一 UAT 便携目录重新启动 Release，运行 inspect-t1-03-persistence.mjs：
 #    验证关闭重开后工作事项持久化、归档项目历史关联保留、选择器仍只含未归档项目、
 #    重启后仍可创建；最后关闭并验证退出码；
-# 6. 再次只读检查数据库（5 条 pending、无其他状态、外键干净），输出证据摘要 JSON。
+# 6. 再次只读检查数据库（6 条 pending、无其他状态、外键干净），输出证据摘要 JSON。
+#
+# P3-02 安全约束：输出目录必须位于专用测试根目录 D:\WorkManager-test-data\ 之下；
+# 路径先规范化再判定；拒绝 D:\WorkManager 正式目录、测试根目录外目录、已包含数据库的
+# 目录、非空的未知目录。脚本不会清空或删除既有目录，每次测试必须使用新的 UAT 目录。
+# 校验逻辑见 T1-03UatPath.ps1，专项测试见 test-t1-03-uat-path.ps1。
 #
 # 数据边界：只使用 D:\WorkManager-test-data 下的隔离目录与虚构数据，
 # 不触碰正式运行目录 D:\WorkManager，不使用真实用户工作数据。
@@ -32,6 +37,9 @@ param(
 $ErrorActionPreference = 'Stop'
 $script:Failed = $false
 $script:DbChecks = New-Object System.Collections.ArrayList
+
+# P3-02：UAT 输出目录安全校验（专用测试根目录、规范化路径、拒绝正式目录/已知数据库/非空目录）。
+. (Join-Path $PSScriptRoot 'T1-03UatPath.ps1')
 
 function Resolve-RepoRoot {
     return (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
@@ -158,9 +166,12 @@ $exeSha256 = (Get-FileHash -Path $ExePath -Algorithm SHA256).Hash.ToLowerInvaria
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
     $OutputDir = 'D:\WorkManager-test-data\t1-03-ui-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
 }
-$outputFull = [System.IO.Path]::GetFullPath($OutputDir)
-if ($outputFull -notmatch '^[Dd]:\\') {
-    Write-Host "PRECONDITION_FAILED: 输出目录必须在 D 盘（实际 $outputFull）"
+# P3-02：限制在专用测试根目录；规范化后判断，拒绝正式目录/已存在数据库/非空目录。
+try {
+    $outputFull = Resolve-T103UatOutputDirectory -RequestedPath $OutputDir
+}
+catch {
+    Write-Host ("PRECONDITION_FAILED: " + $_.Exception.Message)
     exit 2
 }
 New-Item -ItemType Directory -Force -Path $outputFull | Out-Null
@@ -231,14 +242,14 @@ else {
     Add-DbCheck -Name 'dbProbe.afterMain.journalModeWal' -Pass ([string]$probe.journal_mode -eq 'wal') -Detail ([string]$probe.journal_mode)
     Add-DbCheck -Name 'dbProbe.afterMain.foreignKeysClean' -Pass ([int]$probe.foreign_key_violations -eq 0) -Detail ('violations=' + [string]$probe.foreign_key_violations)
     Add-DbCheck -Name 'dbProbe.afterMain.migrations1To3' -Pass (@($probe.schema_migrations).Count -eq 3 -and [int]$probe.schema_migrations[0].version -eq 1 -and [int]$probe.schema_migrations[1].version -eq 2 -and [int]$probe.schema_migrations[2].version -eq 3) -Detail ('migrations=' + (@($probe.schema_migrations) | ForEach-Object { $_.version }) -join ',')
-    Add-DbCheck -Name 'dbProbe.afterMain.workItems4' -Pass ([int]$probe.work_items_total -eq 4) -Detail ('work_items=' + [string]$probe.work_items_total)
-    Add-DbCheck -Name 'dbProbe.afterMain.pending4' -Pass ([int]$probe.work_items_pending -eq 4) -Detail ('pending=' + [string]$probe.work_items_pending)
+    Add-DbCheck -Name 'dbProbe.afterMain.workItems5' -Pass ([int]$probe.work_items_total -eq 5) -Detail ('work_items=' + [string]$probe.work_items_total)
+    Add-DbCheck -Name 'dbProbe.afterMain.pending5' -Pass ([int]$probe.work_items_pending -eq 5) -Detail ('pending=' + [string]$probe.work_items_pending)
     Add-DbCheck -Name 'dbProbe.afterMain.noOtherStatus' -Pass ([int]$probe.work_items_other_status -eq 0) -Detail ('other_status=' + [string]$probe.work_items_other_status)
-    Add-DbCheck -Name 'dbProbe.afterMain.unassigned3' -Pass ([int]$probe.work_items_null_project -eq 3) -Detail ('null_project=' + [string]$probe.work_items_null_project)
+    Add-DbCheck -Name 'dbProbe.afterMain.unassigned4' -Pass ([int]$probe.work_items_null_project -eq 4) -Detail ('null_project=' + [string]$probe.work_items_null_project)
     Add-DbCheck -Name 'dbProbe.afterMain.archivedLink1' -Pass ([int]$probe.work_items_linked_archived -eq 1) -Detail ('linked_archived=' + [string]$probe.work_items_linked_archived)
     Add-DbCheck -Name 'dbProbe.afterMain.noActiveProjectLink' -Pass ([int]$probe.work_items_linked_active -eq 0) -Detail ('linked_active=' + [string]$probe.work_items_linked_active)
     Add-DbCheck -Name 'dbProbe.afterMain.projects2Archived2' -Pass ([int]$probe.projects_total -eq 2 -and [int]$probe.projects_archived -eq 2) -Detail ('projects=' + [string]$probe.projects_total + ' archived=' + [string]$probe.projects_archived)
-    $expectedTitles = @('整理中核商品数据', '重复提交保护验证', '关联未归档项目的待安排工作')
+    $expectedTitles = @('整理中核商品数据', '重复提交保护验证', '关联未归档项目的待安排工作', '创建成功但刷新失败验证')
     $titles = @($probe.pending_titles)
     $titlesOk = $expectedTitles | ForEach-Object { $titles -contains $_ }
     Add-DbCheck -Name 'dbProbe.afterMain.expectedTitlesPersisted' -Pass (-not ($titlesOk -contains $false)) -Detail ('titles=' + ($titles -join ' | '))
@@ -293,10 +304,10 @@ else {
             Add-DbCheck -Name 'dbProbe.afterRestart.readable' -Pass $true -Detail $dbProbeAfterRestart.Path
             Add-DbCheck -Name 'dbProbe.afterRestart.userVersion3' -Pass ([int]$probe2.user_version -eq 3) -Detail ('user_version=' + [string]$probe2.user_version)
             Add-DbCheck -Name 'dbProbe.afterRestart.integrityOk' -Pass ([string]$probe2.integrity_check -eq 'ok') -Detail ([string]$probe2.integrity_check)
-            Add-DbCheck -Name 'dbProbe.afterRestart.workItems5' -Pass ([int]$probe2.work_items_total -eq 5) -Detail ('work_items=' + [string]$probe2.work_items_total)
-            Add-DbCheck -Name 'dbProbe.afterRestart.pending5' -Pass ([int]$probe2.work_items_pending -eq 5) -Detail ('pending=' + [string]$probe2.work_items_pending)
+            Add-DbCheck -Name 'dbProbe.afterRestart.workItems6' -Pass ([int]$probe2.work_items_total -eq 6) -Detail ('work_items=' + [string]$probe2.work_items_total)
+            Add-DbCheck -Name 'dbProbe.afterRestart.pending6' -Pass ([int]$probe2.work_items_pending -eq 6) -Detail ('pending=' + [string]$probe2.work_items_pending)
             Add-DbCheck -Name 'dbProbe.afterRestart.noOtherStatus' -Pass ([int]$probe2.work_items_other_status -eq 0) -Detail ('other_status=' + [string]$probe2.work_items_other_status)
-            Add-DbCheck -Name 'dbProbe.afterRestart.unassigned4' -Pass ([int]$probe2.work_items_null_project -eq 4) -Detail ('null_project=' + [string]$probe2.work_items_null_project)
+            Add-DbCheck -Name 'dbProbe.afterRestart.unassigned5' -Pass ([int]$probe2.work_items_null_project -eq 5) -Detail ('null_project=' + [string]$probe2.work_items_null_project)
             Add-DbCheck -Name 'dbProbe.afterRestart.archivedLink1' -Pass ([int]$probe2.work_items_linked_archived -eq 1) -Detail ('linked_archived=' + [string]$probe2.work_items_linked_archived)
             Add-DbCheck -Name 'dbProbe.afterRestart.foreignKeysClean' -Pass ([int]$probe2.foreign_key_violations -eq 0) -Detail ('violations=' + [string]$probe2.foreign_key_violations)
             Add-DbCheck -Name 'dbProbe.afterRestart.newWorkPersisted' -Pass (@($probe2.pending_titles) -contains '重启后新建的工作') -Detail ('titles=' + (@($probe2.pending_titles) -join ' | '))
