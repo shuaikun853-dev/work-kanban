@@ -146,7 +146,7 @@ ORDER BY w.created_at DESC, w.id DESC
 - `title: String`（必填）；
 - `projectId: Option<String>`：显式 `null` 表示未归属；字段缺省同样按 `null` 处理（serde Option 语义），文档明确要求前端显式传 `null`。
 
-`WorkItemDto`（创建返回）：
+`WorkItemDto`（创建返回，**10 个字段，与 Rust `WorkItem` serde 输出逐字段一致**）：
 
 ```json
 {
@@ -154,10 +154,19 @@ ORDER BY w.created_at DESC, w.id DESC
   "projectId": null,
   "title": "整理中核商品数据",
   "lifecycleStatus": "pending",
+  "importance": null,
+  "urgency": null,
+  "dueDate": null,
+  "description": null,
   "createdAt": "2026-11-19T10:00:00.000Z",
   "updatedAt": "2026-11-19T10:00:00.000Z"
 }
 ```
+
+- 可空字段：`importance`/`urgency` 为 `null` 或 1–5 整数；`dueDate` 为 `null` 或非空字符串；
+  `description` 为 `null` 或字符串；未设置时必须输出 `null`，不得省略字段。
+- **严格契约（P2-02）：** Bridge 校验要求 DTO 恰好包含上述 10 个字段；缺少字段、字段类型错误、
+  非法 lifecycleStatus 或出现未知字段均拒绝（`ipc-contract-violation`），不静默忽略。
 
 `PendingWorkItemDto`（待安排列表项）：
 
@@ -226,7 +235,9 @@ src/App.svelte（不变）
   ├─ 并行加载未归档项目（失败不阻塞未归属创建，显示轻量提示）
   ├─ 保存：title.trim() 为空 → 前端提示不提交
   ├─ 保存中：submitting=true，保存按钮禁用，重复点击被同步守卫拦截
-  ├─ 成功：关闭对话框 → 重新从后端读取待安排列表（权威刷新）
+  ├─ 成功：关闭对话框 → 提示“正在从数据库刷新” → 重新从后端读取待安排列表（权威刷新）
+  │        ├─ 刷新成功：提示“待安排列表已从数据库更新”（P3-01：刷新成功后才显示）
+  │        └─ 刷新失败：提示“工作已创建，但列表刷新失败”，提供“重新加载”；不得重复创建
   ├─ 失败：保留对话框，展示错误码/消息；若项目被归档/不存在则刷新项目选项并清除失效选择
   └─ 取消：关闭，不写数据
 项目列表加载后、提交前项目被归档 → Core 返回 project-archived → UI 显示错误，不新增记录

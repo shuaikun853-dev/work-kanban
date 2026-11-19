@@ -1,4 +1,4 @@
-T1-03 工作事项快速创建和待安排区域 — 测试数量与环境（最终代码状态）
+T1-03 工作事项快速创建和待安排区域 — 第二轮修复测试数量与环境
 ================================================================================
 
 环境
@@ -8,26 +8,18 @@ PowerShell      : Windows PowerShell 5.1.19041.6456
 rustc / cargo   : 1.100.0 / 1.100.0
 Node / npm      : v22.20.0 / 10.9.3
 Python          : 3.14.5（标准库 sqlite3，仅只读探针）
-Git             : Windows，分支 task/T1-03-quick-create-pending
-测试数据根目录   : <uat-root>（隔离 UAT，虚构数据）
+分支            : task/T1-03-quick-create-pending
+UAT 测试根目录   : <uat-root>（专用测试根目录，脚本强制限定；本次为 t1-03-ui-run4）
+测试数据         : 全部虚构；未使用真实工作数据
 
 Rust（cargo test --workspace）
 --------------------------------------------------------------------------------
 基线（T1-02 验收后）                         : 90 passed / 0 failed
-T1-03 最终                                  : 123 passed / 0 failed
-新增                                        : 33
+第二轮最终                                  : 124 passed / 0 failed
+T1-03 新增（含第二轮 +1）                    : 34
 
-新增分解
-  work_items model 单测                     : 5
-  work_items error 单测                     : 2
-  work_items 领域集成测试                   : 16
-  work_items migration 专项测试             : 4
-  Tauri work_items 命令契约测试             : 5
-  Tauri WorkItemContext 生命周期测试        : 1
-  小计                                      : 33
-
-最终 123 分解（测试二进制）
-  workmanager lib 单测                      : 10
+最终 124 分解（测试二进制）
+  workmanager lib 单测                      : 11
   workmanager-core lib 单测                 : 32
   work_items                                : 16
   work_items_migration                      : 4
@@ -42,46 +34,64 @@ T1-03 最终                                  : 123 passed / 0 failed
   portable_paths                            : 5
   windows_real_paths                        : 4
   zero_byte_database                        : 6
-  合计                                      : 123
+  合计                                      : 124
 
 Node / 前端
 --------------------------------------------------------------------------------
 svelte-check                                : 0 errors / 0 warnings
-work-item-bridge.test.mjs                   : 10 / 10 passed
+work-item-bridge.test.mjs                   : 17 / 17 passed（P2-02 严格 10 字段契约）
 design-tokens.test.mjs                      : 49 / 49 passed
-npm run build                               : exit 0（167 modules）
+npm run check                               : exit 0
+npm run build                               : exit 0
 
-Release E2E（scripts/verify/verify-t1-03-ui.ps1，UAT: t1-03-ui-run2）
+Release E2E（scripts/verify/verify-t1-03-ui.ps1，UAT: t1-03-ui-run4）
 --------------------------------------------------------------------------------
 Release EXE      : target\release\workmanager.exe
-EXE 大小          : 10,351,616 字节
-EXE SHA-256      : 22af942fe2817388596118fc7cb66f34fce4e8c5e2367fe1a2942dc13dd66b23
-主 UI/IPC 检查    : 70 / 70（exit 0）
+EXE 大小          : 10,352,128 字节
+EXE SHA-256      : 3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3
+主 UI/IPC 检查    : 84 / 84（exit 0）
 最小窗口 860x640  : 12 / 12（exit 0；关闭按钮后进程退出码 0）
 重启持久化阶段    : 17 / 17（exit 0；关闭按钮后进程退出码 0）
+UAT 路径安全专项  : 23 / 23（exit 0）
 数据库只读探针    : 25 / 25（关闭后 + 重启后）
 CSP 违规          : 0
 页面未捕获异常    : 0
-总计              : 124 项 E2E/数据库断言，0 失败
+E2E/数据库总断言  : 84 + 12 + 17 + 25 = 138（另路径安全 23 项）
 
-继承 Release 回归
+继承 Release 回归（第二轮新 EXE）
 --------------------------------------------------------------------------------
-verify-release-portable.ps1                 : TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15（PASS）
+verify-release-portable.ps1                 : TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15（PASS；保留既有 WARN）
 verify-release-faults.ps1                   : TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9（PASS）
 verify-t1-02-ui.ps1                         : 主 73/73；最小窗口 12/12；关闭退出码 0（PASS）
 
-数据库探针关键事实（重启后）
+数据库探针关键事实（第二轮）
 --------------------------------------------------------------------------------
-user_version              : 3
-integrity_check           : ok
-journal_mode              : wal
-schema_migrations         : 1, 2, 3
-work_items_total          : 5
-work_items_pending        : 5
-work_items_other_status   : 0
-work_items_null_project   : 4
-work_items_linked_archived: 1
-work_items_linked_active  : 0
-projects_total            : 2
-projects_archived         : 2
-foreign_key_violations    : 0
+第一次关闭后
+  user_version              : 3
+  integrity_check           : ok
+  journal_mode              : wal
+  schema_migrations         : 1, 2, 3
+  work_items_total          : 5
+  work_items_pending        : 5
+  work_items_other_status   : 0
+  work_items_null_project   : 4
+  work_items_linked_archived: 1
+  projects_total            : 2
+  projects_archived         : 2
+  foreign_key_violations    : 0
+重启并再次创建后关闭
+  work_items_total          : 6
+  work_items_pending        : 6
+  work_items_other_status   : 0
+  work_items_null_project   : 5
+  work_items_linked_archived: 1
+  foreign_key_violations    : 0
+
+P2-01 脱敏/历史清理核对
+--------------------------------------------------------------------------------
+当前 T1-03-assets 机器标识扫描               : 0 个文件命中（含 PNG 二进制）
+脱敏前后 JSON 证据结构一致性                 : 11 / 11 完全一致
+分支新增文件 Git 历史深度扫描（018e851..HEAD）: 15 提交 / 84 文件状态，0 命中
+T1-03-assets/logs 在分支历史中可达           : 否
+旧/新 HEAD                                   : 2342828 -> b6cf344（force-with-lease）
+本地恢复引用                                  : backup/t1-03-r1-audit-baseline + 仓库外 bundle

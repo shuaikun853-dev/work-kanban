@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-11-19T11:45:49.524Z",
+  "generatedAt": "2026-11-19T13:27:56.332Z",
   "task": "T1-03",
   "method": "CDP at minimum supported window size 860x640: app-shell wait, 待安排 view layout checks, long-title layout check, quick-create dialog bounds, real titlebar close button click; process exit verified by orchestration",
-  "port": 9345,
+  "port": 9365,
   "target": {
-    "id": "3393C6F9AAA362A19E9666C7F370BFF8",
+    "id": "706BE2303564B788AFC08C9A3C677318",
     "title": "今日工作 · WorkManager",
     "url": "http://tauri.localhost/"
   },
@@ -46,12 +46,12 @@
     {
       "name": "minWindow.pendingNoHorizontalOverflow",
       "pass": true,
-      "detail": "{\"innerWidth\":844,\"innerHeight\":632,\"docScrollWidth\":844,\"clientWidth\":844,\"bodyScrollWidth\":844,\"overflow\":false,\"offenders\":[{\"tag\":\"P\",\"cls\":\"work-item-title svelte-k3ghdt\",\"text\":\"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是\",\"left\":209,\"right\":811,\"width\":602,\"scrollWidth\":1365,\"clientWidth\":602}]}"
+      "detail": "{\"innerWidth\":844,\"innerHeight\":632,\"docScrollWidth\":844,\"clientWidth\":844,\"bodyScrollWidth\":844,\"overflow\":false,\"offenders\":[{\"tag\":\"P\",\"cls\":\"work-item-title svelte-k3ghdt\",\"text\":\"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是\",\"left\":209,\"right\":796,\"width\":587,\"scrollWidth\":1365,\"clientWidth\":587}]}"
     },
     {
       "name": "minWindow.pendingRowsVisible",
       "pass": true,
-      "detail": "{\"rowCount\":4,\"archivedBadgeCount\":1,\"createButtonVisible\":true,\"longRowVisible\":true,\"longTitleEllipsized\":true,\"longTitleFullAttribute\":true,\"firstRowRight\":827}"
+      "detail": "{\"rowCount\":5,\"archivedBadgeCount\":1,\"createButtonVisible\":true,\"longRowVisible\":true,\"longTitleEllipsized\":true,\"longTitleFullAttribute\":true,\"firstRowRight\":812}"
     },
     {
       "name": "minWindow.createButtonClickable",
@@ -61,7 +61,7 @@
     {
       "name": "minWindow.longTitleEllipsizedWithoutClippingLayout",
       "pass": true,
-      "detail": "{\"rowCount\":4,\"archivedBadgeCount\":1,\"createButtonVisible\":true,\"longRowVisible\":true,\"longTitleEllipsized\":true,\"longTitleFullAttribute\":true,\"firstRowRight\":827}"
+      "detail": "{\"rowCount\":5,\"archivedBadgeCount\":1,\"createButtonVisible\":true,\"longRowVisible\":true,\"longTitleEllipsized\":true,\"longTitleFullAttribute\":true,\"firstRowRight\":812}"
     },
     {
       "name": "minWindow.openCreateDialog",

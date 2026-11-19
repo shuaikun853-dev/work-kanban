@@ -1,0 +1,125 @@
+{
+  "task": "T1-03",
+  "fix": "P3-02 UAT path safety",
+  "generatedAt": "2026-11-19T13:27:58.0171462Z",
+  "checkCount": 23,
+  "failed": [],
+  "checks": [
+    {
+      "name": "unit.freshNewUatDirectoryAllowed",
+      "pass": true,
+      "detail": "allowed: <uat-root>\\t1-03-path-safety-<run>\\fresh-20261119-212752"
+    },
+    {
+      "name": "unit.emptyExistingDirectoryAllowed",
+      "pass": true,
+      "detail": "allowed: <uat-root>\\t1-03-path-safety-<run>\\empty-existing"
+    },
+    {
+      "name": "unit.caseInsensitiveRootAllowed",
+      "pass": true,
+      "detail": "allowed: <uat-root>\\t1-03-path-safety-<run>\\fresh-20261119-212752"
+    },
+    {
+      "name": "unit.normalizedDotDotInsideAllowed",
+      "pass": true,
+      "detail": "allowed: <uat-root>\\t1-03-path-safety-<run>\\fresh-normalized"
+    },
+    {
+      "name": "unit.cDriveRejected",
+      "pass": true,
+      "detail": "rejected: 输出目录必须位于专用测试根目录 <uat-root> 之下（实际：<non-d-drive-root>\\WorkManager-test-data\\t1-03-ui-reject）。请使用新的 UAT 目录，例如 <uat-root>\\t1-03-ui-<timestamp>。"
+    },
+    {
+      "name": "unit.formalRootRejected",
+      "pass": true,
+      "detail": "rejected: 禁止使用正式应用目录 <formal-root> 作为 UAT 输出目录（实际：<formal-root>）。请使用新的测试目录，例如 <uat-root>\\t1-03-ui-<timestamp>。"
+    },
+    {
+      "name": "unit.formalRootSubdirectoryRejected",
+      "pass": true,
+      "detail": "rejected: 禁止使用正式应用目录 <formal-root> 作为 UAT 输出目录（实际：<formal-root>\\data\\uat）。请使用新的测试目录，例如 <uat-root>\\t1-03-ui-<timestamp>。"
+    },
+    {
+      "name": "unit.outsideTestRootDDriveRejected",
+      "pass": true,
+      "detail": "rejected: 输出目录必须位于专用测试根目录 <uat-root> 之下（实际：<outside-test-root>\\OtherWorkManagerDir\\t1-03-ui）。请使用新的 UAT 目录，例如 <uat-root>\\t1-03-ui-<timestamp>。"
+    },
+    {
+      "name": "unit.dotDotEscapeToFormalRejected",
+      "pass": true,
+      "detail": "rejected: 禁止使用正式应用目录 <formal-root> 作为 UAT 输出目录（实际：<formal-root>）。请使用新的测试目录，例如 <uat-root>\\t1-03-ui-<timestamp>。"
+    },
+    {
+      "name": "unit.dotDotEscapeOutsideRejected",
+      "pass": true,
+      "detail": "rejected: 输出目录必须位于专用测试根目录 <uat-root> 之下（实际：<outside-test-root>\\OtherWorkManagerDir）。请使用新的 UAT 目录，例如 <uat-root>\\t1-03-ui-<timestamp>。"
+    },
+    {
+      "name": "unit.testRootItselfRejected",
+      "pass": true,
+      "detail": "rejected: 输出目录不能是专用测试根目录本身：<uat-root>。请使用该根目录下的新 UAT 目录，例如 <uat-root>\\t1-03-ui-<timestamp>。"
+    },
+    {
+      "name": "unit.testRootWithTrailingSlashRejected",
+      "pass": true,
+      "detail": "rejected: 输出目录不能是专用测试根目录本身：<uat-root>。请使用该根目录下的新 UAT 目录，例如 <uat-root>\\t1-03-ui-<timestamp>。"
+    },
+    {
+      "name": "unit.relativePathRejected",
+      "pass": true,
+      "detail": "rejected: 输出目录必须位于专用测试根目录 <uat-root> 之下（实际：<repo-root>\\t1-03-ui-relative-dir）。请使用新的 UAT 目录，例如 <uat-root>\\t1-03-ui-<timestamp>。"
+    },
+    {
+      "name": "unit.nonEmptyUnknownDirectoryRejected",
+      "pass": true,
+      "detail": "rejected: 目标 UAT 目录已存在且非空（1 个条目），拒绝覆盖或删除未知内容。请使用新的测试目录，例如 <uat-root>\\t1-03-ui-<timestamp>。"
+    },
+    {
+      "name": "unit.existingDatabaseDirectoryRejected",
+      "pass": true,
+      "detail": "rejected: 目标 UAT 目录已包含数据库文件（1 个），默认拒绝复用旧数据库。请使用新的测试目录，例如 <uat-root>\\t1-03-ui-<timestamp>。"
+    },
+    {
+      "name": "integration.cDriveRejected",
+      "pass": true,
+      "detail": "exit=2; keyword=PRECONDITION_FAILED"
+    },
+    {
+      "name": "integration.formalRootRejected",
+      "pass": true,
+      "detail": "exit=2; keyword=正式应用目录"
+    },
+    {
+      "name": "integration.outsideTestRootRejected",
+      "pass": true,
+      "detail": "exit=2; keyword=专用测试根目录"
+    },
+    {
+      "name": "integration.dotDotEscapeRejected",
+      "pass": true,
+      "detail": "exit=2; keyword=正式应用目录"
+    },
+    {
+      "name": "integration.nonEmptyUnknownDirectoryRejected",
+      "pass": true,
+      "detail": "exit=2; keyword=非空"
+    },
+    {
+      "name": "integration.existingDatabaseDirectoryRejected",
+      "pass": true,
+      "detail": "exit=2; keyword=数据库"
+    },
+    {
+      "name": "integration.nonEmptyDirectoryNotDeletedOrModified",
+      "pass": true,
+      "detail": "marker=must-not-be-deleted"
+    },
+    {
+      "name": "integration.existingDatabaseNotOverwritten",
+      "pass": true,
+      "detail": "database content preserved=True"
+    }
+  ],
+  "pass": true
+}

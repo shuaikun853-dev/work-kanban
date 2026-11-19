@@ -1,14 +1,15 @@
 # T1-03：工作事项快速创建和待安排区域
 
-**任务状态：** 待独立审计（代码实现与开发自测完成；PR #8 等待独立审计，未合并）
+**任务状态：** 第二轮定向修复完成，等待第二轮独立审计（PR #8 保持 Open，未合并）
 **启动日期：** 2026-11-19  
 **所属阶段：** 阶段 1：基础架构与工作事项  
 **前置任务：** T1-01、T1-02 已验收完成并合并到 main  
 **开发分支：** `task/T1-03-quick-create-pending`  
 **开发基线：** `018e851e8daf5835391a7b61caf881bc57c2ad42`  
 **目标分支：** `main`  
-**实现提交：** `be8d9c2e9c78710690de189936d6ee65f48ed8df`
-**Pull Request：** [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（指向 main，保持 Open，等待独立审计）
+**第一轮实现提交：** `be8d9c2e9c78710690de189936d6ee65f48ed8df`
+**第二轮修复提交：** P2-02 `12b1bdf026f01688c79ba438165a97a652e086a1`；P3-01/P3-02 `2d91c92301713597ccfc1c0ddc2d83a479f572d4`；P2-01 历史清理 `b6cf344abc1693e7031427f8963c27474c0b59f9`
+**Pull Request：** [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（指向 main，保持 Open，等待第二轮独立审计）
 **测试报告：** `docs/testing/reports/T1-03-REPORT.md`
 **截图与证据：** `docs/testing/reports/T1-03-assets/`
 **开发设计：** `docs/development/tasks/T1-03-Implementation-Design.md`
@@ -208,3 +209,31 @@
 
 **详细报告：** `docs/testing/reports/T1-03-REPORT.md`；证据：`docs/testing/reports/T1-03-assets/`。
 **停止条件：** 已停止开发，等待独立审计；未合并 PR、未修改 main、未开始 T1-04/T1-05。
+
+---
+
+## 12. 第二轮定向修复结果（2026-11-19，等待第二轮独立审计）
+
+第一轮独立审计未通过；本轮只修复四项审计问题，不新增业务功能、不修改业务决策。
+
+**状态：** 第二轮定向修复完成；PR #8 保持 Open，等待第二轮独立审计。开发代理不自行宣布审计/验收通过。
+
+**修复内容：**
+
+- **P2-01 原始日志与机器信息：** 删除 `T1-03-assets/logs/` 9 个原始命令日志；11 个 JSON 证据脱敏（计算机名/账户名/用户目录/仓库与 UAT 绝对路径替换为占位符）；新增 `SANITIZATION.md`；重写本任务分支 docs/evidence 提交（旧 HEAD `2342828` → 新 HEAD `b6cf344`）并 `--force-with-lease` 推送；本地恢复分支 `backup/t1-03-r1-audit-baseline` 与仓库外 bundle 保留。当前证据扫描 0 命中；脱敏前后结构一致性 11/11；分支新增历史深度扫描 0 命中。
+- **P2-02 Rust/TS DTO 契约：** `WorkItemDto` 与 Rust 统一为 10 个 camelCase 字段（含可空 `importance`/`urgency`/`dueDate`/`description`）；Bridge 严格拒绝缺字段、类型错误、非法状态与未知字段；Rust 增加完整字段/可空值序列化测试；Node 契约测试扩展为 17 项。
+- **P3-01 创建提示时机：** 创建成功、列表刷新成功、刷新失败三态分离；刷新成功后才显示列表已更新；刷新失败显示 warning 并允许重新加载；不重复创建同一工作。
+- **P3-02 UAT 路径安全：** 新增 `T1-03UatPath.ps1`，规范化路径后限定专用测试根目录 `D:\WorkManager-test-data\`，拒绝正式目录、根目录外、`..` 越界、已含数据库目录与非空未知目录；脚本不删除/不覆盖；新增 23 项专项测试。
+
+**第二轮验证：**
+
+- `cargo fmt --all -- --check` / `cargo check --workspace --all-targets`：退出码 0；
+- `cargo test --workspace`：**124 passed / 0 failed**；
+- `npm run check`：svelte-check 0/0、Bridge 17/17、Design Token 49/49；`npm run build`：退出码 0；
+- Bridge DTO 专项：**17/17 PASS**；UAT 路径安全专项：**23/23 PASS**；
+- T1-03 Release E2E：**主 84/84 + 最小窗口 12/12 + 重启持久化 17/17 + 数据库探针 25/25**，两次真实关闭退出码 0；
+- 继承回归：便携 106 项（0 FAIL，保留 1 WARN）、异常注入 73 项（0 FAIL）、T1-02 UI E2E（73/73 + 12/12）全部通过；
+- Release EXE：10,352,128 字节，SHA-256 `3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3`。
+
+**详细报告：** `docs/testing/reports/T1-03-REPORT.md`；证据：`docs/testing/reports/T1-03-assets/`（含 `SANITIZATION.md`）。
+**停止条件：** 已停止，等待第二轮独立审计；未合并 PR #8、未修改 main、未开始 T1-04/T1-05。

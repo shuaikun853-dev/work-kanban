@@ -3,8 +3,8 @@
 **更新日期：** 2026-11-19  
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **最近完成任务：** T1-02 项目创建、编辑、归档（用户验收完成，PR #7 已合并）  
-**当前任务：** T1-03 工作事项快速创建和待安排区域（**待独立审计**：代码实现与开发自测完成，PR #8 Open，未合并）
-**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01、T1-02 均已完成用户验收并合并到 `main`。T1-02 第二轮独立审计通过；PR #7 合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。T1-03 已获用户授权并在分支 `task/T1-03-quick-create-pending` 完成实现、自动化测试与 Windows Release 实测（含关闭重开持久化），实现提交 `be8d9c2`，PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 等待独立审计；开发代理不自行宣布审计/验收通过。T1-04 / T1-05 未启动。TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。
+**当前任务：** T1-03 工作事项快速创建和待安排区域（**第二轮定向修复完成，等待第二轮独立审计**：PR #8 Open，未合并）
+**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01、T1-02 均已完成用户验收并合并到 `main`。T1-02 第二轮独立审计通过；PR #7 合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。T1-03 第一轮独立审计未通过后，已按四项审计问题（P2-01 机器信息/原始日志、P2-02 Rust/TS DTO 契约、P3-01 创建/刷新提示时机、P3-02 UAT 路径安全）完成定向修复、自动化测试、Release 实测与证据脱敏，并重写分支历史清理机器信息；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 等待第二轮独立审计。开发代理不自行宣布审计/验收通过。T1-04 / T1-05 未启动。TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。
 
 ## 最新产品决策
 
@@ -28,7 +28,7 @@
 - 前端组件分层、Design Tokens、typed Bridge、CSS 隔离和 UI 回归规则已写入 UI 规范、技术架构和 AGENTS.md。
 - **T1-02 已进入开发：项目 CRUD + UI 基础应用壳/导航 + 项目管理页面。**
 - **T1-02 已验收完成并合并。** 第二轮独立审计通过；用户于 2026-11-19 明确接受；PR #7 合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。详见 [第二轮独立审计报告](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)、[机器可读审计证据](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-evidence.json) 和 [用户验收记录](testing/reports/T1-02-USER-ACCEPTANCE.md)。
-- **T1-03 已完成开发与自测，等待独立审计。** 任务说明：[T1-03-Quick-Work-Item-Creation.md](development/tasks/T1-03-Quick-Work-Item-Creation.md)；开发设计：[T1-03-Implementation-Design.md](development/tasks/T1-03-Implementation-Design.md)；分支 `task/T1-03-quick-create-pending`；实现提交 `be8d9c2`；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open。报告：[T1-03-REPORT.md](testing/reports/T1-03-REPORT.md)；证据：[T1-03-assets/](testing/reports/T1-03-assets/README.md)。
+- **T1-03 第二轮定向修复完成，等待第二轮独立审计。** 任务说明：[T1-03-Quick-Work-Item-Creation.md](development/tasks/T1-03-Quick-Work-Item-Creation.md)；开发设计：[T1-03-Implementation-Design.md](development/tasks/T1-03-Implementation-Design.md)；分支 `task/T1-03-quick-create-pending`；第二轮修复提交 `12b1bdf`（P2-02）、`2d91c92`（P3-01/P3-02），P2-01 历史清理提交 `b6cf344`；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open。报告：[T1-03-REPORT.md](testing/reports/T1-03-REPORT.md)；证据：[T1-03-assets/](testing/reports/T1-03-assets/README.md)。
 
 ## 阶段 0：技术验证
 
@@ -55,7 +55,7 @@
 |---|---|---|
 | T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | **验收完成**（用户 2026-11-18 确认；PR #1 已合并到 main，commit `260e6c0`；TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
 | T1-02 | 项目创建、编辑、归档 | **验收完成，PR #7 已合并** |
-| T1-03 | 工作事项快速创建和待安排区域 | **待独立审计**（代码实现与开发自测完成；实现提交 `be8d9c2`；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open，未合并） |
+| T1-03 | 工作事项快速创建和待安排区域 | **第二轮定向修复完成，等待第二轮独立审计**（P2-02/P3-01/P3-02 提交 `12b1bdf`、`2d91c92`；P2-01 历史清理 `b6cf344`；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open，未合并） |
 | T1-04 | 多项目独立副本创建 | 未开始 |
 | T1-05 | 工作事项状态流转和历史记录 | 未开始 |
 | T1-06 | 六位数字应用密码与锁屏 | 取消 |
@@ -144,7 +144,7 @@
 
 - T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；T1-01 代码与 UI 设计文档均已合并到 main。
 - **T1-02 项目管理：已完成。** 第二轮独立审计通过、用户已于 2026-11-19 明确接受，PR #7 已合并到 main（`ab6aba32a94d7d091b20f0ab49b25badf26377c4`）。
-- **T1-03 已完成开发与自测，等待独立审计。** 分支 `task/T1-03-quick-create-pending`；实现提交 `be8d9c2`；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open，不合并；DEC-033 已实现（选择器只展示未归档项目 + Rust Core 创建事务内拒绝归档项目），自动化测试与 Release 实测证据见 [T1-03-REPORT.md](testing/reports/T1-03-REPORT.md)。
+- **T1-03 第二轮定向修复完成，等待第二轮独立审计。** 分支 `task/T1-03-quick-create-pending`；第一轮实现提交 `be8d9c2`；第二轮修复提交 `12b1bdf`（P2-02）、`2d91c92`（P3-01/P3-02）；P2-01 证据脱敏与分支历史清理提交 `b6cf344`；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open，不合并；详细测试与证据见 [T1-03-REPORT.md](testing/reports/T1-03-REPORT.md)。
 - TOCTOU 残余风险按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复、不得宣称绝不写入 C 盘；未经用户另行授权不得开始完整句柄相对改造/custom SQLite VFS。
 - 备份策略（OPEN-001/002/003）未确认前，不实施、也不宣称自动备份。
 - 最小化提醒/Toast、托盘、单实例等系统集成仍按计划在阶段 6（T6-07）验收。
@@ -313,3 +313,49 @@
 - 待安排排序固定为 `created_at DESC, id DESC`；手动排序/优先级/状态流转/计划/复盘/附件/报表/备份恢复属于后续任务，本任务未实现。
 - 继承验证脚本仅更新 schema 版本断言（2 → 3），未改变产品行为。
 - **下一步：** 等待独立审计；审计通过前不合并 PR、不开始 T1-04/T1-05。
+
+## T1-03 第二轮定向修复结果（2026-11-19，等待第二轮独立审计）
+
+**任务：** T1-03 工作事项快速创建和待安排区域 — 第一轮独立审计四项问题定向修复。
+**当前状态：** **第二轮定向修复完成，等待第二轮独立审计**。PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open；main 未修改。
+
+### 修复内容
+
+| 审计问题 | 修复 | 验证 |
+|---|---|---|
+| **P2-01** 原始日志与机器信息提交 | 删除 `T1-03-assets/logs/`（9 个原始日志）；11 个 JSON 证据脱敏；新增 `SANITIZATION.md`；重写本任务分支 docs/evidence 提交并 `--force-with-lease` 推送（旧 HEAD `2342828` → 新 HEAD `b6cf344`；本地恢复分支/bundle 保留） | 当前证据扫描 0 命中；脱敏前后结构一致性 11/11；分支新增历史深度扫描 0 命中 |
+| **P2-02** Rust / TS DTO 契约不一致 | `WorkItemDto` 统一为 Rust 实际 10 字段；Bridge 严格拒绝缺字段/类型错误/非法状态/未知字段；Rust 完整序列化测试；Node 契约测试 17 项 | Rust 124/124；Bridge 17/17；真实 E2E 创建响应严格校验通过 |
+| **P3-01** 创建成功提示时机不准确 | 创建成功/列表刷新成功/刷新失败三态分离；刷新成功后才提示已更新；失败显示 warning + 重试；不重复创建 | E2E 中间态/成功态/失败/重试/无重复创建断言；2 张新截图 |
+| **P3-02** UAT 脚本缺少数据库复用保护 | 新增 `T1-03UatPath.ps1`：规范化路径、限定专用测试根目录、拒绝正式目录/根目录外/`..` 越界/已知数据库/非空目录；不删除/不覆盖 | 路径安全专项 23/23 PASS；不安全目录编排退出码 2 |
+
+### 验证结果
+
+| 项目 | 结果 |
+|---|---|
+| `cargo fmt --all -- --check` / `cargo check --workspace --all-targets` | PASS（退出码 0） |
+| `cargo test --workspace` | **124 passed / 0 failed** |
+| `npm run check` | PASS（svelte-check 0/0；Bridge 17/17；Design Token 49/49） |
+| `npm run build` | PASS |
+| Bridge DTO 专项（`node --test scripts/quality/work-item-bridge.test.mjs`） | **17/17 PASS** |
+| UAT 路径安全专项（`test-t1-03-uat-path.ps1`） | **23/23 PASS** |
+| T1-03 Release 主 UI/IPC（新 EXE） | **84/84 PASS** |
+| T1-03 最小窗口 + 真实关闭 | **12/12 PASS**，退出码 0 |
+| T1-03 关闭重开持久化 | **17/17 PASS**，退出码 0 |
+| T1-03 数据库只读探针 | **25/25 PASS**（main 后 5 条 / 重启后 6 条；外键 0 违规） |
+| 继承便携验证 | **106 项，90 PASS / 0 FAIL / 1 WARN 保留** |
+| 继承异常注入 | **73 项，64 PASS / 0 FAIL** |
+| 继承 T1-02 UI E2E | 主 73/73；最小窗口 12/12；关闭退出码 0 |
+| Release EXE | **10,352,128 字节**；SHA-256 `3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3` |
+
+### 证据与 Git
+
+- 报告：[T1-03-REPORT.md](testing/reports/T1-03-REPORT.md)
+- 证据：[T1-03-assets/](testing/reports/T1-03-assets/README.md)（19 张截图、11 个脱敏 JSON、脱敏说明）
+- 第二轮修复提交：`12b1bdf`（P2-02）、`2d91c92`（P3-01/P3-02）；历史清理提交 `b6cf344`
+- PR：[#8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（Open，不合并）
+
+### 遗留风险
+
+- 尚未第二轮独立审计/用户验收；普通 SQLite 未加密（DEC-028）；TOCTOU 按 DEC-029 延期至 Issue #2。
+- 仓库基线 main 中既有 T1-01/T1-02 历史证据仍含同类机器信息（非本 PR 新增，未扩大修改）。
+- GitHub 不可达对象可能保留有限缓存；不能宣称服务端立即物理删除。
