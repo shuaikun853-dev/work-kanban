@@ -3,8 +3,8 @@
 **更新日期：** 2026-11-19  
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **最近完成任务：** T1-02 项目创建、编辑、归档（用户验收完成，PR #7 已合并）  
-**当前任务：** T1-03 工作事项快速创建和待安排区域（未开始，等待单独启动指示）  
-**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01、T1-02 均已完成用户验收并合并到 `main`。T1-02 第二轮独立审计通过，P2-01 / P3-01 / P3-02 已关闭；独立回归 Rust 90/90、前端质量门禁 49/49、Release UI E2E 连续 5/5。PR [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7) 已于 2026-11-19 合并，合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。**T1-03 尚未开始，等待用户单独启动指示。** TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。
+**当前任务：** T1-03 工作事项快速创建和待安排区域（进行中：开发准备；待确认归档项目是否可用于新建工作）  
+**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01、T1-02 均已完成用户验收并合并到 `main`。T1-02 第二轮独立审计通过；PR #7 合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。T1-03 已获用户授权，分支 `task/T1-03-quick-create-pending` 已从 main `018e851e8daf5835391a7b61caf881bc57c2ad42` 创建，任务说明已建立；当前处于开发准备，归档项目能否用于新建工作待用户确认。未确认前不实现该项目选择策略。T1-04 / T1-05 未启动。TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。
 
 ## 最新产品决策
 
@@ -25,7 +25,8 @@
 - 首页优先展示今日要做、今日已完成、当前工作；复盘与待跟进降为次级信息；禁止堆叠统计图表和无关指标。
 - 前端组件分层、Design Tokens、typed Bridge、CSS 隔离和 UI 回归规则已写入 UI 规范、技术架构和 AGENTS.md。
 - **T1-02 已进入开发：项目 CRUD + UI 基础应用壳/导航 + 项目管理页面。**
-- **T1-02 已验收完成并合并。** 第二轮独立审计通过；用户于 2026-11-19 明确接受；PR #7 合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。详见 [第二轮独立审计报告](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)、[机器可读审计证据](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-evidence.json) 和 [用户验收记录](testing/reports/T1-02-USER-ACCEPTANCE.md)。**T1-03 未开始，等待单独启动指示。**
+- **T1-02 已验收完成并合并。** 第二轮独立审计通过；用户于 2026-11-19 明确接受；PR #7 合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。详见 [第二轮独立审计报告](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)、[机器可读审计证据](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-evidence.json) 和 [用户验收记录](testing/reports/T1-02-USER-ACCEPTANCE.md)。
+- **T1-03 已启动开发准备。** 任务说明：[T1-03-Quick-Work-Item-Creation.md](development/tasks/T1-03-Quick-Work-Item-Creation.md)；分支 `task/T1-03-quick-create-pending`；归档项目选择规则待用户确认。
 
 ## 阶段 0：技术验证
 
@@ -52,6 +53,7 @@
 |---|---|---|
 | T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | **验收完成**（用户 2026-11-18 确认；PR #1 已合并到 main，commit `260e6c0`；TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
 | T1-02 | 项目创建、编辑、归档 | **验收完成，PR #7 已合并** |
+| T1-03 | 工作事项快速创建和待安排区域 | **进行中（开发准备；归档项目选择规则待确认）** |
 | T1-03 | 工作事项快速创建和待安排区域 | 未开始 |
 | T1-04 | 多项目独立副本创建 | 未开始 |
 | T1-05 | 工作事项状态流转和历史记录 | 未开始 |
@@ -250,3 +252,12 @@
 - **最终状态：验收完成。** 第二轮独立审计通过；用户明确回复“接受 T1-02”；PR #7 已合并。
 - **合并提交：** `ab6aba32a94d7d091b20f0ab49b25badf26377c4`；当前 `main` HEAD 与该提交一致。
 - **下一任务：** T1-03 工作事项快速创建和待安排区域，当前未开始；等待用户单独启动指示。
+
+
+## T1-03 开发启动记录（2026-11-19）
+
+- 用户已明确授权启动 T1-03「工作事项快速创建和待安排区域」。
+- 开发分支：`task/T1-03-quick-create-pending`；基线 main：`018e851e8daf5835391a7b61caf881bc57c2ad42`。
+- 任务说明：`docs/development/tasks/T1-03-Quick-Work-Item-Creation.md`。
+- 当前状态：开发准备中；归档项目是否允许被新建工作选择待用户确认。确认前不擅自实现该规则。
+- T1-04、T1-05 均未启动；本任务完成自测后进入独立审计，不自行合并 PR。
