@@ -5,7 +5,7 @@
 **文档状态：** 开发执行基线（阶段 0 已放行；T1-01 已验收完成；T1-02 第二轮独立审计通过，当前**待用户验收**；TOCTOU 按 DEC-029 接受并延期） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；T1-01 验收完成。**T1-02 第二轮独立审计已通过，当前状态“待用户验收”**：第一轮审计的 P2-01 / P3-01 / P3-02 已关闭；P2-01 第五轮专项复核通过。独立回归 `cargo test --workspace` 90/90、`npm run check`（0 errors / 0 warnings、18 文件 0 违规、49/49）、`npm run build` 通过；Release UI E2E 连续 5 次通过（每次主检查 73/73、最小窗口 12/12、CSP 0、页面异常 0、关闭退出码 0）。用户验收前不得标记任务完成或合并 PR #7。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。详见 [T1-02 第二轮独立审计报告](../testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)、[用户验收清单](../testing/reports/T1-02-USER-ACCEPTANCE.md)。
+**当前进度：** 阶段 0 已放行；T1-01 验收完成。T1-02 第二轮独立审计已通过，用户于 2026-11-19 明确回复“接受 T1-02”，当前**用户验收通过，待 PR #7 合并**。PR 合并完成并同步 main 前不启动 T1-03。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。详见 [T1-02 第二轮独立审计报告](../testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)、[用户验收清单](../testing/reports/T1-02-USER-ACCEPTANCE.md)。
 
 ---
 
@@ -167,7 +167,7 @@
 | 任务 | 内容 | 核心验收 |
 |---|---|---|
 | T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | Tauri 2 + Svelte 5 + TypeScript + Rust 可构建；SQLite 初始化、user_version migration、外键、WAL、事务和测试通过 |
-| T1-02 | 项目创建、编辑、归档 | 项目 CRUD；归档不删除工作历史 | **待用户验收**（第二轮独立审计通过；等待用户实际验收） |
+| T1-02 | 项目创建、编辑、归档 | 项目 CRUD；归档不删除工作历史 | **用户验收通过，待 PR #7 合并** |
 | T1-03 | 工作事项快速创建和待安排区域 | 新建默认待安排；支持未归属项目 |
 | T1-04 | 多项目独立副本创建 | 多项目创建时每个项目有独立工作记录、状态、日志和附件关联 |
 | T1-05 | 工作事项状态流转和历史记录 | 待安排、未开始、进行中、已完成、已放弃规则正确；状态变更可追溯 |
@@ -183,7 +183,7 @@
 - 前端架构：应用壳、Design Tokens、通用组件、Feature 页面、typed Bridge、DTO Contracts、纯展示函数分层。
 - UI 实现并入对应业务纵向任务，不另造重复业务任务；每次只实现一个页面/一个可验证切片，附截图和回归结果。
 - **T1-02 已按 DEC-032 完成自定义无边框标题栏与三色真实窗口控制**；项目管理 UI 使用已确认的 Design Tokens、AppShell、Sidebar 和紧凑桌面布局。
-- **T1-02 当前状态：待用户验收。** 第二轮独立审计已于 2026-11-19 通过；用户明确验收前，不得合并 PR #7 或开始 T1-03。
+- **T1-02 当前状态：用户验收通过，待 PR #7 合并。** 用户于 2026-11-19 明确回复“接受 T1-02”；合并前不得开始 T1-03。
 
 ### T1-01 详细范围
 
@@ -214,7 +214,7 @@
 
 ### T1-02 详细范围与实际交付（2026-11-19，第二轮独立审计通过，待用户验收）
 
-**当前状态：** **待用户验收**。第二轮独立审计已通过；用户明确接受并完成 PR 合并前，不得标记“验收完成”或启动 T1-03。  
+**当前状态：** **用户验收通过，待 PR #7 合并**。用户明确接受已记录；PR 合并完成后同步最终状态，再标记任务完成。  
 **分支：** `task/T1-02-project-management`；基线 main `0cafde6`。  
 **测试报告：** [T1-02-REPORT.md](../testing/reports/T1-02-REPORT.md)；机器可读证据：[T1-02-evidence.json](../testing/reports/T1-02-evidence.json)；返工修复报告：[T1-02-AUDIT-FIX-REPORT.md](../testing/reports/T1-02-AUDIT-FIX-REPORT.md)。
 
@@ -502,3 +502,5 @@
 | 2026-11-18 | T1-02 第一轮审计返工修复完成（待第二轮独立审计） | 修复 P2-01：审计点名 9 处 + 静态检查覆盖范围内 23 处，共 32 处组件/UI CSS 原始颜色收敛为语义 Token（新增 20 个，视觉不变）；新增 `scripts/quality/check-design-tokens.mjs` + 8 项正反向测试并接入 `npm run check`（18 文件 0 违规）。修复 P3-01 过期 Tauri 注释。修复 P3-02：E2E 改为 boot marker/IPC 就绪/应用壳/项目 Loading 终态 4 项确定性等待并保留失败诊断，只改测试脚本。统计口径核实：主检查 73 项、最小窗口实际执行 12 项（旧 JSON 仅持久化 11 项，已修复为 12 项全部持久化）。最终 Release EXE 10,230,784 字节、SHA-256 `51BBBA8D…356EE`；连续 5 次完整 E2E 全部通过（每次主 73/73、最小窗口 12/12）；Rust 90/90；便携 106 项、异常注入 73 项 0 FAIL；诊断页 24/24。修复提交 `881e755`（P2-01）、`c3593e6`（P3-01）、`a9e4198`（P3-02）、`8e215f8`（证据与文档）。状态置为**待审计**，等待第二轮独立审计；PR #7 不合并，T1-03 不开始。报告：`docs/testing/reports/T1-02-AUDIT-FIX-REPORT.md`。 |
 
 | 2026-11-19 | T1-02 第二轮独立审计通过（待用户验收） | 审计代码基线 `8123e0354bc3d3393944a323ecd59f709ac3b051`；P2-01 第五轮专项审计通过，P3-01 / P3-02 已核验关闭；独立回归 Rust 90/90、`npm run check`（49/49、18 文件 0 违规）、`npm run build`，Release UI E2E 5/5（每次主 73/73、最小窗口 12/12、CSP 0、页面异常 0、关闭退出码 0）。状态转为待用户验收；PR #7 保持 Open，main 未修改，T1-03 未开始。报告 `docs/testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md`。 |
+
+| 2026-11-19 | T1-02 用户验收通过 | 用户在当前对话明确回复“接受 T1-02”；验收记录 `docs/testing/reports/T1-02-USER-ACCEPTANCE.md` 已更新。PR #7 进入合并流程；合并完成并同步 main 前不开始 T1-03。 |
