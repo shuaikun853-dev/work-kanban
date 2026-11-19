@@ -9,7 +9,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "check": "svelte-check --tsconfig ./tsconfig.json && npm run check:design-tokens && npm run test:design-tokens",
+    "check:design-tokens": "node scripts/quality/check-design-tokens.mjs",
+    "test:design-tokens": "node --test scripts/quality/design-tokens.test.mjs",
     "tauri": "tauri"
   },
   "dependencies": {

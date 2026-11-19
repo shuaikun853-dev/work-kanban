@@ -3,5 +3,11 @@
   "identifier": "default",
   "description": "WorkManager 主窗口最小权限：只开放核心默认能力；不开放任意 SQL、任意文件读写或任意命令执行。",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "core:default",
+    "core:window:allow-close",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-start-dragging"
+  ]
 }

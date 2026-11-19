@@ -1,0 +1,9 @@
+cargo :     Checking workmanager-core v0.1.0 (D:\工作事项看板\crates\workmanager-core)
+所在位置 行:1 字符: 387
++ ... STEXITCODE; cargo check --workspace --all-targets > "$logDir\final-ca ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Checking wo...rkmanager-core):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    Checking workmanager v0.1.0 (D:\工作事项看板\src-tauri)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.94s

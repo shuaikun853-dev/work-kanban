@@ -17,3 +17,6 @@ tauri-build = { workspace = true, features = [] }
 serde.workspace = true
 tauri.workspace = true
 workmanager-core.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

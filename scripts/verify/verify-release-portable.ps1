@@ -6,11 +6,11 @@
 # 覆盖检查（a-g）：
 #   a. 记录 Release EXE 路径、大小、SHA-256；
 #   b. 在隔离目录复制 EXE 并启动，验证主窗口标题、data/ 子目录、work.db 创建；
-#   c. 用 python sqlite3 只读验证 user_version=1、integrity_check=ok、
-#      journal_mode=wal、schema_migrations 表及 version=1、主数据库文件大于 0；
+#   c. 用 python sqlite3 只读验证 user_version=2、integrity_check=ok、
+#      journal_mode=wal、schema_migrations 表及版本 1、2、主数据库文件大于 0；
 #   d. 关闭应用后验证 WAL/SHM 无残留数据、数据库仍可只读打开且完整性 ok；
 #   e. 持久化：关闭后写入虚构 canary 到 settings(key='test-canary')，重启应用，
-#      验证 canary 仍在、user_version 仍为 1、schema_migrations 仍只有 1 条；
+#      验证 canary 仍在、user_version 仍为 2、schema_migrations 仍只有 2 条；
 #   f. Release 忽略 WORKMANAGER_TEST_PORTABLE_ROOT：设置诱饵目录后启动，验证
 #      数据库创建在 EXE 同级 data/ 而诱饵目录保持为空；
 #   g. 汇总 PASS/FAIL，任一 FAIL 时退出码 1。
@@ -250,31 +250,33 @@ function Add-DatabaseInspectionChecks {
     if ($null -ne $Inspection.schema_migrations_count) {
         $migrationCount = [int]$Inspection.schema_migrations_count
     }
-    if ($migrationCount -eq 1) {
-        Add-VerifyCheck -Name ($Prefix + '.schema_migrations_count') -Status 'PASS' -Detail 'schema_migrations 记录数=1'
+    if ($migrationCount -eq [int]$script:VerifyExpectedSchemaVersion) {
+        Add-VerifyCheck -Name ($Prefix + '.schema_migrations_count') -Status 'PASS' -Detail ('schema_migrations 记录数=' + $migrationCount)
     }
     else {
-        Add-VerifyCheck -Name ($Prefix + '.schema_migrations_count') -Status 'FAIL' -Detail ('schema_migrations 记录数=' + [string]$migrationCount + '（期望 1）')
+        Add-VerifyCheck -Name ($Prefix + '.schema_migrations_count') -Status 'FAIL' -Detail ('schema_migrations 记录数=' + [string]$migrationCount + '（期望 ' + $script:VerifyExpectedSchemaVersion + '）')
     }
 
     $migrationVersions = @()
     if ($null -ne $Inspection.schema_migrations) {
         $migrationVersions = @($Inspection.schema_migrations | ForEach-Object { [int]$_.version })
     }
-    if ($migrationVersions -contains 1) {
-        Add-VerifyCheck -Name ($Prefix + '.schema_migration_version_1') -Status 'PASS' -Detail ('versions=' + ($migrationVersions -join ','))
+    $expectedVersions = @(1..[int]$script:VerifyExpectedSchemaVersion)
+    $missingVersions = @($expectedVersions | Where-Object { $migrationVersions -notcontains $_ })
+    if ($missingVersions.Count -eq 0) {
+        Add-VerifyCheck -Name ($Prefix + '.schema_migration_versions') -Status 'PASS' -Detail ('versions=' + ($migrationVersions -join ','))
     }
     else {
-        Add-VerifyCheck -Name ($Prefix + '.schema_migration_version_1') -Status 'FAIL' -Detail ('versions=' + ($migrationVersions -join ','))
+        Add-VerifyCheck -Name ($Prefix + '.schema_migration_versions') -Status 'FAIL' -Detail ('versions=' + ($migrationVersions -join ',') + '（缺少 ' + ($missingVersions -join ',') + '）')
     }
 
     # 外部只读连接无法读取应用进程内的 PRAGMA foreign_keys（SQLite 每连接配置），
-    # 按 task-2 约定用“schema_migrations 存在且 version=1”证明初始化/迁移路径已执行。
-    if (($tables -contains 'schema_migrations') -and ($migrationVersions -contains 1)) {
-        Add-VerifyCheck -Name ($Prefix + '.foreign_keys_enabled_evidence') -Status 'PASS' -Detail 'schema_migrations 存在且 version=1（按 task-2 约定作为 foreign_keys=ON 初始化路径证据）'
+    # 用“schema_migrations 包含全部版本”证明初始化/迁移路径已执行。
+    if (($tables -contains 'schema_migrations') -and ($missingVersions.Count -eq 0)) {
+        Add-VerifyCheck -Name ($Prefix + '.foreign_keys_enabled_evidence') -Status 'PASS' -Detail ('schema_migrations 完整（versions=' + ($migrationVersions -join ',') + '，作为 foreign_keys=ON 初始化路径证据）')
     }
     else {
-        Add-VerifyCheck -Name ($Prefix + '.foreign_keys_enabled_evidence') -Status 'FAIL' -Detail 'schema_migrations/version=1 缺失，无法证明初始化路径'
+        Add-VerifyCheck -Name ($Prefix + '.foreign_keys_enabled_evidence') -Status 'FAIL' -Detail 'schema_migrations 版本不完整，无法证明初始化路径'
     }
 
     $foreignKeyViolations = 0

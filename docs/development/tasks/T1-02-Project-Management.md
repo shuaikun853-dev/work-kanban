@@ -1,11 +1,21 @@
 # T1-02：项目创建、编辑、归档
 
-**任务状态：** 开发中  
+**任务状态：** 用户验收通过，待 PR #7 合并（用户于 2026-11-19 明确回复“接受 T1-02”）  
 **启动日期：** 2026-11-18  
+**自测完成日期：** 2026-11-18  
+**返工修复完成日期：** 2026-11-18  
 **所属阶段：** 阶段 1：基础架构与工作事项  
 **前置任务：** T1-01 已验收完成并已合并到 main  
 **开发分支：** `task/T1-02-project-management`  
-**目标分支：** `main`
+**目标分支：** `main`  
+**Pull Request：** [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)（保持 Open，不合并）  
+**测试报告：** [T1-02-REPORT.md](../../testing/reports/T1-02-REPORT.md)  
+**返工修复报告：** [T1-02-AUDIT-FIX-REPORT.md](../../testing/reports/T1-02-AUDIT-FIX-REPORT.md)  
+**第二轮独立审计报告：** [T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md](../../testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)  
+**用户验收清单：** [T1-02-USER-ACCEPTANCE.md](../../testing/reports/T1-02-USER-ACCEPTANCE.md)  
+**第二轮独立审计机器可读证据：** [T1-02-SECOND-INDEPENDENT-AUDIT-evidence.json](../../testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-evidence.json)  
+**机器可读证据：** [T1-02-evidence.json](../../testing/reports/T1-02-evidence.json)  
+**返工修复机器可读证据：** [T1-02-AUDIT-FIX-evidence.json](../../testing/reports/T1-02-AUDIT-FIX-evidence.json)
 
 ## 1. 权威依据
 
@@ -62,6 +72,12 @@ T1-02 至少完成：
 8. 归档后的项目仍可用于历史数据展示，但不能作为新工作事项的正常可选项目（具体行为必须以 PRD/后续任务定义为准，不得提前扩展工作事项业务）。
 
 **不要在本任务实现 T1-03 工作事项创建、T1-04 多项目创建或 T1-05 状态流转。**
+
+### 3.1 全局窗口标题栏（DEC-032，UI Shell 前置切片）
+
+- 按用户 2026-11-18 确认的 DEC-032，Windows 10 主窗口使用 Tauri 2 自定义无边框标题栏（`decorations: false`）。
+- 红/黄/绿三个圆点分别真实调用关闭、最小化、最大化/还原窗口 API；保留拖动、双击最大化、窗口缩放、最小尺寸和键盘可访问性。
+- 该切片在本次 T1-02 分支中保留并完成 Release 实测：最大化视口 1100→1920→1100；点击关闭按钮后进程真实退出（退出码 0）。
 
 ## 4. 数据与业务边界
 
@@ -151,7 +167,7 @@ UI 变更必须提供：
 - 更新 `docs/STATUS.md`、`docs/development/DEVELOPMENT_PLAN.md` 和本任务说明；
 - 推送任务分支；
 - 创建 PR 指向 `main`；
-- PR 合并前状态只能为“待审计”，不得自行标记“验收完成”。
+- 用户明确接受后状态为“用户验收通过，待 PR #7 合并”；PR 合并完成并同步 main 后，方可标记任务“验收完成”。
 
 最终报告必须提供：
 
@@ -180,3 +196,92 @@ UI 变更必须提供：
 - 不把“代码完成”写成“验收完成”。
 
 **完成代码和自测后停止，等待独立审计。**
+
+---
+
+## 9. 实际交付结果（2026-11-18，待审计）
+
+**代码提交：** `b8962b5`（Core + migration）、`2b3035d`（Tauri IPC）、`14a542e`（UI）、`30666c8`（验证脚本）。
+
+**实际完成：**
+
+- migration 0002：`projects` 表（id、name、is_archived、created_at、updated_at），schema version 1 → 2；T1-01 migration 历史未修改。
+- Rust Core `projects/` 模块：模型、名称校验、参数化 SQL 仓储、应用服务、`IMMEDIATE` 写事务与失败回滚。
+- Tauri typed IPC：`list_projects` / `create_project` / `update_project` / `archive_project`；请求 DTO 拒绝未知字段；无任意 SQL / 任意文件接口。
+- 前端：Design Tokens、AppShell、Sidebar、navigation、typed Bridge、DTO Contracts；项目管理列表/新建/编辑/归档/loading/空/错误/长名称/归档态；诊断页迁移且功能不变。
+- 归档为 UPDATE 标记，不删除项目记录；已归档项目只读并保留在列表；重复归档幂等。
+- 测试：`cargo test --workspace` 90 passed / 0 failed；`npm run check` / `npm run build` / `cargo fmt --check` / `cargo check` 均通过。
+- Release：`target\release\workmanager.exe` 10,230,272 字节，SHA-256 `DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8`。
+- Release UI/IPC：主检查 73/73、最小窗口 12/12（旧证据 JSON 因关闭按钮前写盘只持久化 11 项；该口径问题已在返工中修复）、关闭按钮真实退出；继承便携验证 106 项 0 FAIL、异常注入 73 项 0 FAIL；诊断页 24/24。
+- 截图与日志：`docs/testing/reports/T1-02-assets/`。
+
+**未实现（保持任务边界）：** T1-03 工作事项、T1-04 多项目副本、T1-05 状态流转、每日计划、复盘、报表、附件、备份恢复、TOCTOU 加固。
+
+**结论：** 开发与自测完成，但第一轮独立审计发现 P2-01 UI Design Token 规范问题，**状态改为返工**。修复完成并重新审计通过前，不得标记验收完成，不合并 PR #7，不开始 T1-03。详见 `docs/testing/reports/T1-02-INDEPENDENT-AUDIT-REPORT.md`。
+
+
+## 10. 第一轮独立审计结果（2026-11-18）
+
+- **审计结论：未通过，进入小范围返工。**
+- P2-01：项目 UI / 通用 UI 组件存在散落 raw hex/rgb/rgba 颜色值，未完全遵守 Design Token 规范。
+- P3-01：`src-tauri/src/lib.rs` 存在过期的命令说明注释。
+- P3-02：Release UI E2E 第一次独立运行出现一次空状态等待超时；立即重跑并随后连续 3 次完整运行通过，暂不认定为产品缺陷，但要求保留证据并考虑增强测试等待逻辑。
+- 独立实测：`cargo test --workspace` 90 passed / 0 failed；`cargo fmt` / `cargo check` / `npm run check` / `npm run build` 全部退出码 0；Release SHA-256 与交付报告一致；便携 106 项、异常 73 项均 0 FAIL；Release UI E2E 在首次抖动后连续 4 次通过。
+- PR #7 保持 Open，不合并；main 不修改；T1-03 不开始。
+- 权威审计报告：`docs/testing/reports/T1-02-INDEPENDENT-AUDIT-REPORT.md`。
+
+## 11. 返工修复结果（2026-11-18，待第二轮独立审计）
+
+**当前状态：** **待审计**。第一轮独立审计 P2-01 / P3-01 / P3-02 已修复并完成重新自测；开发代理
+不自行宣布审计通过或验收完成，第一轮独立审计报告未修改。
+
+**修复内容：**
+
+- **P2-01（Design Token）：** 审计点名 9 处原始颜色全部改为语义 Token；另把静态检查覆盖范围内
+  同类散落颜色一并收敛，共 **32 处**（含 T1-01 诊断页 18 处、DEC-032 标题栏 4 处、`app.css` 1 处），
+  新增 **20 个**语义 Token，取值与修改前渲染值一致（视觉无变化）；新增
+  `scripts/quality/check-design-tokens.mjs` 静态检查与 `design-tokens.test.mjs` 8 项正反向测试，
+  并接入 `npm run check`；实际检查 18 个文件、0 违规。
+- **P3-01（过期注释）：** `src-tauri/src/lib.rs` 命令说明更新为数据库健康检查 + 项目 CRUD 5 个命令；
+  未改命令注册、IPC 名称或 DTO。
+- **P3-02（E2E 稳定性）：** 只改测试脚本——新增 reload 新文档 boot marker、应用壳 + Tauri IPC 就绪、
+  项目 Loading 终态 4 项确定性等待，失败时写页面状态/IPC/异常/截图诊断 JSON；保留空状态断言；
+  未改产品业务逻辑。最终 EXE 上 **连续 5 次完整 E2E 全部通过**（每次主检查 73/73、最小窗口 12/12）。
+- **统计口径：** 主检查 73 项、最小窗口实际执行 12 项；旧证据 JSON 因“关闭按钮前写盘”只持久化
+  11 项，审计报告 12/12 正确。返工后 12 项全部进入证据 JSON，编排脚本另行验证进程真实退出。
+
+**回归结果（最终 EXE）：** `cargo fmt --check` / `cargo check` / `cargo test`（90 passed） /
+`npm run check` / `npm run build` / Release 构建全部退出码 0；便携 106 项、异常注入 73 项 0 FAIL；
+诊断页 24/24；CSP 0；未捕获异常 0。Release EXE 10,230,784 字节，
+SHA-256 `51BBBA8DD17103D742E1BD4A85B83377F7578D34584F2206F30EDFEC8D3DC7F6`。
+
+**修复提交：** `881e755`（P2-01）、`c3593e6`（P3-01）、`a9e4198`（P3-02）、`8e215f8`（证据与文档）。
+
+**证据：** [T1-02-AUDIT-FIX-REPORT.md](../../testing/reports/T1-02-AUDIT-FIX-REPORT.md)、
+[T1-02-AUDIT-FIX-evidence.json](../../testing/reports/T1-02-AUDIT-FIX-evidence.json)、
+[T1-02-AUDIT-FIX-assets/](../../testing/reports/T1-02-AUDIT-FIX-assets/README.md)。
+
+**未开始/未修改：** T1-03 未开始；PRD、DEC-028～DEC-032、UI 布局、三色窗口按钮、项目业务逻辑、
+T1-01 基础架构、migration 历史均未修改；main 未修改；PR #7 未合并。
+
+
+## 12. 第二轮独立审计结果（2026-11-19，待用户验收）
+
+**审计结论：** **通过**。审计对象为 PR #7，代码基线 `8123e0354bc3d3393944a323ecd59f709ac3b051`；本轮属于 T1-02 第二轮整体复核，其中 P2-01 为第五轮专项复核。
+
+- **P2-01：通过。** 组件 `style` prop 与 HTML 原生元素样式按 Svelte AST 节点语义区分；组件 `style` / `Style` / `STYLE` prop 不误报；原生 HTML 小写/大写属性、条件表达式分支保持检测。独立测试 49/49；隔离探针覆盖组件 prop、原生元素和混合场景，结果符合预期。
+- **P3-01：通过。** `src-tauri/src/lib.rs` 过期命令说明已更新，与当前项目 CRUD 命令边界一致。
+- **P3-02：通过。** E2E 采用新文档 boot marker、应用壳/IPC 就绪和项目 Loading 终态等待；本轮独立 Release E2E 连续 5/5 通过，每次主检查 73/73、最小窗口 12/12、CSP 0、页面异常 0、关闭退出码 0。
+- **独立回归：** `cargo fmt --all -- --check`、`cargo check --workspace --all-targets`、`cargo test --workspace`（90/90）、`npm run check`（0 errors / 0 warnings、18 文件 0 违规、49/49）、`npm run build`（156 modules）全部通过。
+- **Release 实测产物：** `target/release/workmanager.exe`，10,230,784 字节，SHA-256 `e2f239a5bb7e645ebecebd4042f12bea57b8d8451d2d7e6046e80cff5a330af7`；连续五次运行均使用该哈希。独立运行日志与证据位于 `D:\WorkManager-test-data\t1-02-second-audit-20261119\`。
+- **未关闭的非阻塞边界：** 归档关联测试目前使用测试探针表；真实 `work_items` 关联尚未在 T1-02 建立，将在 T1-03 引入后补充集成验证。静态检查不覆盖 `style:` 指令和脚本动态颜色（当前代码无此用法）；无独立前端组件/视觉回归框架。TOCTOU 按 DEC-029 接受并延期，普通 SQLite 按 DEC-028 不加密，备份策略仍待用户确认。
+
+**当前状态：** **待用户验收**，不是验收完成。用户明确接受后，才进入 PR #7 合并流程；合并前不开始 T1-03。用户验收记录见 [T1-02-USER-ACCEPTANCE.md](../../testing/reports/T1-02-USER-ACCEPTANCE.md)。
+
+
+## 13. 用户验收结论（2026-11-19）
+
+- **用户结论：接受 T1-02。** 用户于 2026-11-19 明确回复“接受 T1-02”。
+- **当前状态：用户验收通过，待 PR #7 合并。**
+- 用户验收记录：`docs/testing/reports/T1-02-USER-ACCEPTANCE.md`。对话中未逐项回填验收清单，因此不将未逐项记录的操作伪记为逐项通过。
+- PR 合并完成并同步 main 后，更新任务为“验收完成”；在此之前不启动 T1-03。

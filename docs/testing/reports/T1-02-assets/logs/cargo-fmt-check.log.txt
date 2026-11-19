@@ -1,0 +1,3 @@
+cargo fmt --all -- --check
+EXIT CODE: 0
+RESULT: PASS（无输出；Rust 代码已由 cargo fmt --all 格式化，check 通过）

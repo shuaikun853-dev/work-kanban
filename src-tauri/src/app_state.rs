@@ -3,11 +3,16 @@
 //! 数据库健康检查执行完整 `PRAGMA integrity_check`，属于耗时阻塞操作；
 //! 命令层通过 `spawn_blocking` 在阻塞线程池执行，不占用 UI/主线程（审计 P2）。
 //! 这里只暴露“可跨线程克隆的上下文”，不向前端暴露 SQLite 连接。
+//!
+//! T1-02 新增项目上下文：命令层只通过 [`ProjectService`] 调用项目业务规则，
+//! Tauri 适配层不包含项目业务判断，也不向前端暴露 SQL。
 
 use std::sync::{Arc, Mutex};
 
 use serde::Serialize;
-use workmanager_core::{Database, DatabaseError, DatabaseHealth, PortablePaths};
+use workmanager_core::{
+    Database, DatabaseError, DatabaseHealth, PortablePaths, Project, ProjectError, ProjectService,
+};
 
 use crate::APP_NAME;
 
@@ -44,6 +49,13 @@ impl AppState {
     pub fn health_context(&self) -> DatabaseHealthContext {
         DatabaseHealthContext {
             paths: Arc::clone(&self.paths),
+            database: Arc::clone(&self.database),
+        }
+    }
+
+    /// 创建可移动到 `spawn_blocking` 任务中的项目命令上下文。
+    pub fn project_context(&self) -> ProjectContext {
+        ProjectContext {
             database: Arc::clone(&self.database),
         }
     }
@@ -100,12 +112,81 @@ impl DatabaseHealthContext {
     }
 }
 
+/// 项目命令的线程安全上下文（`Send + 'static`，供 `spawn_blocking` 使用）。
+///
+/// 命令层只能调用本上下文暴露的项目业务方法；不返回 SQLite 连接、不执行任意 SQL。
+#[derive(Clone)]
+pub struct ProjectContext {
+    database: Arc<Mutex<Option<Database>>>,
+}
+
+impl ProjectContext {
+    /// 查询项目列表（只读连接；未归档在前）。
+    pub fn list_projects(&self) -> Result<Vec<Project>, ProjectError> {
+        let mut guard = self.lock_database()?;
+        let database = guard
+            .as_mut()
+            .ok_or_else(|| database_closed_error("查询项目列表"))?;
+        ProjectService::list(database)
+    }
+
+    /// 创建项目。
+    pub fn create_project(&self, name: &str) -> Result<Project, ProjectError> {
+        let mut guard = self.lock_database()?;
+        let database = guard
+            .as_mut()
+            .ok_or_else(|| database_closed_error("创建项目"))?;
+        ProjectService::create(database, name)
+    }
+
+    /// 编辑项目名称。
+    pub fn update_project(&self, project_id: &str, name: &str) -> Result<Project, ProjectError> {
+        let mut guard = self.lock_database()?;
+        let database = guard
+            .as_mut()
+            .ok_or_else(|| database_closed_error("编辑项目"))?;
+        ProjectService::update(database, project_id, name)
+    }
+
+    /// 归档项目（非破坏性标记）。
+    pub fn archive_project(&self, project_id: &str) -> Result<Project, ProjectError> {
+        let mut guard = self.lock_database()?;
+        let database = guard
+            .as_mut()
+            .ok_or_else(|| database_closed_error("归档项目"))?;
+        ProjectService::archive(database, project_id)
+    }
+
+    fn lock_database(&self) -> Result<std::sync::MutexGuard<'_, Option<Database>>, ProjectError> {
+        self.database.lock().map_err(|_| {
+            database_unavailable_error(
+                "数据库连接互斥锁",
+                "数据库连接锁已中毒（前一次操作发生 panic），请重启 WorkManager",
+            )
+        })
+    }
+}
+
+fn database_closed_error(context: &'static str) -> ProjectError {
+    database_unavailable_error(
+        context,
+        "数据库连接已关闭（应用正在退出），无法处理项目请求",
+    )
+}
+
+fn database_unavailable_error(context: &'static str, detail: &str) -> ProjectError {
+    ProjectError::Database(DatabaseError::Sqlite {
+        context,
+        detail: detail.to_string(),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::*;
-    use workmanager_core::{Database, PortablePaths, RuntimeMode};
+    use workmanager_core::{Database, LATEST_SCHEMA_VERSION, PortablePaths, RuntimeMode};
 
     fn unique_test_data_root() -> std::path::PathBuf {
         let nanos = SystemTime::now()
@@ -145,7 +226,7 @@ mod tests {
         assert_eq!(response.app_version, env!("CARGO_PKG_VERSION"));
         assert_eq!(response.runtime_mode, "debug-test");
         assert_eq!(response.database.status, "ok");
-        assert_eq!(response.database.schema_version, 1);
+        assert_eq!(response.database.schema_version, LATEST_SCHEMA_VERSION);
         assert_eq!(response.database.journal_mode, "wal");
         assert!(response.database.foreign_keys);
         assert_eq!(response.database.busy_timeout_ms, 5000);
@@ -160,6 +241,73 @@ mod tests {
 
         // 正常退出关闭连接后，只清理本测试创建的 D 盘隔离目录。
         state.shutdown();
+        let _ = std::fs::remove_dir_all(&data_root);
+    }
+
+    /// T1-02：项目命令上下文必须通过 Rust Core 完成真实 CRUD，
+    /// 且错误以稳定错误码返回；不向命令层泄露 SQLite 连接。
+    #[test]
+    fn project_context_runs_real_project_lifecycle_against_database() {
+        let data_root = unique_test_data_root();
+        std::fs::create_dir_all(&data_root).expect("create D-drive test data root");
+        let exe_path = data_root.join("WorkManager.exe");
+        let paths = PortablePaths::resolve(RuntimeMode::DebugTest, &exe_path, Some(&data_root))
+            .expect("resolve test portable paths");
+        paths.ensure_directories().expect("ensure portable layout");
+        let database = Database::initialize(&paths).expect("initialize database");
+
+        let state = AppState::new(paths.clone(), database);
+        let context = state.project_context();
+        assert_send(&context);
+
+        assert!(
+            context
+                .list_projects()
+                .expect("empty project list")
+                .is_empty(),
+            "新数据库不应包含项目"
+        );
+
+        let created = context
+            .create_project("  虚构 IPC 项目  ")
+            .expect("create project via context");
+        assert_eq!(created.name, "虚构 IPC 项目");
+        assert!(!created.is_archived);
+
+        let listed = context.list_projects().expect("list projects via context");
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].id, created.id);
+
+        let updated = context
+            .update_project(&created.id, "虚构 IPC 项目（编辑）")
+            .expect("update project via context");
+        assert_eq!(updated.name, "虚构 IPC 项目（编辑）");
+
+        let archived = context
+            .archive_project(&created.id)
+            .expect("archive project via context");
+        assert!(archived.is_archived);
+        assert_eq!(
+            context.list_projects().expect("list after archive").len(),
+            1,
+            "归档不得删除项目记录"
+        );
+
+        let error = context
+            .update_project(&created.id, "不应成功")
+            .expect_err("已归档项目必须拒绝编辑");
+        assert_eq!(error.code(), "project-archived");
+
+        let error = context.create_project("   ").expect_err("空白名称必须失败");
+        assert_eq!(error.code(), "project-name-empty");
+
+        // 应用退出关闭连接后，项目命令必须返回结构化错误而不是 panic。
+        state.shutdown();
+        let error = context
+            .list_projects()
+            .expect_err("数据库关闭后必须返回结构化错误");
+        assert_eq!(error.code(), "database-sqlite-error");
+
         let _ = std::fs::remove_dir_all(&data_root);
     }
 }

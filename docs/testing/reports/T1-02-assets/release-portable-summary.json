@@ -1,0 +1,1620 @@
+{
+    "script":  "verify-release-portable",
+    "overall":  "PASS",
+    "started_at":  "2026-11-18T13:04:52.5824031+08:00",
+    "finished_at":  "2026-11-18T13:05:00.0459330+08:00",
+    "duration_seconds":  7.5,
+    "output_dir":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2",
+    "exe_path":  "D:\\工作事项看板\\target\\release\\workmanager.exe",
+    "exe_size_bytes":  10230272,
+    "exe_sha256":  "DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8",
+    "fatal_error":  "",
+    "counts":  {
+                   "total":  106,
+                   "pass":  90,
+                   "fail":  0,
+                   "warn":  1,
+                   "info":  15
+               },
+    "environment":  {
+                        "computer_name":  "<host>",
+                        "user_name":  "<user>",
+                        "user_identity":  "<host>\\<user>",
+                        "powershell_version":  "5.1.19041.6456",
+                        "powershell_edition":  "Desktop",
+                        "os_version":  "Microsoft Windows NT 10.0.19045.0",
+                        "is_64_bit_process":  true,
+                        "process_id":  38104,
+                        "current_directory":  "D:\\工作事项看板",
+                        "test_data_root":  "D:\\WorkManager-test-data",
+                        "output_dir":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2",
+                        "python":  {
+                                       "path":  "E:\\Python314\\python.exe",
+                                       "version":  "3.14.5",
+                                       "sqlite_version":  "3.50.4"
+                                   }
+                    },
+    "artifacts":  [
+                      {
+                          "label":  "python SQLite 探针脚本",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\tools\\sqlite_probe.py",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "C 盘边界基线 JSON（before）",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\c-drive-boundary-before.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "用例沙箱目录 case1-first-launch",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch",
+                          "kind":  "directory",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "首次启动主窗口截图",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-main-window.png",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "case1 WebView2 目录快照 JSON",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-webview2-directory-snapshot.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "case1 运行期间数据库快照 JSON",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-db-running-snapshot.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "case1 首次启动 标准输出日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-app1-stdout.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "case1 首次启动 标准错误日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-app1-stderr.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "case1 data 目录快照 JSON",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-data-directory-snapshot.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "case1 关闭后 sidecar 状态 JSON",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-sidecars-after-first-close.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "SQLite 检查 JSON case1-db-after-first-close",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-db-after-first-close.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "SQLite 检查 JSON persistence-canary-insert",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\persistence-canary-insert.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "SQLite 检查 JSON persistence-canary-before-restart",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\persistence-canary-before-restart.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "case1 重启 标准输出日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-app2-stdout.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "case1 重启 标准错误日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-app2-stderr.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "SQLite 检查 JSON persistence-db-after-restart",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\persistence-db-after-restart.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "用例沙箱目录 case2-env-ignore",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore",
+                          "kind":  "directory",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "case2 环境变量隔离 标准输出日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case2-env-ignore-stdout.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "case2 环境变量隔离 标准错误日志",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case2-env-ignore-stderr.log",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "case2 诱饵目录快照 JSON",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case2-decoy-root-snapshot.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "SQLite 检查 JSON case2-env-ignore-db",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case2-env-ignore-db.json",
+                          "kind":  "file",
+                          "exists":  true
+                      },
+                      {
+                          "label":  "C 盘边界快照 JSON（after）",
+                          "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\c-drive-boundary-after.json",
+                          "kind":  "file",
+                          "exists":  true
+                      }
+                  ],
+    "checks":  [
+                   {
+                       "name":  "precondition.release_exe",
+                       "status":  "INFO",
+                       "detail":  "path=D:\\工作事项看板\\target\\release\\workmanager.exe；size_bytes=10230272；sha256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8",
+                       "checked_at":  "2026-11-18T13:04:53.0011682+08:00"
+                   },
+                   {
+                       "name":  "precondition.python",
+                       "status":  "INFO",
+                       "detail":  "E:\\Python314\\python.exe 3.14.5 / sqlite 3.50.4",
+                       "checked_at":  "2026-11-18T13:04:53.0031684+08:00"
+                   },
+                   {
+                       "name":  "precondition.output_dir",
+                       "status":  "INFO",
+                       "detail":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2",
+                       "checked_at":  "2026-11-18T13:04:53.0051705+08:00"
+                   },
+                   {
+                       "name":  "precondition.source_exe_data_directory",
+                       "status":  "INFO",
+                       "detail":  "源 EXE 目录尚无 data/（本次验证只写入隔离复制目录）",
+                       "checked_at":  "2026-11-18T13:04:53.0071728+08:00"
+                   },
+                   {
+                       "name":  "c_drive.baseline",
+                       "status":  "INFO",
+                       "detail":  "LOCALAPPDATA\\com.workmanager.portable exists=False；APPDATA\\com.workmanager.portable exists=False；LOCALAPPDATA\\EBWebView exists=True",
+                       "checked_at":  "2026-11-18T13:04:53.1155252+08:00"
+                   },
+                   {
+                       "name":  "case1.exe_copy_sha256_matches",
+                       "status":  "PASS",
+                       "detail":  "sha256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8",
+                       "checked_at":  "2026-11-18T13:04:53.1935265+08:00"
+                   },
+                   {
+                       "name":  "case1.main_window_visible",
+                       "status":  "PASS",
+                       "detail":  "title=WorkManager；hwnd=1908474；elapsed_ms=358",
+                       "checked_at":  "2026-11-18T13:04:53.7381452+08:00"
+                   },
+                   {
+                       "name":  "case1.main_window_title",
+                       "status":  "PASS",
+                       "detail":  "窗口标题=WorkManager（期望 WorkManager）",
+                       "checked_at":  "2026-11-18T13:04:53.7391509+08:00"
+                   },
+                   {
+                       "name":  "case1.main_window_screenshot",
+                       "status":  "PASS",
+                       "detail":  "png=D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-main-window.png；1116x788",
+                       "checked_at":  "2026-11-18T13:04:54.9193771+08:00"
+                   },
+                   {
+                       "name":  "case1.webview2_ebwebview_dir",
+                       "status":  "PASS",
+                       "detail":  "WebView2 profile 目录存在：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\cache\\webview2\\EBWebView；等待 1 ms",
+                       "checked_at":  "2026-11-18T13:04:54.9293732+08:00"
+                   },
+                   {
+                       "name":  "case1.running_database_file",
+                       "status":  "PASS",
+                       "detail":  "运行期间 work.db 存在且非空：size_bytes=32768",
+                       "checked_at":  "2026-11-18T13:04:55.0343784+08:00"
+                   },
+                   {
+                       "name":  "case1.running_sidecars",
+                       "status":  "INFO",
+                       "detail":  "运行期间 sidecar 状态：-wal exists=True size=0；-shm exists=True size=32768；-journal exists=False",
+                       "checked_at":  "2026-11-18T13:04:55.0433755+08:00"
+                   },
+                   {
+                       "name":  "case1.process_exited",
+                       "status":  "PASS",
+                       "detail":  "method=CloseMainWindow elapsed_ms=159",
+                       "checked_at":  "2026-11-18T13:04:55.2891035+08:00"
+                   },
+                   {
+                       "name":  "case1.graceful_close",
+                       "status":  "PASS",
+                       "detail":  "CloseMainWindow 正常关闭，exit_code=0",
+                       "checked_at":  "2026-11-18T13:04:55.2921005+08:00"
+                   },
+                   {
+                       "name":  "case1.exit_code_zero",
+                       "status":  "PASS",
+                       "detail":  "exit_code=0",
+                       "checked_at":  "2026-11-18T13:04:55.2941012+08:00"
+                   },
+                   {
+                       "name":  "case1.data_root_created",
+                       "status":  "PASS",
+                       "detail":  "目录存在：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data",
+                       "checked_at":  "2026-11-18T13:04:55.2981004+08:00"
+                   },
+                   {
+                       "name":  "case1.database_dir_created",
+                       "status":  "PASS",
+                       "detail":  "目录存在：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database",
+                       "checked_at":  "2026-11-18T13:04:55.3011041+08:00"
+                   },
+                   {
+                       "name":  "case1.cache_dir_created",
+                       "status":  "PASS",
+                       "detail":  "目录存在：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\cache",
+                       "checked_at":  "2026-11-18T13:04:55.3041096+08:00"
+                   },
+                   {
+                       "name":  "case1.webview2_dir_created",
+                       "status":  "PASS",
+                       "detail":  "目录存在：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\cache\\webview2",
+                       "checked_at":  "2026-11-18T13:04:55.3061008+08:00"
+                   },
+                   {
+                       "name":  "case1.config_dir_created",
+                       "status":  "PASS",
+                       "detail":  "目录存在：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\config",
+                       "checked_at":  "2026-11-18T13:04:55.3091007+08:00"
+                   },
+                   {
+                       "name":  "case1.logs_dir_created",
+                       "status":  "PASS",
+                       "detail":  "目录存在：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\logs",
+                       "checked_at":  "2026-11-18T13:04:55.3110993+08:00"
+                   },
+                   {
+                       "name":  "case1.temp_dir_created",
+                       "status":  "PASS",
+                       "detail":  "目录存在：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\temp",
+                       "checked_at":  "2026-11-18T13:04:55.3141001+08:00"
+                   },
+                   {
+                       "name":  "case1.backups_dir_created",
+                       "status":  "PASS",
+                       "detail":  "目录存在：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\backups",
+                       "checked_at":  "2026-11-18T13:04:55.3161003+08:00"
+                   },
+                   {
+                       "name":  "case1.webview2_dir_populated",
+                       "status":  "PASS",
+                       "detail":  "WebView2 数据目录内有 25 个条目（截断=False）",
+                       "checked_at":  "2026-11-18T13:04:55.3267473+08:00"
+                   },
+                   {
+                       "name":  "case1.database_file_created",
+                       "status":  "PASS",
+                       "detail":  "work.db 存在且非空：size_bytes=32768",
+                       "checked_at":  "2026-11-18T13:04:55.3302735+08:00"
+                   },
+                   {
+                       "name":  "case1.data_directory_snapshot",
+                       "status":  "INFO",
+                       "detail":  "条目数=10；truncated=False；快照=D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-data-directory-snapshot.json",
+                       "checked_at":  "2026-11-18T13:04:55.3432705+08:00"
+                   },
+                   {
+                       "name":  "case1.wal_cleared_after_close",
+                       "status":  "PASS",
+                       "detail":  "-wal 不存在或为 0 字节（无未提交数据残留）：exists=False；size=0",
+                       "checked_at":  "2026-11-18T13:04:55.3722741+08:00"
+                   },
+                   {
+                       "name":  "case1.shm_cleared_after_close",
+                       "status":  "PASS",
+                       "detail":  "-shm 不存在（wal_exists=False；wal_size=0）",
+                       "checked_at":  "2026-11-18T13:04:55.3742734+08:00"
+                   },
+                   {
+                       "name":  "case1.journal_after_close",
+                       "status":  "INFO",
+                       "detail":  "-journal exists=False；size=0",
+                       "checked_at":  "2026-11-18T13:04:55.3772762+08:00"
+                   },
+                   {
+                       "name":  "case1.readonly_open",
+                       "status":  "PASS",
+                       "detail":  "open_mode=mode=ro",
+                       "checked_at":  "2026-11-18T13:04:55.8512109+08:00"
+                   },
+                   {
+                       "name":  "case1.database_size_positive",
+                       "status":  "PASS",
+                       "detail":  "size_bytes=32768",
+                       "checked_at":  "2026-11-18T13:04:55.8592123+08:00"
+                   },
+                   {
+                       "name":  "case1.user_version",
+                       "status":  "PASS",
+                       "detail":  "user_version=2（期望 2）",
+                       "checked_at":  "2026-11-18T13:04:55.8692155+08:00"
+                   },
+                   {
+                       "name":  "case1.integrity_ok",
+                       "status":  "PASS",
+                       "detail":  "PRAGMA integrity_check = ok",
+                       "checked_at":  "2026-11-18T13:04:55.8762133+08:00"
+                   },
+                   {
+                       "name":  "case1.journal_mode_wal",
+                       "status":  "PASS",
+                       "detail":  "journal_mode=wal",
+                       "checked_at":  "2026-11-18T13:04:55.8822143+08:00"
+                   },
+                   {
+                       "name":  "case1.schema_migrations_table",
+                       "status":  "PASS",
+                       "detail":  "tables=projects,schema_migrations,settings",
+                       "checked_at":  "2026-11-18T13:04:55.8892103+08:00"
+                   },
+                   {
+                       "name":  "case1.settings_table",
+                       "status":  "PASS",
+                       "detail":  "settings 表存在",
+                       "checked_at":  "2026-11-18T13:04:55.8932109+08:00"
+                   },
+                   {
+                       "name":  "case1.schema_migrations_count",
+                       "status":  "PASS",
+                       "detail":  "schema_migrations 记录数=2",
+                       "checked_at":  "2026-11-18T13:04:55.8972141+08:00"
+                   },
+                   {
+                       "name":  "case1.schema_migration_versions",
+                       "status":  "PASS",
+                       "detail":  "versions=1,2",
+                       "checked_at":  "2026-11-18T13:04:55.9412120+08:00"
+                   },
+                   {
+                       "name":  "case1.foreign_keys_enabled_evidence",
+                       "status":  "PASS",
+                       "detail":  "schema_migrations 完整（versions=1,2，作为 foreign_keys=ON 初始化路径证据）",
+                       "checked_at":  "2026-11-18T13:04:55.9432100+08:00"
+                   },
+                   {
+                       "name":  "case1.foreign_key_check_clean",
+                       "status":  "PASS",
+                       "detail":  "PRAGMA foreign_key_check 无违规行",
+                       "checked_at":  "2026-11-18T13:04:55.9462147+08:00"
+                   },
+                   {
+                       "name":  "case1.canary_absent",
+                       "status":  "PASS",
+                       "detail":  "settings 中不存在 test-canary（首次启动应为空）",
+                       "checked_at":  "2026-11-18T13:04:55.9562085+08:00"
+                   },
+                   {
+                       "name":  "case1.probe_connection_pragmas",
+                       "status":  "INFO",
+                       "detail":  "python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{\"busy_timeout\":5000,\"foreign_keys\":0,\"page_count\":8,\"page_size\":4096,\"synchronous\":2,\"temp_store\":0}",
+                       "checked_at":  "2026-11-18T13:04:55.9622126+08:00"
+                   },
+                   {
+                       "name":  "case1.probe_side_effects",
+                       "status":  "INFO",
+                       "detail":  "python 只读探针会创建 -wal/-shm（SQLite WAL 只读访问的正常副作用）；探针后 -wal size=0；-shm size=32768",
+                       "checked_at":  "2026-11-18T13:04:55.9692116+08:00"
+                   },
+                   {
+                       "name":  "persistence.canary_inserted",
+                       "status":  "PASS",
+                       "detail":  "settings(key=test-canary) value_json={\"value\": \"release-verify-canary-20261118-130453\"}",
+                       "checked_at":  "2026-11-18T13:04:56.2839777+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.readonly_open",
+                       "status":  "PASS",
+                       "detail":  "open_mode=mode=ro",
+                       "checked_at":  "2026-11-18T13:04:56.5429783+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.database_size_positive",
+                       "status":  "PASS",
+                       "detail":  "size_bytes=32768",
+                       "checked_at":  "2026-11-18T13:04:56.5449852+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.user_version",
+                       "status":  "PASS",
+                       "detail":  "user_version=2（期望 2）",
+                       "checked_at":  "2026-11-18T13:04:56.5469845+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.integrity_ok",
+                       "status":  "PASS",
+                       "detail":  "PRAGMA integrity_check = ok",
+                       "checked_at":  "2026-11-18T13:04:56.5489779+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.journal_mode_wal",
+                       "status":  "PASS",
+                       "detail":  "journal_mode=wal",
+                       "checked_at":  "2026-11-18T13:04:56.5519818+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.schema_migrations_table",
+                       "status":  "PASS",
+                       "detail":  "tables=projects,schema_migrations,settings",
+                       "checked_at":  "2026-11-18T13:04:56.5549857+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.settings_table",
+                       "status":  "PASS",
+                       "detail":  "settings 表存在",
+                       "checked_at":  "2026-11-18T13:04:56.5569802+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.schema_migrations_count",
+                       "status":  "PASS",
+                       "detail":  "schema_migrations 记录数=2",
+                       "checked_at":  "2026-11-18T13:04:56.5599812+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.schema_migration_versions",
+                       "status":  "PASS",
+                       "detail":  "versions=1,2",
+                       "checked_at":  "2026-11-18T13:04:56.5629845+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.foreign_keys_enabled_evidence",
+                       "status":  "PASS",
+                       "detail":  "schema_migrations 完整（versions=1,2，作为 foreign_keys=ON 初始化路径证据）",
+                       "checked_at":  "2026-11-18T13:04:56.5649801+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.foreign_key_check_clean",
+                       "status":  "PASS",
+                       "detail":  "PRAGMA foreign_key_check 无违规行",
+                       "checked_at":  "2026-11-18T13:04:56.5669783+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.canary_present",
+                       "status":  "PASS",
+                       "detail":  "value_json={\"value\": \"release-verify-canary-20261118-130453\"}；updated_at=2026-11-18T05:04:56Z",
+                       "checked_at":  "2026-11-18T13:04:56.5719817+08:00"
+                   },
+                   {
+                       "name":  "persistence.before_restart.probe_connection_pragmas",
+                       "status":  "INFO",
+                       "detail":  "python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{\"busy_timeout\":5000,\"foreign_keys\":0,\"page_count\":8,\"page_size\":4096,\"synchronous\":2,\"temp_store\":0}",
+                       "checked_at":  "2026-11-18T13:04:56.5739796+08:00"
+                   },
+                   {
+                       "name":  "persistence.restart_window_visible",
+                       "status":  "PASS",
+                       "detail":  "title=WorkManager；elapsed_ms=339",
+                       "checked_at":  "2026-11-18T13:04:56.9297292+08:00"
+                   },
+                   {
+                       "name":  "persistence.restart_window_title",
+                       "status":  "PASS",
+                       "detail":  "窗口标题=WorkManager",
+                       "checked_at":  "2026-11-18T13:04:56.9317242+08:00"
+                   },
+                   {
+                       "name":  "persistence.restart.process_exited",
+                       "status":  "PASS",
+                       "detail":  "method=CloseMainWindow elapsed_ms=774",
+                       "checked_at":  "2026-11-18T13:04:57.7488758+08:00"
+                   },
+                   {
+                       "name":  "persistence.restart.graceful_close",
+                       "status":  "PASS",
+                       "detail":  "CloseMainWindow 正常关闭，exit_code=0",
+                       "checked_at":  "2026-11-18T13:04:57.7498753+08:00"
+                   },
+                   {
+                       "name":  "persistence.restart.exit_code_zero",
+                       "status":  "PASS",
+                       "detail":  "exit_code=0",
+                       "checked_at":  "2026-11-18T13:04:57.7528764+08:00"
+                   },
+                   {
+                       "name":  "persistence.wal_cleared_after_restart",
+                       "status":  "PASS",
+                       "detail":  "-wal 不存在或为 0 字节：exists=False；size=0",
+                       "checked_at":  "2026-11-18T13:04:57.7558757+08:00"
+                   },
+                   {
+                       "name":  "persistence.shm_after_restart",
+                       "status":  "PASS",
+                       "detail":  "-shm 不存在",
+                       "checked_at":  "2026-11-18T13:04:57.7578767+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.readonly_open",
+                       "status":  "PASS",
+                       "detail":  "open_mode=mode=ro",
+                       "checked_at":  "2026-11-18T13:04:58.0234994+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.database_size_positive",
+                       "status":  "PASS",
+                       "detail":  "size_bytes=32768",
+                       "checked_at":  "2026-11-18T13:04:58.0255005+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.user_version",
+                       "status":  "PASS",
+                       "detail":  "user_version=2（期望 2）",
+                       "checked_at":  "2026-11-18T13:04:58.0275009+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.integrity_ok",
+                       "status":  "PASS",
+                       "detail":  "PRAGMA integrity_check = ok",
+                       "checked_at":  "2026-11-18T13:04:58.0295004+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.journal_mode_wal",
+                       "status":  "PASS",
+                       "detail":  "journal_mode=wal",
+                       "checked_at":  "2026-11-18T13:04:58.0305019+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.schema_migrations_table",
+                       "status":  "PASS",
+                       "detail":  "tables=projects,schema_migrations,settings",
+                       "checked_at":  "2026-11-18T13:04:58.0324988+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.settings_table",
+                       "status":  "PASS",
+                       "detail":  "settings 表存在",
+                       "checked_at":  "2026-11-18T13:04:58.0345006+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.schema_migrations_count",
+                       "status":  "PASS",
+                       "detail":  "schema_migrations 记录数=2",
+                       "checked_at":  "2026-11-18T13:04:58.0355029+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.schema_migration_versions",
+                       "status":  "PASS",
+                       "detail":  "versions=1,2",
+                       "checked_at":  "2026-11-18T13:04:58.0375012+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.foreign_keys_enabled_evidence",
+                       "status":  "PASS",
+                       "detail":  "schema_migrations 完整（versions=1,2，作为 foreign_keys=ON 初始化路径证据）",
+                       "checked_at":  "2026-11-18T13:04:58.0395066+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.foreign_key_check_clean",
+                       "status":  "PASS",
+                       "detail":  "PRAGMA foreign_key_check 无违规行",
+                       "checked_at":  "2026-11-18T13:04:58.0415058+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.canary_present",
+                       "status":  "PASS",
+                       "detail":  "value_json={\"value\": \"release-verify-canary-20261118-130453\"}；updated_at=2026-11-18T05:04:56Z",
+                       "checked_at":  "2026-11-18T13:04:58.0435010+08:00"
+                   },
+                   {
+                       "name":  "persistence.after_restart.probe_connection_pragmas",
+                       "status":  "INFO",
+                       "detail":  "python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{\"busy_timeout\":5000,\"foreign_keys\":0,\"page_count\":8,\"page_size\":4096,\"synchronous\":2,\"temp_store\":0}",
+                       "checked_at":  "2026-11-18T13:04:58.0455028+08:00"
+                   },
+                   {
+                       "name":  "env.exe_copy_sha256_matches",
+                       "status":  "PASS",
+                       "detail":  "sha256=DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8",
+                       "checked_at":  "2026-11-18T13:04:58.1046499+08:00"
+                   },
+                   {
+                       "name":  "env.decoy_root_empty_before",
+                       "status":  "INFO",
+                       "detail":  "诱饵目录初始条目数=0；D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\decoy-portable-root",
+                       "checked_at":  "2026-11-18T13:04:58.1096555+08:00"
+                   },
+                   {
+                       "name":  "env.override_restored_after_start",
+                       "status":  "PASS",
+                       "detail":  "子进程启动后父进程环境变量已恢复：",
+                       "checked_at":  "2026-11-18T13:04:58.2603405+08:00"
+                   },
+                   {
+                       "name":  "env.main_window_visible",
+                       "status":  "PASS",
+                       "detail":  "title=WorkManager；elapsed_ms=341",
+                       "checked_at":  "2026-11-18T13:04:58.6043398+08:00"
+                   },
+                   {
+                       "name":  "env.main_window_title",
+                       "status":  "PASS",
+                       "detail":  "窗口标题=WorkManager",
+                       "checked_at":  "2026-11-18T13:04:58.6063382+08:00"
+                   },
+                   {
+                       "name":  "env.process_exited",
+                       "status":  "PASS",
+                       "detail":  "method=CloseMainWindow elapsed_ms=666",
+                       "checked_at":  "2026-11-18T13:04:59.2894560+08:00"
+                   },
+                   {
+                       "name":  "env.graceful_close",
+                       "status":  "PASS",
+                       "detail":  "CloseMainWindow 正常关闭，exit_code=0",
+                       "checked_at":  "2026-11-18T13:04:59.2924560+08:00"
+                   },
+                   {
+                       "name":  "env.exit_code_zero",
+                       "status":  "PASS",
+                       "detail":  "exit_code=0",
+                       "checked_at":  "2026-11-18T13:04:59.2944585+08:00"
+                   },
+                   {
+                       "name":  "env.database_created_adjacent_to_exe",
+                       "status":  "PASS",
+                       "detail":  "数据库位于 EXE 同级 data/：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\data\\database\\work.db",
+                       "checked_at":  "2026-11-18T13:04:59.3004608+08:00"
+                   },
+                   {
+                       "name":  "env.decoy_database_not_created",
+                       "status":  "PASS",
+                       "detail":  "诱饵目录中未创建数据库：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\decoy-portable-root\\database\\work.db",
+                       "checked_at":  "2026-11-18T13:04:59.3034523+08:00"
+                   },
+                   {
+                       "name":  "env.decoy_root_still_empty",
+                       "status":  "PASS",
+                       "detail":  "诱饵目录仍为空：D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\decoy-portable-root",
+                       "checked_at":  "2026-11-18T13:04:59.3144542+08:00"
+                   },
+                   {
+                       "name":  "env.readonly_open",
+                       "status":  "PASS",
+                       "detail":  "open_mode=mode=ro",
+                       "checked_at":  "2026-11-18T13:04:59.5499754+08:00"
+                   },
+                   {
+                       "name":  "env.database_size_positive",
+                       "status":  "PASS",
+                       "detail":  "size_bytes=32768",
+                       "checked_at":  "2026-11-18T13:04:59.5509748+08:00"
+                   },
+                   {
+                       "name":  "env.user_version",
+                       "status":  "PASS",
+                       "detail":  "user_version=2（期望 2）",
+                       "checked_at":  "2026-11-18T13:04:59.5529763+08:00"
+                   },
+                   {
+                       "name":  "env.integrity_ok",
+                       "status":  "PASS",
+                       "detail":  "PRAGMA integrity_check = ok",
+                       "checked_at":  "2026-11-18T13:04:59.5549751+08:00"
+                   },
+                   {
+                       "name":  "env.journal_mode_wal",
+                       "status":  "PASS",
+                       "detail":  "journal_mode=wal",
+                       "checked_at":  "2026-11-18T13:04:59.5569739+08:00"
+                   },
+                   {
+                       "name":  "env.schema_migrations_table",
+                       "status":  "PASS",
+                       "detail":  "tables=projects,schema_migrations,settings",
+                       "checked_at":  "2026-11-18T13:04:59.5589745+08:00"
+                   },
+                   {
+                       "name":  "env.settings_table",
+                       "status":  "PASS",
+                       "detail":  "settings 表存在",
+                       "checked_at":  "2026-11-18T13:04:59.5599768+08:00"
+                   },
+                   {
+                       "name":  "env.schema_migrations_count",
+                       "status":  "PASS",
+                       "detail":  "schema_migrations 记录数=2",
+                       "checked_at":  "2026-11-18T13:04:59.5619767+08:00"
+                   },
+                   {
+                       "name":  "env.schema_migration_versions",
+                       "status":  "PASS",
+                       "detail":  "versions=1,2",
+                       "checked_at":  "2026-11-18T13:04:59.5639763+08:00"
+                   },
+                   {
+                       "name":  "env.foreign_keys_enabled_evidence",
+                       "status":  "PASS",
+                       "detail":  "schema_migrations 完整（versions=1,2，作为 foreign_keys=ON 初始化路径证据）",
+                       "checked_at":  "2026-11-18T13:04:59.5659744+08:00"
+                   },
+                   {
+                       "name":  "env.foreign_key_check_clean",
+                       "status":  "PASS",
+                       "detail":  "PRAGMA foreign_key_check 无违规行",
+                       "checked_at":  "2026-11-18T13:04:59.5679749+08:00"
+                   },
+                   {
+                       "name":  "env.probe_connection_pragmas",
+                       "status":  "INFO",
+                       "detail":  "python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{\"busy_timeout\":5000,\"foreign_keys\":0,\"page_count\":8,\"page_size\":4096,\"synchronous\":2,\"temp_store\":0}",
+                       "checked_at":  "2026-11-18T13:04:59.5699766+08:00"
+                   },
+                   {
+                       "name":  "cleanup.process_cleanup",
+                       "status":  "PASS",
+                       "detail":  "没有遗留的被测进程",
+                       "checked_at":  "2026-11-18T13:04:59.5769792+08:00"
+                   },
+                   {
+                       "name":  "cleanup.case_directories",
+                       "status":  "PASS",
+                       "detail":  "已删除本脚本创建的用例沙箱目录（证据在 evidence/ 与 summary/report 中保留）",
+                       "checked_at":  "2026-11-18T13:04:59.8831756+08:00"
+                   },
+                   {
+                       "name":  "cleanup.evidence_retained",
+                       "status":  "INFO",
+                       "detail":  "证据与汇总保留在：D:\\WorkManager-test-data\\t1-02-release-portable-v2",
+                       "checked_at":  "2026-11-18T13:04:59.8841712+08:00"
+                   },
+                   {
+                       "name":  "c_drive.LOCALAPPDATA_com.workmanager.portable",
+                       "status":  "PASS",
+                       "detail":  "C 盘路径不存在（符合便携边界预期）：path=C:\\Users\\<user>\\AppData\\Local\\com.workmanager.portable；exists=False",
+                       "checked_at":  "2026-11-18T13:04:59.9061794+08:00"
+                   },
+                   {
+                       "name":  "c_drive.APPDATA_com.workmanager.portable",
+                       "status":  "PASS",
+                       "detail":  "C 盘路径不存在（符合便携边界预期）：path=C:\\Users\\<user>\\AppData\\Roaming\\com.workmanager.portable；exists=False",
+                       "checked_at":  "2026-11-18T13:04:59.9081798+08:00"
+                   },
+                   {
+                       "name":  "c_drive.LOCALAPPDATA_EBWebView",
+                       "status":  "WARN",
+                       "detail":  "C 盘路径在验证开始前已存在且相同时刻/条目未变化（非本次验证创建，需人工确认来源）：path=C:\\Users\\<user>\\AppData\\Local\\EBWebView；exists=True；last_write_utc=2026-11-17T22:35:37.2504950Z；creation_time_utc=2024-07-15T07:29:20.1195506Z；top_level_entries=25",
+                       "checked_at":  "2026-11-18T13:04:59.9121732+08:00"
+                   }
+               ],
+    "release_exe":  {
+                        "path":  "D:\\工作事项看板\\target\\release\\workmanager.exe",
+                        "size_bytes":  10230272,
+                        "sha256":  "DF4469EA067DEE39E10E49F0592FD4A9DAB076F4186FF3E8CF60F8F72EABB7E8"
+                    },
+    "python":  {
+                   "path":  "E:\\Python314\\python.exe",
+                   "version":  "3.14.5",
+                   "sqlite_version":  "3.50.4"
+               },
+    "canary_value":  "release-verify-canary-20261118-130453",
+    "keep_case_directories":  false,
+    "c_drive_boundary":  {
+                             "before":  {
+                                            "label":  "before",
+                                            "captured_at":  "2026-11-18T13:04:53.0415265+08:00",
+                                            "locations":  [
+                                                              {
+                                                                  "name":  "LOCALAPPDATA\\com.workmanager.portable",
+                                                                  "path":  "C:\\Users\\<user>\\AppData\\Local\\com.workmanager.portable",
+                                                                  "exists":  false,
+                                                                  "is_directory":  false,
+                                                                  "creation_time_utc":  null,
+                                                                  "last_write_utc":  null,
+                                                                  "top_level_entry_count":  null
+                                                              },
+                                                              {
+                                                                  "name":  "APPDATA\\com.workmanager.portable",
+                                                                  "path":  "C:\\Users\\<user>\\AppData\\Roaming\\com.workmanager.portable",
+                                                                  "exists":  false,
+                                                                  "is_directory":  false,
+                                                                  "creation_time_utc":  null,
+                                                                  "last_write_utc":  null,
+                                                                  "top_level_entry_count":  null
+                                                              },
+                                                              {
+                                                                  "name":  "LOCALAPPDATA\\EBWebView",
+                                                                  "path":  "C:\\Users\\<user>\\AppData\\Local\\EBWebView",
+                                                                  "exists":  true,
+                                                                  "is_directory":  true,
+                                                                  "creation_time_utc":  "2024-07-15T07:29:20.1195506Z",
+                                                                  "last_write_utc":  "2026-11-17T22:35:37.2504950Z",
+                                                                  "top_level_entry_count":  25
+                                                              }
+                                                          ]
+                                        },
+                             "after":  {
+                                           "label":  "after",
+                                           "captured_at":  "2026-11-18T13:04:59.8941753+08:00",
+                                           "locations":  [
+                                                             {
+                                                                 "name":  "LOCALAPPDATA\\com.workmanager.portable",
+                                                                 "path":  "C:\\Users\\<user>\\AppData\\Local\\com.workmanager.portable",
+                                                                 "exists":  false,
+                                                                 "is_directory":  false,
+                                                                 "creation_time_utc":  null,
+                                                                 "last_write_utc":  null,
+                                                                 "top_level_entry_count":  null
+                                                             },
+                                                             {
+                                                                 "name":  "APPDATA\\com.workmanager.portable",
+                                                                 "path":  "C:\\Users\\<user>\\AppData\\Roaming\\com.workmanager.portable",
+                                                                 "exists":  false,
+                                                                 "is_directory":  false,
+                                                                 "creation_time_utc":  null,
+                                                                 "last_write_utc":  null,
+                                                                 "top_level_entry_count":  null
+                                                             },
+                                                             {
+                                                                 "name":  "LOCALAPPDATA\\EBWebView",
+                                                                 "path":  "C:\\Users\\<user>\\AppData\\Local\\EBWebView",
+                                                                 "exists":  true,
+                                                                 "is_directory":  true,
+                                                                 "creation_time_utc":  "2024-07-15T07:29:20.1195506Z",
+                                                                 "last_write_utc":  "2026-11-17T22:35:37.2504950Z",
+                                                                 "top_level_entry_count":  25
+                                                             }
+                                                         ]
+                                       }
+                         },
+    "running_database_snapshot":  {
+                                      "captured_at":  "2026-11-18T13:04:54.9753768+08:00",
+                                      "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db",
+                                      "database_exists":  true,
+                                      "database_size_bytes":  32768,
+                                      "sidecars":  {
+                                                       "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db",
+                                                       "wal_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                       "shm_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                       "journal_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                       "wal_exists":  true,
+                                                       "wal_size_bytes":  0,
+                                                       "shm_exists":  true,
+                                                       "shm_size_bytes":  32768,
+                                                       "journal_exists":  false,
+                                                       "journal_size_bytes":  0,
+                                                       "captured_at":  "2026-11-18T13:04:54.9833798+08:00"
+                                                   }
+                                  },
+    "case_results":  [
+                         {
+                             "case":  "case1-first-launch",
+                             "directory":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch",
+                             "exe":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\WorkManager.exe",
+                             "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db",
+                             "main_window_title":  "WorkManager",
+                             "first_exit_code":  0,
+                             "wal_cleared":  true,
+                             "shm_cleared":  null,
+                             "database_inspection":  {
+                                                         "database":  {
+                                                                          "exists":  true,
+                                                                          "is_file":  true,
+                                                                          "size_bytes":  32768
+                                                                      },
+                                                         "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db",
+                                                         "foreign_key_check":  [
+
+                                                                               ],
+                                                         "header":  {
+                                                                        "exists":  true,
+                                                                        "magic":  "SQLite format 3\u0000",
+                                                                        "page_size":  4096,
+                                                                        "read_version":  2,
+                                                                        "write_version":  2
+                                                                    },
+                                                         "integrity_check":  [
+                                                                                 "ok"
+                                                                             ],
+                                                         "journal_mode":  "wal",
+                                                         "open_errors":  [
+
+                                                                         ],
+                                                         "open_mode":  "mode=ro",
+                                                         "probe_connection_pragmas":  {
+                                                                                          "busy_timeout":  5000,
+                                                                                          "foreign_keys":  0,
+                                                                                          "page_count":  8,
+                                                                                          "page_size":  4096,
+                                                                                          "synchronous":  2,
+                                                                                          "temp_store":  0
+                                                                                      },
+                                                         "schema_migrations":  [
+                                                                                   {
+                                                                                       "applied_at":  "2026-11-18T05:04:53Z",
+                                                                                       "name":  "0001_initial_foundation",
+                                                                                       "version":  1
+                                                                                   },
+                                                                                   {
+                                                                                       "applied_at":  "2026-11-18T05:04:53Z",
+                                                                                       "name":  "0002_projects",
+                                                                                       "version":  2
+                                                                                   }
+                                                                               ],
+                                                         "schema_migrations_count":  2,
+                                                         "settings_canary":  null,
+                                                         "settings_row_count":  0,
+                                                         "sidecars_after_close":  {
+                                                                                      "-journal":  {
+                                                                                                       "exists":  false,
+                                                                                                       "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                                       "size_bytes":  0
+                                                                                                   },
+                                                                                      "-shm":  {
+                                                                                                   "exists":  true,
+                                                                                                   "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                                   "size_bytes":  32768
+                                                                                               },
+                                                                                      "-wal":  {
+                                                                                                   "exists":  true,
+                                                                                                   "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                                   "size_bytes":  0
+                                                                                               }
+                                                                                  },
+                                                         "sidecars_before_open":  {
+                                                                                      "-journal":  {
+                                                                                                       "exists":  false,
+                                                                                                       "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                                       "size_bytes":  0
+                                                                                                   },
+                                                                                      "-shm":  {
+                                                                                                   "exists":  false,
+                                                                                                   "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                                   "size_bytes":  0
+                                                                                               },
+                                                                                      "-wal":  {
+                                                                                                   "exists":  false,
+                                                                                                   "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                                   "size_bytes":  0
+                                                                                               }
+                                                                                  },
+                                                         "tables":  [
+                                                                        "projects",
+                                                                        "schema_migrations",
+                                                                        "settings"
+                                                                    ],
+                                                         "user_version":  2
+                                                     }
+                         },
+                         {
+                             "case":  "case2-persistence",
+                             "directory":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch",
+                             "exe":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\WorkManager.exe",
+                             "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db",
+                             "canary_value":  "release-verify-canary-20261118-130453",
+                             "restart_window_title":  "WorkManager",
+                             "restart_exit_code":  0,
+                             "database_inspection":  {
+                                                         "database":  {
+                                                                          "exists":  true,
+                                                                          "is_file":  true,
+                                                                          "size_bytes":  32768
+                                                                      },
+                                                         "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db",
+                                                         "foreign_key_check":  [
+
+                                                                               ],
+                                                         "header":  {
+                                                                        "exists":  true,
+                                                                        "magic":  "SQLite format 3\u0000",
+                                                                        "page_size":  4096,
+                                                                        "read_version":  2,
+                                                                        "write_version":  2
+                                                                    },
+                                                         "integrity_check":  [
+                                                                                 "ok"
+                                                                             ],
+                                                         "journal_mode":  "wal",
+                                                         "open_errors":  [
+
+                                                                         ],
+                                                         "open_mode":  "mode=ro",
+                                                         "probe_connection_pragmas":  {
+                                                                                          "busy_timeout":  5000,
+                                                                                          "foreign_keys":  0,
+                                                                                          "page_count":  8,
+                                                                                          "page_size":  4096,
+                                                                                          "synchronous":  2,
+                                                                                          "temp_store":  0
+                                                                                      },
+                                                         "schema_migrations":  [
+                                                                                   {
+                                                                                       "applied_at":  "2026-11-18T05:04:53Z",
+                                                                                       "name":  "0001_initial_foundation",
+                                                                                       "version":  1
+                                                                                   },
+                                                                                   {
+                                                                                       "applied_at":  "2026-11-18T05:04:53Z",
+                                                                                       "name":  "0002_projects",
+                                                                                       "version":  2
+                                                                                   }
+                                                                               ],
+                                                         "schema_migrations_count":  2,
+                                                         "settings_canary":  {
+                                                                                 "key":  "test-canary",
+                                                                                 "updated_at":  "2026-11-18T05:04:56Z",
+                                                                                 "value_json":  "{\"value\": \"release-verify-canary-20261118-130453\"}"
+                                                                             },
+                                                         "settings_row_count":  1,
+                                                         "sidecars_after_close":  {
+                                                                                      "-journal":  {
+                                                                                                       "exists":  false,
+                                                                                                       "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                                       "size_bytes":  0
+                                                                                                   },
+                                                                                      "-shm":  {
+                                                                                                   "exists":  true,
+                                                                                                   "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                                   "size_bytes":  32768
+                                                                                               },
+                                                                                      "-wal":  {
+                                                                                                   "exists":  true,
+                                                                                                   "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                                   "size_bytes":  0
+                                                                                               }
+                                                                                  },
+                                                         "sidecars_before_open":  {
+                                                                                      "-journal":  {
+                                                                                                       "exists":  false,
+                                                                                                       "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                                       "size_bytes":  0
+                                                                                                   },
+                                                                                      "-shm":  {
+                                                                                                   "exists":  false,
+                                                                                                   "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                                   "size_bytes":  0
+                                                                                               },
+                                                                                      "-wal":  {
+                                                                                                   "exists":  false,
+                                                                                                   "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                                   "size_bytes":  0
+                                                                                               }
+                                                                                  },
+                                                         "tables":  [
+                                                                        "projects",
+                                                                        "schema_migrations",
+                                                                        "settings"
+                                                                    ],
+                                                         "user_version":  2
+                                                     }
+                         },
+                         {
+                             "case":  "case2-env-ignore",
+                             "directory":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore",
+                             "exe":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\WorkManager.exe",
+                             "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\data\\database\\work.db",
+                             "decoy_root":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\decoy-portable-root",
+                             "decoy_entry_count":  0,
+                             "window_title":  "WorkManager",
+                             "exit_code":  0
+                         }
+                     ],
+    "probe_reports":  [
+                          {
+                              "label":  "case1-db-after-first-close",
+                              "json_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case1-db-after-first-close.json",
+                              "ok":  true,
+                              "exit_code":  0,
+                              "open_mode":  "mode=ro",
+                              "error":  null,
+                              "inspection":  {
+                                                 "database":  {
+                                                                  "exists":  true,
+                                                                  "is_file":  true,
+                                                                  "size_bytes":  32768
+                                                              },
+                                                 "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db",
+                                                 "foreign_key_check":  [
+
+                                                                       ],
+                                                 "header":  {
+                                                                "exists":  true,
+                                                                "magic":  "SQLite format 3\u0000",
+                                                                "page_size":  4096,
+                                                                "read_version":  2,
+                                                                "write_version":  2
+                                                            },
+                                                 "integrity_check":  [
+                                                                         "ok"
+                                                                     ],
+                                                 "journal_mode":  "wal",
+                                                 "open_errors":  [
+
+                                                                 ],
+                                                 "open_mode":  "mode=ro",
+                                                 "probe_connection_pragmas":  {
+                                                                                  "busy_timeout":  5000,
+                                                                                  "foreign_keys":  0,
+                                                                                  "page_count":  8,
+                                                                                  "page_size":  4096,
+                                                                                  "synchronous":  2,
+                                                                                  "temp_store":  0
+                                                                              },
+                                                 "schema_migrations":  [
+                                                                           {
+                                                                               "applied_at":  "2026-11-18T05:04:53Z",
+                                                                               "name":  "0001_initial_foundation",
+                                                                               "version":  1
+                                                                           },
+                                                                           {
+                                                                               "applied_at":  "2026-11-18T05:04:53Z",
+                                                                               "name":  "0002_projects",
+                                                                               "version":  2
+                                                                           }
+                                                                       ],
+                                                 "schema_migrations_count":  2,
+                                                 "settings_canary":  null,
+                                                 "settings_row_count":  0,
+                                                 "sidecars_after_close":  {
+                                                                              "-journal":  {
+                                                                                               "exists":  false,
+                                                                                               "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                               "size_bytes":  0
+                                                                                           },
+                                                                              "-shm":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                           "size_bytes":  32768
+                                                                                       },
+                                                                              "-wal":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                           "size_bytes":  0
+                                                                                       }
+                                                                          },
+                                                 "sidecars_before_open":  {
+                                                                              "-journal":  {
+                                                                                               "exists":  false,
+                                                                                               "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                               "size_bytes":  0
+                                                                                           },
+                                                                              "-shm":  {
+                                                                                           "exists":  false,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                           "size_bytes":  0
+                                                                                       },
+                                                                              "-wal":  {
+                                                                                           "exists":  false,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                           "size_bytes":  0
+                                                                                       }
+                                                                          },
+                                                 "tables":  [
+                                                                "projects",
+                                                                "schema_migrations",
+                                                                "settings"
+                                                            ],
+                                                 "user_version":  2
+                                             }
+                          },
+                          {
+                              "label":  "persistence-canary-insert",
+                              "json_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\persistence-canary-insert.json",
+                              "ok":  true,
+                              "exit_code":  0,
+                              "open_mode":  "mode=ro",
+                              "error":  null,
+                              "inspection":  {
+                                                 "database":  {
+                                                                  "exists":  true,
+                                                                  "is_file":  true,
+                                                                  "size_bytes":  32768
+                                                              },
+                                                 "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db",
+                                                 "foreign_key_check":  [
+
+                                                                       ],
+                                                 "header":  {
+                                                                "exists":  true,
+                                                                "magic":  "SQLite format 3\u0000",
+                                                                "page_size":  4096,
+                                                                "read_version":  2,
+                                                                "write_version":  2
+                                                            },
+                                                 "integrity_check":  [
+                                                                         "ok"
+                                                                     ],
+                                                 "journal_mode":  "wal",
+                                                 "open_errors":  [
+
+                                                                 ],
+                                                 "open_mode":  "mode=ro",
+                                                 "probe_connection_pragmas":  {
+                                                                                  "busy_timeout":  5000,
+                                                                                  "foreign_keys":  0,
+                                                                                  "page_count":  8,
+                                                                                  "page_size":  4096,
+                                                                                  "synchronous":  2,
+                                                                                  "temp_store":  0
+                                                                              },
+                                                 "schema_migrations":  [
+                                                                           {
+                                                                               "applied_at":  "2026-11-18T05:04:53Z",
+                                                                               "name":  "0001_initial_foundation",
+                                                                               "version":  1
+                                                                           },
+                                                                           {
+                                                                               "applied_at":  "2026-11-18T05:04:53Z",
+                                                                               "name":  "0002_projects",
+                                                                               "version":  2
+                                                                           }
+                                                                       ],
+                                                 "schema_migrations_count":  2,
+                                                 "settings_canary":  {
+                                                                         "key":  "test-canary",
+                                                                         "updated_at":  "2026-11-18T05:04:56Z",
+                                                                         "value_json":  "{\"value\": \"release-verify-canary-20261118-130453\"}"
+                                                                     },
+                                                 "settings_row_count":  1,
+                                                 "sidecars_after_close":  {
+                                                                              "-journal":  {
+                                                                                               "exists":  false,
+                                                                                               "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                               "size_bytes":  0
+                                                                                           },
+                                                                              "-shm":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                           "size_bytes":  32768
+                                                                                       },
+                                                                              "-wal":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                           "size_bytes":  0
+                                                                                       }
+                                                                          },
+                                                 "sidecars_before_open":  {
+                                                                              "-journal":  {
+                                                                                               "exists":  false,
+                                                                                               "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                               "size_bytes":  0
+                                                                                           },
+                                                                              "-shm":  {
+                                                                                           "exists":  false,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                           "size_bytes":  0
+                                                                                       },
+                                                                              "-wal":  {
+                                                                                           "exists":  false,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                           "size_bytes":  0
+                                                                                       }
+                                                                          },
+                                                 "tables":  [
+                                                                "projects",
+                                                                "schema_migrations",
+                                                                "settings"
+                                                            ],
+                                                 "user_version":  2
+                                             }
+                          },
+                          {
+                              "label":  "persistence-canary-before-restart",
+                              "json_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\persistence-canary-before-restart.json",
+                              "ok":  true,
+                              "exit_code":  0,
+                              "open_mode":  "mode=ro",
+                              "error":  null,
+                              "inspection":  {
+                                                 "database":  {
+                                                                  "exists":  true,
+                                                                  "is_file":  true,
+                                                                  "size_bytes":  32768
+                                                              },
+                                                 "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db",
+                                                 "foreign_key_check":  [
+
+                                                                       ],
+                                                 "header":  {
+                                                                "exists":  true,
+                                                                "magic":  "SQLite format 3\u0000",
+                                                                "page_size":  4096,
+                                                                "read_version":  2,
+                                                                "write_version":  2
+                                                            },
+                                                 "integrity_check":  [
+                                                                         "ok"
+                                                                     ],
+                                                 "journal_mode":  "wal",
+                                                 "open_errors":  [
+
+                                                                 ],
+                                                 "open_mode":  "mode=ro",
+                                                 "probe_connection_pragmas":  {
+                                                                                  "busy_timeout":  5000,
+                                                                                  "foreign_keys":  0,
+                                                                                  "page_count":  8,
+                                                                                  "page_size":  4096,
+                                                                                  "synchronous":  2,
+                                                                                  "temp_store":  0
+                                                                              },
+                                                 "schema_migrations":  [
+                                                                           {
+                                                                               "applied_at":  "2026-11-18T05:04:53Z",
+                                                                               "name":  "0001_initial_foundation",
+                                                                               "version":  1
+                                                                           },
+                                                                           {
+                                                                               "applied_at":  "2026-11-18T05:04:53Z",
+                                                                               "name":  "0002_projects",
+                                                                               "version":  2
+                                                                           }
+                                                                       ],
+                                                 "schema_migrations_count":  2,
+                                                 "settings_canary":  {
+                                                                         "key":  "test-canary",
+                                                                         "updated_at":  "2026-11-18T05:04:56Z",
+                                                                         "value_json":  "{\"value\": \"release-verify-canary-20261118-130453\"}"
+                                                                     },
+                                                 "settings_row_count":  1,
+                                                 "sidecars_after_close":  {
+                                                                              "-journal":  {
+                                                                                               "exists":  false,
+                                                                                               "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                               "size_bytes":  0
+                                                                                           },
+                                                                              "-shm":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                           "size_bytes":  32768
+                                                                                       },
+                                                                              "-wal":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                           "size_bytes":  0
+                                                                                       }
+                                                                          },
+                                                 "sidecars_before_open":  {
+                                                                              "-journal":  {
+                                                                                               "exists":  false,
+                                                                                               "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                               "size_bytes":  0
+                                                                                           },
+                                                                              "-shm":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                           "size_bytes":  32768
+                                                                                       },
+                                                                              "-wal":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                           "size_bytes":  0
+                                                                                       }
+                                                                          },
+                                                 "tables":  [
+                                                                "projects",
+                                                                "schema_migrations",
+                                                                "settings"
+                                                            ],
+                                                 "user_version":  2
+                                             }
+                          },
+                          {
+                              "label":  "persistence-db-after-restart",
+                              "json_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\persistence-db-after-restart.json",
+                              "ok":  true,
+                              "exit_code":  0,
+                              "open_mode":  "mode=ro",
+                              "error":  null,
+                              "inspection":  {
+                                                 "database":  {
+                                                                  "exists":  true,
+                                                                  "is_file":  true,
+                                                                  "size_bytes":  32768
+                                                              },
+                                                 "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db",
+                                                 "foreign_key_check":  [
+
+                                                                       ],
+                                                 "header":  {
+                                                                "exists":  true,
+                                                                "magic":  "SQLite format 3\u0000",
+                                                                "page_size":  4096,
+                                                                "read_version":  2,
+                                                                "write_version":  2
+                                                            },
+                                                 "integrity_check":  [
+                                                                         "ok"
+                                                                     ],
+                                                 "journal_mode":  "wal",
+                                                 "open_errors":  [
+
+                                                                 ],
+                                                 "open_mode":  "mode=ro",
+                                                 "probe_connection_pragmas":  {
+                                                                                  "busy_timeout":  5000,
+                                                                                  "foreign_keys":  0,
+                                                                                  "page_count":  8,
+                                                                                  "page_size":  4096,
+                                                                                  "synchronous":  2,
+                                                                                  "temp_store":  0
+                                                                              },
+                                                 "schema_migrations":  [
+                                                                           {
+                                                                               "applied_at":  "2026-11-18T05:04:53Z",
+                                                                               "name":  "0001_initial_foundation",
+                                                                               "version":  1
+                                                                           },
+                                                                           {
+                                                                               "applied_at":  "2026-11-18T05:04:53Z",
+                                                                               "name":  "0002_projects",
+                                                                               "version":  2
+                                                                           }
+                                                                       ],
+                                                 "schema_migrations_count":  2,
+                                                 "settings_canary":  {
+                                                                         "key":  "test-canary",
+                                                                         "updated_at":  "2026-11-18T05:04:56Z",
+                                                                         "value_json":  "{\"value\": \"release-verify-canary-20261118-130453\"}"
+                                                                     },
+                                                 "settings_row_count":  1,
+                                                 "sidecars_after_close":  {
+                                                                              "-journal":  {
+                                                                                               "exists":  false,
+                                                                                               "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                               "size_bytes":  0
+                                                                                           },
+                                                                              "-shm":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                           "size_bytes":  32768
+                                                                                       },
+                                                                              "-wal":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                           "size_bytes":  0
+                                                                                       }
+                                                                          },
+                                                 "sidecars_before_open":  {
+                                                                              "-journal":  {
+                                                                                               "exists":  false,
+                                                                                               "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-journal",
+                                                                                               "size_bytes":  0
+                                                                                           },
+                                                                              "-shm":  {
+                                                                                           "exists":  false,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-shm",
+                                                                                           "size_bytes":  0
+                                                                                       },
+                                                                              "-wal":  {
+                                                                                           "exists":  false,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case1-first-launch\\data\\database\\work.db-wal",
+                                                                                           "size_bytes":  0
+                                                                                       }
+                                                                          },
+                                                 "tables":  [
+                                                                "projects",
+                                                                "schema_migrations",
+                                                                "settings"
+                                                            ],
+                                                 "user_version":  2
+                                             }
+                          },
+                          {
+                              "label":  "case2-env-ignore-db",
+                              "json_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\evidence\\case2-env-ignore-db.json",
+                              "ok":  true,
+                              "exit_code":  0,
+                              "open_mode":  "mode=ro",
+                              "error":  null,
+                              "inspection":  {
+                                                 "database":  {
+                                                                  "exists":  true,
+                                                                  "is_file":  true,
+                                                                  "size_bytes":  32768
+                                                              },
+                                                 "database_path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\data\\database\\work.db",
+                                                 "foreign_key_check":  [
+
+                                                                       ],
+                                                 "header":  {
+                                                                "exists":  true,
+                                                                "magic":  "SQLite format 3\u0000",
+                                                                "page_size":  4096,
+                                                                "read_version":  2,
+                                                                "write_version":  2
+                                                            },
+                                                 "integrity_check":  [
+                                                                         "ok"
+                                                                     ],
+                                                 "journal_mode":  "wal",
+                                                 "open_errors":  [
+
+                                                                 ],
+                                                 "open_mode":  "mode=ro",
+                                                 "probe_connection_pragmas":  {
+                                                                                  "busy_timeout":  5000,
+                                                                                  "foreign_keys":  0,
+                                                                                  "page_count":  8,
+                                                                                  "page_size":  4096,
+                                                                                  "synchronous":  2,
+                                                                                  "temp_store":  0
+                                                                              },
+                                                 "schema_migrations":  [
+                                                                           {
+                                                                               "applied_at":  "2026-11-18T05:04:58Z",
+                                                                               "name":  "0001_initial_foundation",
+                                                                               "version":  1
+                                                                           },
+                                                                           {
+                                                                               "applied_at":  "2026-11-18T05:04:58Z",
+                                                                               "name":  "0002_projects",
+                                                                               "version":  2
+                                                                           }
+                                                                       ],
+                                                 "schema_migrations_count":  2,
+                                                 "settings_canary":  null,
+                                                 "settings_row_count":  0,
+                                                 "sidecars_after_close":  {
+                                                                              "-journal":  {
+                                                                                               "exists":  false,
+                                                                                               "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\data\\database\\work.db-journal",
+                                                                                               "size_bytes":  0
+                                                                                           },
+                                                                              "-shm":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\data\\database\\work.db-shm",
+                                                                                           "size_bytes":  32768
+                                                                                       },
+                                                                              "-wal":  {
+                                                                                           "exists":  true,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\data\\database\\work.db-wal",
+                                                                                           "size_bytes":  0
+                                                                                       }
+                                                                          },
+                                                 "sidecars_before_open":  {
+                                                                              "-journal":  {
+                                                                                               "exists":  false,
+                                                                                               "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\data\\database\\work.db-journal",
+                                                                                               "size_bytes":  0
+                                                                                           },
+                                                                              "-shm":  {
+                                                                                           "exists":  false,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\data\\database\\work.db-shm",
+                                                                                           "size_bytes":  0
+                                                                                       },
+                                                                              "-wal":  {
+                                                                                           "exists":  false,
+                                                                                           "path":  "D:\\WorkManager-test-data\\t1-02-release-portable-v2\\case2-env-ignore\\data\\database\\work.db-wal",
+                                                                                           "size_bytes":  0
+                                                                                       }
+                                                                          },
+                                                 "tables":  [
+                                                                "projects",
+                                                                "schema_migrations",
+                                                                "settings"
+                                                            ],
+                                                 "user_version":  2
+                                             }
+                          }
+                      ]
+}

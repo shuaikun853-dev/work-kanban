@@ -10,6 +10,8 @@
  * 契约变更必须同时修改 Rust DTO、本文件与 docs/architecture/TECHNICAL_DESIGN.md。
  */
 
+export type { IpcErrorPayload } from './ipc';
+
 /** 生产代码中唯一允许调用的数据库相关命令名。 */
 export const DATABASE_HEALTH_COMMAND = 'get_database_health' as const;
 
@@ -64,12 +66,4 @@ export interface DatabaseHealthResponse {
   readonly databasePath: string;
   readonly webview2DataDir: string;
   readonly database: DatabaseHealth;
-}
-
-/** `get_database_health` 失败载荷（对应 Rust `CommandError`）。 */
-export interface IpcErrorPayload {
-  /** 稳定错误码，例如 `database-integrity-check-failed`。 */
-  readonly code: string;
-  /** 面向用户的中文错误消息。 */
-  readonly message: string;
 }
