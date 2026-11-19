@@ -1,0 +1,119 @@
+{
+  "task": "T1-02",
+  "taskName": "项目创建、编辑、归档",
+  "auditRound": 2,
+  "focusedReview": "P2-01 fifth focused audit",
+  "auditedCodeHead": "8123e0354bc3d3393944a323ecd59f709ac3b051",
+  "branch": "task/T1-02-project-management",
+  "pullRequest": {
+    "number": 7,
+    "url": "https://github.com/shuaikun853-dev/work-kanban/pull/7",
+    "state": "OPEN",
+    "merged": false,
+    "base": "main",
+    "baseSha": "0cafde61078c8d428a37cd509a349e4db8f4096e"
+  },
+  "conclusion": "PASS",
+  "statusAfterAudit": "待用户验收",
+  "independentRegression": {
+    "cargoFmt": {
+      "exitCode": 0,
+      "pass": true
+    },
+    "cargoCheck": {
+      "exitCode": 0,
+      "pass": true
+    },
+    "cargoTest": {
+      "exitCode": 0,
+      "passed": 90,
+      "failed": 0,
+      "pass": true
+    },
+    "npmCheck": {
+      "exitCode": 0,
+      "svelteErrors": 0,
+      "svelteWarnings": 0,
+      "designTokenFiles": 18,
+      "designTokenViolations": 0,
+      "tokenTestsPassed": 49,
+      "tokenTestsTotal": 49,
+      "pass": true
+    },
+    "npmBuild": {
+      "exitCode": 0,
+      "modules": 156,
+      "pass": true
+    },
+    "gitDiffCheck": {
+      "exitCode": 0,
+      "pass": true
+    },
+    "releaseUiE2e": {
+      "runs": 5,
+      "passed": 5,
+      "failed": 0,
+      "perRun": {
+        "mainChecks": 73,
+        "mainFailed": 0,
+        "minWindowChecks": 12,
+        "minWindowFailed": 0,
+        "cspViolations": 0,
+        "uncaughtPageErrors": 0,
+        "closeExitCode": 0
+      },
+      "pass": true
+    }
+  },
+  "releaseArtifact": {
+    "path": "D:\\工作事项看板\\target\\release\\workmanager.exe",
+    "sizeBytes": 10230784,
+    "sha256": "e2f239a5bb7e645ebecebd4042f12bea57b8d8451d2d7e6046e80cff5a330af7"
+  },
+  "focusedTokenAudit": {
+    "svelteVersion": "5.57.3",
+    "isolatedProbes": [
+      {
+        "scenario": "component style/Style/STYLE props",
+        "exitCode": 0,
+        "violations": 0,
+        "pass": true
+      },
+      {
+        "scenario": "native div/style case variants/custom element/svelte:element/slot/title",
+        "exitCode": 1,
+        "violations": 6,
+        "pass": true
+      },
+      {
+        "scenario": "mixed component prop and native div",
+        "exitCode": 1,
+        "violations": 1,
+        "pass": true
+      }
+    ],
+    "astBehavior": "Current default parser returns legacy AST; missing ast.html fails with exit code 2. Modern AST support is not claimed.",
+    "limitations": [
+      "Svelte style: directives and script-dynamic colors are not scanned; current code has no such use.",
+      "No dedicated frontend component unit or visual-regression framework.",
+      "First-round initial E2E timeout raw log is unavailable; this round independently passed five consecutive complete E2E runs."
+    ]
+  },
+  "knownNonBlockingBoundaries": [
+    "Actual work_items associations are not yet created by T1-02; test-only probe table validates non-destructive archive semantics. Re-test with real associations in T1-03.",
+    "TOCTOU is accepted and deferred under DEC-029 / Issue #2.",
+    "Ordinary SQLite without encryption is confirmed by DEC-028.",
+    "Backup/restore policy OPEN-001/002/003 remains pending user decision."
+  ],
+  "userAcceptance": {
+    "status": "PENDING",
+    "exePath": "D:\\WorkManager-UAT-20261119\\WorkManager.exe",
+    "dataRoot": "D:\\WorkManager-UAT-20261119\\data",
+    "accepted": false
+  },
+  "gates": {
+    "doNotMergeUntilUserAcceptance": true,
+    "doNotStartT1_03UntilUserAcceptanceAndMerge": true,
+    "doNotMarkTaskCompleteYet": true
+  }
+}
