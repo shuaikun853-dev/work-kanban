@@ -1,6 +1,6 @@
 # T1-02：项目创建、编辑、归档
 
-**任务状态：** 待审计（第一轮独立审计问题已修复并完成自测；等待第二轮独立审计，不得标记验收完成）  
+**任务状态：** 待用户验收（第二轮独立审计已通过；用户验收完成前不得合并 PR #7 或标记验收完成）  
 **启动日期：** 2026-11-18  
 **自测完成日期：** 2026-11-18  
 **返工修复完成日期：** 2026-11-18  
@@ -11,6 +11,8 @@
 **Pull Request：** [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)（保持 Open，不合并）  
 **测试报告：** [T1-02-REPORT.md](../../testing/reports/T1-02-REPORT.md)  
 **返工修复报告：** [T1-02-AUDIT-FIX-REPORT.md](../../testing/reports/T1-02-AUDIT-FIX-REPORT.md)  
+**第二轮独立审计报告：** [T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md](../../testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)  
+**用户验收清单：** [T1-02-USER-ACCEPTANCE.md](../../testing/reports/T1-02-USER-ACCEPTANCE.md)
 **机器可读证据：** [T1-02-evidence.json](../../testing/reports/T1-02-evidence.json)  
 **返工修复机器可读证据：** [T1-02-AUDIT-FIX-evidence.json](../../testing/reports/T1-02-AUDIT-FIX-evidence.json)
 
@@ -164,7 +166,7 @@ UI 变更必须提供：
 - 更新 `docs/STATUS.md`、`docs/development/DEVELOPMENT_PLAN.md` 和本任务说明；
 - 推送任务分支；
 - 创建 PR 指向 `main`；
-- PR 合并前状态只能为“待审计”，不得自行标记“验收完成”。
+- 第二轮独立审计通过后状态为“待用户验收”；用户明确接受前不得合并 PR #7 或标记“验收完成”。
 
 最终报告必须提供：
 
@@ -260,3 +262,17 @@ SHA-256 `51BBBA8DD17103D742E1BD4A85B83377F7578D34584F2206F30EDFEC8D3DC7F6`。
 
 **未开始/未修改：** T1-03 未开始；PRD、DEC-028～DEC-032、UI 布局、三色窗口按钮、项目业务逻辑、
 T1-01 基础架构、migration 历史均未修改；main 未修改；PR #7 未合并。
+
+
+## 12. 第二轮独立审计结果（2026-11-19，待用户验收）
+
+**审计结论：** **通过**。审计对象为 PR #7，代码基线 `8123e0354bc3d3393944a323ecd59f709ac3b051`；本轮属于 T1-02 第二轮整体复核，其中 P2-01 为第五轮专项复核。
+
+- **P2-01：通过。** 组件 `style` prop 与 HTML 原生元素样式按 Svelte AST 节点语义区分；组件 `style` / `Style` / `STYLE` prop 不误报；原生 HTML 小写/大写属性、条件表达式分支保持检测。独立测试 49/49；隔离探针覆盖组件 prop、原生元素和混合场景，结果符合预期。
+- **P3-01：通过。** `src-tauri/src/lib.rs` 过期命令说明已更新，与当前项目 CRUD 命令边界一致。
+- **P3-02：通过。** E2E 采用新文档 boot marker、应用壳/IPC 就绪和项目 Loading 终态等待；本轮独立 Release E2E 连续 5/5 通过，每次主检查 73/73、最小窗口 12/12、CSP 0、页面异常 0、关闭退出码 0。
+- **独立回归：** `cargo fmt --all -- --check`、`cargo check --workspace --all-targets`、`cargo test --workspace`（90/90）、`npm run check`（0 errors / 0 warnings、18 文件 0 违规、49/49）、`npm run build`（156 modules）全部通过。
+- **Release 实测产物：** `target/release/workmanager.exe`，10,230,784 字节，SHA-256 `e2f239a5bb7e645ebecebd4042f12bea57b8d8451d2d7e6046e80cff5a330af7`；连续五次运行均使用该哈希。独立运行日志与证据位于 `D:\WorkManager-test-data\t1-02-second-audit-20261119\`。
+- **未关闭的非阻塞边界：** 归档关联测试目前使用测试探针表；真实 `work_items` 关联尚未在 T1-02 建立，将在 T1-03 引入后补充集成验证。静态检查不覆盖 `style:` 指令和脚本动态颜色（当前代码无此用法）；无独立前端组件/视觉回归框架。TOCTOU 按 DEC-029 接受并延期，普通 SQLite 按 DEC-028 不加密，备份策略仍待用户确认。
+
+**当前状态：** **待用户验收**，不是验收完成。用户明确接受后，才进入 PR #7 合并流程；合并前不开始 T1-03。用户验收记录见 [T1-02-USER-ACCEPTANCE.md](../../testing/reports/T1-02-USER-ACCEPTANCE.md)。
