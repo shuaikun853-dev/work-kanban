@@ -119,8 +119,10 @@ mod tests {
         );
     }
 
+    /// Rust `WorkItem` 的 serde 输出字段必须与 TypeScript `WorkItemDto` 逐字段一致：
+    /// 10 个 camelCase 字段，四个可空字段为 JSON null，禁止 snake_case 字段。
     #[test]
-    fn created_work_item_serializes_camel_case_contract() {
+    fn created_work_item_serializes_full_camel_case_contract() {
         let work_item = WorkItem {
             id: "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a001".to_string(),
             project_id: None,
@@ -134,17 +136,79 @@ mod tests {
             updated_at: "2026-11-19T10:00:00.000Z".to_string(),
         };
         let value = serde_json::to_value(&work_item).expect("序列化工作事项");
+        let object = value.as_object().expect("工作事项 JSON 对象");
+
+        let expected_keys = [
+            "id",
+            "projectId",
+            "title",
+            "lifecycleStatus",
+            "importance",
+            "urgency",
+            "dueDate",
+            "description",
+            "createdAt",
+            "updatedAt",
+        ];
+        assert_eq!(
+            object.len(),
+            expected_keys.len(),
+            "创建 DTO 必须只包含 10 个已定义字段"
+        );
+        for key in expected_keys {
+            assert!(
+                object.contains_key(key),
+                "创建 DTO 必须包含字段 {key}；实际字段：{:?}",
+                object.keys().collect::<Vec<_>>()
+            );
+        }
+        for snake_case_key in [
+            "project_id",
+            "lifecycle_status",
+            "due_date",
+            "created_at",
+            "updated_at",
+        ] {
+            assert!(
+                object.get(snake_case_key).is_none(),
+                "创建 DTO 不得包含 snake_case 字段 {snake_case_key}"
+            );
+        }
+
         assert_eq!(value["projectId"], serde_json::Value::Null);
+        assert_eq!(value["importance"], serde_json::Value::Null);
+        assert_eq!(value["urgency"], serde_json::Value::Null);
+        assert_eq!(value["dueDate"], serde_json::Value::Null);
+        assert_eq!(value["description"], serde_json::Value::Null);
         assert_eq!(value["lifecycleStatus"], "pending");
         assert_eq!(value["createdAt"], "2026-11-19T10:00:00.000Z");
         assert_eq!(value["updatedAt"], "2026-11-19T10:00:00.000Z");
-        assert!(value.get("project_id").is_none());
-        assert!(value.get("lifecycle_status").is_none());
-        assert_eq!(
-            value.as_object().expect("对象").len(),
-            10,
-            "创建 DTO 只包含已定义字段"
-        );
+    }
+
+    /// 四个可空字段具有合法值时，序列化类型与字段名保持一致（数字/字符串）。
+    #[test]
+    fn created_work_item_serializes_optional_values_with_exact_contract() {
+        let work_item = WorkItem {
+            id: "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a001".to_string(),
+            project_id: Some("3f0b8f28-5d5a-4f73-9a52-3a8a0f0f0000".to_string()),
+            title: "关联项目的工作".to_string(),
+            lifecycle_status: WORK_ITEM_STATUS_PENDING.to_string(),
+            importance: Some(3),
+            urgency: Some(5),
+            due_date: Some("2026-12-31".to_string()),
+            description: Some("虚构描述：已补齐可选字段".to_string()),
+            created_at: "2026-11-19T10:00:00.000Z".to_string(),
+            updated_at: "2026-11-19T10:00:00.000Z".to_string(),
+        };
+        let value = serde_json::to_value(&work_item).expect("序列化工作事项");
+        assert_eq!(value.as_object().expect("对象").len(), 10);
+        assert_eq!(value["importance"], 3);
+        assert_eq!(value["urgency"], 5);
+        assert_eq!(value["dueDate"], "2026-12-31");
+        assert_eq!(value["description"], "虚构描述：已补齐可选字段");
+        assert_eq!(value["projectId"], "3f0b8f28-5d5a-4f73-9a52-3a8a0f0f0000");
+        assert!(value["importance"].is_number(), "importance 必须是数字");
+        assert!(value["urgency"].is_number(), "urgency 必须是数字");
     }
 
     #[test]

@@ -19,6 +19,14 @@ pub const WORK_ITEM_STATUS_PENDING: &str = "pending";
 /// - `id`：Rust Core 生成的稳定 UUID，前端不得自行生成业务 ID；
 /// - `project_id`：`None` 表示未归属项目；
 /// - 时间字段：UTC RFC3339 字符串，展示时由前端按业务时区 Asia/Shanghai 格式化。
+///
+/// **序列化契约（与 `src/lib/contracts/workItems.ts` 的 `WorkItemDto` 逐字段一致）：**
+/// serde `camelCase` 输出且恰好包含 10 个字段：
+/// `id`、`projectId`、`title`、`lifecycleStatus`、`importance`、`urgency`、`dueDate`、
+/// `description`、`createdAt`、`updatedAt`。其中 `projectId`、`importance`、`urgency`、
+/// `dueDate`、`description` 未设置时序列化为 JSON `null`（不省略字段）；`importance`/
+/// `urgency` 已设置时为 1–5 的整数。前端 Bridge 对该字段集合做严格运行时校验，新增或
+/// 删除字段必须同步更新 TypeScript 契约与测试。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkItem {
