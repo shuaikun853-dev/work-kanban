@@ -47,4 +47,4 @@
 - **PR #7：** 已合并到 `main`。
 - **合并日期：** 2026-11-19。
 - **Merge commit：** `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。
-- **合并后 main HEAD：** `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。
+- **PR 合并后 main 初始 HEAD：** `ab6aba32a94d7d091b20f0ab49b25badf26377c4`；之后追加了状态文档同步提交。
