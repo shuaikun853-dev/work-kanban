@@ -3,8 +3,8 @@
 **更新日期：** 2026-11-19  
 **当前阶段：** 阶段 1：基础架构与工作事项  
 **最近完成任务：** T1-01 正式工程骨架与 SQLite 基础设施（用户验收完成）  
-**当前任务：** T1-02 项目创建、编辑、归档（**待用户验收**：第二轮独立审计已通过；等待用户实际验收项目管理 Release 流程，2026-11-19）  
-**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01 已验收完成并合并到 main。T1-02 的项目 CRUD、migration 0002、Rust Core、typed Tauri IPC、项目 UI、自动化测试与 Release 验证已完成；第一轮审计发现的 P2-01 / P3-01 / P3-02 均已修复，第二轮独立审计已通过（P2-01 第五轮专项复核通过，49/49 静态检查测试、Rust 90/90、Release UI E2E 5/5）；**当前状态为待用户验收**（[PR #7](https://github.com/shuaikun853-dev/work-kanban/pull/7) 保持 Open、未合并）。用户验收完成前不合并 PR、不标记验收完成、不开始 T1-03。TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。分支 `task/T1-02-project-management`。
+**当前任务：** T1-02 项目创建、编辑、归档（**用户验收通过，待 PR #7 合并**：用户于 2026-11-19 明确接受）  
+**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01 已验收完成并合并到 main。T1-02 的项目 CRUD、migration 0002、Rust Core、typed Tauri IPC、项目 UI、自动化测试与 Release 验证已完成；第一轮审计发现的 P2-01 / P3-01 / P3-02 均已修复，第二轮独立审计已通过（P2-01 第五轮专项复核通过，49/49 静态检查测试、Rust 90/90、Release UI E2E 5/5）；**用户已于 2026-11-19 明确接受 T1-02，当前进入 PR #7 合并流程**（PR 仍 Open，尚未合并）。合并完成并同步 main 前不启动 T1-03。TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。分支 `task/T1-02-project-management`。
 
 ## 最新产品决策
 
@@ -51,7 +51,7 @@
 | 任务 | 内容 | 状态 |
 |---|---|---|
 | T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | **验收完成**（用户 2026-11-18 确认；PR #1 已合并到 main，commit `260e6c0`；TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
-| T1-02 | 项目创建、编辑、归档 | **待用户验收**（第二轮独立审计通过；等待用户验收，PR #7 保持 Open） |
+| T1-02 | 项目创建、编辑、归档 | **用户验收通过，待 PR #7 合并** |
 | T1-03 | 工作事项快速创建和待安排区域 | 未开始 |
 | T1-04 | 多项目独立副本创建 | 未开始 |
 | T1-05 | 工作事项状态流转和历史记录 | 未开始 |
@@ -140,7 +140,7 @@
 ## 下一步安排
 
 - T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；T1-01 代码与 UI 设计文档均已合并到 main。
-- **T1-02 项目管理：第二轮独立审计已通过，当前“待用户验收”**；等待用户实际验收项目管理 Release 流程。用户明确接受前不合并 PR #7、不标记验收完成、不开始 T1-03。
+- **T1-02 项目管理：第二轮独立审计通过，用户已于 2026-11-19 明确接受，当前待 PR #7 合并。** 合并完成并同步 main 前不开始 T1-03。
 - T1-02 用户验收完成并按流程合并 PR #7 前，**不开始 T1-03**。
 - TOCTOU 残余风险按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复、不得宣称绝不写入 C 盘；未经用户另行授权不得开始完整句柄相对改造/custom SQLite VFS。
 - 备份策略（OPEN-001/002/003）未确认前，不实施、也不宣称自动备份。
@@ -236,3 +236,10 @@
 - **独立回归：** `cargo fmt --all -- --check`、`cargo check --workspace --all-targets`、`cargo test --workspace`（90/90）、`npm run check`（0 errors / 0 warnings，18 文件 0 违规，49/49）、`npm run build`（156 modules）均通过；Release UI E2E 连续 5/5 通过，每次主检查 73/73、最小窗口 12/12、CSP 0、页面未捕获异常 0、关闭进程退出码 0。
 - **当前门禁：** T1-02 转入**待用户验收**，不等于验收完成。用户确认接受后才按流程合并 PR #7；合并前不开始 T1-03。
 - 审计报告：[T1-02 第二轮独立审计报告](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)；机器证据：[T1-02 第二轮审计证据](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-evidence.json)；用户验收清单：[T1-02-USER-ACCEPTANCE.md](testing/reports/T1-02-USER-ACCEPTANCE.md)。
+
+
+## T1-02 用户验收结论（2026-11-19）
+
+- **用户结论：接受 T1-02。** 用户于 2026-11-19 在当前对话明确回复“接受 T1-02”。
+- **状态：** 用户验收通过，PR #7 待合并；PR 合并前不启动 T1-03。
+- **验收记录：** [T1-02-USER-ACCEPTANCE.md](testing/reports/T1-02-USER-ACCEPTANCE.md)。用户整体接受结论已记录；对话未逐项回填清单，不伪造逐项操作记录。
