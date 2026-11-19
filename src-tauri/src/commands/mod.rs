@@ -2,7 +2,8 @@
 //!
 //! 当前暴露：
 //! - 数据库健康检查（T1-01）；
-//! - 项目列表 / 创建 / 编辑 / 归档（T1-02）。
+//! - 项目列表 / 创建 / 编辑 / 归档（T1-02）；
+//! - 工作事项创建 / 待安排列表（T1-03）。
 //!
 //! 刻意不提供：`execute_sql`、`query_sql`、任意文件读写或任意命令执行接口（TD 6.1）。
 //!
@@ -10,10 +11,11 @@
 //! `PRAGMA integrity_check` 阻塞 UI/主线程（审计 P2）。IPC DTO 契约保持不变。
 
 pub mod projects;
+pub mod work_items;
 
 use serde::Serialize;
 use tauri::Manager;
-use workmanager_core::{DatabaseError, ProjectError};
+use workmanager_core::{DatabaseError, ProjectError, WorkItemError};
 
 use crate::app_state::{AppState, DatabaseHealthResponse};
 
@@ -36,6 +38,15 @@ impl From<DatabaseError> for CommandError {
 
 impl From<ProjectError> for CommandError {
     fn from(error: ProjectError) -> Self {
+        Self {
+            code: error.code().to_string(),
+            message: error.to_string(),
+        }
+    }
+}
+
+impl From<WorkItemError> for CommandError {
+    fn from(error: WorkItemError) -> Self {
         Self {
             code: error.code().to_string(),
             message: error.to_string(),
