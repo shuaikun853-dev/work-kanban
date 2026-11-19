@@ -12,7 +12,8 @@
 **测试报告：** [T1-02-REPORT.md](../../testing/reports/T1-02-REPORT.md)  
 **返工修复报告：** [T1-02-AUDIT-FIX-REPORT.md](../../testing/reports/T1-02-AUDIT-FIX-REPORT.md)  
 **第二轮独立审计报告：** [T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md](../../testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)  
-**用户验收清单：** [T1-02-USER-ACCEPTANCE.md](../../testing/reports/T1-02-USER-ACCEPTANCE.md)
+**用户验收清单：** [T1-02-USER-ACCEPTANCE.md](../../testing/reports/T1-02-USER-ACCEPTANCE.md)  
+**第二轮独立审计机器可读证据：** [T1-02-SECOND-INDEPENDENT-AUDIT-evidence.json](../../testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-evidence.json)  
 **机器可读证据：** [T1-02-evidence.json](../../testing/reports/T1-02-evidence.json)  
 **返工修复机器可读证据：** [T1-02-AUDIT-FIX-evidence.json](../../testing/reports/T1-02-AUDIT-FIX-evidence.json)
 
