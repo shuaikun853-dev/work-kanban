@@ -293,5 +293,5 @@ T1-01 基础架构、migration 历史均未修改；main 未修改；PR #7 未�
 - **任务状态：验收完成。** 第二轮独立审计通过；用户明确回复“接受 T1-02”；PR #7 已合并到 main。
 - **PR：** [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7)，merged。
 - **Merge commit：** `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。
-- **main HEAD：** `ab6aba32a94d7d091b20f0ab49b25badf26377c4`（合并后核验）。
+- **PR 合并后 main 初始 HEAD：** `ab6aba32a94d7d091b20f0ab49b25badf26377c4`；之后在 main 上追加了状态文档同步提交。
 - **下一任务：** T1-03 工作事项快速创建和待安排区域，尚未开始；等待用户单独启动指示。
