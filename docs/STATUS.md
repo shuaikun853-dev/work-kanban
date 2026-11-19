@@ -2,9 +2,9 @@
 
 **更新日期：** 2026-11-19  
 **当前阶段：** 阶段 1：基础架构与工作事项  
-**最近完成任务：** T1-01 正式工程骨架与 SQLite 基础设施（用户验收完成）  
-**当前任务：** T1-02 项目创建、编辑、归档（**用户验收通过，待 PR #7 合并**：用户于 2026-11-19 明确接受）  
-**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01 已验收完成并合并到 main。T1-02 的项目 CRUD、migration 0002、Rust Core、typed Tauri IPC、项目 UI、自动化测试与 Release 验证已完成；第一轮审计发现的 P2-01 / P3-01 / P3-02 均已修复，第二轮独立审计已通过（P2-01 第五轮专项复核通过，49/49 静态检查测试、Rust 90/90、Release UI E2E 5/5）；**用户已于 2026-11-19 明确接受 T1-02，当前进入 PR #7 合并流程**（PR 仍 Open，尚未合并）。合并完成并同步 main 前不启动 T1-03。TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。分支 `task/T1-02-project-management`。
+**最近完成任务：** T1-02 项目创建、编辑、归档（用户验收完成，PR #7 已合并）  
+**当前任务：** T1-03 工作事项快速创建和待安排区域（未开始，等待单独启动指示）  
+**总体状态：** 阶段 0 已放行；阶段 1 进行中。T1-01、T1-02 均已完成用户验收并合并到 `main`。T1-02 第二轮独立审计通过，P2-01 / P3-01 / P3-02 已关闭；独立回归 Rust 90/90、前端质量门禁 49/49、Release UI E2E 连续 5/5。PR [#7](https://github.com/shuaikun853-dev/work-kanban/pull/7) 已于 2026-11-19 合并，合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。**T1-03 尚未开始，等待用户单独启动指示。** TOCTOU 仍按 DEC-029 接受并延期至独立安全加固 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复，不作绝对 C 盘写入保证。
 
 ## 最新产品决策
 
@@ -25,7 +25,7 @@
 - 首页优先展示今日要做、今日已完成、当前工作；复盘与待跟进降为次级信息；禁止堆叠统计图表和无关指标。
 - 前端组件分层、Design Tokens、typed Bridge、CSS 隔离和 UI 回归规则已写入 UI 规范、技术架构和 AGENTS.md。
 - **T1-02 已进入开发：项目 CRUD + UI 基础应用壳/导航 + 项目管理页面。**
-- **T1-02 当前状态：待用户验收（第二轮独立审计已通过，2026-11-19）。** P2-01 第五轮专项审计通过；P3-01 过期注释和 P3-02 E2E 等待修复已核验。独立复跑 Rust 90/90、`npm run check`（svelte-check 0 errors / 0 warnings、Design Token 18 文件 0 违规、测试 49/49）、`npm run build`，以及 Release UI E2E 连续 5 次（每次主检查 73/73、最小窗口 12/12、CSP 0、未捕获异常 0、关闭退出码 0）。用户验收前不合并 PR、不开始 T1-03。详见 [第二轮独立审计报告](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md) 和 [用户验收清单](testing/reports/T1-02-USER-ACCEPTANCE.md)。
+- **T1-02 已验收完成并合并。** 第二轮独立审计通过；用户于 2026-11-19 明确接受；PR #7 合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。详见 [第二轮独立审计报告](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)、[机器可读审计证据](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-evidence.json) 和 [用户验收记录](testing/reports/T1-02-USER-ACCEPTANCE.md)。**T1-03 未开始，等待单独启动指示。**
 
 ## 阶段 0：技术验证
 
@@ -51,7 +51,7 @@
 | 任务 | 内容 | 状态 |
 |---|---|---|
 | T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | **验收完成**（用户 2026-11-18 确认；PR #1 已合并到 main，commit `260e6c0`；TOCTOU 按 DEC-029 接受并延期至 Issue #2） |
-| T1-02 | 项目创建、编辑、归档 | **用户验收通过，待 PR #7 合并** |
+| T1-02 | 项目创建、编辑、归档 | **验收完成，PR #7 已合并** |
 | T1-03 | 工作事项快速创建和待安排区域 | 未开始 |
 | T1-04 | 多项目独立副本创建 | 未开始 |
 | T1-05 | 工作事项状态流转和历史记录 | 未开始 |
@@ -140,8 +140,8 @@
 ## 下一步安排
 
 - T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；T1-01 代码与 UI 设计文档均已合并到 main。
-- **T1-02 项目管理：第二轮独立审计通过，用户已于 2026-11-19 明确接受，当前待 PR #7 合并。** 合并完成并同步 main 前不开始 T1-03。
-- T1-02 用户验收完成并按流程合并 PR #7 前，**不开始 T1-03**。
+- **T1-02 项目管理：已完成。** 第二轮独立审计通过、用户已于 2026-11-19 明确接受，PR #7 已合并到 main（`ab6aba32a94d7d091b20f0ab49b25badf26377c4`）。T1-03 尚未启动，等待用户单独指示。
+- T1-02 已验收并合并；T1-03 仍需用户单独授权后再启动。
 - TOCTOU 残余风险按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复、不得宣称绝不写入 C 盘；未经用户另行授权不得开始完整句柄相对改造/custom SQLite VFS。
 - 备份策略（OPEN-001/002/003）未确认前，不实施、也不宣称自动备份。
 - 最小化提醒/Toast、托盘、单实例等系统集成仍按计划在阶段 6（T6-07）验收。
@@ -179,11 +179,11 @@
 - 合并提交：`260e6c07802a297529d8bda1e2d9239fca90fc10`。
 - **T1-01 代码现已进入 main；T1-02 已于 2026-11-18 启动开发。**
 
-## T1-02 交付结果（2026-11-19，第二轮独立审计通过，待用户验收）
+## T1-02 交付结果（2026-11-19，独立审计、用户验收及 PR 合并全部完成）
 
 **任务：** 项目创建、编辑、归档。  
-**分支：** `task/T1-02-project-management`（基于 main `0cafde6`）；[PR #7](https://github.com/shuaikun853-dev/work-kanban/pull/7)，**保持 Open、未合并**。  
-**状态：** **待用户验收**。第二轮独立审计已通过；等待用户实际验收。用户验收完成前，PR #7 保持 Open、不合并，T1-03 不开始。
+**分支：** `task/T1-02-project-management`（基于 main `0cafde6`）；[PR #7](https://github.com/shuaikun853-dev/work-kanban/pull/7)，**已合并**；合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。  
+**状态：** **验收完成**。第二轮独立审计通过；用户于 2026-11-19 明确接受；PR #7 已合并到 main。T1-03 尚未开始，等待单独启动指示。
 
 ### 实现范围
 
@@ -234,12 +234,19 @@
 
 - **独立审计结论：通过。** 审计代码基线 `8123e0354bc3d3393944a323ecd59f709ac3b051`；P2-01 第五轮专项复核通过，组件 `style` prop 不再误报，原生 HTML 大小写属性与条件分支回归未退化。
 - **独立回归：** `cargo fmt --all -- --check`、`cargo check --workspace --all-targets`、`cargo test --workspace`（90/90）、`npm run check`（0 errors / 0 warnings，18 文件 0 违规，49/49）、`npm run build`（156 modules）均通过；Release UI E2E 连续 5/5 通过，每次主检查 73/73、最小窗口 12/12、CSP 0、页面未捕获异常 0、关闭进程退出码 0。
-- **当前门禁：** T1-02 转入**待用户验收**，不等于验收完成。用户确认接受后才按流程合并 PR #7；合并前不开始 T1-03。
+- **当时门禁：** 第二轮独立审计通过后进入待用户验收；用户随后于 2026-11-19 明确接受，PR #7 已合并。当前 T1-02 验收完成；T1-03 尚未启动。
 - 审计报告：[T1-02 第二轮独立审计报告](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)；机器证据：[T1-02 第二轮审计证据](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-evidence.json)；用户验收清单：[T1-02-USER-ACCEPTANCE.md](testing/reports/T1-02-USER-ACCEPTANCE.md)。
 
 
 ## T1-02 用户验收结论（2026-11-19）
 
 - **用户结论：接受 T1-02。** 用户于 2026-11-19 在当前对话明确回复“接受 T1-02”。
-- **状态：** 用户验收通过，PR #7 待合并；PR 合并前不启动 T1-03。
+- **状态：** 用户验收通过，PR #7 已合并到 main，合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`；T1-02 标记为验收完成。T1-03 尚未启动，等待用户单独指示。
 - **验收记录：** [T1-02-USER-ACCEPTANCE.md](testing/reports/T1-02-USER-ACCEPTANCE.md)。用户整体接受结论已记录；对话未逐项回填清单，不伪造逐项操作记录。
+
+
+## T1-02 最终交付状态（2026-11-19）
+
+- **最终状态：验收完成。** 第二轮独立审计通过；用户明确回复“接受 T1-02”；PR #7 已合并。
+- **合并提交：** `ab6aba32a94d7d091b20f0ab49b25badf26377c4`；当前 `main` HEAD 与该提交一致。
+- **下一任务：** T1-03 工作事项快速创建和待安排区域，当前未开始；等待用户单独启动指示。
