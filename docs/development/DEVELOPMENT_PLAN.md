@@ -2,10 +2,10 @@
 
 **文档版本：** V2.0  
 **编制日期：** 2026-11-19  
-**文档状态：** 开发执行基线（阶段 0 已放行；T1-01、T1-02 均已验收完成并合并到 main；T1-03 开发准备完成，等待本地 Harness 执行；TOCTOU 按 DEC-029 接受并延期） \
+**文档状态：** 开发执行基线（阶段 0 已放行；T1-01、T1-02 均已验收完成并合并到 main；T1-03 开发与自测完成，待独立审计；TOCTOU 按 DEC-029 接受并延期） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；T1-01、T1-02 均已验收完成并合并到 main。用户于 2026-11-19 明确授权启动 T1-03「工作事项快速创建和待安排区域」；开发分支 `task/T1-03-quick-create-pending` 已从 main 基线 `018e851e8daf5835391a7b61caf881bc57c2ad42` 创建。开发准备已完成；DEC-033 已确认新工作不得关联已归档项目。T1-04 / T1-05 未启动。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。
+**当前进度：** 阶段 0 已放行；T1-01、T1-02 均已验收完成并合并到 main。T1-03「工作事项快速创建和待安排区域」已完成代码实现、自动化测试与 Windows Release 实测（含关闭重开持久化），实现提交 `be8d9c2`，PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open，状态 **待独立审计**。DEC-033 已实现并验证。T1-04 / T1-05 未启动。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。
 
 ---
 
@@ -86,7 +86,7 @@
 | 阶段 | 名称 | 主要交付 | 当前状态 |
 |---|---|---|---|
 | 0 | 技术验证 | 桌面壳、便携路径、WebView2 基础验证 | 已放行；SQLCipher/DPAPI 取消，系统集成验证延期至阶段 6 |
-| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 进行中；T1-01、T1-02 已验收完成并合并；**T1-03 开发准备完成，待本地 Harness 执行** |
+| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 进行中；T1-01、T1-02 已验收完成并合并；**T1-03 开发自测完成，待独立审计** |
 | 2 | 计划、优先级与当前工作 | 每日计划、全局排序、当前工作和切换记录 | 未开始 |
 | 3 | 每日复盘与提醒 | 工作日历、复盘、补录、提醒调度 | 未开始 |
 | 4 | 日志、搜索与报表 | 工作日志、历史搜索、日报、周报、月报 | 未开始 |
@@ -168,7 +168,7 @@
 |---|---|---|
 | T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | Tauri 2 + Svelte 5 + TypeScript + Rust 可构建；SQLite 初始化、user_version migration、外键、WAL、事务和测试通过 |
 | T1-02 | 项目创建、编辑、归档 | 项目 CRUD；归档不删除工作历史 | **验收完成**（用户接受；PR #7 于 2026-11-19 合并，commit `ab6aba32a94d7d091b20f0ab49b25badf26377c4`） |
-| T1-03 | 工作事项快速创建和待安排区域 | 标题快速录入并立即保存；默认待安排；仅可选未归档项目或不归属；待安排列表显示两类记录 | **进行中（开发准备完成；待本地 Harness 执行）** |
+| T1-03 | 工作事项快速创建和待安排区域 | 标题快速录入并立即保存；默认待安排；仅可选未归档项目或不归属；待安排列表显示两类记录 | **待独立审计**（实现提交 `be8d9c2`；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open；开发自测完成） |
 | T1-04 | 多项目独立副本创建 | 多项目创建时每个项目有独立工作记录、状态、日志和附件关联 |
 | T1-05 | 工作事项状态流转和历史记录 | 待安排、未开始、进行中、已完成、已放弃规则正确；状态变更可追溯 |
 | T1-06 | 六位数字应用密码与锁屏 | 取消（DEC-028）；第一版不实现 |
@@ -183,7 +183,7 @@
 - 前端架构：应用壳、Design Tokens、通用组件、Feature 页面、typed Bridge、DTO Contracts、纯展示函数分层。
 - UI 实现并入对应业务纵向任务，不另造重复业务任务；每次只实现一个页面/一个可验证切片，附截图和回归结果。
 - **T1-02 已按 DEC-032 完成自定义无边框标题栏与三色真实窗口控制**；项目管理 UI 使用已确认的 Design Tokens、AppShell、Sidebar 和紧凑桌面布局。
-- **T1-02 已验收完成。** 用户于 2026-11-19 明确回复“接受 T1-02”；PR #7 已合并到 main，commit `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。**T1-03 已获授权，开发分支和任务说明已建立；DEC-033 已确认新工作不能关联已归档项目；开发准备完成，等待本地 Harness 执行。**
+- **T1-03 开发与自测完成，待独立审计。** 实现提交 `be8d9c2`；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open；工作事项快速创建、待安排列表、DEC-033 归档项目拒绝与 Release 持久化实测均已完成，详见 [T1-03-REPORT.md](../testing/reports/T1-03-REPORT.md)。
 
 ### T1-01 详细范围
 
@@ -236,6 +236,24 @@
 - **已知风险：** 项目名称唯一性/删除恢复/排序偏好等 PRD 未定义行为未实现；归档历史关联测试使用测试探针表模拟未来 work_items；仓库仍无前端组件测试/视觉回归框架；TOCTOU 按 DEC-029 未修复并延期至 Issue #2；普通 SQLite 未加密；备份策略未确认。
 
 **审计与验收结果：** 第一轮审计发现的 P2-01 / P3-01 / P3-02 均已修复；第二轮独立审计于 2026-11-19 通过；用户于 2026-11-19 明确接受；PR #7 已合并到 main。T1-03 仍未开始，需用户单独授权。报告见 `docs/testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md`，用户验收记录见 `docs/testing/reports/T1-02-USER-ACCEPTANCE.md`。
+
+### T1-03 详细范围与实际交付（2026-11-19，待独立审计）
+
+**当前状态：** **待独立审计**。代码实现、自动化测试、Windows Release 实测与证据完成；PR 保持 Open，未合并；main 未修改。
+**分支：** `task/T1-03-quick-create-pending`；基线 main `018e851`；实现提交 `be8d9c2e9c78710690de189936d6ee65f48ed8df`。
+**Pull Request：** [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（Open，等待独立审计）。
+**测试报告：** [T1-03-REPORT.md](../testing/reports/T1-03-REPORT.md)；证据：[T1-03-assets/](../testing/reports/T1-03-assets/README.md)；预编码设计：[T1-03-Implementation-Design.md](tasks/T1-03-Implementation-Design.md)。
+
+**实际实现范围：**
+
+- **数据库：** 新增 migration `0003_work_items.sql`，schema version 2 → 3；`work_items`（稳定 ID、可空 `project_id` + `ON DELETE RESTRICT`、标题 CHECK、生命周期五值 CHECK、可空 `importance/urgency` 1–5、可空 `due_date/description`、创建/更新时间、待安排查询索引）；沿用现有 `user_version` + 事务化 migration，未修改 0001/0002。
+- **Rust Core：** 新增 `crates/workmanager-core/src/work_items/`（model/repository/service/error）；仅标题即可创建；标题 trim 后非空；Core 生成 UUID；默认 `pending`；相同标题独立记录；**DEC-033：项目存在性与归档校验与插入在同一个 `IMMEDIATE` 写事务内**（`project-not-found` / `project-archived`）；待安排查询只返回 `pending`，含未归属与归档项目历史关联，排序 `created_at DESC, id DESC`。
+- **Tauri IPC：** `create_work_item` / `list_pending_work_items`；serde camelCase、请求 `deny_unknown_fields`、`spawn_blocking`、稳定 `{code,message}` 错误；无任意 SQL / 文件 / 命令接口。
+- **前端：** `lib/contracts/workItems.ts`、`lib/bridge/workItems.ts` + `workItemValidation.ts`（运行时契约校验）；今日工作页下“待安排”次级视图（**不新增一级导航**、未修改 AppShell/Sidebar/Design Tokens）+ 独立快速创建组件；选择器只展示未归档项目；loading/empty/error/list、重复提交保护、创建成功后从后端重新读取、归档竞态错误提示、归档历史关联“项目已归档”标识。
+- **验证工具：** T1-03 Release E2E（主检查 70 / 最小窗口 12 / 重启持久化 17 / 数据库只读探针 25）、Bridge 运行时契约 Node 测试 10 项接入 `npm run check`；继承便携（106 项）、异常注入（73 项）、T1-02 UI E2E 回归通过。
+- **统计：** `cargo test --workspace` **123 passed / 0 failed**（基线 90 + 新增 33）；`npm run check`（svelte-check 0/0；Bridge 10/10；Design Token 49/49）；Release EXE 10,351,616 字节，SHA-256 `22af942fe2817388596118fc7cb66f34fce4e8c5e2367fe1a2942dc13dd66b23`。
+- **未实现：** T1-04 多项目独立副本、T1-05 状态流转、每日计划、优先级/手动排序、当前工作指针、复盘、日志、附件、报表、清理、备份恢复、TOCTOU 加固。未新增一级导航；未修改 T1-01/T1-02 已验收行为。
+- **已知风险：** 普通 SQLite 未加密；TOCTOU 按 DEC-029 未修复；待安排排序固定；开发自测不等于独立审计/用户验收。
 
 ## 7. 阶段 2：计划、优先级与当前工作
 
@@ -481,12 +499,12 @@
 
 - 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 已于 2026-11-18 经第四轮独立审计、用户验收并合并到 main（PR #1，commit `260e6c0`），状态为**验收完成**。
 - **T1-02 项目创建、编辑、归档：已验收完成。** 第二轮独立审计通过、用户明确接受、PR #7 已合并（commit `ab6aba32a94d7d091b20f0ab49b25badf26377c4`）。报告：`docs/testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md`；验收记录：`docs/testing/reports/T1-02-USER-ACCEPTANCE.md`。
-- **T1-03 工作事项快速创建和待安排区域：已获用户授权，开发准备完成。** 分支 `task/T1-03-quick-create-pending`，基线 `018e851e8daf5835391a7b61caf881bc57c2ad42`。DEC-033 已确认：新工作仅允许关联未归档项目；归档项目不得出现在选择器中，Core 必须拒绝已归档项目 ID。代码实现待本地 Harness 执行。
+- **T1-03 工作事项快速创建和待安排区域：开发与自测完成，待独立审计。** 分支 `task/T1-03-quick-create-pending`，基线 `018e851e8daf5835391a7b61caf881bc57c2ad42`，实现提交 `be8d9c2e9c78710690de189936d6ee65f48ed8df`，PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open。DEC-033 已实现并测试：新建工作只能关联未归档项目，Rust Core 在同一创建事务内拒绝归档项目；未归属工作仍可创建；归档不删除/改写既有工作关联。开发自测：`cargo test --workspace` 123/123、T1-03 Release E2E 70/70 + 12/12 + 17/17 + 数据库探针 25/25、继承回归全部通过；详细报告见 `docs/testing/reports/T1-03-REPORT.md`。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
-- 最近完成任务：**T1-01 正式工程骨架、便携路径接入与 SQLite 基础设施**；任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；验收记录见 `docs/testing/reports/T1-01-USER-ACCEPTANCE.md`；R3 返工证据见 `docs/testing/reports/T1-01-R3-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-R3-FIX-evidence.json`。
+- 最近完成任务：**T1-02 项目创建、编辑、归档**（用户验收完成，PR #7 已合并）；**T1-03 工作事项快速创建和待安排区域**已完成开发自测，等待独立审计（PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open）。T1-01 任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；验收记录见 `docs/testing/reports/T1-01-USER-ACCEPTANCE.md`；R3 返工证据见 `docs/testing/reports/T1-01-R3-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-R3-FIX-evidence.json`。
 - 参考实现/候选依赖说明：项目 ID 使用 `uuid` crate（MIT/Apache-2.0，技术设计 1.3 已列出）；`serde_json` 仅用于测试 DTO 契约；未引入云服务、遥测、账户或同步依赖。
 - 第一版采用普通 SQLite，不实现应用密码、SQLCipher 或 DPAPI。
-- UI 设计基线已按 DEC-030 / DEC-031 确认，DEC-032 自定义标题栏已实现并实测；业务 UI 目前仅交付 AppShell、项目管理和结构页，工作总览/今日工作真实业务数据尚未接入。
+- UI 设计基线已按 DEC-030 / DEC-031 确认，DEC-032 自定义标题栏已实现并实测；业务 UI 已交付 AppShell、项目管理（T1-02）与今日工作页下的待安排次级视图（T1-03）；今日工作计划/当前工作/完成状态等真实业务数据尚未接入，按后续任务实现。
 - D 盘本地存储、不上传数据、事务、版本化 migration、异常保护和备份恢复仍是必须要求。
 - 本计划书定义未来工作，不表示尚未开发的功能已经实现。
 
@@ -514,3 +532,6 @@
 ### T1-03 业务规则确认记录（2026-11-19）
 
 用户明确确认：**新建工作事项不允许选择已归档项目。** 该规则形成 DEC-033，并同步更新 PRD V0.3.2 与 T1-03 任务说明。实现要求：前端选择器只显示未归档项目；Rust Core 在创建事务内校验 `is_archived = 0`，对已归档项目返回 `project-archived`；不归属项目仍允许创建；项目归档不得删除或改写既有工作事项的项目关联。
+
+| 2026-11-19 | T1-03 编码前设计确认并提交 | 新增 `docs/development/tasks/T1-03-Implementation-Design.md`（组件树、页面状态流、修改文件清单、数据库模型、IPC 契约、测试计划），提交 `9c09156`；随后按该设计实施。 |
+| 2026-11-19 | T1-03 代码实现与开发自测完成（待独立审计） | 实现提交 `be8d9c2`：migration 0003（schema 2 → 3）、Rust Core `work_items` 领域（DEC-033 同事务校验）、Tauri typed IPC（`create_work_item` / `list_pending_work_items`）、前端 Contracts/Bridge/运行时校验、今日工作 → 待安排次级视图与快速创建对话框、T1-03 Release E2E 与继承回归脚本更新。`cargo test --workspace` **123 passed / 0 failed**（基线 90 + 新增 33）；`npm run check`（svelte-check 0/0、Bridge 10/10、Design Token 49/49）；Release E2E **主 70/70 + 最小窗口 12/12 + 重启持久化 17/17 + 数据库探针 25/25**，两次真实关闭退出码 0；继承便携 106 项、异常注入 73 项、T1-02 UI E2E 全部通过；Release EXE 10,351,616 字节、SHA-256 `22af942f…66b23`。状态置为**待独立审计**；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open，main 未修改，T1-04/T1-05 不开始。报告：`docs/testing/reports/T1-03-REPORT.md`；证据：`docs/testing/reports/T1-03-assets/`。 |

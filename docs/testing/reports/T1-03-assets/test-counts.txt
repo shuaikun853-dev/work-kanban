@@ -1,0 +1,87 @@
+T1-03 工作事项快速创建和待安排区域 — 测试数量与环境（最终代码状态）
+================================================================================
+
+环境
+--------------------------------------------------------------------------------
+OS              : Windows 10 家庭中文版 10.0.19045
+PowerShell      : Windows PowerShell 5.1.19041.6456
+rustc / cargo   : 1.100.0 / 1.100.0
+Node / npm      : v22.20.0 / 10.9.3
+Python          : 3.14.5（标准库 sqlite3，仅只读探针）
+Git             : Windows，分支 task/T1-03-quick-create-pending
+测试数据根目录   : <uat-root>（隔离 UAT，虚构数据）
+
+Rust（cargo test --workspace）
+--------------------------------------------------------------------------------
+基线（T1-02 验收后）                         : 90 passed / 0 failed
+T1-03 最终                                  : 123 passed / 0 failed
+新增                                        : 33
+
+新增分解
+  work_items model 单测                     : 5
+  work_items error 单测                     : 2
+  work_items 领域集成测试                   : 16
+  work_items migration 专项测试             : 4
+  Tauri work_items 命令契约测试             : 5
+  Tauri WorkItemContext 生命周期测试        : 1
+  小计                                      : 33
+
+最终 123 分解（测试二进制）
+  workmanager lib 单测                      : 10
+  workmanager-core lib 单测                 : 32
+  work_items                                : 16
+  work_items_migration                      : 4
+  projects                                  : 15
+  database_fail_closed                      : 8
+  database_lifecycle                        : 5
+  database_precheck_order                   : 3
+  foreign_keys                              : 2
+  formal_root_protection                    : 5
+  init_concurrency                          : 3
+  migration_rollback                        : 5
+  portable_paths                            : 5
+  windows_real_paths                        : 4
+  zero_byte_database                        : 6
+  合计                                      : 123
+
+Node / 前端
+--------------------------------------------------------------------------------
+svelte-check                                : 0 errors / 0 warnings
+work-item-bridge.test.mjs                   : 10 / 10 passed
+design-tokens.test.mjs                      : 49 / 49 passed
+npm run build                               : exit 0（167 modules）
+
+Release E2E（scripts/verify/verify-t1-03-ui.ps1，UAT: t1-03-ui-run2）
+--------------------------------------------------------------------------------
+Release EXE      : target\release\workmanager.exe
+EXE 大小          : 10,351,616 字节
+EXE SHA-256      : 22af942fe2817388596118fc7cb66f34fce4e8c5e2367fe1a2942dc13dd66b23
+主 UI/IPC 检查    : 70 / 70（exit 0）
+最小窗口 860x640  : 12 / 12（exit 0；关闭按钮后进程退出码 0）
+重启持久化阶段    : 17 / 17（exit 0；关闭按钮后进程退出码 0）
+数据库只读探针    : 25 / 25（关闭后 + 重启后）
+CSP 违规          : 0
+页面未捕获异常    : 0
+总计              : 124 项 E2E/数据库断言，0 失败
+
+继承 Release 回归
+--------------------------------------------------------------------------------
+verify-release-portable.ps1                 : TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15（PASS）
+verify-release-faults.ps1                   : TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9（PASS）
+verify-t1-02-ui.ps1                         : 主 73/73；最小窗口 12/12；关闭退出码 0（PASS）
+
+数据库探针关键事实（重启后）
+--------------------------------------------------------------------------------
+user_version              : 3
+integrity_check           : ok
+journal_mode              : wal
+schema_migrations         : 1, 2, 3
+work_items_total          : 5
+work_items_pending        : 5
+work_items_other_status   : 0
+work_items_null_project   : 4
+work_items_linked_archived: 1
+work_items_linked_active  : 0
+projects_total            : 2
+projects_archived         : 2
+foreign_key_violations    : 0

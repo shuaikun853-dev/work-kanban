@@ -1,0 +1,198 @@
+{
+  "task": "T1-03",
+  "generatedAt": "2026-11-19T11:45:53.1320171Z",
+  "exePath": "<repo-root>\\target\\release\\workmanager.exe",
+  "exeSha256": "22af942fe2817388596118fc7cb66f34fce4e8c5e2367fe1a2942dc13dd66b23",
+  "exeSizeBytes": 10351616,
+  "outputDir": "<uat-root>\\t1-03-ui-run2",
+  "appDir": "<uat-root>\\t1-03-ui-run2\\app",
+  "databasePath": "<uat-root>\\t1-03-ui-run2\\app\\data\\database\\work.db",
+  "remoteDebugPort": 9345,
+  "mainUiCheckExitCode": 0,
+  "mainUiCheckCount": 70,
+  "mainUiFailedCheckCount": 0,
+  "minWindowCheckExit": 0,
+  "minWindowCheckCount": 12,
+  "minWindowFailedCheckCount": 0,
+  "firstCloseExitCode": 0,
+  "persistenceCheckExitCode": 0,
+  "persistenceCheckCount": 17,
+  "persistenceFailedCheckCount": 0,
+  "secondCloseExitCode": 0,
+  "dbCheckCount": 25,
+  "dbFailedCheckCount": 0,
+  "dbChecks": [
+    {
+      "name": "dbProbe.afterMain.readable",
+      "pass": true,
+      "detail": "<uat-root>\\t1-03-ui-run2\\t1-03-db-after-main.json"
+    },
+    {
+      "name": "dbProbe.afterMain.portablePath",
+      "pass": true,
+      "detail": "<uat-root>\\t1-03-ui-run2\\app\\data\\database\\work.db"
+    },
+    {
+      "name": "dbProbe.afterMain.userVersion3",
+      "pass": true,
+      "detail": "user_version=3"
+    },
+    {
+      "name": "dbProbe.afterMain.integrityOk",
+      "pass": true,
+      "detail": "ok"
+    },
+    {
+      "name": "dbProbe.afterMain.journalModeWal",
+      "pass": true,
+      "detail": "wal"
+    },
+    {
+      "name": "dbProbe.afterMain.foreignKeysClean",
+      "pass": true,
+      "detail": "violations=0"
+    },
+    {
+      "name": "dbProbe.afterMain.migrations1To3",
+      "pass": true,
+      "detail": "migrations=1 2 3"
+    },
+    {
+      "name": "dbProbe.afterMain.workItems4",
+      "pass": true,
+      "detail": "work_items=4"
+    },
+    {
+      "name": "dbProbe.afterMain.pending4",
+      "pass": true,
+      "detail": "pending=4"
+    },
+    {
+      "name": "dbProbe.afterMain.noOtherStatus",
+      "pass": true,
+      "detail": "other_status=0"
+    },
+    {
+      "name": "dbProbe.afterMain.unassigned3",
+      "pass": true,
+      "detail": "null_project=3"
+    },
+    {
+      "name": "dbProbe.afterMain.archivedLink1",
+      "pass": true,
+      "detail": "linked_archived=1"
+    },
+    {
+      "name": "dbProbe.afterMain.noActiveProjectLink",
+      "pass": true,
+      "detail": "linked_active=0"
+    },
+    {
+      "name": "dbProbe.afterMain.projects2Archived2",
+      "pass": true,
+      "detail": "projects=2 archived=2"
+    },
+    {
+      "name": "dbProbe.afterMain.expectedTitlesPersisted",
+      "pass": true,
+      "detail": "titles=超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ | 关联未归档项目的待安排工作 | 重复提交保护验证 | 整理中核商品数据"
+    },
+    {
+      "name": "dbProbe.afterRestart.readable",
+      "pass": true,
+      "detail": "<uat-root>\\t1-03-ui-run2\\t1-03-db-after-restart.json"
+    },
+    {
+      "name": "dbProbe.afterRestart.userVersion3",
+      "pass": true,
+      "detail": "user_version=3"
+    },
+    {
+      "name": "dbProbe.afterRestart.integrityOk",
+      "pass": true,
+      "detail": "ok"
+    },
+    {
+      "name": "dbProbe.afterRestart.workItems5",
+      "pass": true,
+      "detail": "work_items=5"
+    },
+    {
+      "name": "dbProbe.afterRestart.pending5",
+      "pass": true,
+      "detail": "pending=5"
+    },
+    {
+      "name": "dbProbe.afterRestart.noOtherStatus",
+      "pass": true,
+      "detail": "other_status=0"
+    },
+    {
+      "name": "dbProbe.afterRestart.unassigned4",
+      "pass": true,
+      "detail": "null_project=4"
+    },
+    {
+      "name": "dbProbe.afterRestart.archivedLink1",
+      "pass": true,
+      "detail": "linked_archived=1"
+    },
+    {
+      "name": "dbProbe.afterRestart.foreignKeysClean",
+      "pass": true,
+      "detail": "violations=0"
+    },
+    {
+      "name": "dbProbe.afterRestart.newWorkPersisted",
+      "pass": true,
+      "detail": "titles=重启后新建的工作 | 超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ | 关联未归档项目的待安排工作 | 重复提交保护验证 | 整理中核商品数据"
+    }
+  ],
+  "dbProbeAfterMain": "<uat-root>\\t1-03-ui-run2\\t1-03-db-after-main.json",
+  "dbProbeAfterRestart": "<uat-root>\\t1-03-ui-run2\\t1-03-db-after-restart.json",
+  "evidenceFiles": [
+    "create-dialog.png",
+    "create-dialog-after-restart.png",
+    "create-dialog-min.png",
+    "create-dialog-projects.png",
+    "create-error-project-archived.png",
+    "pending-after-restart.png",
+    "pending-after-restart-new-item.png",
+    "pending-archived-project.png",
+    "pending-contract-violation.png",
+    "pending-empty.png",
+    "pending-linked-project.png",
+    "pending-load-error.png",
+    "pending-loading.png",
+    "pending-long-title.png",
+    "pending-min.png",
+    "pending-unassigned.png",
+    "t1-03-db-after-main.json",
+    "t1-03-db-after-restart.json",
+    "t1-03-min-window-evidence.json",
+    "t1-03-persistence-evidence.json",
+    "t1-03-prerequisite.json",
+    "t1-03-ui-evidence.json",
+    "today-entry.png"
+  ],
+  "screenshots": [
+    "create-dialog.png",
+    "create-dialog-after-restart.png",
+    "create-dialog-min.png",
+    "create-dialog-projects.png",
+    "create-error-project-archived.png",
+    "pending-after-restart.png",
+    "pending-after-restart-new-item.png",
+    "pending-archived-project.png",
+    "pending-contract-violation.png",
+    "pending-empty.png",
+    "pending-linked-project.png",
+    "pending-load-error.png",
+    "pending-loading.png",
+    "pending-long-title.png",
+    "pending-min.png",
+    "pending-unassigned.png",
+    "today-entry.png"
+  ],
+  "pass": true
+}

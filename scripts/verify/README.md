@@ -89,23 +89,24 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-t1-03-
 （EXE 不存在、python 不可用、输出目录非法）。脚本不会伪造 PASS：无法执行的检查会
 如实记录为 FAIL/INFO，并保留可复核证据。
 
-## 当前验证结果（2026-11-18，T1-02 返工修复后，待第二轮独立审计）
+## 当前验证结果（2026-11-19，T1-03 开发自测完成，待独立审计）
 
-Release 产物：`target\release\workmanager.exe`，10,230,784 字节，
-SHA-256 `51BBBA8DD17103D742E1BD4A85B83377F7578D34584F2206F30EDFEC8D3DC7F6`。
+Release 产物：`target\release\workmanager.exe`，10,351,616 字节，
+SHA-256 `22af942fe2817388596118fc7cb66f34fce4e8c5e2367fe1a2942dc13dd66b23`。
 
 | 脚本 | 退出码 | 结果 |
 |---|---|---|
-| `verify-t1-02-ui.ps1`（连续 5 次） | 0 | 每次主 UI/IPC **73/73**；最小窗口 **12/12**（含关闭按钮断言，JSON 全量持久化）；关闭按钮后进程退出码 0；CSP 0；未捕获异常 0 |
-| `verify-release-portable.ps1` | 0 | TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15 |
-| `verify-release-faults.ps1` | 0 | TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9 |
-| `inspect-release-ui.mjs`（诊断页） | 0 | 24/24 断言通过（真实窗口渲染 + 真实 IPC 返回 + CSP 0 违规 + 截图） |
-| `scripts/quality/check-design-tokens.mjs` | 0 | DESIGN_TOKEN_CHECK=PASS files=18 violations=0 |
-| `scripts/quality/design-tokens.test.mjs` | 0 | 8/8 正反向测试通过 |
+| `verify-t1-03-ui.ps1`（UAT `t1-03-ui-run2`） | 0 | 主 UI/IPC **70/70**；最小窗口 **12/12**；重启持久化 **17/17**；数据库探针 **25/25**；两次真实关闭退出码 **0**；CSP 0；未捕获异常 0 |
+| `verify-t1-02-ui.ps1`（继承回归） | 0 | 主 UI/IPC **73/73**；最小窗口 **12/12**；关闭按钮后进程退出码 0；CSP 0；页面异常 0 |
+| `verify-release-portable.ps1`（继承回归） | 0 | TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15 |
+| `verify-release-faults.ps1`（继承回归） | 0 | TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9 |
+| `scripts/quality/check-design-tokens.mjs` | 0 | 0 违规（由 `npm run check` 执行） |
+| `scripts/quality/design-tokens.test.mjs` | 0 | 49/49 正反向测试通过 |
+| `scripts/quality/work-item-bridge.test.mjs` | 0 | 10/10 工作事项 Bridge 契约测试通过 |
 
-说明：schema 版本期望已更新为 **2**（0001 foundation + 0002 projects）；审计修复后应用会在数据库目录保留跨进程初始化锁文件
+说明：schema 版本期望已更新为 **3**（0001 foundation + 0002 projects + 0003 work_items）；应用会在数据库目录保留跨进程初始化锁文件
 `.work.db.init.lock`（仅 PID/时间戳诊断），异常路径检查允许该文件存在；`.work.db.init-*` 临时数据库仍必须为空。
 
-T1-02 返工修复后的截图、JSON 证据与日志见 `docs/testing/reports/T1-02-AUDIT-FIX-assets/`；
-第一轮审计时的历史证据保留在 `docs/testing/reports/T1-02-assets/`；详细结果见
-`docs/testing/reports/T1-02-REPORT.md` 与 `docs/testing/reports/T1-02-AUDIT-FIX-REPORT.md`。
+T1-03 的截图、JSON 证据与日志见 `docs/testing/reports/T1-03-assets/`；详细结果与遗留风险见
+`docs/testing/reports/T1-03-REPORT.md`。T1-02 历史证据保留在 `docs/testing/reports/T1-02-assets/` 与
+`docs/testing/reports/T1-02-AUDIT-FIX-assets/`；历史报告见 `T1-02-REPORT.md` 与 `T1-02-AUDIT-FIX-REPORT.md`。

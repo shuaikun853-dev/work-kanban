@@ -1,0 +1,1634 @@
+{
+  "script": "verify-release-portable",
+  "overall": "PASS",
+  "started_at": "2026-11-19T19:49:37.6369299+08:00",
+  "finished_at": "2026-11-19T19:49:45.9111119+08:00",
+  "duration_seconds": 8.3,
+  "output_dir": "<uat-root>\\t1-03-regression-portable",
+  "exe_path": "<repo-root>\\target\\release\\workmanager.exe",
+  "exe_size_bytes": 10351616,
+  "exe_sha256": "22AF942FE2817388596118FC7CB66F34FCE4E8C5E2367FE1A2942DC13DD66B23",
+  "fatal_error": "",
+  "counts": {
+    "total": 106,
+    "pass": 90,
+    "fail": 0,
+    "warn": 1,
+    "info": 15
+  },
+  "environment": {
+    "computer_name": "<redacted>",
+    "user_name": "<redacted>",
+    "user_identity": "<redacted>",
+    "powershell_version": "5.1.19041.6456",
+    "powershell_edition": "Desktop",
+    "os_version": "Microsoft Windows NT 10.0.19045.0",
+    "is_64_bit_process": true,
+    "process_id": 31204,
+    "current_directory": "<repo-root>",
+    "test_data_root": "<uat-root>",
+    "output_dir": "<uat-root>\\t1-03-regression-portable",
+    "python": {
+      "path": "<python-exe>",
+      "version": "3.14.5",
+      "sqlite_version": "3.50.4"
+    }
+  },
+  "artifacts": [
+    {
+      "label": "python SQLite 探针脚本",
+      "path": "<uat-root>\\t1-03-regression-portable\\tools\\sqlite_probe.py",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "C 盘边界基线 JSON（before）",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\c-drive-boundary-before.json",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "用例沙箱目录 case1-first-launch",
+      "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch",
+      "kind": "directory",
+      "exists": true
+    },
+    {
+      "label": "首次启动主窗口截图",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case1-main-window.png",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "case1 WebView2 目录快照 JSON",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case1-webview2-directory-snapshot.json",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "case1 运行期间数据库快照 JSON",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case1-db-running-snapshot.json",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "case1 首次启动 标准输出日志",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case1-app1-stdout.log",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "case1 首次启动 标准错误日志",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case1-app1-stderr.log",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "case1 data 目录快照 JSON",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case1-data-directory-snapshot.json",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "case1 关闭后 sidecar 状态 JSON",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case1-sidecars-after-first-close.json",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "SQLite 检查 JSON case1-db-after-first-close",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case1-db-after-first-close.json",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "SQLite 检查 JSON persistence-canary-insert",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\persistence-canary-insert.json",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "SQLite 检查 JSON persistence-canary-before-restart",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\persistence-canary-before-restart.json",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "case1 重启 标准输出日志",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case1-app2-stdout.log",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "case1 重启 标准错误日志",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case1-app2-stderr.log",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "SQLite 检查 JSON persistence-db-after-restart",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\persistence-db-after-restart.json",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "用例沙箱目录 case2-env-ignore",
+      "path": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore",
+      "kind": "directory",
+      "exists": true
+    },
+    {
+      "label": "case2 环境变量隔离 标准输出日志",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case2-env-ignore-stdout.log",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "case2 环境变量隔离 标准错误日志",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case2-env-ignore-stderr.log",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "case2 诱饵目录快照 JSON",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case2-decoy-root-snapshot.json",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "SQLite 检查 JSON case2-env-ignore-db",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\case2-env-ignore-db.json",
+      "kind": "file",
+      "exists": true
+    },
+    {
+      "label": "C 盘边界快照 JSON（after）",
+      "path": "<uat-root>\\t1-03-regression-portable\\evidence\\c-drive-boundary-after.json",
+      "kind": "file",
+      "exists": true
+    }
+  ],
+  "checks": [
+    {
+      "name": "precondition.release_exe",
+      "status": "INFO",
+      "detail": "path=<repo-root>\\target\\release\\workmanager.exe；size_bytes=10351616；sha256=22AF942FE2817388596118FC7CB66F34FCE4E8C5E2367FE1A2942DC13DD66B23",
+      "checked_at": "2026-11-19T19:49:38.0957021+08:00"
+    },
+    {
+      "name": "precondition.python",
+      "status": "INFO",
+      "detail": "<python-exe> 3.14.5 / sqlite 3.50.4",
+      "checked_at": "2026-11-19T19:49:38.0977072+08:00"
+    },
+    {
+      "name": "precondition.output_dir",
+      "status": "INFO",
+      "detail": "<uat-root>\\t1-03-regression-portable",
+      "checked_at": "2026-11-19T19:49:38.1007051+08:00"
+    },
+    {
+      "name": "precondition.source_exe_data_directory",
+      "status": "INFO",
+      "detail": "源 EXE 目录尚无 data/（本次验证只写入隔离复制目录）",
+      "checked_at": "2026-11-19T19:49:38.1037026+08:00"
+    },
+    {
+      "name": "c_drive.baseline",
+      "status": "INFO",
+      "detail": "LOCALAPPDATA\\com.workmanager.portable exists=False；APPDATA\\com.workmanager.portable exists=False；LOCALAPPDATA\\EBWebView exists=True",
+      "checked_at": "2026-11-19T19:49:38.2329429+08:00"
+    },
+    {
+      "name": "case1.exe_copy_sha256_matches",
+      "status": "PASS",
+      "detail": "sha256=22AF942FE2817388596118FC7CB66F34FCE4E8C5E2367FE1A2942DC13DD66B23",
+      "checked_at": "2026-11-19T19:49:38.3241043+08:00"
+    },
+    {
+      "name": "case1.main_window_visible",
+      "status": "PASS",
+      "detail": "title=WorkManager；hwnd=11084392；elapsed_ms=376",
+      "checked_at": "2026-11-19T19:49:38.9203692+08:00"
+    },
+    {
+      "name": "case1.main_window_title",
+      "status": "PASS",
+      "detail": "窗口标题=WorkManager（期望 WorkManager）",
+      "checked_at": "2026-11-19T19:49:38.9233690+08:00"
+    },
+    {
+      "name": "case1.main_window_screenshot",
+      "status": "PASS",
+      "detail": "png=<uat-root>\\t1-03-regression-portable\\evidence\\case1-main-window.png；1116x788",
+      "checked_at": "2026-11-19T19:49:40.1455740+08:00"
+    },
+    {
+      "name": "case1.webview2_ebwebview_dir",
+      "status": "PASS",
+      "detail": "WebView2 profile 目录存在：<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\cache\\webview2\\EBWebView；等待 2 ms",
+      "checked_at": "2026-11-19T19:49:40.1575724+08:00"
+    },
+    {
+      "name": "case1.running_database_file",
+      "status": "PASS",
+      "detail": "运行期间 work.db 存在且非空：size_bytes=49152",
+      "checked_at": "2026-11-19T19:49:40.2953844+08:00"
+    },
+    {
+      "name": "case1.running_sidecars",
+      "status": "INFO",
+      "detail": "运行期间 sidecar 状态：-wal exists=True size=0；-shm exists=True size=32768；-journal exists=False",
+      "checked_at": "2026-11-19T19:49:40.3063838+08:00"
+    },
+    {
+      "name": "case1.process_exited",
+      "status": "PASS",
+      "detail": "method=CloseMainWindow elapsed_ms=173",
+      "checked_at": "2026-11-19T19:49:40.5718436+08:00"
+    },
+    {
+      "name": "case1.graceful_close",
+      "status": "PASS",
+      "detail": "CloseMainWindow 正常关闭，exit_code=0",
+      "checked_at": "2026-11-19T19:49:40.5768438+08:00"
+    },
+    {
+      "name": "case1.exit_code_zero",
+      "status": "PASS",
+      "detail": "exit_code=0",
+      "checked_at": "2026-11-19T19:49:40.5818463+08:00"
+    },
+    {
+      "name": "case1.data_root_created",
+      "status": "PASS",
+      "detail": "目录存在：<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data",
+      "checked_at": "2026-11-19T19:49:40.5895478+08:00"
+    },
+    {
+      "name": "case1.database_dir_created",
+      "status": "PASS",
+      "detail": "目录存在：<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database",
+      "checked_at": "2026-11-19T19:49:40.5935406+08:00"
+    },
+    {
+      "name": "case1.cache_dir_created",
+      "status": "PASS",
+      "detail": "目录存在：<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\cache",
+      "checked_at": "2026-11-19T19:49:40.5965397+08:00"
+    },
+    {
+      "name": "case1.webview2_dir_created",
+      "status": "PASS",
+      "detail": "目录存在：<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\cache\\webview2",
+      "checked_at": "2026-11-19T19:49:40.6005413+08:00"
+    },
+    {
+      "name": "case1.config_dir_created",
+      "status": "PASS",
+      "detail": "目录存在：<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\config",
+      "checked_at": "2026-11-19T19:49:40.6055407+08:00"
+    },
+    {
+      "name": "case1.logs_dir_created",
+      "status": "PASS",
+      "detail": "目录存在：<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\logs",
+      "checked_at": "2026-11-19T19:49:40.6095424+08:00"
+    },
+    {
+      "name": "case1.temp_dir_created",
+      "status": "PASS",
+      "detail": "目录存在：<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\temp",
+      "checked_at": "2026-11-19T19:49:40.6135432+08:00"
+    },
+    {
+      "name": "case1.backups_dir_created",
+      "status": "PASS",
+      "detail": "目录存在：<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\backups",
+      "checked_at": "2026-11-19T19:49:40.6165426+08:00"
+    },
+    {
+      "name": "case1.webview2_dir_populated",
+      "status": "PASS",
+      "detail": "WebView2 数据目录内有 25 个条目（截断=False）",
+      "checked_at": "2026-11-19T19:49:40.6325394+08:00"
+    },
+    {
+      "name": "case1.database_file_created",
+      "status": "PASS",
+      "detail": "work.db 存在且非空：size_bytes=49152",
+      "checked_at": "2026-11-19T19:49:40.6385397+08:00"
+    },
+    {
+      "name": "case1.data_directory_snapshot",
+      "status": "INFO",
+      "detail": "条目数=10；truncated=False；快照=<uat-root>\\t1-03-regression-portable\\evidence\\case1-data-directory-snapshot.json",
+      "checked_at": "2026-11-19T19:49:40.6585494+08:00"
+    },
+    {
+      "name": "case1.wal_cleared_after_close",
+      "status": "PASS",
+      "detail": "-wal 不存在或为 0 字节（无未提交数据残留）：exists=False；size=0",
+      "checked_at": "2026-11-19T19:49:40.7025407+08:00"
+    },
+    {
+      "name": "case1.shm_cleared_after_close",
+      "status": "PASS",
+      "detail": "-shm 不存在（wal_exists=False；wal_size=0）",
+      "checked_at": "2026-11-19T19:49:40.7055415+08:00"
+    },
+    {
+      "name": "case1.journal_after_close",
+      "status": "INFO",
+      "detail": "-journal exists=False；size=0",
+      "checked_at": "2026-11-19T19:49:40.7095416+08:00"
+    },
+    {
+      "name": "case1.readonly_open",
+      "status": "PASS",
+      "detail": "open_mode=mode=ro",
+      "checked_at": "2026-11-19T19:49:41.2912022+08:00"
+    },
+    {
+      "name": "case1.database_size_positive",
+      "status": "PASS",
+      "detail": "size_bytes=49152",
+      "checked_at": "2026-11-19T19:49:41.2991970+08:00"
+    },
+    {
+      "name": "case1.user_version",
+      "status": "PASS",
+      "detail": "user_version=3（期望 3）",
+      "checked_at": "2026-11-19T19:49:41.3062118+08:00"
+    },
+    {
+      "name": "case1.integrity_ok",
+      "status": "PASS",
+      "detail": "PRAGMA integrity_check = ok",
+      "checked_at": "2026-11-19T19:49:41.3132011+08:00"
+    },
+    {
+      "name": "case1.journal_mode_wal",
+      "status": "PASS",
+      "detail": "journal_mode=wal",
+      "checked_at": "2026-11-19T19:49:41.3182060+08:00"
+    },
+    {
+      "name": "case1.schema_migrations_table",
+      "status": "PASS",
+      "detail": "tables=projects,schema_migrations,settings,work_items",
+      "checked_at": "2026-11-19T19:49:41.3252002+08:00"
+    },
+    {
+      "name": "case1.settings_table",
+      "status": "PASS",
+      "detail": "settings 表存在",
+      "checked_at": "2026-11-19T19:49:41.3281994+08:00"
+    },
+    {
+      "name": "case1.schema_migrations_count",
+      "status": "PASS",
+      "detail": "schema_migrations 记录数=3",
+      "checked_at": "2026-11-19T19:49:41.3342052+08:00"
+    },
+    {
+      "name": "case1.schema_migration_versions",
+      "status": "PASS",
+      "detail": "versions=1,2,3",
+      "checked_at": "2026-11-19T19:49:41.3762009+08:00"
+    },
+    {
+      "name": "case1.foreign_keys_enabled_evidence",
+      "status": "PASS",
+      "detail": "schema_migrations 完整（versions=1,2,3，作为 foreign_keys=ON 初始化路径证据）",
+      "checked_at": "2026-11-19T19:49:41.3782027+08:00"
+    },
+    {
+      "name": "case1.foreign_key_check_clean",
+      "status": "PASS",
+      "detail": "PRAGMA foreign_key_check 无违规行",
+      "checked_at": "2026-11-19T19:49:41.3831992+08:00"
+    },
+    {
+      "name": "case1.canary_absent",
+      "status": "PASS",
+      "detail": "settings 中不存在 test-canary（首次启动应为空）",
+      "checked_at": "2026-11-19T19:49:41.3932103+08:00"
+    },
+    {
+      "name": "case1.probe_connection_pragmas",
+      "status": "INFO",
+      "detail": "python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{\"busy_timeout\":5000,\"foreign_keys\":0,\"page_count\":12,\"page_size\":4096,\"synchronous\":2,\"temp_store\":0}",
+      "checked_at": "2026-11-19T19:49:41.4052038+08:00"
+    },
+    {
+      "name": "case1.probe_side_effects",
+      "status": "INFO",
+      "detail": "python 只读探针会创建 -wal/-shm（SQLite WAL 只读访问的正常副作用）；探针后 -wal size=0；-shm size=32768",
+      "checked_at": "2026-11-19T19:49:41.4262066+08:00"
+    },
+    {
+      "name": "persistence.canary_inserted",
+      "status": "PASS",
+      "detail": "settings(key=test-canary) value_json={\"value\": \"release-verify-canary-20261119-194938\"}",
+      "checked_at": "2026-11-19T19:49:41.7327732+08:00"
+    },
+    {
+      "name": "persistence.before_restart.readonly_open",
+      "status": "PASS",
+      "detail": "open_mode=mode=ro",
+      "checked_at": "2026-11-19T19:49:41.9445953+08:00"
+    },
+    {
+      "name": "persistence.before_restart.database_size_positive",
+      "status": "PASS",
+      "detail": "size_bytes=49152",
+      "checked_at": "2026-11-19T19:49:41.9455936+08:00"
+    },
+    {
+      "name": "persistence.before_restart.user_version",
+      "status": "PASS",
+      "detail": "user_version=3（期望 3）",
+      "checked_at": "2026-11-19T19:49:41.9475873+08:00"
+    },
+    {
+      "name": "persistence.before_restart.integrity_ok",
+      "status": "PASS",
+      "detail": "PRAGMA integrity_check = ok",
+      "checked_at": "2026-11-19T19:49:41.9505902+08:00"
+    },
+    {
+      "name": "persistence.before_restart.journal_mode_wal",
+      "status": "PASS",
+      "detail": "journal_mode=wal",
+      "checked_at": "2026-11-19T19:49:41.9525947+08:00"
+    },
+    {
+      "name": "persistence.before_restart.schema_migrations_table",
+      "status": "PASS",
+      "detail": "tables=projects,schema_migrations,settings,work_items",
+      "checked_at": "2026-11-19T19:49:41.9545922+08:00"
+    },
+    {
+      "name": "persistence.before_restart.settings_table",
+      "status": "PASS",
+      "detail": "settings 表存在",
+      "checked_at": "2026-11-19T19:49:41.9565866+08:00"
+    },
+    {
+      "name": "persistence.before_restart.schema_migrations_count",
+      "status": "PASS",
+      "detail": "schema_migrations 记录数=3",
+      "checked_at": "2026-11-19T19:49:41.9585847+08:00"
+    },
+    {
+      "name": "persistence.before_restart.schema_migration_versions",
+      "status": "PASS",
+      "detail": "versions=1,2,3",
+      "checked_at": "2026-11-19T19:49:41.9605927+08:00"
+    },
+    {
+      "name": "persistence.before_restart.foreign_keys_enabled_evidence",
+      "status": "PASS",
+      "detail": "schema_migrations 完整（versions=1,2,3，作为 foreign_keys=ON 初始化路径证据）",
+      "checked_at": "2026-11-19T19:49:41.9625886+08:00"
+    },
+    {
+      "name": "persistence.before_restart.foreign_key_check_clean",
+      "status": "PASS",
+      "detail": "PRAGMA foreign_key_check 无违规行",
+      "checked_at": "2026-11-19T19:49:41.9655868+08:00"
+    },
+    {
+      "name": "persistence.before_restart.canary_present",
+      "status": "PASS",
+      "detail": "value_json={\"value\": \"release-verify-canary-20261119-194938\"}；updated_at=2026-11-19T11:49:41Z",
+      "checked_at": "2026-11-19T19:49:41.9695861+08:00"
+    },
+    {
+      "name": "persistence.before_restart.probe_connection_pragmas",
+      "status": "INFO",
+      "detail": "python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{\"busy_timeout\":5000,\"foreign_keys\":0,\"page_count\":12,\"page_size\":4096,\"synchronous\":2,\"temp_store\":0}",
+      "checked_at": "2026-11-19T19:49:41.9725862+08:00"
+    },
+    {
+      "name": "persistence.restart_window_visible",
+      "status": "PASS",
+      "detail": "title=WorkManager；elapsed_ms=334",
+      "checked_at": "2026-11-19T19:49:42.3229338+08:00"
+    },
+    {
+      "name": "persistence.restart_window_title",
+      "status": "PASS",
+      "detail": "窗口标题=WorkManager",
+      "checked_at": "2026-11-19T19:49:42.3259299+08:00"
+    },
+    {
+      "name": "persistence.restart.process_exited",
+      "status": "PASS",
+      "detail": "method=CloseMainWindow elapsed_ms=860",
+      "checked_at": "2026-11-19T19:49:43.2041712+08:00"
+    },
+    {
+      "name": "persistence.restart.graceful_close",
+      "status": "PASS",
+      "detail": "CloseMainWindow 正常关闭，exit_code=0",
+      "checked_at": "2026-11-19T19:49:43.2061741+08:00"
+    },
+    {
+      "name": "persistence.restart.exit_code_zero",
+      "status": "PASS",
+      "detail": "exit_code=0",
+      "checked_at": "2026-11-19T19:49:43.2091772+08:00"
+    },
+    {
+      "name": "persistence.wal_cleared_after_restart",
+      "status": "PASS",
+      "detail": "-wal 不存在或为 0 字节：exists=False；size=0",
+      "checked_at": "2026-11-19T19:49:43.2439136+08:00"
+    },
+    {
+      "name": "persistence.shm_after_restart",
+      "status": "PASS",
+      "detail": "-shm 不存在",
+      "checked_at": "2026-11-19T19:49:43.2469150+08:00"
+    },
+    {
+      "name": "persistence.after_restart.readonly_open",
+      "status": "PASS",
+      "detail": "open_mode=mode=ro",
+      "checked_at": "2026-11-19T19:49:43.5701330+08:00"
+    },
+    {
+      "name": "persistence.after_restart.database_size_positive",
+      "status": "PASS",
+      "detail": "size_bytes=49152",
+      "checked_at": "2026-11-19T19:49:43.5721316+08:00"
+    },
+    {
+      "name": "persistence.after_restart.user_version",
+      "status": "PASS",
+      "detail": "user_version=3（期望 3）",
+      "checked_at": "2026-11-19T19:49:43.5741321+08:00"
+    },
+    {
+      "name": "persistence.after_restart.integrity_ok",
+      "status": "PASS",
+      "detail": "PRAGMA integrity_check = ok",
+      "checked_at": "2026-11-19T19:49:43.5761351+08:00"
+    },
+    {
+      "name": "persistence.after_restart.journal_mode_wal",
+      "status": "PASS",
+      "detail": "journal_mode=wal",
+      "checked_at": "2026-11-19T19:49:43.5781316+08:00"
+    },
+    {
+      "name": "persistence.after_restart.schema_migrations_table",
+      "status": "PASS",
+      "detail": "tables=projects,schema_migrations,settings,work_items",
+      "checked_at": "2026-11-19T19:49:43.5801331+08:00"
+    },
+    {
+      "name": "persistence.after_restart.settings_table",
+      "status": "PASS",
+      "detail": "settings 表存在",
+      "checked_at": "2026-11-19T19:49:43.5821354+08:00"
+    },
+    {
+      "name": "persistence.after_restart.schema_migrations_count",
+      "status": "PASS",
+      "detail": "schema_migrations 记录数=3",
+      "checked_at": "2026-11-19T19:49:43.5851371+08:00"
+    },
+    {
+      "name": "persistence.after_restart.schema_migration_versions",
+      "status": "PASS",
+      "detail": "versions=1,2,3",
+      "checked_at": "2026-11-19T19:49:43.5871445+08:00"
+    },
+    {
+      "name": "persistence.after_restart.foreign_keys_enabled_evidence",
+      "status": "PASS",
+      "detail": "schema_migrations 完整（versions=1,2,3，作为 foreign_keys=ON 初始化路径证据）",
+      "checked_at": "2026-11-19T19:49:43.5891361+08:00"
+    },
+    {
+      "name": "persistence.after_restart.foreign_key_check_clean",
+      "status": "PASS",
+      "detail": "PRAGMA foreign_key_check 无违规行",
+      "checked_at": "2026-11-19T19:49:43.5921387+08:00"
+    },
+    {
+      "name": "persistence.after_restart.canary_present",
+      "status": "PASS",
+      "detail": "value_json={\"value\": \"release-verify-canary-20261119-194938\"}；updated_at=2026-11-19T11:49:41Z",
+      "checked_at": "2026-11-19T19:49:43.5941306+08:00"
+    },
+    {
+      "name": "persistence.after_restart.probe_connection_pragmas",
+      "status": "INFO",
+      "detail": "python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{\"busy_timeout\":5000,\"foreign_keys\":0,\"page_count\":12,\"page_size\":4096,\"synchronous\":2,\"temp_store\":0}",
+      "checked_at": "2026-11-19T19:49:43.5961295+08:00"
+    },
+    {
+      "name": "env.exe_copy_sha256_matches",
+      "status": "PASS",
+      "detail": "sha256=22AF942FE2817388596118FC7CB66F34FCE4E8C5E2367FE1A2942DC13DD66B23",
+      "checked_at": "2026-11-19T19:49:43.6607386+08:00"
+    },
+    {
+      "name": "env.decoy_root_empty_before",
+      "status": "INFO",
+      "detail": "诱饵目录初始条目数=0；<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\decoy-portable-root",
+      "checked_at": "2026-11-19T19:49:43.6667437+08:00"
+    },
+    {
+      "name": "env.override_restored_after_start",
+      "status": "PASS",
+      "detail": "子进程启动后父进程环境变量已恢复：",
+      "checked_at": "2026-11-19T19:49:43.8307441+08:00"
+    },
+    {
+      "name": "env.main_window_visible",
+      "status": "PASS",
+      "detail": "title=WorkManager；elapsed_ms=326",
+      "checked_at": "2026-11-19T19:49:44.1594755+08:00"
+    },
+    {
+      "name": "env.main_window_title",
+      "status": "PASS",
+      "detail": "窗口标题=WorkManager",
+      "checked_at": "2026-11-19T19:49:44.1644759+08:00"
+    },
+    {
+      "name": "env.process_exited",
+      "status": "PASS",
+      "detail": "method=CloseMainWindow elapsed_ms=801",
+      "checked_at": "2026-11-19T19:49:44.9858722+08:00"
+    },
+    {
+      "name": "env.graceful_close",
+      "status": "PASS",
+      "detail": "CloseMainWindow 正常关闭，exit_code=0",
+      "checked_at": "2026-11-19T19:49:44.9888725+08:00"
+    },
+    {
+      "name": "env.exit_code_zero",
+      "status": "PASS",
+      "detail": "exit_code=0",
+      "checked_at": "2026-11-19T19:49:44.9918698+08:00"
+    },
+    {
+      "name": "env.database_created_adjacent_to_exe",
+      "status": "PASS",
+      "detail": "数据库位于 EXE 同级 data/：<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\data\\database\\work.db",
+      "checked_at": "2026-11-19T19:49:44.9982365+08:00"
+    },
+    {
+      "name": "env.decoy_database_not_created",
+      "status": "PASS",
+      "detail": "诱饵目录中未创建数据库：<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\decoy-portable-root\\database\\work.db",
+      "checked_at": "2026-11-19T19:49:45.0022355+08:00"
+    },
+    {
+      "name": "env.decoy_root_still_empty",
+      "status": "PASS",
+      "detail": "诱饵目录仍为空：<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\decoy-portable-root",
+      "checked_at": "2026-11-19T19:49:45.0132365+08:00"
+    },
+    {
+      "name": "env.readonly_open",
+      "status": "PASS",
+      "detail": "open_mode=mode=ro",
+      "checked_at": "2026-11-19T19:49:45.2762449+08:00"
+    },
+    {
+      "name": "env.database_size_positive",
+      "status": "PASS",
+      "detail": "size_bytes=49152",
+      "checked_at": "2026-11-19T19:49:45.2782425+08:00"
+    },
+    {
+      "name": "env.user_version",
+      "status": "PASS",
+      "detail": "user_version=3（期望 3）",
+      "checked_at": "2026-11-19T19:49:45.2802425+08:00"
+    },
+    {
+      "name": "env.integrity_ok",
+      "status": "PASS",
+      "detail": "PRAGMA integrity_check = ok",
+      "checked_at": "2026-11-19T19:49:45.2832437+08:00"
+    },
+    {
+      "name": "env.journal_mode_wal",
+      "status": "PASS",
+      "detail": "journal_mode=wal",
+      "checked_at": "2026-11-19T19:49:45.2852399+08:00"
+    },
+    {
+      "name": "env.schema_migrations_table",
+      "status": "PASS",
+      "detail": "tables=projects,schema_migrations,settings,work_items",
+      "checked_at": "2026-11-19T19:49:45.2872396+08:00"
+    },
+    {
+      "name": "env.settings_table",
+      "status": "PASS",
+      "detail": "settings 表存在",
+      "checked_at": "2026-11-19T19:49:45.2892453+08:00"
+    },
+    {
+      "name": "env.schema_migrations_count",
+      "status": "PASS",
+      "detail": "schema_migrations 记录数=3",
+      "checked_at": "2026-11-19T19:49:45.2922494+08:00"
+    },
+    {
+      "name": "env.schema_migration_versions",
+      "status": "PASS",
+      "detail": "versions=1,2,3",
+      "checked_at": "2026-11-19T19:49:45.2952431+08:00"
+    },
+    {
+      "name": "env.foreign_keys_enabled_evidence",
+      "status": "PASS",
+      "detail": "schema_migrations 完整（versions=1,2,3，作为 foreign_keys=ON 初始化路径证据）",
+      "checked_at": "2026-11-19T19:49:45.2972419+08:00"
+    },
+    {
+      "name": "env.foreign_key_check_clean",
+      "status": "PASS",
+      "detail": "PRAGMA foreign_key_check 无违规行",
+      "checked_at": "2026-11-19T19:49:45.2992397+08:00"
+    },
+    {
+      "name": "env.probe_connection_pragmas",
+      "status": "INFO",
+      "detail": "python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{\"busy_timeout\":5000,\"foreign_keys\":0,\"page_count\":12,\"page_size\":4096,\"synchronous\":2,\"temp_store\":0}",
+      "checked_at": "2026-11-19T19:49:45.3022416+08:00"
+    },
+    {
+      "name": "cleanup.process_cleanup",
+      "status": "PASS",
+      "detail": "没有遗留的被测进程",
+      "checked_at": "2026-11-19T19:49:45.3102380+08:00"
+    },
+    {
+      "name": "cleanup.case_directories",
+      "status": "PASS",
+      "detail": "已删除本脚本创建的用例沙箱目录（证据在 evidence/ 与 summary/report 中保留）",
+      "checked_at": "2026-11-19T19:49:45.7052706+08:00"
+    },
+    {
+      "name": "cleanup.evidence_retained",
+      "status": "INFO",
+      "detail": "证据与汇总保留在：<uat-root>\\t1-03-regression-portable",
+      "checked_at": "2026-11-19T19:49:45.7082729+08:00"
+    },
+    {
+      "name": "c_drive.LOCALAPPDATA_com.workmanager.portable",
+      "status": "PASS",
+      "detail": "C 盘路径不存在（符合便携边界预期）：path=<user-profile>\\AppData\\Local\\com.workmanager.portable；exists=False",
+      "checked_at": "2026-11-19T19:49:45.7352729+08:00"
+    },
+    {
+      "name": "c_drive.APPDATA_com.workmanager.portable",
+      "status": "PASS",
+      "detail": "C 盘路径不存在（符合便携边界预期）：path=<user-profile>\\AppData\\Roaming\\com.workmanager.portable；exists=False",
+      "checked_at": "2026-11-19T19:49:45.7382721+08:00"
+    },
+    {
+      "name": "c_drive.LOCALAPPDATA_EBWebView",
+      "status": "WARN",
+      "detail": "C 盘路径在验证开始前已存在且相同时刻/条目未变化（非本次验证创建，需人工确认来源）：path=<user-profile>\\AppData\\Local\\EBWebView；exists=True；last_write_utc=2026-11-19T11:34:38.5754742Z；creation_time_utc=2024-07-15T07:29:20.1195506Z；top_level_entries=25",
+      "checked_at": "2026-11-19T19:49:45.7412705+08:00"
+    }
+  ],
+  "release_exe": {
+    "path": "<repo-root>\\target\\release\\workmanager.exe",
+    "size_bytes": 10351616,
+    "sha256": "22AF942FE2817388596118FC7CB66F34FCE4E8C5E2367FE1A2942DC13DD66B23"
+  },
+  "python": {
+    "path": "<python-exe>",
+    "version": "3.14.5",
+    "sqlite_version": "3.50.4"
+  },
+  "canary_value": "release-verify-canary-20261119-194938",
+  "keep_case_directories": false,
+  "c_drive_boundary": {
+    "before": {
+      "label": "before",
+      "captured_at": "2026-11-19T19:49:38.1387013+08:00",
+      "locations": [
+        {
+          "name": "LOCALAPPDATA\\com.workmanager.portable",
+          "path": "<user-profile>\\AppData\\Local\\com.workmanager.portable",
+          "exists": false,
+          "is_directory": false,
+          "creation_time_utc": null,
+          "last_write_utc": null,
+          "top_level_entry_count": null
+        },
+        {
+          "name": "APPDATA\\com.workmanager.portable",
+          "path": "<user-profile>\\AppData\\Roaming\\com.workmanager.portable",
+          "exists": false,
+          "is_directory": false,
+          "creation_time_utc": null,
+          "last_write_utc": null,
+          "top_level_entry_count": null
+        },
+        {
+          "name": "LOCALAPPDATA\\EBWebView",
+          "path": "<user-profile>\\AppData\\Local\\EBWebView",
+          "exists": true,
+          "is_directory": true,
+          "creation_time_utc": "2024-07-15T07:29:20.1195506Z",
+          "last_write_utc": "2026-11-19T11:34:38.5754742Z",
+          "top_level_entry_count": 25
+        }
+      ]
+    },
+    "after": {
+      "label": "after",
+      "captured_at": "2026-11-19T19:49:45.7212776+08:00",
+      "locations": [
+        {
+          "name": "LOCALAPPDATA\\com.workmanager.portable",
+          "path": "<user-profile>\\AppData\\Local\\com.workmanager.portable",
+          "exists": false,
+          "is_directory": false,
+          "creation_time_utc": null,
+          "last_write_utc": null,
+          "top_level_entry_count": null
+        },
+        {
+          "name": "APPDATA\\com.workmanager.portable",
+          "path": "<user-profile>\\AppData\\Roaming\\com.workmanager.portable",
+          "exists": false,
+          "is_directory": false,
+          "creation_time_utc": null,
+          "last_write_utc": null,
+          "top_level_entry_count": null
+        },
+        {
+          "name": "LOCALAPPDATA\\EBWebView",
+          "path": "<user-profile>\\AppData\\Local\\EBWebView",
+          "exists": true,
+          "is_directory": true,
+          "creation_time_utc": "2024-07-15T07:29:20.1195506Z",
+          "last_write_utc": "2026-11-19T11:34:38.5754742Z",
+          "top_level_entry_count": 25
+        }
+      ]
+    }
+  },
+  "running_database_snapshot": {
+    "captured_at": "2026-11-19T19:49:40.2178777+08:00",
+    "database_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db",
+    "database_exists": true,
+    "database_size_bytes": 49152,
+    "sidecars": {
+      "database_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db",
+      "wal_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+      "shm_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+      "journal_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+      "wal_exists": true,
+      "wal_size_bytes": 0,
+      "shm_exists": true,
+      "shm_size_bytes": 32768,
+      "journal_exists": false,
+      "journal_size_bytes": 0,
+      "captured_at": "2026-11-19T19:49:40.2288783+08:00"
+    }
+  },
+  "case_results": [
+    {
+      "case": "case1-first-launch",
+      "directory": "<uat-root>\\t1-03-regression-portable\\case1-first-launch",
+      "exe": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\WorkManager.exe",
+      "database_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db",
+      "main_window_title": "WorkManager",
+      "first_exit_code": 0,
+      "wal_cleared": true,
+      "shm_cleared": null,
+      "database_inspection": {
+        "database": {
+          "exists": true,
+          "is_file": true,
+          "size_bytes": 49152
+        },
+        "database_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db",
+        "foreign_key_check": [],
+        "header": {
+          "exists": true,
+          "magic": "SQLite format 3\u0000",
+          "page_size": 4096,
+          "read_version": 2,
+          "write_version": 2
+        },
+        "integrity_check": [
+          "ok"
+        ],
+        "journal_mode": "wal",
+        "open_errors": [],
+        "open_mode": "mode=ro",
+        "probe_connection_pragmas": {
+          "busy_timeout": 5000,
+          "foreign_keys": 0,
+          "page_count": 12,
+          "page_size": 4096,
+          "synchronous": 2,
+          "temp_store": 0
+        },
+        "schema_migrations": [
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0001_initial_foundation",
+            "version": 1
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0002_projects",
+            "version": 2
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0003_work_items",
+            "version": 3
+          }
+        ],
+        "schema_migrations_count": 3,
+        "settings_canary": null,
+        "settings_row_count": 0,
+        "sidecars_after_close": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 32768
+          },
+          "-wal": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "sidecars_before_open": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 0
+          },
+          "-wal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "tables": [
+          "projects",
+          "schema_migrations",
+          "settings",
+          "work_items"
+        ],
+        "user_version": 3
+      }
+    },
+    {
+      "case": "case2-persistence",
+      "directory": "<uat-root>\\t1-03-regression-portable\\case1-first-launch",
+      "exe": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\WorkManager.exe",
+      "database_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db",
+      "canary_value": "release-verify-canary-20261119-194938",
+      "restart_window_title": "WorkManager",
+      "restart_exit_code": 0,
+      "database_inspection": {
+        "database": {
+          "exists": true,
+          "is_file": true,
+          "size_bytes": 49152
+        },
+        "database_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db",
+        "foreign_key_check": [],
+        "header": {
+          "exists": true,
+          "magic": "SQLite format 3\u0000",
+          "page_size": 4096,
+          "read_version": 2,
+          "write_version": 2
+        },
+        "integrity_check": [
+          "ok"
+        ],
+        "journal_mode": "wal",
+        "open_errors": [],
+        "open_mode": "mode=ro",
+        "probe_connection_pragmas": {
+          "busy_timeout": 5000,
+          "foreign_keys": 0,
+          "page_count": 12,
+          "page_size": 4096,
+          "synchronous": 2,
+          "temp_store": 0
+        },
+        "schema_migrations": [
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0001_initial_foundation",
+            "version": 1
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0002_projects",
+            "version": 2
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0003_work_items",
+            "version": 3
+          }
+        ],
+        "schema_migrations_count": 3,
+        "settings_canary": {
+          "key": "test-canary",
+          "updated_at": "2026-11-19T11:49:41Z",
+          "value_json": "{\"value\": \"release-verify-canary-20261119-194938\"}"
+        },
+        "settings_row_count": 1,
+        "sidecars_after_close": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 32768
+          },
+          "-wal": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "sidecars_before_open": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 0
+          },
+          "-wal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "tables": [
+          "projects",
+          "schema_migrations",
+          "settings",
+          "work_items"
+        ],
+        "user_version": 3
+      }
+    },
+    {
+      "case": "case2-env-ignore",
+      "directory": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore",
+      "exe": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\WorkManager.exe",
+      "database_path": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\data\\database\\work.db",
+      "decoy_root": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\decoy-portable-root",
+      "decoy_entry_count": 0,
+      "window_title": "WorkManager",
+      "exit_code": 0
+    }
+  ],
+  "probe_reports": [
+    {
+      "label": "case1-db-after-first-close",
+      "json_path": "<uat-root>\\t1-03-regression-portable\\evidence\\case1-db-after-first-close.json",
+      "ok": true,
+      "exit_code": 0,
+      "open_mode": "mode=ro",
+      "error": null,
+      "inspection": {
+        "database": {
+          "exists": true,
+          "is_file": true,
+          "size_bytes": 49152
+        },
+        "database_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db",
+        "foreign_key_check": [],
+        "header": {
+          "exists": true,
+          "magic": "SQLite format 3\u0000",
+          "page_size": 4096,
+          "read_version": 2,
+          "write_version": 2
+        },
+        "integrity_check": [
+          "ok"
+        ],
+        "journal_mode": "wal",
+        "open_errors": [],
+        "open_mode": "mode=ro",
+        "probe_connection_pragmas": {
+          "busy_timeout": 5000,
+          "foreign_keys": 0,
+          "page_count": 12,
+          "page_size": 4096,
+          "synchronous": 2,
+          "temp_store": 0
+        },
+        "schema_migrations": [
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0001_initial_foundation",
+            "version": 1
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0002_projects",
+            "version": 2
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0003_work_items",
+            "version": 3
+          }
+        ],
+        "schema_migrations_count": 3,
+        "settings_canary": null,
+        "settings_row_count": 0,
+        "sidecars_after_close": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 32768
+          },
+          "-wal": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "sidecars_before_open": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 0
+          },
+          "-wal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "tables": [
+          "projects",
+          "schema_migrations",
+          "settings",
+          "work_items"
+        ],
+        "user_version": 3
+      }
+    },
+    {
+      "label": "persistence-canary-insert",
+      "json_path": "<uat-root>\\t1-03-regression-portable\\evidence\\persistence-canary-insert.json",
+      "ok": true,
+      "exit_code": 0,
+      "open_mode": "mode=ro",
+      "error": null,
+      "inspection": {
+        "database": {
+          "exists": true,
+          "is_file": true,
+          "size_bytes": 49152
+        },
+        "database_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db",
+        "foreign_key_check": [],
+        "header": {
+          "exists": true,
+          "magic": "SQLite format 3\u0000",
+          "page_size": 4096,
+          "read_version": 2,
+          "write_version": 2
+        },
+        "integrity_check": [
+          "ok"
+        ],
+        "journal_mode": "wal",
+        "open_errors": [],
+        "open_mode": "mode=ro",
+        "probe_connection_pragmas": {
+          "busy_timeout": 5000,
+          "foreign_keys": 0,
+          "page_count": 12,
+          "page_size": 4096,
+          "synchronous": 2,
+          "temp_store": 0
+        },
+        "schema_migrations": [
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0001_initial_foundation",
+            "version": 1
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0002_projects",
+            "version": 2
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0003_work_items",
+            "version": 3
+          }
+        ],
+        "schema_migrations_count": 3,
+        "settings_canary": {
+          "key": "test-canary",
+          "updated_at": "2026-11-19T11:49:41Z",
+          "value_json": "{\"value\": \"release-verify-canary-20261119-194938\"}"
+        },
+        "settings_row_count": 1,
+        "sidecars_after_close": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 32768
+          },
+          "-wal": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "sidecars_before_open": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 0
+          },
+          "-wal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "tables": [
+          "projects",
+          "schema_migrations",
+          "settings",
+          "work_items"
+        ],
+        "user_version": 3
+      }
+    },
+    {
+      "label": "persistence-canary-before-restart",
+      "json_path": "<uat-root>\\t1-03-regression-portable\\evidence\\persistence-canary-before-restart.json",
+      "ok": true,
+      "exit_code": 0,
+      "open_mode": "mode=ro",
+      "error": null,
+      "inspection": {
+        "database": {
+          "exists": true,
+          "is_file": true,
+          "size_bytes": 49152
+        },
+        "database_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db",
+        "foreign_key_check": [],
+        "header": {
+          "exists": true,
+          "magic": "SQLite format 3\u0000",
+          "page_size": 4096,
+          "read_version": 2,
+          "write_version": 2
+        },
+        "integrity_check": [
+          "ok"
+        ],
+        "journal_mode": "wal",
+        "open_errors": [],
+        "open_mode": "mode=ro",
+        "probe_connection_pragmas": {
+          "busy_timeout": 5000,
+          "foreign_keys": 0,
+          "page_count": 12,
+          "page_size": 4096,
+          "synchronous": 2,
+          "temp_store": 0
+        },
+        "schema_migrations": [
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0001_initial_foundation",
+            "version": 1
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0002_projects",
+            "version": 2
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0003_work_items",
+            "version": 3
+          }
+        ],
+        "schema_migrations_count": 3,
+        "settings_canary": {
+          "key": "test-canary",
+          "updated_at": "2026-11-19T11:49:41Z",
+          "value_json": "{\"value\": \"release-verify-canary-20261119-194938\"}"
+        },
+        "settings_row_count": 1,
+        "sidecars_after_close": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 32768
+          },
+          "-wal": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "sidecars_before_open": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 32768
+          },
+          "-wal": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "tables": [
+          "projects",
+          "schema_migrations",
+          "settings",
+          "work_items"
+        ],
+        "user_version": 3
+      }
+    },
+    {
+      "label": "persistence-db-after-restart",
+      "json_path": "<uat-root>\\t1-03-regression-portable\\evidence\\persistence-db-after-restart.json",
+      "ok": true,
+      "exit_code": 0,
+      "open_mode": "mode=ro",
+      "error": null,
+      "inspection": {
+        "database": {
+          "exists": true,
+          "is_file": true,
+          "size_bytes": 49152
+        },
+        "database_path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db",
+        "foreign_key_check": [],
+        "header": {
+          "exists": true,
+          "magic": "SQLite format 3\u0000",
+          "page_size": 4096,
+          "read_version": 2,
+          "write_version": 2
+        },
+        "integrity_check": [
+          "ok"
+        ],
+        "journal_mode": "wal",
+        "open_errors": [],
+        "open_mode": "mode=ro",
+        "probe_connection_pragmas": {
+          "busy_timeout": 5000,
+          "foreign_keys": 0,
+          "page_count": 12,
+          "page_size": 4096,
+          "synchronous": 2,
+          "temp_store": 0
+        },
+        "schema_migrations": [
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0001_initial_foundation",
+            "version": 1
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0002_projects",
+            "version": 2
+          },
+          {
+            "applied_at": "2026-11-19T11:49:38Z",
+            "name": "0003_work_items",
+            "version": 3
+          }
+        ],
+        "schema_migrations_count": 3,
+        "settings_canary": {
+          "key": "test-canary",
+          "updated_at": "2026-11-19T11:49:41Z",
+          "value_json": "{\"value\": \"release-verify-canary-20261119-194938\"}"
+        },
+        "settings_row_count": 1,
+        "sidecars_after_close": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 32768
+          },
+          "-wal": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "sidecars_before_open": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-shm",
+            "size_bytes": 0
+          },
+          "-wal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case1-first-launch\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "tables": [
+          "projects",
+          "schema_migrations",
+          "settings",
+          "work_items"
+        ],
+        "user_version": 3
+      }
+    },
+    {
+      "label": "case2-env-ignore-db",
+      "json_path": "<uat-root>\\t1-03-regression-portable\\evidence\\case2-env-ignore-db.json",
+      "ok": true,
+      "exit_code": 0,
+      "open_mode": "mode=ro",
+      "error": null,
+      "inspection": {
+        "database": {
+          "exists": true,
+          "is_file": true,
+          "size_bytes": 49152
+        },
+        "database_path": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\data\\database\\work.db",
+        "foreign_key_check": [],
+        "header": {
+          "exists": true,
+          "magic": "SQLite format 3\u0000",
+          "page_size": 4096,
+          "read_version": 2,
+          "write_version": 2
+        },
+        "integrity_check": [
+          "ok"
+        ],
+        "journal_mode": "wal",
+        "open_errors": [],
+        "open_mode": "mode=ro",
+        "probe_connection_pragmas": {
+          "busy_timeout": 5000,
+          "foreign_keys": 0,
+          "page_count": 12,
+          "page_size": 4096,
+          "synchronous": 2,
+          "temp_store": 0
+        },
+        "schema_migrations": [
+          {
+            "applied_at": "2026-11-19T11:49:43Z",
+            "name": "0001_initial_foundation",
+            "version": 1
+          },
+          {
+            "applied_at": "2026-11-19T11:49:43Z",
+            "name": "0002_projects",
+            "version": 2
+          },
+          {
+            "applied_at": "2026-11-19T11:49:43Z",
+            "name": "0003_work_items",
+            "version": 3
+          }
+        ],
+        "schema_migrations_count": 3,
+        "settings_canary": null,
+        "settings_row_count": 0,
+        "sidecars_after_close": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\data\\database\\work.db-shm",
+            "size_bytes": 32768
+          },
+          "-wal": {
+            "exists": true,
+            "path": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "sidecars_before_open": {
+          "-journal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\data\\database\\work.db-journal",
+            "size_bytes": 0
+          },
+          "-shm": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\data\\database\\work.db-shm",
+            "size_bytes": 0
+          },
+          "-wal": {
+            "exists": false,
+            "path": "<uat-root>\\t1-03-regression-portable\\case2-env-ignore\\data\\database\\work.db-wal",
+            "size_bytes": 0
+          }
+        },
+        "tables": [
+          "projects",
+          "schema_migrations",
+          "settings",
+          "work_items"
+        ],
+        "user_version": 3
+      }
+    }
+  ]
+}
