@@ -18,10 +18,14 @@
 #    重启后仍可创建；最后关闭并验证退出码；
 # 6. 再次只读检查数据库（6 条 pending、无其他状态、外键干净），输出证据摘要 JSON。
 #
-# P3-02 安全约束：输出目录必须位于专用测试根目录 D:\WorkManager-test-data\ 之下；
-# 路径先规范化再判定；拒绝 D:\WorkManager 正式目录、测试根目录外目录、已包含数据库的
-# 目录、非空的未知目录。脚本不会清空或删除既有目录，每次测试必须使用新的 UAT 目录。
+# P3-02 安全约束（第三轮）：输出目录必须位于专用测试根目录 D:\WorkManager-test-data\ 之下，
+# 且必须通过 Windows 原生文件系统句柄检查（CreateFileW + GetFileInformationByHandleEx +
+# GetFinalPathNameByHandleW）：专用测试根目录本身及其所有已存在路径组件不得是未获批准的
+# Junction / Symbolic Link / 其他 reparse point；真实最终路径必须位于专用测试根目录内、
+# 不在正式目录内，且卷身份一致。拒绝 UNC、设备路径与相对路径；无法确认身份时 fail closed。
 # 校验逻辑见 T1-03UatPath.ps1，专项测试见 test-t1-03-uat-path.ps1。
+# 校验在创建 UAT 目录、创建 app 目录、复制 EXE、启动应用（写数据库）之前重复执行；
+# 但路径检查与后续文件操作之间仍存在 TOCTOU 并发替换窗口，本脚本不宣称已消除该风险。
 #
 # 数据边界：只使用 D:\WorkManager-test-data 下的隔离目录与虚构数据，
 # 不触碰正式运行目录 D:\WorkManager，不使用真实用户工作数据。
@@ -38,8 +42,21 @@ $ErrorActionPreference = 'Stop'
 $script:Failed = $false
 $script:DbChecks = New-Object System.Collections.ArrayList
 
-# P3-02：UAT 输出目录安全校验（专用测试根目录、规范化路径、拒绝正式目录/已知数据库/非空目录）。
+# P3-02：UAT 输出目录安全校验（专用测试根目录 + Windows 原生句柄重解析点/最终路径/卷身份检查）。
 . (Join-Path $PSScriptRoot 'T1-03UatPath.ps1')
+
+function Assert-UatOutputDirStillSafe([string]$Directory, [string]$Stage) {
+    # 防御性重新校验：在创建目录、复制 EXE、启动应用等关键写操作前再次执行原生检查。
+    # 仍存在 TOCTOU 剩余风险（检查与操作之间可能被并发替换），此处不宣称已消除。
+    try {
+        $guard = Assert-T103NativePathSafety -RequestedPath $Directory -TestRoot $script:T103UatTestRoot -FormalRoot $script:T103UatFormalRoot
+        Write-Host ("P3-02 原生路径重校验通过（{0}）：components={1} volumeIdentityMatch={2} finalPathInsideRoot={3}" -f $Stage, $guard.checkedComponentCount, $guard.volumeIdentityMatch, $guard.finalPathInsideRoot)
+    }
+    catch {
+        Write-Host ("PRECONDITION_FAILED: P3-02 原生路径重校验失败（{0}）：{1}" -f $Stage, $_.Exception.Message)
+        exit 2
+    }
+}
 
 function Resolve-RepoRoot {
     return (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
@@ -166,7 +183,8 @@ $exeSha256 = (Get-FileHash -Path $ExePath -Algorithm SHA256).Hash.ToLowerInvaria
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
     $OutputDir = 'D:\WorkManager-test-data\t1-03-ui-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
 }
-# P3-02：限制在专用测试根目录；规范化后判断，拒绝正式目录/已存在数据库/非空目录。
+# P3-02：限制在专用测试根目录；原生句柄检查重解析点/最终路径/卷身份，拒绝正式目录/
+# 已存在数据库/非空目录。resolve 内部已在任何创建之前完成原生检查。
 try {
     $outputFull = Resolve-T103UatOutputDirectory -RequestedPath $OutputDir
 }
@@ -174,12 +192,20 @@ catch {
     Write-Host ("PRECONDITION_FAILED: " + $_.Exception.Message)
     exit 2
 }
+$initialGuard = Get-T103UatNativeGuardSummary
+if ($null -ne $initialGuard) {
+    Write-Host ("P3-02 原生路径检查通过：components={0} reparsePointAllowed={1} volumeIdentityMatch={2} finalPathInsideRoot={3}" -f $initialGuard.checkedComponentCount, $initialGuard.reparsePointAllowed, $initialGuard.volumeIdentityMatch, $initialGuard.finalPathInsideRoot)
+}
 New-Item -ItemType Directory -Force -Path $outputFull | Out-Null
+Assert-UatOutputDirStillSafe -Directory $outputFull -Stage '创建 UAT 根目录后'
 
 $appDir = Join-Path $outputFull 'app'
 New-Item -ItemType Directory -Force -Path $appDir | Out-Null
+Assert-UatOutputDirStillSafe -Directory $appDir -Stage '创建 app 目录后'
 $appExe = Join-Path $appDir 'WorkManager.exe'
+Assert-UatOutputDirStillSafe -Directory $appDir -Stage '复制 EXE 前'
 Copy-Item -Path $ExePath -Destination $appExe -Force
+Assert-UatOutputDirStillSafe -Directory $appDir -Stage '复制 EXE 后（启动应用前）'
 $databasePath = Join-Path $appDir 'data\database\work.db'
 
 Write-Host "T1-03 UI 验证：exe=$ExePath sha256=$exeSha256 size=$($exeInfo.Length) output=$outputFull port=$Port"
@@ -270,6 +296,7 @@ if (-not (Test-Path $prerequisitePath -PathType Leaf)) {
 else {
     $secondPort = $Port + 1
     Write-Host "--- 重新启动 Release（端口 $secondPort）验证持久化 ---"
+    Assert-UatOutputDirStillSafe -Directory $appDir -Stage '重新启动应用前（写数据库前）'
     $second = Start-ReleaseApp -AppExe $appExe -WorkingDirectory $appDir -DebugPort $secondPort
     if ($second.Hwnd -eq [IntPtr]::Zero) {
         $script:Failed = $true

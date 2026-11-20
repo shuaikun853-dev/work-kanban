@@ -2,10 +2,10 @@
 
 **文档版本：** V2.0  
 **编制日期：** 2026-11-19  
-**文档状态：** 开发执行基线（阶段 0 已放行；T1-01、T1-02 均已验收完成并合并到 main；T1-03 第二轮定向修复完成，等待第二轮独立审计；TOCTOU 按 DEC-029 接受并延期） \
+**文档状态：** 开发执行基线（阶段 0 已放行；T1-01、T1-02 均已验收完成并合并到 main；T1-03 第三轮 P2-01/P3-02 定向修复完成，等待第三轮独立审计；P2-01 待 GitHub Support 服务端历史清理后关闭；TOCTOU 按 DEC-029 接受并延期） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；T1-01、T1-02 均已验收完成并合并到 main。T1-03「工作事项快速创建和待安排区域」第一轮独立审计未通过后，已完成四项定向修复（P2-01 证据脱敏与分支历史清理、P2-02 Rust/TS DTO 契约、P3-01 创建/刷新提示时机、P3-02 UAT 路径安全），并通过质量门禁、Release E2E、路径安全专项与继承回归；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open，状态 **等待第二轮独立审计**。T1-04 / T1-05 未启动。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。
+**当前进度：** 阶段 0 已放行；T1-01、T1-02 均已验收完成并合并到 main。T1-03「工作事项快速创建和待安排区域」第一轮独立审计未通过后，已完成两轮定向修复；第三轮仅处理 P2-01（证据/历史对象复核）与 P3-02（UAT 路径原生 Windows 句柄安全校验），质量门禁、Release E2E、路径安全专项与继承回归均通过。P3-02 已修复，等待第三轮独立审计；P2-01 复核通过但旧提交 `2342828` 仍可经 GitHub API 读取（9 个原始日志仍可列出/下载），GitHub Support 服务端清理未完成（需仓库所有者提交工单），**P2-01 仍未关闭**。PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open，main 未修改；T1-04 / T1-05 未启动。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。
 
 ---
 
@@ -86,7 +86,7 @@
 | 阶段 | 名称 | 主要交付 | 当前状态 |
 |---|---|---|---|
 | 0 | 技术验证 | 桌面壳、便携路径、WebView2 基础验证 | 已放行；SQLCipher/DPAPI 取消，系统集成验证延期至阶段 6 |
-| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 进行中；T1-01、T1-02 已验收完成并合并；**T1-03 第二轮定向修复完成，等待第二轮独立审计** |
+| 1 | 基础架构与工作事项 | SQLite、项目、工作事项、状态流转、历史 | 进行中；T1-01、T1-02 已验收完成并合并；**T1-03 第三轮 P2-01/P3-02 定向修复完成，等待第三轮独立审计** |
 | 2 | 计划、优先级与当前工作 | 每日计划、全局排序、当前工作和切换记录 | 未开始 |
 | 3 | 每日复盘与提醒 | 工作日历、复盘、补录、提醒调度 | 未开始 |
 | 4 | 日志、搜索与报表 | 工作日志、历史搜索、日报、周报、月报 | 未开始 |
@@ -168,7 +168,7 @@
 |---|---|---|
 | T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | Tauri 2 + Svelte 5 + TypeScript + Rust 可构建；SQLite 初始化、user_version migration、外键、WAL、事务和测试通过 |
 | T1-02 | 项目创建、编辑、归档 | 项目 CRUD；归档不删除工作历史 | **验收完成**（用户接受；PR #7 于 2026-11-19 合并，commit `ab6aba32a94d7d091b20f0ab49b25badf26377c4`） |
-| T1-03 | 工作事项快速创建和待安排区域 | 标题快速录入并立即保存；默认待安排；仅可选未归档项目或不归属；待安排列表显示两类记录 | **待独立审计**（实现提交 `be8d9c2`；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open；开发自测完成） |
+| T1-03 | 工作事项快速创建和待安排区域 | 标题快速录入并立即保存；默认待安排；仅可选未归档项目或不归属；待安排列表显示两类记录 | **第三轮定向修复完成，等待第三轮独立审计**（P3-02 已修复待审计；P2-01 仍开放，待 GitHub Support 服务端清理；第三轮修复提交：本分支后续提交，PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 时间线可见；PR 保持 Open） |
 | T1-04 | 多项目独立副本创建 | 多项目创建时每个项目有独立工作记录、状态、日志和附件关联 |
 | T1-05 | 工作事项状态流转和历史记录 | 待安排、未开始、进行中、已完成、已放弃规则正确；状态变更可追溯 |
 | T1-06 | 六位数字应用密码与锁屏 | 取消（DEC-028）；第一版不实现 |
@@ -183,7 +183,7 @@
 - 前端架构：应用壳、Design Tokens、通用组件、Feature 页面、typed Bridge、DTO Contracts、纯展示函数分层。
 - UI 实现并入对应业务纵向任务，不另造重复业务任务；每次只实现一个页面/一个可验证切片，附截图和回归结果。
 - **T1-02 已按 DEC-032 完成自定义无边框标题栏与三色真实窗口控制**；项目管理 UI 使用已确认的 Design Tokens、AppShell、Sidebar 和紧凑桌面布局。
-- **T1-03 第二轮定向修复完成，等待第二轮独立审计。** 第一轮实现提交 `be8d9c2`；第二轮修复提交 `12b1bdf`（P2-02）、`2d91c92`（P3-01/P3-02）；P2-01 证据脱敏与分支历史清理提交 `b6cf344`；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open；工作事项快速创建、待安排列表、DEC-033、四项审计问题修复与 Release 实测均已完成，详见 [T1-03-REPORT.md](../testing/reports/T1-03-REPORT.md)。
+- **T1-03 第三轮 P2-01/P3-02 定向修复完成，等待第三轮独立审计。** 第一轮实现提交 `be8d9c2`；第二轮修复提交 `12b1bdf`（P2-02）、`2d91c92`（P3-01/P3-02）；P2-01 证据脱敏与分支历史清理提交 `b6cf344`；第三轮修复提交：本分支后续提交（PR #8 时间线可见）。P3-02 已改为 Windows 原生句柄/重解析点/最终路径/卷身份校验并通过 60 项路径安全专项（1 项 SKIP 已记录）；P2-01 旧提交 `2342828` 仍可经 GitHub API 读取、GitHub Support 服务端清理未完成，**P2-01 未关闭**；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open。详见 [T1-03-REPORT.md](../testing/reports/T1-03-REPORT.md)。
 
 ### T1-01 详细范围
 
@@ -237,11 +237,11 @@
 
 **审计与验收结果：** 第一轮审计发现的 P2-01 / P3-01 / P3-02 均已修复；第二轮独立审计于 2026-11-19 通过；用户于 2026-11-19 明确接受；PR #7 已合并到 main。T1-03 仍未开始，需用户单独授权。报告见 `docs/testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md`，用户验收记录见 `docs/testing/reports/T1-02-USER-ACCEPTANCE.md`。
 
-### T1-03 详细范围与实际交付（2026-11-19，第二轮定向修复完成，等待第二轮独立审计）
+### T1-03 详细范围与实际交付（2026-11-19 第二轮修复 + 2026-11-20 第三轮 P2-01/P3-02 修复完成，等待第三轮独立审计）
 
-**当前状态：** **第二轮定向修复完成，等待第二轮独立审计**。第一轮四项审计问题已修复；PR 保持 Open，未合并；main 未修改。
+**当前状态：** **第三轮 P2-01/P3-02 定向修复完成，等待第三轮独立审计**。第一轮四项审计问题已完成两轮定向修复；第三轮仅处理 P2-01/P3-02：P3-02 已修复待审计，P2-01 复核通过但旧提交 `2342828` 仍可经 GitHub API 读取、GitHub Support 服务端清理未完成，**P2-01 仍未关闭**；PR 保持 Open，未合并；main 未修改。
 **分支：** `task/T1-03-quick-create-pending`；基线 main `018e851`；第一轮实现提交 `be8d9c2e9c78710690de189936d6ee65f48ed8df`；第二轮修复提交 `12b1bdf026f01688c79ba438165a97a652e086a1`（P2-02）、`2d91c92301713597ccfc1c0ddc2d83a479f572d4`（P3-01/P3-02）；P2-01 历史清理提交 `b6cf344abc1693e7031427f8963c27474c0b59f9`。
-**Pull Request：** [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（Open，等待第二轮独立审计）。
+**Pull Request：** [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（Open，等待第三轮独立审计）。
 **测试报告：** [T1-03-REPORT.md](../testing/reports/T1-03-REPORT.md)；证据：[T1-03-assets/](../testing/reports/T1-03-assets/README.md)；预编码设计：[T1-03-Implementation-Design.md](tasks/T1-03-Implementation-Design.md)。
 
 **实际实现范围：**
@@ -267,6 +267,23 @@
 | **P3-02** UAT 脚本缺少数据库复用保护 | 新增 `T1-03UatPath.ps1`：规范化路径、限定专用测试根目录、拒绝正式目录/根目录外/`..` 越界/已知数据库/非空目录；脚本不删除/不覆盖 | 路径安全专项 23/23 PASS；不安全目录编排退出码 2 |
 
 第二轮质量门禁与实测：`cargo fmt` / `cargo check` / `cargo test`（124/124）/ `npm run check` / `npm run build` / `git diff --check` 全部通过；T1-03 Release E2E 84/84 + 12/12 + 17/17 + 数据库探针 25/25；路径安全 23/23；继承便携 106 项、异常注入 73 项、T1-02 UI E2E 全部通过。状态：**等待第二轮独立审计**；不合并 PR、不修改 main、不开始 T1-04/T1-05。
+
+#### T1-03 第三轮定向修复记录（2026-11-20）
+
+第二轮独立审计仍未关闭 P2-01/P3-02；第三轮只修复这两项，仅修改验证脚本与文档，不新增业务功能、不修改产品代码（Release EXE 与第二轮一致）。
+
+| 问题 | 修复 | 验证 |
+|---|---|---|
+| **P2-01** 机器信息/原始日志历史对象 | 复核当前分支与 PR #8 文本脱敏：当前 T1-03-assets 33 个文件（含 19 张 PNG）敏感值命中 0；分支增量 `018e851..HEAD` 18 个提交 / 5,773 次文件树扫描，分支新增敏感值命中 0；远端 18 个 ref（8 分支 + 7 pull heads + 2 pull merges + HEAD）、无 tag、无 ref 指向旧提交；PR #8 正文 2,091 字符 / SHA-256 `4621bf70…f660`、2 条 issue 评论、0 条 review，敏感类别/旧日志文件名/抽样原始行命中 0。**旧提交 `2342828852abee43ab56610e7d1fa91a02310bfe` 仍可经 GitHub API 读取（HTTP 200），其新增的 9 个原始 T1-03 命令日志（共 147,009 字节）仍可列出/下载**；旧提交不可从 HEAD 到达，仅本地备份分支 `backup/t1-03-r1-audit-baseline` 与 gitignored 本地 bundle 引用，均未推送。GitHub Support 服务端清理未完成（工单材料已准备，需仓库所有者提交） | 分支历史/PR 文本复扫通过；旧 SHA 暴露检查未通过 → **P2-01 保持 OPEN/未关闭**；Support 清理完成后必须做旧 SHA 暴露复检 |
+| **P3-02** UAT 路径安全（重解析点/最终路径/卷身份） | `scripts/verify/T1-03UatPath.ps1` 改用 Windows 原生句柄 API：`CreateFileW` + `GetFileInformationByHandleEx`（`FILE_ATTRIBUTE_TAG_INFO` / `FILE_ID_INFO`）+ `GetFinalPathNameByHandleW`，使用 `FILE_FLAG_BACKUP_SEMANTICS` + `FILE_FLAG_OPEN_REPARSE_POINT`；拒绝测试根自身及盘符根→输出目录每个已存在路径分量上的未批准 Junction/符号链接/其他重解析点，校验真实最终路径位于 `D:\WorkManager-test-data` 内且在 `D:\WorkManager` 外，校验卷序列号（FileIdInfo）与盘符根/测试根一致；拒绝 UNC/设备/相对路径/非法字符/保留名/末尾点或空格；缺失输出父目录仅允许在已校验的安全存在祖先下；身份无法确认时 fail-closed；已批准重解析点白名单为空。`verify-t1-03-ui.ps1` 在创建 UAT 根后、创建应用目录后、复制 EXE 前后、每次应用启动前（数据库写入前）原生复验。TOCTOU 窗口已记录但**未消除**（DEC-029 / Issue #2 仍适用） | `test-t1-03-uat-path.ps1`：原 23 项保留 + 新增真实 Junction/重解析点/无副作用检查 = **60 项，FAILED=0；SKIPPED=1 显式记录且不计为 PASS**（非管理员进程缺少 SeCreateSymbolicLinkPrivilege、未启用开发者模式，`mklink /D` 退出码 1）；真实 `mklink /J` 覆盖测试根自身、测试根路径分量、中间分量、输出目录、指向正式根、指向 C 盘、指向测试根内部共 7 类全部拒绝（重解析 tag `0xA0000003`）；无副作用检查：canary/假 DB/EXE/编排产物不变、Junction 目标未被触碰、正式根未创建、清理仅删链接（非递归）；退出码 0 |
+
+- **第三轮质量门禁（全部退出码 0）：** `cargo fmt --all -- --check`；`cargo check --workspace --all-targets`；`cargo test --workspace` = **124 passed / 0 failed**（18 个测试套件）；`npm run check` = svelte-check 0 errors / 0 warnings + Bridge 17/17 + Design Token 22 文件 / 0 违规 + 49/49；`npm run build`；`git diff --check`。
+- **P3-02 路径安全专项：** 60 项（原 23 + 新增 37），FAILED=0，SKIPPED=1（符号链接创建权限不足，已记录，不计为 PASS），退出码 0。
+- **第三轮 Release E2E：** 主 UI/IPC **84/84**、最小窗口 **12/12**、重启持久化 **17/17**、数据库只读探针 **25/25**；两次真实关闭退出码 0；CSP 违规 0。
+- **继承回归（全部退出码 0）：** 便携 **106 项 PASS 90 / FAIL 0 / WARN 1（既有 WARN 保留）**；异常注入 **73 项 PASS 64 / FAIL 0**；T1-02 UI E2E 主 73/73 + 最小窗口 12/12 + 关闭退出码 0。
+- **Release EXE：** 10,352,128 字节，SHA-256 `3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3`（产品代码未变，与第二轮一致）。
+
+**第三轮状态：** P3-02 已修复并完成本地验证，等待第三轮独立审计；P2-01 保持 OPEN/未关闭（旧提交 `2342828` 仍可经 GitHub API 读取，GitHub Support 服务端清理未完成，需仓库所有者提交工单）。PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open；main 未修改（基线 `018e851`）；T1-04/T1-05 未启动。第三轮修复提交：本分支后续提交（PR #8 时间线可见）。TOCTOU 未消除，DEC-029 延期至 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2) 仍适用。开发代理不自行宣布审计/验收通过。
 
 
 ## 7. 阶段 2：计划、优先级与当前工作
@@ -513,9 +530,9 @@
 
 - 当前获授权的执行阶段：**阶段 1：基础架构与工作事项**；T1-01 已于 2026-11-18 经第四轮独立审计、用户验收并合并到 main（PR #1，commit `260e6c0`），状态为**验收完成**。
 - **T1-02 项目创建、编辑、归档：已验收完成。** 第二轮独立审计通过、用户明确接受、PR #7 已合并（commit `ab6aba32a94d7d091b20f0ab49b25badf26377c4`）。报告：`docs/testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md`；验收记录：`docs/testing/reports/T1-02-USER-ACCEPTANCE.md`。
-- **T1-03 工作事项快速创建和待安排区域：第二轮定向修复完成，等待第二轮独立审计。** 分支 `task/T1-03-quick-create-pending`，基线 `018e851e8daf5835391a7b61caf881bc57c2ad42`；第一轮实现提交 `be8d9c2e9c78710690de189936d6ee65f48ed8df`；第二轮修复提交 `12b1bdf`（P2-02）、`2d91c92`（P3-01/P3-02）；P2-01 证据脱敏与历史清理 `b6cf344`；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open。DEC-033 已实现并测试。第二轮验证：`cargo test --workspace` 124/124、T1-03 Release E2E 84/84 + 12/12 + 17/17 + 数据库探针 25/25 + 路径安全 23/23、继承回归全部通过；详细报告见 `docs/testing/reports/T1-03-REPORT.md`。
+- **T1-03 工作事项快速创建和待安排区域：第三轮 P2-01/P3-02 定向修复完成，等待第三轮独立审计。** 分支 `task/T1-03-quick-create-pending`，基线 `018e851e8daf5835391a7b61caf881bc57c2ad42`；第一轮实现提交 `be8d9c2e9c78710690de189936d6ee65f48ed8df`；第二轮修复提交 `12b1bdf`（P2-02）、`2d91c92`（P3-01/P3-02）；P2-01 证据脱敏与历史清理 `b6cf344`；第三轮修复提交：本分支后续提交（PR #8 时间线可见）。DEC-033 已实现并测试。第三轮验证：`cargo test --workspace` 124/124、T1-03 Release E2E 84/84 + 12/12 + 17/17 + 数据库探针 25/25、原生路径安全专项 60 项（1 项 SKIP 已记录）、继承回归全部通过；P3-02 等待第三轮独立审计，P2-01 仍未关闭（旧提交 `2342828` 仍可经 GitHub API 读取，待 GitHub Support 服务端清理）。PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open；详细报告见 `docs/testing/reports/T1-03-REPORT.md`。
 - 阶段 0 已于 2026-11-17 按 DEC-028 放行；T0-04/T0-05 取消，T0-06 延期到阶段 6；T0-06 的验收拆分为 T6-04 和 T6-07。
-- 最近完成任务：**T1-02 项目创建、编辑、归档**（用户验收完成，PR #7 已合并）；**T1-03 工作事项快速创建和待安排区域**已完成开发自测，等待独立审计（PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open）。T1-01 任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；验收记录见 `docs/testing/reports/T1-01-USER-ACCEPTANCE.md`；R3 返工证据见 `docs/testing/reports/T1-01-R3-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-R3-FIX-evidence.json`。
+- 最近完成任务：**T1-02 项目创建、编辑、归档**（用户验收完成，PR #7 已合并）；**T1-03 工作事项快速创建和待安排区域**第三轮 P2-01/P3-02 定向修复完成，等待第三轮独立审计（P3-02 已修复待审计；P2-01 仍未关闭，待 GitHub Support 服务端清理；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) Open）。T1-01 任务说明见 `docs/development/tasks/T1-01-SQLite-Foundation.md`；验收记录见 `docs/testing/reports/T1-01-USER-ACCEPTANCE.md`；R3 返工证据见 `docs/testing/reports/T1-01-R3-FIX-REPORT.md` 与 `docs/testing/reports/T1-01-R3-FIX-evidence.json`。
 - 参考实现/候选依赖说明：项目 ID 使用 `uuid` crate（MIT/Apache-2.0，技术设计 1.3 已列出）；`serde_json` 仅用于测试 DTO 契约；未引入云服务、遥测、账户或同步依赖。
 - 第一版采用普通 SQLite，不实现应用密码、SQLCipher 或 DPAPI。
 - UI 设计基线已按 DEC-030 / DEC-031 确认，DEC-032 自定义标题栏已实现并实测；业务 UI 已交付 AppShell、项目管理（T1-02）与今日工作页下的待安排次级视图（T1-03）；今日工作计划/当前工作/完成状态等真实业务数据尚未接入，按后续任务实现。
@@ -552,3 +569,5 @@
 
 | 2026-11-19 | T1-03 第一轮独立审计未通过，进入定向返工 | 四项问题：P2-01 原始命令日志/机器信息提交；P2-02 Rust `WorkItem` 10 字段与 TS `WorkItemDto` 6 字段不一致且 Bridge 静默忽略未知字段；P3-01 创建成功后提示“列表已刷新”的时机不准确；P3-02 UAT 脚本缺少数据库复用/路径绕过保护。任务状态置为返工；只修复这四项，不扩大范围。 |
 | 2026-11-19 | T1-03 第二轮定向修复完成（等待第二轮独立审计） | P2-01：删除 9 个原始日志、脱敏 11 个证据 JSON、新增 `SANITIZATION.md`，重写分支 docs/evidence 提交 `2342828` → `b6cf344` 并 `--force-with-lease` 推送；P2-02：`WorkItemDto` 统一为 10 字段、Bridge 严格契约、Node 17/17；P3-01：创建/刷新成功/刷新失败三态与重试；P3-02：`T1-03UatPath.ps1` + 路径安全专项 23/23。质量门禁：`cargo test` 124/124、npm check、npm build、git diff --check 全部通过；Release E2E 84/84 + 12/12 + 17/17 + 数据库探针 25/25，两次真实关闭退出码 0；继承便携 106 项（1 WARN 保留）、异常注入 73 项、T1-02 UI E2E 全部通过。Release EXE 10,352,128 字节，SHA-256 `3f12bbce…fa9e3`。状态：等待第二轮独立审计；PR #8 Open，未合并；main 未修改；T1-04/T1-05 不开始。报告：`docs/testing/reports/T1-03-REPORT.md`。 |
+
+| 2026-11-20 | T1-03 第三轮 P2-01/P3-02 定向修复完成（待第三轮独立审计） | 第三轮仅修复 P2-01/P3-02，仅改验证脚本与文档、未改产品代码。P3-02：`T1-03UatPath.ps1` 改用 Windows 原生句柄 API（`CreateFileW` + `GetFileInformationByHandleEx` `FILE_ATTRIBUTE_TAG_INFO`/`FILE_ID_INFO` + `GetFinalPathNameByHandleW`，`FILE_FLAG_BACKUP_SEMANTICS` + `FILE_FLAG_OPEN_REPARSE_POINT`），拒绝测试根及每个已存在路径分量的未批准 Junction/符号链接/其他重解析点，校验真实最终路径在 `D:\WorkManager-test-data` 内、`D:\WorkManager` 外及卷序列号一致，未知身份 fail-closed；`verify-t1-03-ui.ps1` 在创建 UAT 根/应用目录、复制 EXE 前后、每次应用启动前原生复验；TOCTOU 窗口记录但未消除（DEC-029 / Issue #2 仍适用）；路径安全专项 **60 项 FAILED=0、SKIPPED=1 已记录（无符号链接创建权限，不计 PASS）**，真实 `mklink /J` 7 类场景全部拒绝且无副作用。P2-01：当前 T1-03-assets 33 文件（19 PNG）敏感值 0 命中；分支增量 18 提交 / 5,773 次扫描 0 命中；PR #8 正文/评论敏感命中 0（正文 2,091 字符、SHA-256 `4621bf70…f660`）；但旧提交 `2342828` 仍可经 GitHub API 读取，9 个原始日志（147,009 字节）仍可列出/下载，GitHub Support 服务端清理未完成，**P2-01 保持 OPEN/未关闭**。质量门禁全部退出码 0：`cargo test --workspace` 124/124（18 套件）、`npm run check`（svelte-check 0/0、Bridge 17/17、Design Token 22 文件 0 违规、49/49）、`npm run build`、`git diff --check`；Release E2E 84/84 + 12/12 + 17/17 + 25/25，两次真实关闭退出码 0；继承便携 106 项（PASS 90 / FAIL 0 / WARN 1 保留）、异常注入 73 项（PASS 64 / FAIL 0）、T1-02 UI E2E 73/73 + 12/12；Release EXE 10,352,128 字节，SHA-256 `3f12bbce…fa9e3`（产品代码未变）。第三轮修复提交：本分支后续提交（PR #8 时间线可见）。状态：等待第三轮独立审计；PR #8 Open，未合并；main 未修改；T1-04/T1-05 不开始。 |

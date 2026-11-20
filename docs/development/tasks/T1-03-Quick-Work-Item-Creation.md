@@ -1,6 +1,6 @@
 # T1-03：工作事项快速创建和待安排区域
 
-**任务状态：** 第二轮定向修复完成，等待第二轮独立审计（PR #8 保持 Open，未合并）
+**任务状态：** 第三轮 P2-01/P3-02 定向修复完成，等待第三轮独立审计（P3-02 已修复待审计；P2-01 仍开放，待 GitHub Support 服务端清理；PR #8 保持 Open，未合并）
 **启动日期：** 2026-11-19  
 **所属阶段：** 阶段 1：基础架构与工作事项  
 **前置任务：** T1-01、T1-02 已验收完成并合并到 main  
@@ -9,7 +9,8 @@
 **目标分支：** `main`  
 **第一轮实现提交：** `be8d9c2e9c78710690de189936d6ee65f48ed8df`
 **第二轮修复提交：** P2-02 `12b1bdf026f01688c79ba438165a97a652e086a1`；P3-01/P3-02 `2d91c92301713597ccfc1c0ddc2d83a479f572d4`；P2-01 历史清理 `b6cf344abc1693e7031427f8963c27474c0b59f9`
-**Pull Request：** [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（指向 main，保持 Open，等待第二轮独立审计）
+**第三轮修复提交：** 本分支后续提交（PR #8 时间线可见）；第三轮前 HEAD `bad0688ee9de5e07f769d64d7fc44e3f182a960d`
+**Pull Request：** [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（指向 main，保持 Open，等待第三轮独立审计）
 **测试报告：** `docs/testing/reports/T1-03-REPORT.md`
 **截图与证据：** `docs/testing/reports/T1-03-assets/`
 **开发设计：** `docs/development/tasks/T1-03-Implementation-Design.md`
@@ -237,3 +238,32 @@
 
 **详细报告：** `docs/testing/reports/T1-03-REPORT.md`；证据：`docs/testing/reports/T1-03-assets/`（含 `SANITIZATION.md`）。
 **停止条件：** 已停止，等待第二轮独立审计；未合并 PR #8、未修改 main、未开始 T1-04/T1-05。
+
+## 13. 第三轮定向修复结果（2026-11-20，等待第三轮独立审计）
+
+**状态：** 第三轮 P2-01/P3-02 定向修复完成；PR #8 保持 Open，等待第三轮独立审计。P3-02 已修复并完成本地验证；P2-01 **仍未关闭**（旧提交 `2342828` 仍可经 GitHub API 读取，GitHub Support 服务端清理未完成）。开发代理不自行宣布审计/验收通过。
+
+**修复内容：**
+
+- **P3-02 UAT 路径安全（原生 Windows 句柄校验）：** `scripts/verify/T1-03UatPath.ps1` 改用 `CreateFileW` + `GetFileInformationByHandleEx`（`FILE_ATTRIBUTE_TAG_INFO` / `FILE_ID_INFO`）+ `GetFinalPathNameByHandleW`，使用 `FILE_FLAG_BACKUP_SEMANTICS` + `FILE_FLAG_OPEN_REPARSE_POINT`；拒绝测试根自身及盘符根→输出目录每个已存在路径分量上的未批准 Junction/符号链接/其他重解析点；校验真实最终路径位于 `D:\WorkManager-test-data` 内且在 `D:\WorkManager` 外，并校验卷序列号（FileIdInfo）与盘符根/测试根一致；拒绝 UNC/设备/相对路径/非法字符/保留名/末尾点或空格；缺失输出父目录仅允许在已校验的安全存在祖先下；身份无法确认时 fail-closed；已批准重解析点白名单为空。`verify-t1-03-ui.ps1` 在创建 UAT 根后、创建应用目录后、复制 EXE 前后、每次应用启动前（数据库写入前）原生复验。TOCTOU 窗口已记录但**未消除**（DEC-029 / Issue #2 仍适用）。
+- **路径安全测试：** `test-t1-03-uat-path.ps1` 原 23 项保留 + 新增真实 Junction/重解析点/无副作用检查 = **60 项，FAILED=0；SKIPPED=1 显式记录且不计为 PASS**（非管理员进程缺少 SeCreateSymbolicLinkPrivilege、未启用开发者模式，`mklink /D` 退出码 1）；真实 `mklink /J` 覆盖测试根自身、测试根路径分量、中间分量、输出目录、指向正式根、指向 C 盘、指向测试根内部共 7 类全部拒绝（重解析 tag `0xA0000003`）。
+- **无副作用验证：** canary 文件、预置假数据库、EXE 复制与编排产物不变；Junction 目标未被触碰；正式根 `D:\WorkManager` 未被创建；清理只删除链接（非递归），目标 canary 完好；退出码 0。
+- **P2-01 机器信息/原始日志历史对象：** 复扫当前分支与 PR #8 文本脱敏 0 命中（当前 assets 33 个文件、19 张 PNG；分支增量 18 个提交 / 5,773 次文件树扫描；PR 正文 2,091 字符、SHA-256 `4621bf70…f660`，2 条 issue 评论、0 review）；但旧提交 `2342828852abee43ab56610e7d1fa91a02310bfe` 仍可经 GitHub API 读取（HTTP 200），其 9 个原始 T1-03 命令日志（共 147,009 字节）仍可列出/下载。旧提交不可从 HEAD 到达，仅本地备份分支 `backup/t1-03-r1-audit-baseline` 与 gitignored 本地 bundle 引用、均未推送。GitHub Support 服务端清理未完成（工单材料已准备，需仓库所有者提交）；**P2-01 保持 OPEN/未关闭**，清理完成后必须做旧 SHA 暴露复检。
+
+**验证结果：**
+
+- 质量门禁（全部退出码 0）：`cargo fmt --all -- --check`、`cargo check --workspace --all-targets`、`cargo test --workspace`（**124 passed / 0 failed**，18 个测试套件）、`npm run check`（svelte-check 0 errors / 0 warnings；Bridge 17/17；Design Token 22 文件 / 0 违规；49/49）、`npm run build`、`git diff --check`。
+- 路径安全专项：**60 项，FAILED=0；SKIPPED=1（已记录，不计为 PASS）**，退出码 0。
+- T1-03 Release E2E（新 UAT 目录）：主 UI/IPC **84/84**、最小窗口 **12/12**、重启持久化 **17/17**、数据库只读探针 **25/25**；两次真实关闭退出码 0；CSP 违规 0。
+- 继承回归（全部退出码 0）：便携 **106 项 PASS 90 / FAIL 0 / WARN 1（既有 WARN 保留）**；异常注入 **73 项 PASS 64 / FAIL 0**；T1-02 UI E2E 主 73/73 + 最小窗口 12/12 + 关闭退出码 0。
+- Release EXE：`10,352,128` 字节，SHA-256 `3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3`（产品代码未变，与第二轮一致）。
+
+**证据：**
+
+- 第三轮汇总（机器可读）：`docs/testing/reports/T1-03-assets/evidence/round3-verification-summary.json`
+- 路径安全证据：`docs/testing/reports/T1-03-assets/evidence/t1-03-uat-path-evidence.json`（60 项）
+- E2E 证据：`docs/testing/reports/T1-03-assets/evidence/` 下 t1-03-ui / min-window / persistence / orchestration / db-after-main / db-after-restart
+- 报告：`docs/testing/reports/T1-03-REPORT.md`；证据索引：`docs/testing/reports/T1-03-assets/README.md`
+- 第三轮修复提交：本分支后续提交（PR #8 时间线可见）；第三轮前 HEAD `bad0688ee9de5e07f769d64d7fc44e3f182a960d`
+
+**停止条件：** 已停止，等待第三轮独立审计；未合并 PR #8、未修改 main（基线 `018e851e8daf5835391a7b61caf881bc57c2ad42`）、未开始 T1-04/T1-05；不自行宣布审计/验收通过。

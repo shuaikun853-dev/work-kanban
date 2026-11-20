@@ -1,4 +1,4 @@
-T1-03 工作事项快速创建和待安排区域 — 第二轮修复测试数量与环境
+T1-03 工作事项快速创建和待安排区域 — 第三轮 P2-01/P3-02 定向修复测试数量与环境
 ================================================================================
 
 环境
@@ -9,62 +9,58 @@ rustc / cargo   : 1.100.0 / 1.100.0
 Node / npm      : v22.20.0 / 10.9.3
 Python          : 3.14.5（标准库 sqlite3，仅只读探针）
 分支            : task/T1-03-quick-create-pending
-UAT 测试根目录   : <uat-root>（专用测试根目录，脚本强制限定；本次为 t1-03-ui-run4）
-测试数据         : 全部虚构；未使用真实工作数据
+第三轮修复基准   : bad0688ee9de5e07f769d64d7fc44e3f182a960d
+main 基线       : 018e851e8daf5835391a7b61caf881bc57c2ad42
+UAT 测试根目录   : <uat-root>（专用测试根目录，脚本强制限定；第三轮运行目录 t1-03-ui-r3-20261120-075440）
+测试数据         : 全部虚构；未使用真实工作数据；未触碰正式目录 D:\WorkManager
 
-Rust（cargo test --workspace）
+质量门禁（第三轮，全部退出码 0）
 --------------------------------------------------------------------------------
-基线（T1-02 验收后）                         : 90 passed / 0 failed
-第二轮最终                                  : 124 passed / 0 failed
-T1-03 新增（含第二轮 +1）                    : 34
+cargo fmt --all -- --check                 : exit 0
+cargo check --workspace --all-targets      : exit 0
+cargo test --workspace                     : 124 passed / 0 failed（18 个测试二进制）
+npm run check                              : exit 0；svelte-check 0/0；Bridge 17/17；Design Token 22 文件 0 违规、49/49
+npm run build                              : exit 0（167 modules）
+git diff --check                           : exit 0
 
-最终 124 分解（测试二进制）
-  workmanager lib 单测                      : 11
-  workmanager-core lib 单测                 : 32
-  work_items                                : 16
-  work_items_migration                      : 4
-  projects                                  : 15
-  database_fail_closed                      : 8
-  database_lifecycle                        : 5
-  database_precheck_order                   : 3
-  foreign_keys                              : 2
-  formal_root_protection                    : 5
-  init_concurrency                          : 3
-  migration_rollback                        : 5
-  portable_paths                            : 5
-  windows_real_paths                        : 4
-  zero_byte_database                        : 6
-  合计                                      : 124
-
-Node / 前端
+P3-02 UAT 路径安全专项（第三轮，真实 Windows 文件系统对象）
 --------------------------------------------------------------------------------
-svelte-check                                : 0 errors / 0 warnings
-work-item-bridge.test.mjs                   : 17 / 17 passed（P2-02 严格 10 字段契约）
-design-tokens.test.mjs                      : 49 / 49 passed
-npm run check                               : exit 0
-npm run build                               : exit 0
+命令：powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\test-t1-03-uat-path.ps1
+结果：exit 0；TOTAL=60；ORIGINAL=23；NEW=37；FAILED=0；SKIPPED=1
+方法：CreateFileW + GetFileInformationByHandleEx(FileAttributeTagInfo/FileIdInfo) + GetFinalPathNameByHandleW；
+      FILE_FLAG_BACKUP_SEMANTICS + FILE_FLAG_OPEN_REPARSE_POINT
+真实 Junction 场景（mklink /J，7 类，全部拒绝；reparse tag 0xA0000003）：
+  测试根目录本身 / 测试根目录路径中间组件 / 输出路径中间组件 / 输出目录本身 /
+  Junction 指向正式目录 / Junction 指向 C 盘 / 重解析点指向测试根目录内部；尾部点/空白组件与 COM0/CONIN$/CONOUT$ 保留设备名拒绝
+无副作用验证：canary 内容不变；既有伪造数据库不变；未复制 EXE；未写 orchestration/WAL 数据库产物；
+              Junction 仍然存在；正式目录未被创建
+清理语义：非递归删除只删除链接本身；链接目标 canary 保留
+SKIP 原因：当前进程无 SeCreateSymbolicLinkPrivilege（非管理员、未启用开发者模式），
+           mklink /D 退出码 1；Symbolic Link 场景未执行，明确记录 SKIP，不计为 PASS
+证据：docs/testing/reports/T1-03-assets/evidence/t1-03-uat-path-evidence.json（60 项）
 
-Release E2E（scripts/verify/verify-t1-03-ui.ps1，UAT: t1-03-ui-run4）
+Release E2E（第三轮，scripts/verify/verify-t1-03-ui.ps1，UAT: t1-03-ui-r3-20261120-075440）
 --------------------------------------------------------------------------------
-Release EXE      : target\release\workmanager.exe
+Release EXE      : target\release\workmanager.exe（产品代码未变，与第二轮 EXE 一致）
 EXE 大小          : 10,352,128 字节
 EXE SHA-256      : 3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3
 主 UI/IPC 检查    : 84 / 84（exit 0）
 最小窗口 860x640  : 12 / 12（exit 0；关闭按钮后进程退出码 0）
 重启持久化阶段    : 17 / 17（exit 0；关闭按钮后进程退出码 0）
-UAT 路径安全专项  : 23 / 23（exit 0）
 数据库只读探针    : 25 / 25（关闭后 + 重启后）
 CSP 违规          : 0
 页面未捕获异常    : 0
-E2E/数据库总断言  : 84 + 12 + 17 + 25 = 138（另路径安全 23 项）
+E2E/数据库总断言  : 84 + 12 + 17 + 25 = 138（另路径安全 60 项）
+证据刷新：t1-03-ui-evidence / min-window / persistence / orchestration / prerequisite / db-after-*
+机器可读汇总：docs/testing/reports/T1-03-assets/evidence/round3-verification-summary.json
 
-继承 Release 回归（第二轮新 EXE）
+继承 Release 回归（第三轮重新执行，全部 exit 0）
 --------------------------------------------------------------------------------
-verify-release-portable.ps1                 : TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15（PASS；保留既有 WARN）
+verify-release-portable.ps1                 : TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15（PASS；既有 WARN 保留）
 verify-release-faults.ps1                   : TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9（PASS）
 verify-t1-02-ui.ps1                         : 主 73/73；最小窗口 12/12；关闭退出码 0（PASS）
 
-数据库探针关键事实（第二轮）
+数据库探针关键事实（第三轮）
 --------------------------------------------------------------------------------
 第一次关闭后
   user_version              : 3
@@ -87,11 +83,21 @@ verify-t1-02-ui.ps1                         : 主 73/73；最小窗口 12/12；�
   work_items_linked_archived: 1
   foreign_key_violations    : 0
 
-P2-01 脱敏/历史清理核对
+P2-01 第三轮脱敏/历史对象复核
 --------------------------------------------------------------------------------
-当前 T1-03-assets 机器标识扫描               : 0 个文件命中（含 PNG 二进制）
-脱敏前后 JSON 证据结构一致性                 : 11 / 11 完全一致
-分支新增文件 Git 历史深度扫描（018e851..HEAD）: 15 提交 / 84 文件状态，0 命中
-T1-03-assets/logs 在分支历史中可达           : 否
-旧/新 HEAD                                   : 2342828 -> b6cf344（force-with-lease）
-本地恢复引用                                  : backup/t1-03-r1-audit-baseline + 仓库外 bundle
+当前 T1-03-assets 敏感值扫描                 : 33 文件（含 19 PNG）；敏感值命中 0
+分支增量历史深度扫描（018e851..HEAD）        : 18 提交 / 5,773 次文件树扫描；分支新增敏感值命中 0
+远程 refs / tags                            : 18 refs / tags 0；无远程 ref 含旧提交 2342828
+PR #8 文本                                  : body 2,091 字符 / SHA-256 4621bf70…5f660；2 条评论；敏感类别 0、旧日志文件名 0、35 条采样行 0
+旧提交服务端可达性                           : 旧提交 2342828 commit API HTTP 200；旧 SHA 的 9 个原始日志 contents API HTTP 200
+                                            -> 服务端清理未完成；P2-01 未关闭
+本地 backup/bundle                          : backup/t1-03-r1-audit-baseline 与 gitignored bundle 仅本地，未推送
+main 基线既有同类信息                       : 954 条原始命中 / 53 个路径（非本 PR 新增，未修改，遗留风险）
+GitHub Support 工单                         : 材料已整理（SANITIZATION.md 第 4 节）；尚未提交/未获确认
+
+遗留风险
+--------------------------------------------------------------------------------
+- P2-01 未关闭：旧提交与 9 个原始日志仍可经 GitHub 读取，需仓库所有者提交 GitHub Support 清理并事后用旧 SHA 复验。
+- TOCTOU 剩余风险未消除（DEC-029 / Issue #2）：路径校验与后续创建/复制/启动之间仍存在并发替换窗口。
+- main 基线既有 T1-01/T1-02 机器信息未修改（需单独授权）。
+- 普通 SQLite 未加密（DEC-028）。

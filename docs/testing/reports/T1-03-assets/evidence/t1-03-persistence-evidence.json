@@ -1,130 +1,134 @@
 {
-  "generatedAt": "2026-11-19T13:27:59.154Z",
-  "task": "T1-03",
-  "method": "Relaunched real Release EXE against the same isolated UAT portable directory; DOM + direct typed IPC verification of persisted pending work items, archived project link flags, unarchived-only selector, post-restart create, then real titlebar close",
-  "port": 9366,
-  "prerequisite": "<uat-root>\\t1-03-ui-run4\\t1-03-prerequisite.json",
-  "rowsAfterRestart": [
-    {
-      "id": "2c11b0a0-c08c-4400-80d9-1433a75ad584",
-      "title": "超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-      "meta": "未归属项目",
-      "hasArchivedBadge": false
-    },
-    {
-      "id": "9ece76e4-a1ef-46be-a0e8-576a943d5d4e",
-      "title": "创建成功但刷新失败验证",
-      "meta": "未归属项目",
-      "hasArchivedBadge": false
-    },
-    {
-      "id": "e1630dd4-ff2d-4ec6-ad20-79b5aaece18d",
-      "title": "关联未归档项目的待安排工作",
-      "meta": "T1-03 虚构未归档项目 项目已归档",
-      "hasArchivedBadge": true
-    },
-    {
-      "id": "e90275f4-b692-4d47-a4b8-8fcfe4e37ecb",
-      "title": "重复提交保护验证",
-      "meta": "未归属项目",
-      "hasArchivedBadge": false
-    },
-    {
-      "id": "7286c099-0539-404e-b8b5-2e1a07a74865",
-      "title": "整理中核商品数据",
-      "meta": "未归属项目",
-      "hasArchivedBadge": false
-    }
-  ],
-  "pageErrors": [],
-  "checks": [
-    {
-      "name": "restart.databaseSchemaStillV3",
-      "pass": true,
-      "detail": "3"
-    },
-    {
-      "name": "restart.navigateToday",
-      "pass": true,
-      "detail": ""
-    },
-    {
-      "name": "restart.pendingEntryVisible",
-      "pass": true,
-      "detail": ""
-    },
-    {
-      "name": "restart.fivePendingWorkItemsPersisted",
-      "pass": true,
-      "detail": "[\"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ\",\"创建成功但刷新失败验证\",\"关联未归档项目的待安排工作\",\"重复提交保护验证\",\"整理中核商品数据\"]"
-    },
-    {
-      "name": "restart.expectedTitlesStillPresent",
-      "pass": true,
-      "detail": "[\"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ\",\"创建成功但刷新失败验证\",\"关联未归档项目的待安排工作\",\"重复提交保护验证\",\"整理中核商品数据\"]"
-    },
-    {
-      "name": "restart.archivedProjectLinkPreserved",
-      "pass": true,
-      "detail": "{\"id\":\"e1630dd4-ff2d-4ec6-ad20-79b5aaece18d\",\"title\":\"关联未归档项目的待安排工作\",\"meta\":\"T1-03 虚构未归档项目 项目已归档\",\"hasArchivedBadge\":true}"
-    },
-    {
-      "name": "restart.unassignedLabelPersisted",
-      "pass": true,
-      "detail": "[\"未归属项目\",\"未归属项目\",\"T1-03 虚构未归档项目 项目已归档\",\"未归属项目\",\"未归属项目\"]"
-    },
-    {
-      "name": "restart.ipcPendingListPersisted",
-      "pass": true,
-      "detail": "5"
-    },
-    {
-      "name": "restart.ipcArchivedLinkFlags",
-      "pass": true,
-      "detail": "{\"id\":\"e1630dd4-ff2d-4ec6-ad20-79b5aaece18d\",\"projectId\":\"9b5c1257-5c4c-4b47-b65b-1897ce5a953a\",\"projectName\":\"T1-03 虚构未归档项目\",\"projectIsArchived\":true,\"title\":\"关联未归档项目的待安排工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-19T13:27:51.903Z\",\"updatedAt\":\"2026-11-19T13:27:51.903Z\"}"
-    },
-    {
-      "name": "restart.openCreateDialog",
-      "pass": true,
-      "detail": ""
-    },
-    {
-      "name": "restart.selectorExcludesArchivedProjects",
-      "pass": true,
-      "detail": "[{\"value\":\"\",\"label\":\"未归属项目\"}]"
-    },
-    {
-      "name": "restart.newTitleFilled",
-      "pass": true,
-      "detail": ""
-    },
-    {
-      "name": "restart.newWorkSaved",
-      "pass": true,
-      "detail": ""
-    },
-    {
-      "name": "restart.newWorkItemPersistedToDatabase",
-      "pass": true,
-      "detail": "6"
-    },
-    {
-      "name": "restart.newWorkItemVisibleWithUnassignedLabel",
-      "pass": true,
-      "detail": "{\"id\":\"33a101bb-d3ec-48c8-ada5-ae534cdc3594\",\"title\":\"重启后新建的工作\",\"meta\":\"未归属项目\",\"hasArchivedBadge\":false}"
-    },
-    {
-      "name": "restart.noUncaughtErrors",
-      "pass": true,
-      "detail": "[]"
-    },
-    {
-      "name": "restart.closeButtonClicked",
-      "pass": true,
-      "detail": ""
-    }
-  ],
-  "failed": [],
-  "closeClicked": true,
-  "pass": true
+    "generatedAt":  "2026-11-20T00:10:36.536Z",
+    "task":  "T1-03",
+    "method":  "Relaunched real Release EXE against the same isolated UAT portable directory; DOM + direct typed IPC verification of persisted pending work items, archived project link flags, unarchived-only selector, post-restart create, then real titlebar close",
+    "port":  9346,
+    "prerequisite":  "\u003cuat-root\u003e\\t1-03-ui-r3-20261120-081100\\t1-03-prerequisite.json",
+    "rowsAfterRestart":  [
+                             {
+                                 "id":  "cb4cf4da-c745-41cf-94e5-31fc1b4f1c5f",
+                                 "title":  "超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                                 "meta":  "未归属项目",
+                                 "hasArchivedBadge":  false
+                             },
+                             {
+                                 "id":  "eeb3af23-081f-4d17-a849-fa3c1da159e5",
+                                 "title":  "创建成功但刷新失败验证",
+                                 "meta":  "未归属项目",
+                                 "hasArchivedBadge":  false
+                             },
+                             {
+                                 "id":  "a17a353c-cad8-4dc9-9c9b-c00780e9d681",
+                                 "title":  "关联未归档项目的待安排工作",
+                                 "meta":  "T1-03 虚构未归档项目 项目已归档",
+                                 "hasArchivedBadge":  true
+                             },
+                             {
+                                 "id":  "3bb85a54-5881-409e-80c4-4cc56a4c3f70",
+                                 "title":  "重复提交保护验证",
+                                 "meta":  "未归属项目",
+                                 "hasArchivedBadge":  false
+                             },
+                             {
+                                 "id":  "9aab62f7-29d2-40f8-84ba-e9adb7a78ef2",
+                                 "title":  "整理中核商品数据",
+                                 "meta":  "未归属项目",
+                                 "hasArchivedBadge":  false
+                             }
+                         ],
+    "pageErrors":  [
+
+                   ],
+    "checks":  [
+                   {
+                       "name":  "restart.databaseSchemaStillV3",
+                       "pass":  true,
+                       "detail":  "3"
+                   },
+                   {
+                       "name":  "restart.navigateToday",
+                       "pass":  true,
+                       "detail":  ""
+                   },
+                   {
+                       "name":  "restart.pendingEntryVisible",
+                       "pass":  true,
+                       "detail":  ""
+                   },
+                   {
+                       "name":  "restart.fivePendingWorkItemsPersisted",
+                       "pass":  true,
+                       "detail":  "[\"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ\",\"创建成功但刷新失败验证\",\"关联未归档项目的待安排工作\",\"重复提交保护验证\",\"整理中核商品数据\"]"
+                   },
+                   {
+                       "name":  "restart.expectedTitlesStillPresent",
+                       "pass":  true,
+                       "detail":  "[\"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ\",\"创建成功但刷新失败验证\",\"关联未归档项目的待安排工作\",\"重复提交保护验证\",\"整理中核商品数据\"]"
+                   },
+                   {
+                       "name":  "restart.archivedProjectLinkPreserved",
+                       "pass":  true,
+                       "detail":  "{\"id\":\"a17a353c-cad8-4dc9-9c9b-c00780e9d681\",\"title\":\"关联未归档项目的待安排工作\",\"meta\":\"T1-03 虚构未归档项目 项目已归档\",\"hasArchivedBadge\":true}"
+                   },
+                   {
+                       "name":  "restart.unassignedLabelPersisted",
+                       "pass":  true,
+                       "detail":  "[\"未归属项目\",\"未归属项目\",\"T1-03 虚构未归档项目 项目已归档\",\"未归属项目\",\"未归属项目\"]"
+                   },
+                   {
+                       "name":  "restart.ipcPendingListPersisted",
+                       "pass":  true,
+                       "detail":  "5"
+                   },
+                   {
+                       "name":  "restart.ipcArchivedLinkFlags",
+                       "pass":  true,
+                       "detail":  "{\"id\":\"a17a353c-cad8-4dc9-9c9b-c00780e9d681\",\"projectId\":\"02d8bb9b-19d8-4083-a2e9-623a040703d6\",\"projectName\":\"T1-03 虚构未归档项目\",\"projectIsArchived\":true,\"title\":\"关联未归档项目的待安排工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-20T00:10:29.238Z\",\"updatedAt\":\"2026-11-20T00:10:29.238Z\"}"
+                   },
+                   {
+                       "name":  "restart.openCreateDialog",
+                       "pass":  true,
+                       "detail":  ""
+                   },
+                   {
+                       "name":  "restart.selectorExcludesArchivedProjects",
+                       "pass":  true,
+                       "detail":  "[{\"value\":\"\",\"label\":\"未归属项目\"}]"
+                   },
+                   {
+                       "name":  "restart.newTitleFilled",
+                       "pass":  true,
+                       "detail":  ""
+                   },
+                   {
+                       "name":  "restart.newWorkSaved",
+                       "pass":  true,
+                       "detail":  ""
+                   },
+                   {
+                       "name":  "restart.newWorkItemPersistedToDatabase",
+                       "pass":  true,
+                       "detail":  "6"
+                   },
+                   {
+                       "name":  "restart.newWorkItemVisibleWithUnassignedLabel",
+                       "pass":  true,
+                       "detail":  "{\"id\":\"b2110131-81dc-4733-8d6c-0695622b1cdd\",\"title\":\"重启后新建的工作\",\"meta\":\"未归属项目\",\"hasArchivedBadge\":false}"
+                   },
+                   {
+                       "name":  "restart.noUncaughtErrors",
+                       "pass":  true,
+                       "detail":  "[]"
+                   },
+                   {
+                       "name":  "restart.closeButtonClicked",
+                       "pass":  true,
+                       "detail":  ""
+                   }
+               ],
+    "failed":  [
+
+               ],
+    "closeClicked":  true,
+    "pass":  true
 }
