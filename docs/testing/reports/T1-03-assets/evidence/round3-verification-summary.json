@@ -1,139 +1,220 @@
 {
-  "task": "T1-03",
-  "round": 3,
-  "scope": ["P2-01 sanitization/history-object re-verification", "P3-02 native Windows path safety"],
-  "generatedAt": "2026-11-20T08:12:00+08:00",
-  "branch": "task/T1-03-quick-create-pending",
-  "baseHead": "bad0688ee9de5e07f769d64d7fc44e3f182a960d",
-  "mainBaseline": "018e851e8daf5835391a7b61caf881bc57c2ad42",
-  "pullRequest": {
-    "number": 8,
-    "state": "OPEN",
-    "merged": false,
-    "mainModified": false
-  },
-  "releaseExe": {
-    "path": "<repo-root>\\target\\release\\workmanager.exe",
-    "sizeBytes": 10352128,
-    "sha256": "3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3",
-    "note": "round-3 changes only verification scripts/docs; product code unchanged, same Release EXE as round 2"
-  },
-  "qualityGates": [
-    { "command": "cargo fmt --all -- --check", "exitCode": 0 },
-    { "command": "cargo check --workspace --all-targets", "exitCode": 0 },
-    { "command": "cargo test --workspace", "exitCode": 0, "passed": 124, "failed": 0, "testSuites": 18 },
-    { "command": "npm run check", "exitCode": 0, "svelteCheckErrors": 0, "svelteCheckWarnings": 0, "bridgeTestsPassed": 17, "designTokenCheckFiles": 22, "designTokenViolations": 0, "designTokenTestsPassed": 49 },
-    { "command": "npm run build", "exitCode": 0 },
-    { "command": "git diff --check", "exitCode": 0 }
-  ],
-  "pathSafety": {
-    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\test-t1-03-uat-path.ps1",
-    "exitCode": 0,
-    "verdict": "PASS",
-    "originalChecks": 23,
-    "newChecks": 37,
-    "totalChecks": 60,
-    "failedChecks": 0,
-    "skippedChecks": 1,
-    "skipReason": "当前进程无法创建 Windows Symbolic Link（非管理员且未启用开发者模式，缺少 SeCreateSymbolicLinkPrivilege；mklink /D 退出码 1）。该场景记录 SKIP，不计为 PASS。",
-    "method": "CreateFileW + GetFileInformationByHandleEx(FileAttributeTagInfo/FileIdInfo) + GetFinalPathNameByHandleW; FILE_FLAG_BACKUP_SEMANTICS + FILE_FLAG_OPEN_REPARSE_POINT",
-    "reparseScenariosRejected": [
-      "test root itself is a junction",
-      "test root path contains a junction component",
-      "middle output path component is a junction",
-      "output directory is a junction",
-      "junction to formal root",
-      "junction to C: drive",
-      "reparse point pointing inside the test root"
-    ],
-    "pathShapeScenariosRejected": [
-      "UNC path",
-      "device path (\\\\?\\ / \\\\.\\ / \\??\\)",
-      "relative path",
-      "illegal characters / wildcard",
-      "trailing dot component",
-      "trailing whitespace component",
-      "reserved device names (CON/NUL/COM0/LPT0/CONIN$/CONOUT$)",
-      "missing test root (fail closed)"
-    ],
-    "noSideEffectVerified": [
-      "canary file content unchanged",
-      "pre-existing fake database unchanged",
-      "no EXE copied into rejection target",
-      "no orchestration/WAL database artifacts written",
-      "junction link still present; target not recursively deleted",
-      "formal root D:\\WorkManager state unchanged (absent before/after)"
-    ],
-    "evidence": "docs/testing/reports/T1-03-assets/evidence/t1-03-uat-path-evidence.json"
-  },
-  "adversarialReview": {
-    "performedBy": "development-agent internal red-team subagent (NOT an independent audit)",
-    "moduleLevelPathInjectionChecks": 99,
-    "orchestratorRejectOnlyIntegrationRuns": 17,
-    "supplementaryInlineChecks": 6,
-    "boundaryBypassesFound": 0,
-    "criticalHighMediumFindings": 0,
-    "lowOrInfoGapsFound": [
-      "TOCTOU window confirmed as not eliminated (documented residual risk, DEC-029)",
-      "path shapes with trailing dot/space were not explicitly rejected/tested before hardening",
-      "reserved-name regex lacked COM0/LPT0/CONIN$/CONOUT$",
-      "test-root trust-anchor branch was not independently exercised because output chain hit first; now test-root chain is validated first"
-    ],
-    "gapsAddressedInFinalImplementation": true,
-    "toctouWindowDemonstratedNotEliminated": true
-  },
-  "releaseE2E": {
-    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\verify-t1-03-ui.ps1 -OutputDir <uat-root>\\t1-03-ui-r3-20261120-081100 -Port 9345",
-    "exitCode": 0,
-    "outputDir": "<uat-root>\\t1-03-ui-r3-20261120-081100",
-    "mainUiIpcChecks": { "passed": 84, "failed": 0 },
-    "minWindowChecks": { "passed": 12, "failed": 0 },
-    "persistenceChecks": { "passed": 17, "failed": 0 },
-    "databaseProbeChecks": { "passed": 25, "failed": 0 },
-    "closeExitCodes": [0, 0],
-    "cspViolations": 0,
-    "uncaughtPageExceptions": 0,
-    "evidence": [
-      "docs/testing/reports/T1-03-assets/evidence/t1-03-ui-evidence.json",
-      "docs/testing/reports/T1-03-assets/evidence/t1-03-min-window-evidence.json",
-      "docs/testing/reports/T1-03-assets/evidence/t1-03-persistence-evidence.json",
-      "docs/testing/reports/T1-03-assets/evidence/t1-03-ui-orchestration.json",
-      "docs/testing/reports/T1-03-assets/evidence/t1-03-db-after-main.json",
-      "docs/testing/reports/T1-03-assets/evidence/t1-03-db-after-restart.json"
-    ]
-  },
-  "inheritedRegressions": {
-    "releasePortable": { "command": "scripts\\verify\\verify-release-portable.ps1", "exitCode": 0, "total": 106, "pass": 90, "fail": 0, "warn": 1, "info": 15, "note": "既有 WARN（C: 盘 AppData\\Local\\EBWebView 目录在验证前已存在，非本次验证创建）保留" },
-    "releaseFaults": { "command": "scripts\\verify\\verify-release-faults.ps1", "exitCode": 0, "total": 73, "pass": 64, "fail": 0, "warn": 0, "info": 9 },
-    "t1_02_ui": { "command": "scripts\\verify\\verify-t1-02-ui.ps1", "exitCode": 0, "mainChecks": 73, "mainFailed": 0, "minWindowChecks": 12, "minWindowFailed": 0, "closeExitCode": 0 }
-  },
-  "sanitization": {
-    "currentAssetsFiles": 34,
-    "currentAssetsSensitiveValueHits": 0,
-    "currentAssetsPngCount": 19,
-    "currentAssetsPngTextChunkHits": 0,
-    "branchDeltaCommits": 18,
-    "branchDeltaFileTreeScans": 5773,
-    "branchIntroducedSensitiveValueHits": 0,
-    "remoteRefCount": 18,
-    "remoteTags": 0,
-    "remoteRefsContainingOldCommit": 0,
-    "prTextSensitiveCategoryHits": 0,
-    "prTextOldLogSampleLineHits": 0,
-    "prBodyLengthChars": 2091,
-    "prBodySha256": "4621bf70d7146ac3b6d10bad0cecc1b0c0f1bb50f5d0d90c88e1568ac765f660",
-    "oldCommitSha": "2342828852abee43ab56610e7d1fa91a02310bfe",
-    "oldCommitStillReadableOnGitHub": true,
-    "oldCommitRawLogFilesStillListable": true,
-    "oldCommitRawLogFileCount": 9,
-    "serverSideCleanupCompleted": false,
-    "supportTicketFiled": false,
-    "p2_01Status": "OPEN (waiting GitHub Support server-side cleanup by repository owner; must re-verify old SHA access afterwards)"
-  },
-  "residualRisks": [
-    "P2-01 remains open: old commit 2342828 and its 9 raw log files are still readable through GitHub; only GitHub Support can remove server-side objects/caches. Not claimed as completed.",
-    "Pre-existing main-baseline same-class machine information remains in T1-01/T1-02 evidence/logs (53 unique pre-existing paths; delta-carried raw hit entries 954); out of round-3 scope and must not be modified without separate authorization.",
-    "TOCTOU between native path validation and later directory/EXE/database operations is reduced by repeated re-validation but not eliminated (DEC-029 / Issue #2 still applies).",
-    "Product SQLite database is unencrypted (DEC-028)."
-  ]
+    "task":  "T1-03",
+    "round":  3,
+    "scope":  [
+                  "P2-01 sanitization/history-object re-verification",
+                  "P3-02 native Windows path safety"
+              ],
+    "generatedAt":  "2026-11-20T08:16:00+08:00",
+    "branch":  "task/T1-03-quick-create-pending",
+    "baseHead":  "bad0688ee9de5e07f769d64d7fc44e3f182a960d",
+    "mainBaseline":  "018e851e8daf5835391a7b61caf881bc57c2ad42",
+    "pullRequest":  {
+                        "number":  8,
+                        "state":  "OPEN",
+                        "merged":  false,
+                        "mainModified":  false
+                    },
+    "releaseExe":  {
+                       "path":  "\u003crepo-root\u003e\\target\\release\\workmanager.exe",
+                       "sizeBytes":  10352128,
+                       "sha256":  "3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3",
+                       "note":  "round-3 changes only verification scripts/docs; product code unchanged, same Release EXE as round 2"
+                   },
+    "qualityGates":  [
+                         {
+                             "command":  "cargo fmt --all -- --check",
+                             "exitCode":  0
+                         },
+                         {
+                             "command":  "cargo check --workspace --all-targets",
+                             "exitCode":  0
+                         },
+                         {
+                             "command":  "cargo test --workspace",
+                             "exitCode":  0,
+                             "passed":  124,
+                             "failed":  0,
+                             "testSuites":  18
+                         },
+                         {
+                             "command":  "npm run check",
+                             "exitCode":  0,
+                             "svelteCheckErrors":  0,
+                             "svelteCheckWarnings":  0,
+                             "bridgeTestsPassed":  17,
+                             "designTokenCheckFiles":  22,
+                             "designTokenViolations":  0,
+                             "designTokenTestsPassed":  49
+                         },
+                         {
+                             "command":  "npm run build",
+                             "exitCode":  0
+                         },
+                         {
+                             "command":  "git diff --check",
+                             "exitCode":  0
+                         }
+                     ],
+    "pathSafety":  {
+                       "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\test-t1-03-uat-path.ps1",
+                       "exitCode":  0,
+                       "verdict":  "PASS",
+                       "originalChecks":  23,
+                       "newChecks":  37,
+                       "totalChecks":  60,
+                       "failedChecks":  0,
+                       "skippedChecks":  1,
+                       "skipReason":  "当前进程无法创建 Windows Symbolic Link（非管理员且未启用开发者模式，缺少 SeCreateSymbolicLinkPrivilege；mklink /D 退出码 1）。该场景记录 SKIP，不计为 PASS。",
+                       "method":  "CreateFileW + GetFileInformationByHandleEx(FileAttributeTagInfo/FileIdInfo) + GetFinalPathNameByHandleW; FILE_FLAG_BACKUP_SEMANTICS + FILE_FLAG_OPEN_REPARSE_POINT",
+                       "reparseScenariosRejected":  [
+                                                        "test root itself is a junction",
+                                                        "test root path contains a junction component",
+                                                        "middle output path component is a junction",
+                                                        "output directory is a junction",
+                                                        "junction to formal root",
+                                                        "junction to C: drive",
+                                                        "reparse point pointing inside the test root"
+                                                    ],
+                       "pathShapeScenariosRejected":  [
+                                                          "UNC path",
+                                                          "device path (\\\\?\\ / \\\\.\\ / \\??\\)",
+                                                          "relative path",
+                                                          "illegal characters / wildcard",
+                                                          "trailing dot component",
+                                                          "trailing whitespace component",
+                                                          "reserved device names (CON/NUL/COM0/LPT0/CONIN$/CONOUT$)",
+                                                          "missing test root (fail closed)"
+                                                      ],
+                       "noSideEffectVerified":  [
+                                                    "canary file content unchanged",
+                                                    "pre-existing fake database unchanged",
+                                                    "no EXE copied into rejection target",
+                                                    "no orchestration/WAL database artifacts written",
+                                                    "junction link still present; target not recursively deleted",
+                                                    "formal root D:\\WorkManager state unchanged (absent before/after)"
+                                                ],
+                       "evidence":  "docs/testing/reports/T1-03-assets/evidence/t1-03-uat-path-evidence.json"
+                   },
+    "adversarialReview":  {
+                              "performedBy":  "development-agent internal red-team subagent (NOT an independent audit)",
+                              "moduleLevelPathInjectionChecks":  99,
+                              "orchestratorRejectOnlyIntegrationRuns":  17,
+                              "supplementaryInlineChecks":  6,
+                              "boundaryBypassesFound":  0,
+                              "criticalHighMediumFindings":  0,
+                              "lowOrInfoGapsFound":  [
+                                                         "TOCTOU window confirmed as not eliminated (documented residual risk, DEC-029)",
+                                                         "path shapes with trailing dot/space were not explicitly rejected/tested before hardening",
+                                                         "reserved-name regex lacked COM0/LPT0/CONIN$/CONOUT$",
+                                                         "test-root trust-anchor branch was not independently exercised because output chain hit first; now test-root chain is validated first"
+                                                     ],
+                              "gapsAddressedInFinalImplementation":  true,
+                              "toctouWindowDemonstratedNotEliminated":  true
+                          },
+    "releaseE2E":  {
+                       "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\verify-t1-03-ui.ps1 -OutputDir \u003cuat-root\u003e\\t1-03-ui-r3-20261120-081100 -Port 9345",
+                       "exitCode":  0,
+                       "outputDir":  "\u003cuat-root\u003e\\t1-03-ui-r3-20261120-081100",
+                       "mainUiIpcChecks":  {
+                                               "passed":  84,
+                                               "failed":  0
+                                           },
+                       "minWindowChecks":  {
+                                               "passed":  12,
+                                               "failed":  0
+                                           },
+                       "persistenceChecks":  {
+                                                 "passed":  17,
+                                                 "failed":  0
+                                             },
+                       "databaseProbeChecks":  {
+                                                   "passed":  25,
+                                                   "failed":  0
+                                               },
+                       "closeExitCodes":  [
+                                              0,
+                                              0
+                                          ],
+                       "cspViolations":  0,
+                       "uncaughtPageExceptions":  0,
+                       "evidence":  [
+                                        "docs/testing/reports/T1-03-assets/evidence/t1-03-ui-evidence.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/t1-03-min-window-evidence.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/t1-03-persistence-evidence.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/t1-03-ui-orchestration.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/t1-03-db-after-main.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/t1-03-db-after-restart.json"
+                                    ]
+                   },
+    "inheritedRegressions":  {
+                                 "releasePortable":  {
+                                                         "command":  "scripts\\verify\\verify-release-portable.ps1",
+                                                         "exitCode":  0,
+                                                         "total":  106,
+                                                         "pass":  90,
+                                                         "fail":  0,
+                                                         "warn":  1,
+                                                         "info":  15,
+                                                         "note":  "既有 WARN（C: 盘 AppData\\Local\\EBWebView 目录在验证前已存在，非本次验证创建）保留"
+                                                     },
+                                 "releaseFaults":  {
+                                                       "command":  "scripts\\verify\\verify-release-faults.ps1",
+                                                       "exitCode":  0,
+                                                       "total":  73,
+                                                       "pass":  64,
+                                                       "fail":  0,
+                                                       "warn":  0,
+                                                       "info":  9
+                                                   },
+                                 "t1_02_ui":  {
+                                                  "command":  "scripts\\verify\\verify-t1-02-ui.ps1",
+                                                  "exitCode":  0,
+                                                  "mainChecks":  73,
+                                                  "mainFailed":  0,
+                                                  "minWindowChecks":  12,
+                                                  "minWindowFailed":  0,
+                                                  "closeExitCode":  0
+                                              }
+                             },
+    "sanitization":  {
+                         "currentAssetsFiles":  34,
+                         "currentAssetsSensitiveValueHits":  0,
+                         "currentAssetsPngCount":  19,
+                         "currentAssetsPngTextChunkHits":  0,
+                         "branchDeltaCommits":  18,
+                         "branchDeltaFileTreeScans":  5773,
+                         "branchIntroducedSensitiveValueHits":  0,
+                         "remoteRefCount":  18,
+                         "remoteTags":  0,
+                         "remoteRefsContainingOldCommit":  0,
+                         "prTextSensitiveCategoryHits":  0,
+                         "prTextOldLogSampleLineHits":  0,
+                         "prBodyLengthChars":  3001,
+                         "prBodySha256":  "b46e61984504785a16fbc43ea80a90b724d2243e0db16b7ab534ce57a93a5891",
+                         "oldCommitSha":  "2342828852abee43ab56610e7d1fa91a02310bfe",
+                         "oldCommitStillReadableOnGitHub":  true,
+                         "oldCommitRawLogFilesStillListable":  true,
+                         "oldCommitRawLogFileCount":  9,
+                         "serverSideCleanupCompleted":  false,
+                         "supportTicketFiled":  false,
+                         "p2_01Status":  "OPEN (waiting GitHub Support server-side cleanup by repository owner; must re-verify old SHA access afterwards)",
+                         "prIssueCommentCount":  3,
+                         "prBodyLengthBeforeUpdate":  2091,
+                         "prBodySha256BeforeUpdate":  "4621bf70d7146ac3b6d10bad0cecc1b0c0f1bb50f5d0d90c88e1568ac765f660",
+                         "prTextScanAfterUpdate":  {
+                                                       "sensitiveCategoryHits":  0,
+                                                       "oldLogFileNameHits":  0,
+                                                       "reviewCommentCount":  0,
+                                                       "reviewCount":  0
+                                                   }
+                     },
+    "residualRisks":  [
+                          "P2-01 remains open: old commit 2342828 and its 9 raw log files are still readable through GitHub; only GitHub Support can remove server-side objects/caches. Not claimed as completed.",
+                          "Pre-existing main-baseline same-class machine information remains in T1-01/T1-02 evidence/logs (53 unique pre-existing paths; delta-carried raw hit entries 954); out of round-3 scope and must not be modified without separate authorization.",
+                          "TOCTOU between native path validation and later directory/EXE/database operations is reduced by repeated re-validation but not eliminated (DEC-029 / Issue #2 still applies).",
+                          "Product SQLite database is unencrypted (DEC-028)."
+                      ],
+    "thirdRoundCommit":  "b6a54591b783049142cbbffecd107ec9086723eb",
+    "finalDocsCommitNote":  "后续文档复核提交见 PR #8 时间线；本轮未重写历史、未强制推送"
 }

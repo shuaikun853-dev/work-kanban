@@ -281,7 +281,7 @@ SHA-256 **`3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3`**�
 | 分支增量历史深度扫描（`018e851..HEAD`，18 提交 / 5,773 次文件树扫描） | 分支**新增**敏感值命中 **0**；5 条原始命中为本轮文档中的分类描述/占位符文本（`T1-03-REPORT.md`、`SANITIZATION.md`），不含具体机器标识 |
 | 原始命令日志是否仍在仓库当前树 | 否（`T1-03-assets/logs/` 不存在，9 个文件在分支增量历史中不可达） |
 | 远程 branches / tags / pull refs | 18 个 ref、tags 0 个；无任何远程 ref 含旧提交 `2342828`；`refs/pull/8/head` 为当前 HEAD，`refs/pull/8/merge` 父提交仅 main 基线 + 当前 HEAD |
-| PR #8 描述与评论 | body 2,091 字符 / SHA-256 `4621bf70…5f660`；2 条 issue 评论、0 review comment、0 review；敏感类别命中 0、旧日志文件名命中 0、35 条旧日志采样行命中 0 |
+| PR #8 描述与评论 | 第三轮修复提交前：body 2,091 字符 / SHA-256 `4621bf70…5f660`、2 条评论，扫描 0 命中；**PR 更新后（第三轮状态 + 说明评论）：body 3,001 字符 / SHA-256 `b46e6198…5891`、3 条 issue 评论、0 review comment、0 review，复扫敏感类别 0、旧日志文件名 0** |
 | 旧提交服务端可达性 | **未清理**：旧提交 `2342828` commit API HTTP 200；旧 SHA 的 contents API 仍可列出 9 个原始日志（HTTP 200） |
 | 本地 backup/bundle | 仅本地 `backup/t1-03-r1-audit-baseline` 与 gitignored bundle，未推送 |
 
@@ -406,7 +406,7 @@ SANITIZATION.md                               # 第三轮脱敏扫描、旧提�
 - 第二轮修复提交：
   - P2-02 `12b1bdf026f01688c79ba438165a97a652e086a1`（Rust/TS DTO 契约）
   - P3-01 + P3-02 `2d91c92301713597ccfc1c0ddc2d83a479f572d4`（提示时机、UAT 路径安全、E2E）
-- 第三轮 P2-01/P3-02 修复提交与证据/文档更新：分支后续提交（PR #8 时间线可见；**第三轮未重写历史、未强制推送**）
+- 第三轮 P2-01/P3-02 修复提交：`b6a54591b783049142cbbffecd107ec9086723eb`；本轮文档复核提交：PR #8 后续提交（**第三轮未重写历史、未强制推送**）
 - 本报告与第二轮脱敏证据的 docs 提交：分支后续提交（PR 时间线可见）
 - PR：[#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) → `main`，保持 Open
 - main：未修改（`018e851e8daf5835391a7b61caf881bc57c2ad42`）；PR 未合并

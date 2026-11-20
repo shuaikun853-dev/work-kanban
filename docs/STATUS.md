@@ -28,7 +28,7 @@
 - 前端组件分层、Design Tokens、typed Bridge、CSS 隔离和 UI 回归规则已写入 UI 规范、技术架构和 AGENTS.md。
 - **T1-02 已进入开发：项目 CRUD + UI 基础应用壳/导航 + 项目管理页面。**
 - **T1-02 已验收完成并合并。** 第二轮独立审计通过；用户于 2026-11-19 明确接受；PR #7 合并提交 `ab6aba32a94d7d091b20f0ab49b25badf26377c4`。详见 [第二轮独立审计报告](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-REPORT.md)、[机器可读审计证据](testing/reports/T1-02-SECOND-INDEPENDENT-AUDIT-evidence.json) 和 [用户验收记录](testing/reports/T1-02-USER-ACCEPTANCE.md)。
-- **T1-03 第三轮 P2-01/P3-02 定向修复完成，等待第三轮独立审计。** 任务说明：[T1-03-Quick-Work-Item-Creation.md](development/tasks/T1-03-Quick-Work-Item-Creation.md)；开发设计：[T1-03-Implementation-Design.md](development/tasks/T1-03-Implementation-Design.md)；分支 `task/T1-03-quick-create-pending`；第二轮修复提交 `12b1bdf`（P2-02）、`2d91c92`（P3-01/P3-02），P2-01 历史清理提交 `b6cf344`；第三轮修复提交：本分支后续提交（PR #8 时间线可见）。P3-02 已修复待审计；P2-01 旧提交 `2342828` 仍可经 GitHub API 读取、GitHub Support 服务端清理未完成，**P2-01 未关闭**；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open。报告：[T1-03-REPORT.md](testing/reports/T1-03-REPORT.md)；证据：[T1-03-assets/](testing/reports/T1-03-assets/README.md)。
+- **T1-03 第三轮 P2-01/P3-02 定向修复完成，等待第三轮独立审计。** 任务说明：[T1-03-Quick-Work-Item-Creation.md](development/tasks/T1-03-Quick-Work-Item-Creation.md)；开发设计：[T1-03-Implementation-Design.md](development/tasks/T1-03-Implementation-Design.md)；分支 `task/T1-03-quick-create-pending`；第二轮修复提交 `12b1bdf`（P2-02）、`2d91c92`（P3-01/P3-02），P2-01 历史清理提交 `b6cf344`；第三轮修复提交：`b6a54591b783049142cbbffecd107ec9086723eb`（另有后续文档复核提交，PR #8 时间线可见）。P3-02 已修复待审计；P2-01 旧提交 `2342828` 仍可经 GitHub API 读取、GitHub Support 服务端清理未完成，**P2-01 未关闭**；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open。报告：[T1-03-REPORT.md](testing/reports/T1-03-REPORT.md)；证据：[T1-03-assets/](testing/reports/T1-03-assets/README.md)。
 
 ## 阶段 0：技术验证
 
@@ -144,7 +144,7 @@
 
 - T1-01 第四轮独立审计及用户验收均已通过，当前状态 **验收完成**；T1-01 代码与 UI 设计文档均已合并到 main。
 - **T1-02 项目管理：已完成。** 第二轮独立审计通过、用户已于 2026-11-19 明确接受，PR #7 已合并到 main（`ab6aba32a94d7d091b20f0ab49b25badf26377c4`）。
-- **T1-03 第三轮 P2-01/P3-02 定向修复完成，等待第三轮独立审计。** 分支 `task/T1-03-quick-create-pending`（第三轮前 HEAD `bad0688`）；第一轮实现提交 `be8d9c2`；第二轮修复提交 `12b1bdf`（P2-02）、`2d91c92`（P3-01/P3-02）；P2-01 证据脱敏与分支历史清理提交 `b6cf344`；第三轮修复提交：本分支后续提交（PR #8 时间线可见）。P3-02 已修复待审计；P2-01 **仍未关闭**：旧提交 `2342828` 仍可经 GitHub API 读取，需仓库所有者提交 GitHub Support 工单完成服务端清理，之后必须做旧 SHA 暴露复检。PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open，不合并；详细测试与证据见 [T1-03-REPORT.md](testing/reports/T1-03-REPORT.md)。
+- **T1-03 第三轮 P2-01/P3-02 定向修复完成，等待第三轮独立审计。** 分支 `task/T1-03-quick-create-pending`（第三轮前 HEAD `bad0688`）；第一轮实现提交 `be8d9c2`；第二轮修复提交 `12b1bdf`（P2-02）、`2d91c92`（P3-01/P3-02）；P2-01 证据脱敏与分支历史清理提交 `b6cf344`；第三轮修复提交：`b6a54591b783049142cbbffecd107ec9086723eb`（另有后续文档复核提交，PR #8 时间线可见）。P3-02 已修复待审计；P2-01 **仍未关闭**：旧提交 `2342828` 仍可经 GitHub API 读取，需仓库所有者提交 GitHub Support 工单完成服务端清理，之后必须做旧 SHA 暴露复检。PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open，不合并；详细测试与证据见 [T1-03-REPORT.md](testing/reports/T1-03-REPORT.md)。
 - TOCTOU 残余风险按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复、不得宣称绝不写入 C 盘；未经用户另行授权不得开始完整句柄相对改造/custom SQLite VFS。
 - 备份策略（OPEN-001/002/003）未确认前，不实施、也不宣称自动备份。
 - 最小化提醒/Toast、托盘、单实例等系统集成仍按计划在阶段 6（T6-07）验收。
@@ -392,7 +392,7 @@
 - 报告：[T1-03-REPORT.md](testing/reports/T1-03-REPORT.md)
 - 证据：[T1-03-assets/](testing/reports/T1-03-assets/README.md)；路径安全证据 `docs/testing/reports/T1-03-assets/evidence/t1-03-uat-path-evidence.json`（60 项）；第三轮汇总 `docs/testing/reports/T1-03-assets/evidence/round3-verification-summary.json`
 - 分支：`task/T1-03-quick-create-pending`；第三轮前 HEAD `bad0688ee9de5e07f769d64d7fc44e3f182a960d`；main 基线 `018e851e8daf5835391a7b61caf881bc57c2ad42`
-- 第三轮修复提交：本分支后续提交（PR #8 时间线可见）
+- 第三轮修复提交：`b6a54591b783049142cbbffecd107ec9086723eb`（另有后续文档复核提交，PR #8 时间线可见）
 - PR：[#8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（Open，不合并）
 
 ### 遗留风险

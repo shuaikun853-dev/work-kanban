@@ -264,6 +264,6 @@
 - 路径安全证据：`docs/testing/reports/T1-03-assets/evidence/t1-03-uat-path-evidence.json`（60 项）
 - E2E 证据：`docs/testing/reports/T1-03-assets/evidence/` 下 t1-03-ui / min-window / persistence / orchestration / db-after-main / db-after-restart
 - 报告：`docs/testing/reports/T1-03-REPORT.md`；证据索引：`docs/testing/reports/T1-03-assets/README.md`
-- 第三轮修复提交：本分支后续提交（PR #8 时间线可见）；第三轮前 HEAD `bad0688ee9de5e07f769d64d7fc44e3f182a960d`
+- 第三轮修复提交：`b6a54591b783049142cbbffecd107ec9086723eb`（另有后续文档复核提交，PR #8 时间线可见）；第三轮前 HEAD `bad0688ee9de5e07f769d64d7fc44e3f182a960d`
 
 **停止条件：** 已停止，等待第三轮独立审计；未合并 PR #8、未修改 main（基线 `018e851e8daf5835391a7b61caf881bc57c2ad42`）、未开始 T1-04/T1-05；不自行宣布审计/验收通过。
