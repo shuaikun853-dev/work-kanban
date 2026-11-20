@@ -1,0 +1,341 @@
+﻿{
+    "task":  "T1-03",
+    "fix":  "P3-02 UAT path safety (round 3: native Windows reparse-point checks)",
+    "generatedAt":  "2026-11-20T00:10:15.5480093Z",
+    "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\test-t1-03-uat-path.ps1",
+    "environment":  {
+                        "os":  "Microsoft Windows NT 10.0.19045.0",
+                        "powershell":  "5.1.19041.6456",
+                        "isAdmin":  false,
+                        "symlinkCreation":  false
+                    },
+    "pathCheckMethod":  "CreateFileW + GetFileInformationByHandleEx(FileAttributeTagInfo/FileIdInfo) + GetFinalPathNameByHandleW",
+    "originalCheckCount":  23,
+    "checkCount":  60,
+    "failed":  [
+
+               ],
+    "checks":  [
+                   {
+                       "name":  "unit.freshNewUatDirectoryAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\fresh-20261120-081007"
+                   },
+                   {
+                       "name":  "unit.emptyExistingDirectoryAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\empty-existing"
+                   },
+                   {
+                       "name":  "unit.caseInsensitiveRootAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cdrive-root\u003e\\workmanager-test-data\\t1-03-path-safety-20261120-081007-29060\\fresh-20261120-081007"
+                   },
+                   {
+                       "name":  "unit.normalizedDotDotInsideAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\fresh-normalized"
+                   },
+                   {
+                       "name":  "unit.cDriveRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录必须位于专用测试根目录 \u003cuat-root\u003e 之下（实际：\u003cdrive-root\u003e\\WorkManager-test-data\\t1-03-ui-reject）。请使用新的 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.formalRootRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 禁止使用正式应用目录 \u003cformal-root\u003e 作为 UAT 输出目录（实际：\u003cformal-root\u003e）。请使用新的测试目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.formalRootSubdirectoryRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 禁止使用正式应用目录 \u003cformal-root\u003e 作为 UAT 输出目录（实际：\u003cformal-root\u003e\\data\\uat）。请使用新的测试目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.outsideTestRootDDriveRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录必须位于专用测试根目录 \u003cuat-root\u003e 之下（实际：\u003cdrive-root\u003e\\OtherWorkManagerDir\\t1-03-ui）。请使用新的 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.dotDotEscapeToFormalRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 禁止使用正式应用目录 \u003cformal-root\u003e 作为 UAT 输出目录（实际：\u003cformal-root\u003e）。请使用新的测试目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.dotDotEscapeOutsideRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录必须位于专用测试根目录 \u003cuat-root\u003e 之下（实际：\u003cdrive-root\u003e\\OtherWorkManagerDir）。请使用新的 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.testRootItselfRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录不能是专用测试根目录本身：\u003cuat-root\u003e。请使用该根目录下的新 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.testRootWithTrailingSlashRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录不能是专用测试根目录本身：\u003cuat-root\u003e。请使用该根目录下的新 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.relativePathRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录必须是本地盘符绝对路径，拒绝相对路径：t1-03-ui-relative-dir。必须位于专用测试根目录 \u003cuat-root\u003e 之下。"
+                   },
+                   {
+                       "name":  "unit.nonEmptyUnknownDirectoryRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 目标 UAT 目录已存在且非空（1 个条目），拒绝覆盖或删除未知内容。请使用新的测试目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.existingDatabaseDirectoryRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 目标 UAT 目录已包含数据库文件（1 个），默认拒绝复用旧数据库。请使用新的测试目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "integration.cDriveRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=PRECONDITION_FAILED"
+                   },
+                   {
+                       "name":  "integration.formalRootRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=正式应用目录"
+                   },
+                   {
+                       "name":  "integration.outsideTestRootRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=专用测试根目录"
+                   },
+                   {
+                       "name":  "integration.dotDotEscapeRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=正式应用目录"
+                   },
+                   {
+                       "name":  "integration.nonEmptyUnknownDirectoryRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=非空"
+                   },
+                   {
+                       "name":  "integration.existingDatabaseDirectoryRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=数据库"
+                   },
+                   {
+                       "name":  "integration.nonEmptyDirectoryNotDeletedOrModified",
+                       "pass":  true,
+                       "detail":  "marker=must-not-be-deleted"
+                   },
+                   {
+                       "name":  "integration.existingDatabaseNotOverwritten",
+                       "pass":  true,
+                       "detail":  "database content preserved=True"
+                   },
+                   {
+                       "name":  "native.newDirectoryUnderRealRootAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\native-fresh-20261120-081007"
+                   },
+                   {
+                       "name":  "native.newDirectoryNotCreatedByValidation",
+                       "pass":  true,
+                       "detail":  "existsAfterValidation=False"
+                   },
+                   {
+                       "name":  "native.nestedNewDirectoryUnderRealRootAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\nested-plain-parent\\deep\\native-nested"
+                   },
+                   {
+                       "name":  "native.nestedDirectoryNotCreatedByValidation",
+                       "pass":  true,
+                       "detail":  "existsAfterValidation=False"
+                   },
+                   {
+                       "name":  "native.missingParentAllowedWithSafetyRules",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\missing-parent-not-exist\\child-output"
+                   },
+                   {
+                       "name":  "native.missingParentNotCreatedByValidation",
+                       "pass":  true,
+                       "detail":  "missing parent still absent"
+                   },
+                   {
+                       "name":  "native.testRootIsJunctionRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\synth\\root-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.testRootPathContainsJunctionRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\synth\\root-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.middleComponentJunctionRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\junction-mid-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.outputDirectoryJunctionRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\output-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.junctionToFormalRootRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\junction-formal-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.junctionToCDriveRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\junction-c-drive-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.reparsePointInsideTestRootRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\junction-inside-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.uncPathRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录不能使用 UNC、设备路径（\\\\?\\ / \\\\.\\ / \\??\\）或根相对路径：\\\\server\\share\\t1-03-ui。必须位于专用测试根目录 \u003cuat-root\u003e 之下并使用普通本地盘符绝对路径。"
+                   },
+                   {
+                       "name":  "native.devicePathRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录不能使用 UNC、设备路径（\\\\?\\ / \\\\.\\ / \\??\\）或根相对路径：\\\\?\\\u003cuat-root\u003e\\t1-03-ui。必须位于专用测试根目录 \u003cuat-root\u003e 之下并使用普通本地盘符绝对路径。"
+                   },
+                   {
+                       "name":  "native.wildcardPathRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径包含 Windows 文件名非法字符（\u003c\u003e:\"|?*）：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\bad*name。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.trailingDotComponentRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径组件以点或空白结尾（Windows 会归一化名称，可能造成路径别名）：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\dot-suffix.（组件：dot-suffix.）。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.trailingSpaceComponentRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径组件以点或空白结尾（Windows 会归一化名称，可能造成路径别名）：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\space suffix \\child（组件：space suffix ）。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.reservedCom0Rejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径组件是 Windows 保留设备名：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\COM0（组件：COM0）。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.reservedConinRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径组件是 Windows 保留设备名：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\CONIN$（组件：CONIN$）。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.missingTestRootRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 无法确认专用测试根目录的真实文件系统身份：目录不存在或路径组件缺失：\u003cuat-root\u003e\\t1-03-path-safety-20261120-081007-29060\\missing-test-root。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.guardSummaryVolumeAndFinalPathChecks",
+                       "pass":  true,
+                       "detail":  "volumeIdentityMatch=True; finalPathInsideRoot=True; checkedComponents=5"
+                   },
+                   {
+                       "name":  "integration.junctionOutputRejected",
+                       "pass":  true,
+                       "detail":  "exit=2"
+                   },
+                   {
+                       "name":  "integration.junctionOutputRejectedByReparsePoint",
+                       "pass":  true,
+                       "detail":  "keyword=重解析点; exit=2"
+                   },
+                   {
+                       "name":  "integration.sideEffectSnapshotUnchanged",
+                       "pass":  true,
+                       "detail":  "removed=0; added=0; changed=0"
+                   },
+                   {
+                       "name":  "integration.sideEffectCanaryUnchanged",
+                       "pass":  true,
+                       "detail":  "canaryPreserved=True"
+                   },
+                   {
+                       "name":  "integration.sideEffectExistingDatabaseUnchanged",
+                       "pass":  true,
+                       "detail":  "databasePreserved=True"
+                   },
+                   {
+                       "name":  "integration.sideEffectNoExeCopied",
+                       "pass":  true,
+                       "detail":  "exeCount=0"
+                   },
+                   {
+                       "name":  "integration.sideEffectNoDatabaseWriteArtifacts",
+                       "pass":  true,
+                       "detail":  "orchestrationOrWalArtifacts=0; existingDatabasePreserved=True"
+                   },
+                   {
+                       "name":  "integration.sideEffectJunctionStillPresent",
+                       "pass":  true,
+                       "detail":  "junction link preserved after rejection"
+                   },
+                   {
+                       "name":  "integration.sideEffectNoChildDirectoryCreated",
+                       "pass":  true,
+                       "detail":  "no child directory created in junction target"
+                   },
+                   {
+                       "name":  "integration.formalRootRejectedWithoutCreation",
+                       "pass":  true,
+                       "detail":  "exit=2; formalRootExistedBefore=False; formalRootExistsAfter=False"
+                   },
+                   {
+                       "name":  "cleanup.junctionLinkRemovedWithoutTouchingTarget",
+                       "pass":  true,
+                       "detail":  "linkRemoved=True; targetCanaryAlive=True"
+                   },
+                   {
+                       "name":  "cleanup.junctionTargetCanaryIntact",
+                       "pass":  true,
+                       "detail":  "canaryPreserved=True"
+                   },
+                   {
+                       "name":  "evidence.original23ChecksPreserved",
+                       "pass":  true,
+                       "detail":  "originalExpected=23; missing=0"
+                   },
+                   {
+                       "name":  "evidence.machineIdentifiersRedacted",
+                       "pass":  true,
+                       "detail":  "sensitivePatternsFound=False; patternsChecked=5"
+                   },
+                   {
+                       "name":  "evidence.passState",
+                       "pass":  true,
+                       "detail":  "failed=0"
+                   }
+               ],
+    "skipped":  [
+                    {
+                        "name":  "native.symbolicLinkToExternalRejected",
+                        "reason":  "当前进程无法创建 Windows Symbolic Link（mklink /D 退出码=1；SeCreateSymbolicLinkPrivilege 未启用/未以管理员运行）。该场景未执行，不计为 PASS。"
+                    }
+                ],
+    "skipCount":  1,
+    "nativeGuard":  {
+                        "checkedComponentCount":  5,
+                        "testRootExists":  true,
+                        "testRootReparsePoint":  false,
+                        "requestedPathExists":  false,
+                        "missingComponentCount":  1,
+                        "reparsePointAllowed":  false,
+                        "finalPathInsideRoot":  true,
+                        "finalPathOutsideFormal":  true,
+                        "volumeIdentityMatch":  true,
+                        "fileIdConsistency":  true,
+                        "checkedAt":  "2026-11-20T00:10:13.6323564Z"
+                    },
+    "pass":  true
+}

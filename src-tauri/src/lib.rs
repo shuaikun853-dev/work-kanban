@@ -2,8 +2,8 @@
 //!
 //! 职责边界（AGENTS.md / TD 2.3）：
 //! - 解析便携路径、初始化数据库、创建主窗口（含 WebView2 绝对数据目录）；
-//! - 暴露最小受限命令：数据库健康检查（T1-01）与项目列表/创建/编辑/归档（T1-02），
-//!   完整注册列表见 [`run`] 中的 `tauri::generate_handler!`；
+//! - 暴露最小受限命令：数据库健康检查（T1-01）、项目列表/创建/编辑/归档（T1-02）、
+//!   工作事项创建/待安排列表（T1-03），完整注册列表见 [`run`] 中的 `tauri::generate_handler!`；
 //! - 不实现业务规则，不向前端暴露数据库连接或任意 SQL；
 //! - 任何启动失败都在创建 WebView2 窗口之前 fail-closed，绝不回退到 C 盘默认目录。
 
@@ -120,6 +120,8 @@ pub fn run() {
             commands::projects::create_project,
             commands::projects::update_project,
             commands::projects::archive_project,
+            commands::work_items::create_work_item,
+            commands::work_items::list_pending_work_items,
         ])
         .setup(|app| {
             setup_app(app)?;

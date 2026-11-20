@@ -315,20 +315,21 @@ fn new_database_runs_all_migrations_and_integrity_checks() {
         database.schema_version().expect("schema 版本"),
         LATEST_SCHEMA_VERSION
     );
-    assert_eq!(LATEST_SCHEMA_VERSION, 2, "T1-02 引入 schema version 2");
+    assert_eq!(LATEST_SCHEMA_VERSION, 3, "T1-03 引入 schema version 3");
     let health = database.health_report().expect("健康检查");
     assert_eq!(health.integrity_check, "ok");
     assert_eq!(health.foreign_key_violations, 0);
-    assert_eq!(health.applied_migrations.len(), 2);
+    assert_eq!(health.applied_migrations.len(), 3);
     assert_eq!(
         health
             .applied_migrations
             .iter()
             .map(|migration| migration.version)
             .collect::<Vec<_>>(),
-        vec![1, 2]
+        vec![1, 2, 3]
     );
     assert_eq!(health.applied_migrations[1].name, "0002_projects");
+    assert_eq!(health.applied_migrations[2].name, "0003_work_items");
 
     let tables: Vec<String> = database
         .connection()
@@ -343,9 +344,10 @@ fn new_database_runs_all_migrations_and_integrity_checks() {
         vec![
             "projects".to_string(),
             "schema_migrations".to_string(),
-            "settings".to_string()
+            "settings".to_string(),
+            "work_items".to_string()
         ],
-        "T1-02 只新增 projects 表，不得提前创建工作事项等业务表"
+        "T1-03 只新增 work_items 表，不得提前创建其他业务表"
     );
     assert!(
         paths.database_file.is_file(),
@@ -410,8 +412,8 @@ fn upgrades_schema_version_1_database_and_preserves_existing_data() {
     let health = database.health_report().expect("升级后健康检查");
     assert_eq!(health.integrity_check, "ok");
     assert_eq!(health.foreign_key_violations, 0);
-    assert_eq!(health.schema_version, 2);
-    assert_eq!(health.applied_migrations.len(), 2);
+    assert_eq!(health.schema_version, 3);
+    assert_eq!(health.applied_migrations.len(), 3);
 
     // 升级后的数据库必须可正常创建项目。
     let project = ProjectService::create(&mut database, "升级后新建项目").expect("创建项目");
@@ -424,13 +426,14 @@ fn failed_migration_after_projects_rolls_back_without_touching_project_data() {
     let (_dir, paths, mut database) = open_database("projects-migration-rollback");
     let created = ProjectService::create(&mut database, "迁移失败前的项目").expect("创建项目");
 
-    // 在 v2 基础上追加一个“先建表、后失败”的 v3 migration。
+    // 在 v3 基础上追加一个“先建表、后失败”的 v4 migration。
     let migrations = [
         MIGRATIONS[0],
         MIGRATIONS[1],
+        MIGRATIONS[2],
         Migration {
-            version: 3,
-            name: "0003-broken-probe",
+            version: 4,
+            name: "0004-broken-probe",
             sql: "CREATE TABLE migration_probe (id INTEGER PRIMARY KEY);\n\
                   INSERT INTO migration_probe (id, missing_column) VALUES (1, 2);",
         },
@@ -439,17 +442,17 @@ fn failed_migration_after_projects_rolls_back_without_touching_project_data() {
         database.connection_mut(),
         paths.database_file(),
         &migrations,
-        3,
+        4,
     )
     .expect_err("损坏 migration 必须失败");
     assert!(matches!(
         error,
-        DatabaseError::MigrationFailed { version: 3, .. }
+        DatabaseError::MigrationFailed { version: 4, .. }
     ));
 
     assert_eq!(
         read_schema_version(database.connection(), paths.database_file()).expect("版本"),
-        2,
+        3,
         "失败 migration 不得前进 user_version"
     );
     let probe_count: i64 = database

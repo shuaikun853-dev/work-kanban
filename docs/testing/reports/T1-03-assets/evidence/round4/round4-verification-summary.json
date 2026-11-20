@@ -1,0 +1,238 @@
+{
+  "task": "T1-03",
+  "round": 4,
+  "scope": [
+    "F1: test-root trust anchor before any filesystem write (real junction root fault injection)",
+    "F2: fail-closed sandbox cleanup (real delete-failure / link-reappear / untracked reparse point / identity-change fault injection)",
+    "evidence and documentation consistency re-scan"
+  ],
+  "generatedAt": "2026-11-20T10:40:00+08:00",
+  "auditBaselineHead": "489d8689484c2cf744893bd3ee08dc7b25b5c8b8",
+  "round3AuditResult": "FAILED (blocking F1/F2; P2-01 still OPEN)",
+  "branch": "task/T1-03-quick-create-pending",
+  "baseRef": "origin/main",
+  "mainBaseline": "018e851e8daf5835391a7b61caf881bc57c2ad42",
+  "fourthRoundCommit": "d82bdd47ae7c3c27fb4383d72ee16a131c89036d",
+  "evidenceSyncCommit": "本分支最新提交（HEAD；origin/main..HEAD = 22）",
+  "branchCommitsAheadOfMain": 22,
+  "branchCommitsAheadOfMainAtScan": 22,
+  "pullRequest": {
+    "number": 8,
+    "state": "OPEN",
+    "merged": false,
+    "mainModified": false,
+    "headRefOidAtBodyUpdate": "d82bdd47ae7c3c27fb4383d72ee16a131c89036d",
+    "bodyUpdatedThisRound": true,
+    "bodyLengthChars": 3957,
+    "bodySha256": "725d5df32469c4873e6b347b07039122a3996ff65bda341a0ee6b248f43e0ae0",
+    "issueCommentCount": 4,
+    "reviewCommentCount": 0,
+    "reviewCount": 0
+  },
+  "releaseExe": {
+    "path": "<repo-root>\\target\\release\\workmanager.exe",
+    "sizeBytes": 10352128,
+    "sha256": "3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3",
+    "note": "round-4 changes only verification scripts/tests/docs; product code unchanged, same Release EXE as rounds 2 and 3"
+  },
+  "qualityGates": [
+    { "command": "cargo fmt --all -- --check", "exitCode": 0 },
+    { "command": "cargo check --workspace --all-targets", "exitCode": 0 },
+    { "command": "cargo test --workspace", "exitCode": 0, "passed": 124, "failed": 0, "testSuites": 18 },
+    {
+      "command": "npm run check",
+      "exitCode": 0,
+      "svelteCheckErrors": 0,
+      "svelteCheckWarnings": 0,
+      "bridgeTestsPassed": 17,
+      "designTokenCheckFiles": 22,
+      "designTokenViolations": 0,
+      "designTokenTestsPassed": 49
+    },
+    { "command": "npm run build", "exitCode": 0, "modulesTransformed": 167 },
+    { "command": "node --test scripts/quality/work-item-bridge.test.mjs", "exitCode": 0, "passed": 17, "failed": 0 },
+    { "command": "git diff --check", "exitCode": 0 }
+  ],
+  "pathSafety": {
+    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\test-t1-03-uat-path.ps1 -EvidencePath docs\\testing\\reports\\T1-03-assets\\evidence\\round4\\t1-03-uat-path-evidence.json",
+    "exitCode": 0,
+    "verdict": "PASS",
+    "originalChecks": 23,
+    "round3ChecksPreserved": 60,
+    "round4AddedChecks": 31,
+    "totalChecks": 93,
+    "failedChecks": 0,
+    "skippedChecks": 1,
+    "skipReason": "当前进程无法创建 Windows Symbolic Link（非管理员且未启用开发者模式，缺少 SeCreateSymbolicLinkPrivilege；mklink /D 退出码 1）。该场景记录 SKIP，不计为 PASS。",
+    "method": "CreateFileW + GetFileInformationByHandleEx(FileAttributeTagInfo/FileIdInfo) + GetFinalPathNameByHandleW; FILE_FLAG_BACKUP_SEMANTICS + FILE_FLAG_OPEN_REPARSE_POINT",
+    "trustAnchor": {
+      "verified": true,
+      "components": 2,
+      "finalPathMatchesExpected": true,
+      "volumeSerialRecorded": true,
+      "fileIdRecorded": true,
+      "fileIdLength": 32,
+      "sandboxIdentityVerified": true
+    },
+    "cleanup": {
+      "safe": true,
+      "recursiveDeletePerformed": true,
+      "steps": 11,
+      "unexpectedReparsePointCount": 0,
+      "leftoverSandboxCount": 0
+    },
+    "f1Scenarios": [
+      "real junction replaces test root with external canary: child entry exits 2 before any write",
+      "external canary file content and directory structure unchanged",
+      "no sandbox created under junction target; no default evidence written",
+      "default test root untouched by child runs",
+      "missing test root fails closed without auto-creation",
+      "--TestRootOverride cannot run the full suite even for a valid plain directory"
+    ],
+    "f2Scenarios": [
+      "normal: real junction removed, sandbox safely deleted, external canary intact",
+      "delete failure injection: trackedLinkDeleteFailed, no recursive delete, sandbox/sentinel/canary preserved, unsafe path reported",
+      "link reappears after delete: trackedLinkStillExists, sandbox preserved",
+      "untracked reparse point: unexpectedReparsePoint, sandbox and both external canaries preserved",
+      "identity swap before cleanup: sandboxIdentityChanged, sandbox preserved, swapped target canary intact",
+      "post-failure canary recheck: 5 external canaries unchanged; 4 failure cases all stopped before recursive delete"
+    ],
+    "round3ChecksPreserved": true,
+    "round4NewChecksPresent": true,
+    "evidence": "docs/testing/reports/T1-03-assets/evidence/round4/t1-03-uat-path-evidence.json"
+  },
+  "releaseE2E": {
+    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\verify-t1-03-ui.ps1 -OutputDir <uat-root>\\t1-03-ui-r4-20261120-181549 -Port 9355",
+    "exitCode": 0,
+    "outputDir": "<uat-root>\\t1-03-ui-r4-20261120-181549",
+    "mainUiIpcChecks": { "passed": 84, "failed": 0 },
+    "minWindowChecks": { "passed": 12, "failed": 0 },
+    "persistenceChecks": { "passed": 17, "failed": 0 },
+    "databaseProbeChecks": { "passed": 25, "failed": 0 },
+    "closeExitCodes": [0, 0],
+    "cspViolations": 0,
+    "uncaughtPageExceptions": 0,
+    "databaseFactsAfterMain": {
+      "user_version": 3,
+      "integrity_check": "ok",
+      "journal_mode": "wal",
+      "schema_migrations": [1, 2, 3],
+      "work_items_total": 5,
+      "work_items_pending": 5,
+      "work_items_other_status": 0,
+      "work_items_null_project": 4,
+      "work_items_linked_archived": 1,
+      "projects_total": 2,
+      "projects_archived": 2,
+      "foreign_key_violations": 0
+    },
+    "databaseFactsAfterRestart": {
+      "work_items_total": 6,
+      "work_items_pending": 6,
+      "work_items_other_status": 0,
+      "work_items_null_project": 5,
+      "work_items_linked_archived": 1,
+      "foreign_key_violations": 0
+    },
+    "evidence": [
+      "docs/testing/reports/T1-03-assets/evidence/round4/t1-03-ui-evidence.json",
+      "docs/testing/reports/T1-03-assets/evidence/round4/t1-03-min-window-evidence.json",
+      "docs/testing/reports/T1-03-assets/evidence/round4/t1-03-persistence-evidence.json",
+      "docs/testing/reports/T1-03-assets/evidence/round4/t1-03-ui-orchestration.json",
+      "docs/testing/reports/T1-03-assets/evidence/round4/t1-03-db-after-main.json",
+      "docs/testing/reports/T1-03-assets/evidence/round4/t1-03-db-after-restart.json",
+      "docs/testing/reports/T1-03-assets/evidence/round4/screenshots/ (19 PNG)"
+    ]
+  },
+  "inheritedRegressions": {
+    "releasePortable": {
+      "command": "scripts\\verify\\verify-release-portable.ps1",
+      "exitCode": 0,
+      "total": 106,
+      "pass": 90,
+      "fail": 0,
+      "warn": 1,
+      "info": 15,
+      "note": "既有 WARN（C: 盘 AppData\\Local\\EBWebView 目录在验证前已存在，非本次验证创建）保留"
+    },
+    "releaseFaults": {
+      "command": "scripts\\verify\\verify-release-faults.ps1",
+      "exitCode": 0,
+      "total": 73,
+      "pass": 64,
+      "fail": 0,
+      "warn": 0,
+      "info": 9
+    },
+    "t1_02_ui": {
+      "command": "scripts\\verify\\verify-t1-02-ui.ps1",
+      "exitCode": 0,
+      "mainChecks": 73,
+      "mainFailed": 0,
+      "minWindowChecks": 12,
+      "minWindowFailed": 0,
+      "closeExitCode": 0,
+      "retryNote": "首次执行出现窗口尺寸/加载超时的环境性失败；在无并发负载下单独重跑通过。产品代码与 T1-02 验证脚本均未修改。"
+    }
+  },
+  "sanitization": {
+    "scanHead": "round-4 evidence sync commit (origin/main..HEAD = 22; HEAD SHA is this commit, see GitHub)",
+    "branchDeltaCommits": 22,
+    "branchDeltaFileTreeScans": "7269",
+    "branchDeltaUniqueBlobs": "449",
+    "branchIntroducedMachineIdentifyingHits": 0,
+    "branchIntroducedRawHitEntriesRound3Comparable": "17",
+    "currentAssetsFiles": 62,
+    "currentAssetsPngCount": 38,
+    "currentAssetsJsonCount": 21,
+    "currentAssetsTextCount": 3,
+    "currentAssetsSensitiveMachineIdentifyingHits": 0,
+    "currentAssetsPngTextChunkHits": "0",
+    "assetsBaselineBeforeRound4Evidence": 34,
+    "remoteRefCount": 18,
+    "remoteTags": 0,
+    "remoteRefsContainingOldCommit": 0,
+    "oldCommitAncestorOfHead": false,
+    "prText": {
+      "bodyLengthChars": 3957,
+      "bodySha256": "725d5df32469c4873e6b347b07039122a3996ff65bda341a0ee6b248f43e0ae0",
+      "issueCommentCount": 4,
+      "reviewCommentCount": 0,
+      "reviewCount": 0,
+      "machineIdentifyingHits": 0,
+      "oldLogFileNameHits": 1,
+      "oldLogFileNameHitLocation": "comment#4 (third-round audit conclusion; reference only, not log content)",
+      "oldCommitShaHits": 3,
+      "oldCommitShaNote": "public old SHA references in body/comment#3/comment#4; not machine identifiers"
+    },
+    "oldCommit": {
+      "sha": "2342828852abee43ab56610e7d1fa91a02310bfe",
+      "commitApiHttpStatus": 200,
+      "rawLogContentsApiHttpStatus": 200,
+      "rawLogFileCount": 9,
+      "rawLogTotalBytes": 147009,
+      "stillReadable": true,
+      "localBackupBranch": "backup/t1-03-r1-audit-baseline (local only, not pushed)",
+      "localBundle": "test-artifacts/r1-backup/t1-03-r1-audit-baseline-2342828.bundle (gitignored, local only)"
+    },
+    "mainBaselinePreexistingMachineInfo": "main-baseline T1-01/T1-02 evidence contains same-class information (not introduced by this PR; not modified in round 4)",
+    "serverSideCleanupCompleted": false,
+    "supportTicketFiled": false,
+    "p2_01Status": "OPEN (waiting GitHub Support server-side cleanup by repository owner; must re-verify old SHA access afterwards)"
+  },
+  "evidenceLayout": {
+    "round3EvidencePreserved": true,
+    "round4EvidenceDir": "docs/testing/reports/T1-03-assets/evidence/round4/",
+    "round4Files": 28
+  },
+  "residualRisks": [
+    "P2-01 remains open: old commit 2342828 and its 9 raw log files are still readable through GitHub; only GitHub Support can remove server-side objects/caches. Not claimed as completed.",
+    "TOCTOU between the new trust-anchor/native validation and subsequent directory/EXE/database operations is reduced but not eliminated (DEC-029 / Issue #2 still applies).",
+    "Pre-existing main-baseline same-class machine information remains in T1-01/T1-02 evidence/logs; out of round-4 scope and must not be modified without separate authorization.",
+    "Product SQLite database is unencrypted (DEC-028).",
+    "T1-02 UI E2E showed transient environment-related failures on first attempts; final clean rerun passed with product code unchanged (recorded honestly)."
+  ],
+  "thirdRoundEvidencePreserved": true,
+  "thirdRoundCommit": "b6a54591b783049142cbbffecd107ec9086723eb",
+  "finalDocsCommitNote": "第四轮证据/文档同步提交见 PR #8 时间线；本轮未重写历史、未强制推送、未删除备份分支/bundle"
+}

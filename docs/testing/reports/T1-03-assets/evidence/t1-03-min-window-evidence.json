@@ -1,0 +1,99 @@
+{
+    "generatedAt":  "2026-11-20T00:10:33.718Z",
+    "task":  "T1-03",
+    "method":  "CDP at minimum supported window size 860x640: app-shell wait, 待安排 view layout checks, long-title layout check, quick-create dialog bounds, real titlebar close button click; process exit verified by orchestration",
+    "port":  9345,
+    "target":  {
+                   "id":  "D6DAF99AE996CA24FC2618E6B291FFE8",
+                   "title":  "今日工作 · WorkManager",
+                   "url":  "http://tauri.localhost/"
+               },
+    "viewport":  {
+                     "innerWidth":  844,
+                     "innerHeight":  632,
+                     "outerWidth":  844,
+                     "outerHeight":  632
+                 },
+    "dialogLayout":  {
+                         "top":  151,
+                         "left":  192,
+                         "right":  652,
+                         "bottom":  481,
+                         "innerWidth":  844,
+                         "innerHeight":  632,
+                         "fullyVisible":  true,
+                         "titleInputVisible":  true,
+                         "projectSelectVisible":  true,
+                         "saveVisible":  true,
+                         "cancelVisible":  true
+                     },
+    "checks":  [
+                   {
+                       "name":  "minWindow.sizeNear860x640",
+                       "pass":  true,
+                       "detail":  "{\"innerWidth\":844,\"innerHeight\":632,\"outerWidth\":844,\"outerHeight\":632}"
+                   },
+                   {
+                       "name":  "minWindow.navigateToday",
+                       "pass":  true,
+                       "detail":  ""
+                   },
+                   {
+                       "name":  "minWindow.pendingEntryVisible",
+                       "pass":  true,
+                       "detail":  ""
+                   },
+                   {
+                       "name":  "minWindow.pendingNoHorizontalOverflow",
+                       "pass":  true,
+                       "detail":  "{\"innerWidth\":844,\"innerHeight\":632,\"docScrollWidth\":844,\"clientWidth\":844,\"bodyScrollWidth\":844,\"overflow\":false,\"offenders\":[{\"tag\":\"P\",\"cls\":\"work-item-title svelte-k3ghdt\",\"text\":\"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是\",\"left\":209,\"right\":796,\"width\":587,\"scrollWidth\":1365,\"clientWidth\":587}]}"
+                   },
+                   {
+                       "name":  "minWindow.pendingRowsVisible",
+                       "pass":  true,
+                       "detail":  "{\"rowCount\":5,\"archivedBadgeCount\":1,\"createButtonVisible\":true,\"longRowVisible\":true,\"longTitleEllipsized\":true,\"longTitleFullAttribute\":true,\"firstRowRight\":812}"
+                   },
+                   {
+                       "name":  "minWindow.createButtonClickable",
+                       "pass":  true,
+                       "detail":  ""
+                   },
+                   {
+                       "name":  "minWindow.longTitleEllipsizedWithoutClippingLayout",
+                       "pass":  true,
+                       "detail":  "{\"rowCount\":5,\"archivedBadgeCount\":1,\"createButtonVisible\":true,\"longRowVisible\":true,\"longTitleEllipsized\":true,\"longTitleFullAttribute\":true,\"firstRowRight\":812}"
+                   },
+                   {
+                       "name":  "minWindow.openCreateDialog",
+                       "pass":  true,
+                       "detail":  ""
+                   },
+                   {
+                       "name":  "minWindow.dialogFullyVisible",
+                       "pass":  true,
+                       "detail":  "{\"top\":151,\"left\":192,\"right\":652,\"bottom\":481,\"innerWidth\":844,\"innerHeight\":632,\"fullyVisible\":true,\"titleInputVisible\":true,\"projectSelectVisible\":true,\"saveVisible\":true,\"cancelVisible\":true}"
+                   },
+                   {
+                       "name":  "minWindow.dialogControlsVisible",
+                       "pass":  true,
+                       "detail":  "{\"top\":151,\"left\":192,\"right\":652,\"bottom\":481,\"innerWidth\":844,\"innerHeight\":632,\"fullyVisible\":true,\"titleInputVisible\":true,\"projectSelectVisible\":true,\"saveVisible\":true,\"cancelVisible\":true}"
+                   },
+                   {
+                       "name":  "minWindow.cancelDialog",
+                       "pass":  true,
+                       "detail":  ""
+                   },
+                   {
+                       "name":  "minWindow.closeButtonClicked",
+                       "pass":  true,
+                       "detail":  ""
+                   }
+               ],
+    "failed":  [
+
+               ],
+    "checkCount":  12,
+    "closeClicked":  true,
+    "processExitVerifiedBy":  "scripts/verify/verify-t1-03-ui.ps1（t1-03-ui-orchestration.json firstCloseExitCode）",
+    "pass":  true
+}
