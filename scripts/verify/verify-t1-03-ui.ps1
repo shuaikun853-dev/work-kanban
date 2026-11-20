@@ -154,6 +154,19 @@ function Invoke-DbProbe([string]$PythonPath, [string]$ProbeScript, [string]$Data
 }
 
 $repoRoot = Resolve-RepoRoot
+
+# 第四轮 F1：在任何写操作之前先验证专用测试根目录信任锚（真实目录、全部已存在祖先
+# 组件无未批准重解析点、真实最终路径与预期一致、卷身份一致、不在正式目录内）。
+# 测试根目录缺失或身份无法确认时 fail closed；本脚本不会自动创建测试根目录。
+try {
+    $trustRecord = Assert-T103UatTrustedTestRoot -TestRoot $script:T103UatTestRoot -FormalRoot $script:T103UatFormalRoot
+}
+catch {
+    Write-Host ("PRECONDITION_FAILED: " + $_.Exception.Message)
+    exit 2
+}
+Write-Host ("P3-02/F1 测试根目录信任锚验证通过：components=" + $trustRecord.existingComponentCount + " volumeIdentity=verified finalPath=verified")
+
 if ([string]::IsNullOrWhiteSpace($ExePath)) {
     $ExePath = Join-Path $repoRoot 'target\release\workmanager.exe'
 }
