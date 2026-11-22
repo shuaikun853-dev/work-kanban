@@ -3,17 +3,17 @@
   "round": 4,
   "scope": [
     "F1: test-root trust anchor before any filesystem write (real junction root fault injection)",
-    "F2: fail-closed sandbox cleanup (real delete-failure / link-reappear / untracked reparse point / identity-change fault injection)",
+    "F2: fail-closed sandbox cleanup (controlled delete-failure FaultHook injection; real link-reappear / untracked reparse point / identity-change scenarios)",
     "evidence and documentation consistency re-scan"
   ],
-  "generatedAt": "2026-11-20T10:40:00+08:00",
+  "generatedAt": "2026-11-20T10:40:00Z",
   "auditBaselineHead": "489d8689484c2cf744893bd3ee08dc7b25b5c8b8",
   "round3AuditResult": "FAILED (blocking F1/F2; P2-01 still OPEN)",
   "branch": "task/T1-03-quick-create-pending",
   "baseRef": "origin/main",
   "mainBaseline": "018e851e8daf5835391a7b61caf881bc57c2ad42",
   "fourthRoundCommit": "d82bdd47ae7c3c27fb4383d72ee16a131c89036d",
-  "evidenceSyncCommit": "本分支最新提交（HEAD；origin/main..HEAD = 22）",
+  "evidenceSyncCommit": "5ab1f49ac16705126d6c27dcaf091990d38a8b3f",
   "branchCommitsAheadOfMain": 22,
   "branchCommitsAheadOfMainAtScan": 22,
   "pullRequest": {
@@ -36,9 +36,21 @@
     "note": "round-4 changes only verification scripts/tests/docs; product code unchanged, same Release EXE as rounds 2 and 3"
   },
   "qualityGates": [
-    { "command": "cargo fmt --all -- --check", "exitCode": 0 },
-    { "command": "cargo check --workspace --all-targets", "exitCode": 0 },
-    { "command": "cargo test --workspace", "exitCode": 0, "passed": 124, "failed": 0, "testSuites": 18 },
+    {
+      "command": "cargo fmt --all -- --check",
+      "exitCode": 0
+    },
+    {
+      "command": "cargo check --workspace --all-targets",
+      "exitCode": 0
+    },
+    {
+      "command": "cargo test --workspace",
+      "exitCode": 0,
+      "passed": 124,
+      "failed": 0,
+      "testSuites": 18
+    },
     {
       "command": "npm run check",
       "exitCode": 0,
@@ -49,16 +61,28 @@
       "designTokenViolations": 0,
       "designTokenTestsPassed": 49
     },
-    { "command": "npm run build", "exitCode": 0, "modulesTransformed": 167 },
-    { "command": "node --test scripts/quality/work-item-bridge.test.mjs", "exitCode": 0, "passed": 17, "failed": 0 },
-    { "command": "git diff --check", "exitCode": 0 }
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "modulesTransformed": 167
+    },
+    {
+      "command": "node --test scripts/quality/work-item-bridge.test.mjs",
+      "exitCode": 0,
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
   ],
   "pathSafety": {
     "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\test-t1-03-uat-path.ps1 -EvidencePath docs\\testing\\reports\\T1-03-assets\\evidence\\round4\\t1-03-uat-path-evidence.json",
     "exitCode": 0,
     "verdict": "PASS",
     "originalChecks": 23,
-    "round3ChecksPreserved": 60,
+    "round3ChecksPreserved": true,
     "round4AddedChecks": 31,
     "totalChecks": 93,
     "failedChecks": 0,
@@ -91,32 +115,59 @@
     ],
     "f2Scenarios": [
       "normal: real junction removed, sandbox safely deleted, external canary intact",
-      "delete failure injection: trackedLinkDeleteFailed, no recursive delete, sandbox/sentinel/canary preserved, unsafe path reported",
+      "delete failure: controlled FaultHook throws a deterministic exception at beforeLinkDelete before the real Junction-delete call; no Windows ACL change and no actual Access Denied/ACL-denial test; trackedLinkDeleteFailed, no recursive delete, sandbox/sentinel/canary preserved",
       "link reappears after delete: trackedLinkStillExists, sandbox preserved",
       "untracked reparse point: unexpectedReparsePoint, sandbox and both external canaries preserved",
       "identity swap before cleanup: sandboxIdentityChanged, sandbox preserved, swapped target canary intact",
       "post-failure canary recheck: 5 external canaries unchanged; 4 failure cases all stopped before recursive delete"
     ],
-    "round3ChecksPreserved": true,
     "round4NewChecksPresent": true,
-    "evidence": "docs/testing/reports/T1-03-assets/evidence/round4/t1-03-uat-path-evidence.json"
+    "evidence": "docs/testing/reports/T1-03-assets/evidence/round4/t1-03-uat-path-evidence.json",
+    "f2DeleteFailureTest": {
+      "type": "controlled_fault_hook_injection",
+      "hookStage": "beforeLinkDelete",
+      "mechanism": "The FaultHook throws a deterministic exception before the real Junction-delete call.",
+      "windowsAclModified": false,
+      "actualWindowsAclDenialTested": false,
+      "actualAccessDeniedObserved": false,
+      "interpretation": "This verifies fail-closed handling of an injected delete failure; it does not demonstrate Windows ACL denial behavior."
+    }
   },
   "releaseE2E": {
     "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\verify-t1-03-ui.ps1 -OutputDir <uat-root>\\t1-03-ui-r4-20261120-181549 -Port 9355",
     "exitCode": 0,
     "outputDir": "<uat-root>\\t1-03-ui-r4-20261120-181549",
-    "mainUiIpcChecks": { "passed": 84, "failed": 0 },
-    "minWindowChecks": { "passed": 12, "failed": 0 },
-    "persistenceChecks": { "passed": 17, "failed": 0 },
-    "databaseProbeChecks": { "passed": 25, "failed": 0 },
-    "closeExitCodes": [0, 0],
+    "mainUiIpcChecks": {
+      "passed": 84,
+      "failed": 0
+    },
+    "minWindowChecks": {
+      "passed": 12,
+      "failed": 0
+    },
+    "persistenceChecks": {
+      "passed": 17,
+      "failed": 0
+    },
+    "databaseProbeChecks": {
+      "passed": 25,
+      "failed": 0
+    },
+    "closeExitCodes": [
+      0,
+      0
+    ],
     "cspViolations": 0,
     "uncaughtPageExceptions": 0,
     "databaseFactsAfterMain": {
       "user_version": 3,
       "integrity_check": "ok",
       "journal_mode": "wal",
-      "schema_migrations": [1, 2, 3],
+      "schema_migrations": [
+        1,
+        2,
+        3
+      ],
       "work_items_total": 5,
       "work_items_pending": 5,
       "work_items_other_status": 0,
@@ -176,7 +227,7 @@
     }
   },
   "sanitization": {
-    "scanHead": "round-4 evidence sync commit (origin/main..HEAD = 22; HEAD SHA is this commit, see GitHub)",
+    "scanHead": "5ab1f49ac16705126d6c27dcaf091990d38a8b3f",
     "branchDeltaCommits": 22,
     "branchDeltaFileTreeScans": "7269",
     "branchDeltaUniqueBlobs": "449",

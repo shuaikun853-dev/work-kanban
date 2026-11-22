@@ -24,9 +24,9 @@
 | 问题 | 本轮修复 | 关键证据 |
 |---|---|---|
 | **F1** 测试根目录未验证就写入沙箱 | `test-t1-03-uat-path.ps1` 在任何写操作之前调用 `Assert-T103UatTrustedTestRoot`：Windows 原生句柄验证测试根目录存在、是真实目录、全部已存在祖先组件、拒绝未批准重解析点、真实最终路径与预期一致、卷身份一致、不在正式目录内；缺失/身份无法确认时 fail closed，**绝不自动创建测试根目录**。新增真实 Junction 根替换 + 外部 Canary 的真实入口子进程无副作用测试；`-TestRootOverride` 只用于故障注入且不能执行完整套件；`verify-t1-03-ui.ps1` 同样在任何写操作前验证信任锚 | 路径安全专项 **93 项（FAILED=0，SKIPPED=1）**；第三轮 60 项全部保留；F1 子进程 exit=2、Canary 内容/目录结构不变、无沙箱/无默认证据写入 |
-| **F2** 清理失败后仍递归删除 | 新增 fail-closed 沙箱清理：清理前复验沙箱身份（卷序列号 + 文件 ID + 真实最终路径），逐个删除并复验跟踪链接，扫描沙箱确认无未预期 reparse point，再次复验身份；任一条件不满足立即停止（不执行整个沙箱递归删除），保留现场并输出可定位 WARN/FAIL。仅全部通过后才执行逐条目校验的安全递归删除，绝不跟随链接进入外部目录 | 4 类失败注入（删除失败/链接重建/未跟踪链接/身份替换）全部 `stopCode` 命中、`recursiveDeletePerformed=false`、沙箱与外部 Canary 保留；正常清理 SAFE |
+| **F2** 清理失败后仍递归删除 | 新增 fail-closed 沙箱清理：清理前复验沙箱身份（卷序列号 + 文件 ID + 真实最终路径），逐个删除并复验跟踪链接，扫描沙箱确认无未预期 reparse point，再次复验身份；任一条件不满足立即停止（不执行整个沙箱递归删除），保留现场并输出可定位 WARN/FAIL。仅全部通过后才执行逐条目校验的安全递归删除，绝不跟随链接进入外部目录 | 4 类失败场景（删除失败由受控 FaultHook 在 `beforeLinkDelete` 阶段抛出确定性异常，未修改 Windows ACL、未实际执行 ACL 拒绝/`Access Denied` 测试；链接重建/未跟踪链接/身份替换使用真实文件系统对象验证）全部 `stopCode` 命中、`recursiveDeletePerformed=false`、沙箱与外部 Canary 保留；正常清理 SAFE |
 
-**第四轮关键结论：** F1/F2 修复完成且新增真实文件系统故障注入测试通过；第三轮 60 项路径安全检查零回归；质量门禁、T1-03 Release E2E、继承便携/异常注入/T1-02 UI 回归全部通过（T1-02 UI 首次执行出现环境性失败，无并发负载单独重跑通过）；2026-11-20 重新扫描的分支/资产/PR 数据已同步到本报告与证据。**P2-01 仍未关闭**（旧提交与 9 个原始日志仍可经 GitHub API 读取），TOCTOU 剩余风险未消除。开发代理不自行宣布审计/验收通过。
+**第四轮关键结论：** F1/F2 修复完成且真实 Junction/Canary 文件系统场景与受控删除失败注入测试通过（未执行实际 Windows ACL 拒绝测试）；第三轮 60 项路径安全检查零回归；质量门禁、T1-03 Release E2E、继承便携/异常注入/T1-02 UI 回归全部通过（T1-02 UI 首次执行出现环境性失败，无并发负载单独重跑通过）；2026-11-20 重新扫描的分支/资产/PR 数据已同步到本报告与证据。**P2-01 仍未关闭**（旧提交与 9 个原始日志仍可经 GitHub API 读取），TOCTOU 剩余风险未消除。开发代理不自行宣布审计/验收通过。
 
 ### 0.1 第三轮修复摘要（历史，2026-11-20）
 
@@ -335,7 +335,7 @@ SHA-256 **`3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3`**�
 F1/F2 第四轮专项证据摘要（详见 `evidence/round4/t1-03-uat-path-evidence.json`）：
 
 - F1：入口在写操作前完成信任锚验证；真实 Junction 替换测试根 + 外部 Canary 的真实入口子进程 exit=2、拒绝执行、Canary 文件内容与目录结构不变、未创建沙箱、未写默认证据、默认测试根目录未被触碰；测试根缺失场景 exit=2 且未自动创建；`-TestRootOverride` 注入到合法普通目录也不会执行完整套件。
-- F2：正常清理 SAFE；4 类故障注入（受控删除失败、删除后链接重建、未跟踪 reparse point、清理前身份替换）分别得到 `trackedLinkDeleteFailed` / `trackedLinkStillExists` / `unexpectedReparsePoint` / `sandboxIdentityChanged`，全部 `recursiveDeletePerformed=false`、沙箱与外部目标保留；失败后重新检查 5 个外部 Canary 全部不变。
+- F2：正常清理 SAFE；4 类故障场景（删除失败由受控 FaultHook 在 `beforeLinkDelete` 阶段抛出确定性异常、未修改 Windows ACL且未实测 `Access Denied`；删除后链接重建、未跟踪 reparse point、清理前身份替换使用真实文件系统对象验证）分别得到 `trackedLinkDeleteFailed` / `trackedLinkStillExists` / `unexpectedReparsePoint` / `sandboxIdentityChanged`，全部 `recursiveDeletePerformed=false`、沙箱与外部目标保留；失败后重新检查 5 个外部 Canary 全部不变。
 - 第三轮 60 项检查全部保留（`evidence.round3ChecksPreserved` 通过）；第四轮新增 31 项全部存在（`evidence.round4NewChecksPresent` 通过）。
 
 ### 4.8 第四轮 P2-01 脱敏与历史对象复扫（2026-11-20）
@@ -463,7 +463,7 @@ SANITIZATION.md                               # 第四轮脱敏扫描、旧提�
 3. **TOCTOU 残余风险**：按 DEC-029 接受并延期至 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复；不得宣称任何情况下不会写入 C 盘。
 4. **P2-01 未关闭（服务端清理未完成）**：当前分支增量历史、工作区证据与 PR #8 文本脱敏复核具体机器标识 0 命中；但旧提交 `2342828852abee43ab56610e7d1fa91a02310bfe` 及其 9 个原始日志仍可经 GitHub API 读取（HTTP 200），GitHub Support 服务端清理尚未完成（工单材料见 `T1-03-assets/SANITIZATION.md` 第 4 节，需仓库所有者提交）；不得宣称 P2-01 已完成。仓库基线 main 中既有 T1-01/T1-02 同类机器信息（属 main 既有内容，非本 PR 新增）未修改，作为遗留风险。
 5. **待安排排序固定**为 `created_at DESC, id DESC`；不提供手动排序/优先级（后续任务）。
-6. **F1/F2（第四轮）**：测试脚本在任何写操作前验证真实测试根目录信任锚，缺失/身份无法确认时 fail closed 且不自动创建；清理在任何链接删除失败、链接仍存在、未预期 reparse point、身份变化时停止整个沙箱递归删除并保留现场。但信任锚/路径校验与后续写操作之间仍存在 **TOCTOU 剩余窗口**，未消除，按 DEC-029 / Issue #2 记录，不得宣称已消除并发替换风险。
+6. **F1/F2（第四轮）**：测试脚本在任何写操作前验证真实测试根目录信任锚，缺失/身份无法确认时 fail closed 且不自动创建；清理在任何链接删除失败、链接仍存在、未预期 reparse point、身份变化时停止整个沙箱递归删除并保留现场；其中删除失败分支仅由受控 FaultHook 模拟，未修改 Windows ACL、未实际测试 ACL `Access Denied`。但信任锚/路径校验与后续写操作之间仍存在 **TOCTOU 剩余窗口**，未消除，按 DEC-029 / Issue #2 记录，不得宣称已消除并发替换风险。
 7. **刷新失败测试**通过 CDP 传输层故障注入实现（不修改产品代码）；真实磁盘/数据库故障路径仍由 Rust/数据库错误处理与异常注入回归覆盖。
 8. 继承验证脚本的 schema 版本断言已改为 3；历史 T1-01/T1-02 报告中的数字为当时历史结果，本报告记录第四轮重新执行结果（产品代码未变，Release EXE 与第二/三轮一致）。
 

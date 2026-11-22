@@ -1,6 +1,6 @@
 # T1-03：工作事项快速创建和待安排区域
 
-**任务状态：** 第三轮独立审计未通过；第四轮 F1/F2 定向修复完成，等待第四轮独立审计（F1 测试根目录信任锚、F2 清理 fail-closed 已修复并通过真实文件系统故障注入；P2-01 仍开放，待 GitHub Support 服务端清理；PR #8 保持 Open，未合并）
+**任务状态：** 第三轮独立审计未通过；第四轮 F1/F2 定向修复完成，等待第四轮独立审计（F1 测试根目录信任锚、F2 清理 fail-closed 已修复并通过真实文件系统对象场景与受控删除失败注入（未修改 Windows ACL、未执行实际 `Access Denied` 测试）；P2-01 仍开放，待 GitHub Support 服务端清理；PR #8 保持 Open，未合并）
 **启动日期：** 2026-11-19  
 **所属阶段：** 阶段 1：基础架构与工作事项  
 **前置任务：** T1-01、T1-02 已验收完成并合并到 main  
@@ -276,7 +276,7 @@
 **修复内容：**
 
 - **F1 测试根目录信任锚：** `scripts/verify/test-t1-03-uat-path.ps1` 在任何写操作（创建沙箱 / `Set-Content` / Canary / 测试数据库 / 测试目录 / 复制 EXE / 启动应用）之前调用 `Assert-T103UatTrustedTestRoot`：用 Windows 原生文件系统句柄验证测试根目录存在、是真实目录、全部已存在祖先组件、拒绝未获批准的重解析点、真实最终路径与预期字面路径一致、卷身份一致、不在正式目录 `D:\WorkManager` 内；测试根目录缺失或身份无法确认时 **fail closed，且绝不自动创建测试根目录**。新增真实 Junction 把测试根替换为外部 Canary 目录后启动真实入口子进程的无副作用测试（exit=2、任何写操作之前拒绝执行、Canary 内容与目录结构不变、不创建沙箱、不写默认证据）；`-TestRootOverride` 注入参数仅用于故障注入、不影响正式默认路径，且不能执行完整套件；`verify-t1-03-ui.ps1` 同样在任何写操作前验证信任锚。信任锚验证与普通输出目录校验明确分离（不只复用子目录校验逻辑）。
-- **F2 清理 fail-closed：** 新增 fail-closed 沙箱清理：清理前复验沙箱身份（卷序列号 + 文件 ID + 真实最终路径），逐个删除并复验所有已创建 Junction/Symbolic Link，扫描整个沙箱确认无未预期 reparse point，再次复验身份；任一条件不满足立即停止（**不执行整个沙箱递归删除**），保留沙箱与外部目标目录，输出明确 WARN/FAIL 与可定位路径。仅当全部条件满足时才执行逐条目校验后的安全递归删除，绝不跟随 Junction/Symbolic Link 进入外部目录。新增真实文件系统故障注入：正常删除、确定性的链接删除失败注入、链接删除后重建、未跟踪 reparse point、清理前身份替换、失败后重新检查目标 Canary。
+- **F2 清理 fail-closed：** 新增 fail-closed 沙箱清理：清理前复验沙箱身份（卷序列号 + 文件 ID + 真实最终路径），逐个删除并复验所有已创建 Junction/Symbolic Link，扫描整个沙箱确认无未预期 reparse point，再次复验身份；任一条件不满足立即停止（**不执行整个沙箱递归删除**），保留沙箱与外部目标目录，输出明确 WARN/FAIL 与可定位路径。仅当全部条件满足时才执行逐条目校验后的安全递归删除，绝不跟随 Junction/Symbolic Link 进入外部目录。新增场景验证：正常删除、链接删除后重建、未跟踪 reparse point、清理前身份替换及失败后 Canary 复检均使用真实文件系统对象；其中“链接删除失败”由受控 `FaultHook` 在 `beforeLinkDelete` 阶段抛出确定性异常，未修改 Windows ACL，也未实际执行 Windows ACL 拒绝/`Access Denied` 测试。
 - **原有测试零回归：** 第三轮 60 项检查全部保留（硬校验 `evidence.round3ChecksPreserved`），第四轮新增 31 项目标检查全部存在（`evidence.round4NewChecksPresent`）；不得把 SKIP 统计成 PASS。
 
 **验证结果：**

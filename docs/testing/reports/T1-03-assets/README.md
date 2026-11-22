@@ -72,8 +72,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-t1-02-
   创建；用真实 Junction 把测试根替换为外部 Canary 目录启动真实入口子进程，验证任何写操作之前拒绝执行、
   Canary 内容/目录结构不变、不创建沙箱。
 - **F2（第四轮）：** 清理前复验沙箱身份、逐个删除并复验跟踪链接、扫描未预期 reparse point、再次复验身份；
-  任一条件不满足立即停止整个沙箱递归删除，保留现场并输出可定位 WARN/FAIL。真实故障注入覆盖删除失败、
-  链接重建、未跟踪链接、身份替换与失败后 Canary 复检。
+  任一条件不满足立即停止整个沙箱递归删除，保留现场并输出可定位 WARN/FAIL。删除失败由 `FaultHook` 在
+  `beforeLinkDelete` 阶段抛出确定性异常，属于受控故障注入；未修改 Windows ACL，也未实际测试 ACL `Access Denied`。
+  链接重建、未跟踪链接、身份替换与失败后 Canary 复检使用真实文件系统对象验证。
 - **P2-01 尚未关闭：** 当前 T1-03 证据目录、当前分支增量历史与 PR #8 文本已完成脱敏复核（具体机器标识 0 命中）；
   但旧提交 `2342828852abee43ab56610e7d1fa91a02310bfe` 的 9 个原始日志仍可通过 GitHub API 读取，
   GitHub 服务端清理需由仓库所有者提交 Support 工单。**不得把分支历史清理等同于服务端清理完成**；

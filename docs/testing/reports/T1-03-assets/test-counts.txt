@@ -45,10 +45,11 @@ F1（测试根目录信任锚 / 真实入口顺序）：
     Canary 内容与目录结构不变、不创建沙箱、默认测试根目录未被触碰、未写默认证据；
   - 测试根缺失场景：exit=2、未自动创建；
   - -TestRootOverride 注入到合法普通目录也不会执行完整套件/不创建沙箱（默认路径不受影响）。
-F2（清理 fail closed / 真实故障注入）：
+F2（清理 fail closed / 受控删除失败注入 + 真实文件系统对象场景）：
   - 正常：真实 Junction 删除成功、沙箱安全删除、外部 Canary 不变；
-  - 受控删除失败注入：stopCode=trackedLinkDeleteFailed，未执行递归删除，沙箱与 sentinel 保留，
-    外部 Canary 不变，失败路径可定位；
+  - 受控删除失败注入：FaultHook 在 beforeLinkDelete 阶段抛出确定性异常，stopCode=trackedLinkDeleteFailed，
+    未执行递归删除，沙箱与 sentinel 保留，外部 Canary 不变，失败路径可定位；
+    此项未修改 Windows ACL，也未实际执行 ACL 拒绝/Access Denied 测试；
   - 删除后链接重建：stopCode=trackedLinkStillExists，沙箱保留；
   - 未跟踪 Reparse Point：stopCode=unexpectedReparsePoint，沙箱与两个外部目标 Canary 均保留；
   - 清理前身份替换：stopCode=sandboxIdentityChanged，沙箱保留、替换目标 Canary 不变；

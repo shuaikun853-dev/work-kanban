@@ -58,7 +58,12 @@
                                                             "stopCode":  "trackedLinkDeleteFailed",
                                                             "sandboxPreserved":  true,
                                                             "targetCanaryIntact":  true,
-                                                            "faultInjection":  "controlled hook failure at real junction-delete step (real link, sandbox and external canary preserved)"
+                                                            "faultInjectionType":  "controlled FaultHook injection",
+                                                             "hookStage":  "beforeLinkDelete",
+                                                             "faultInjection":  "FaultHook throws a deterministic exception before the real Junction-delete call; Windows ACL is not modified.",
+                                                             "windowsAclModified":  false,
+                                                             "actualWindowsAclDenialTested":  false,
+                                                             "actualAccessDeniedObserved":  false
                                                         },
                                       "reappear":  {
                                                        "safe":  false,

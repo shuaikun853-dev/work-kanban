@@ -29,7 +29,7 @@
 | `inspect-t1-03-persistence.mjs` | T1-03 关闭重开持久化检查：同一 UAT 便携目录重启 Release，验证 5 条虚构待安排工作仍存在、归档项目历史关联保留且显示“项目已归档”、选择器仍只展示未归档项目、重启后仍可创建新工作，最后真实关闭。 |
 | `probe-t1-03-db.py` | T1-03 数据库只读探针（标准库 sqlite3）：`user_version`、完整性、journal_mode、`schema_migrations`、项目/工作事项行数、生命周期状态分布、`project_id` NULL/归档关联计数、`foreign_key_check`；不修改任何数据。 |
 | `T1-03UatPath.ps1` | T1-03 UAT 输出目录安全校验模块（P3-02 + 第四轮 F1/F2）：`GetFullPath` 规范化、限定 `D:\WorkManager-test-data\`、拒绝正式应用目录/根目录外/`..` 越界/已含数据库/非空未知目录；`Assert-T103UatTrustedTestRoot` 信任锚在任何写操作前用 Windows 原生句柄验证真实测试根目录（存在/真实目录/全部已存在祖先/重解析点/最终路径/卷身份/正式目录排除，缺失不自动创建）；`Invoke-T103FailClosedSandboxCleanup` 清理前复验沙箱身份、逐个删除并复验链接、扫描未预期 reparse point、身份再复验，任一失败停止递归删除并保留现场；只在校验通过时执行逐条目校验的安全递归删除。 |
-| `test-t1-03-uat-path.ps1` | T1-03 UAT 路径安全专项测试（第四轮 93 项）：第三轮 60 项全部保留（合法新目录/空目录、C 盘/正式目录/根目录外/`..`/既有数据库/非空目录拒绝、真实 Junction 7 类、UNC/设备/保留名/尾部点空白、无副作用与清理语义），第四轮新增 F1 信任锚/真实入口无副作用子进程测试与 F2 清理 fail-closed 真实故障注入（删除失败/链接重建/未跟踪 reparse point/身份替换/失败后 Canary 复检）；1 项 Symbolic Link 场景因权限限制明确记录 SKIP、不计 PASS。 |
+| `test-t1-03-uat-path.ps1` | T1-03 UAT 路径安全专项测试（第四轮 93 项）：第三轮 60 项全部保留（合法新目录/空目录、C 盘/正式目录/根目录外/`..`/既有数据库/非空目录拒绝、真实 Junction 7 类、UNC/设备/保留名/尾部点空白、无副作用与清理语义），第四轮新增 F1 信任锚/真实入口无副作用子进程测试与 F2 清理 fail-closed：删除失败由受控 FaultHook 注入（未修改 Windows ACL、非实际 Access Denied 测试），链接重建/未跟踪 reparse point/身份替换及 Canary 复检使用真实文件系统对象；1 项 Symbolic Link 场景因权限限制明确记录 SKIP、不计 PASS。 |
 
 ## 用法
 
