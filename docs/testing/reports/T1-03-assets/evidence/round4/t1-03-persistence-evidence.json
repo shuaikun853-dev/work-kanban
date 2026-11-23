@@ -1,0 +1,130 @@
+{
+  "generatedAt": "2026-11-20T10:16:09.821Z",
+  "task": "T1-03",
+  "method": "Relaunched real Release EXE against the same isolated UAT portable directory; DOM + direct typed IPC verification of persisted pending work items, archived project link flags, unarchived-only selector, post-restart create, then real titlebar close",
+  "port": 9356,
+  "prerequisite": "<uat-root>\\t1-03-ui-r4-20261120-181549\\t1-03-prerequisite.json",
+  "rowsAfterRestart": [
+    {
+      "id": "5551ec0d-8ff5-45ec-9bcf-0d5ca66adc94",
+      "title": "超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      "meta": "未归属项目",
+      "hasArchivedBadge": false
+    },
+    {
+      "id": "6055e520-3166-4465-b243-806cc7e3665c",
+      "title": "创建成功但刷新失败验证",
+      "meta": "未归属项目",
+      "hasArchivedBadge": false
+    },
+    {
+      "id": "d3645165-c755-4ec9-a08b-66fc843c42fc",
+      "title": "关联未归档项目的待安排工作",
+      "meta": "T1-03 虚构未归档项目 项目已归档",
+      "hasArchivedBadge": true
+    },
+    {
+      "id": "d31defd2-e56e-4196-ae07-63b1ab9146b7",
+      "title": "重复提交保护验证",
+      "meta": "未归属项目",
+      "hasArchivedBadge": false
+    },
+    {
+      "id": "fd74e2bf-5949-48d4-b38d-07c693464d4c",
+      "title": "整理中核商品数据",
+      "meta": "未归属项目",
+      "hasArchivedBadge": false
+    }
+  ],
+  "pageErrors": [],
+  "checks": [
+    {
+      "name": "restart.databaseSchemaStillV3",
+      "pass": true,
+      "detail": "3"
+    },
+    {
+      "name": "restart.navigateToday",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "restart.pendingEntryVisible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "restart.fivePendingWorkItemsPersisted",
+      "pass": true,
+      "detail": "[\"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ\",\"创建成功但刷新失败验证\",\"关联未归档项目的待安排工作\",\"重复提交保护验证\",\"整理中核商品数据\"]"
+    },
+    {
+      "name": "restart.expectedTitlesStillPresent",
+      "pass": true,
+      "detail": "[\"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ\",\"创建成功但刷新失败验证\",\"关联未归档项目的待安排工作\",\"重复提交保护验证\",\"整理中核商品数据\"]"
+    },
+    {
+      "name": "restart.archivedProjectLinkPreserved",
+      "pass": true,
+      "detail": "{\"id\":\"d3645165-c755-4ec9-a08b-66fc843c42fc\",\"title\":\"关联未归档项目的待安排工作\",\"meta\":\"T1-03 虚构未归档项目 项目已归档\",\"hasArchivedBadge\":true}"
+    },
+    {
+      "name": "restart.unassignedLabelPersisted",
+      "pass": true,
+      "detail": "[\"未归属项目\",\"未归属项目\",\"T1-03 虚构未归档项目 项目已归档\",\"未归属项目\",\"未归属项目\"]"
+    },
+    {
+      "name": "restart.ipcPendingListPersisted",
+      "pass": true,
+      "detail": "5"
+    },
+    {
+      "name": "restart.ipcArchivedLinkFlags",
+      "pass": true,
+      "detail": "{\"id\":\"d3645165-c755-4ec9-a08b-66fc843c42fc\",\"projectId\":\"831eeb1c-cc8a-4b5e-88a0-c178c6ee605a\",\"projectName\":\"T1-03 虚构未归档项目\",\"projectIsArchived\":true,\"title\":\"关联未归档项目的待安排工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-20T10:15:59.651Z\",\"updatedAt\":\"2026-11-20T10:15:59.651Z\"}"
+    },
+    {
+      "name": "restart.openCreateDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "restart.selectorExcludesArchivedProjects",
+      "pass": true,
+      "detail": "[{\"value\":\"\",\"label\":\"未归属项目\"}]"
+    },
+    {
+      "name": "restart.newTitleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "restart.newWorkSaved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "restart.newWorkItemPersistedToDatabase",
+      "pass": true,
+      "detail": "6"
+    },
+    {
+      "name": "restart.newWorkItemVisibleWithUnassignedLabel",
+      "pass": true,
+      "detail": "{\"id\":\"e44fa322-775b-47cf-92d4-af26e0d18179\",\"title\":\"重启后新建的工作\",\"meta\":\"未归属项目\",\"hasArchivedBadge\":false}"
+    },
+    {
+      "name": "restart.noUncaughtErrors",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "restart.closeButtonClicked",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "failed": [],
+  "closeClicked": true,
+  "pass": true
+}

@@ -1,0 +1,588 @@
+﻿{
+    "task":  "T1-03",
+    "fix":  "P3-02 + round-4 F1/F2 UAT path safety (test-root trust anchor + fail-closed sandbox cleanup)",
+    "generatedAt":  "2026-11-20T10:14:13.6713689Z",
+    "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\test-t1-03-uat-path.ps1",
+    "environment":  {
+                        "os":  "Microsoft Windows NT 10.0.19045.0",
+                        "powershell":  "5.1.19041.6456",
+                        "isAdmin":  false,
+                        "symlinkCreation":  false,
+                        "testRoot":  "\u003cuat-root\u003e",
+                        "testRootOverrideActive":  false,
+                        "sandbox":  "\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528"
+                    },
+    "pathCheckMethod":  "CreateFileW + GetFileInformationByHandleEx(FileAttributeTagInfo/FileIdInfo) + GetFinalPathNameByHandleW",
+    "trustAnchor":  {
+                        "verified":  true,
+                        "path":  "\u003cuat-root\u003e",
+                        "finalPathMatchesPath":  true,
+                        "existingComponents":  2,
+                        "volumeSerialRecorded":  true,
+                        "fileIdRecorded":  true,
+                        "fileIdLength":  32,
+                        "sandboxIdentityVerified":  true
+                    },
+    "cleanup":  {
+                    "safe":  true,
+                    "recursiveDeletePerformed":  true,
+                    "stopCode":  "",
+                    "stopReason":  "",
+                    "unsafePathCount":  0,
+                    "stepsCount":  11
+                },
+    "faultInjection":  {
+                           "f1":  {
+                                      "trustAnchorPath":  "D:\\WorkManager-test-data",
+                                      "trustAnchorComponents":  2,
+                                      "rootJunctionChildExitCode":  2,
+                                      "rootJunctionCanaryUnchanged":  true,
+                                      "rootJunctionSandboxCreated":  false,
+                                      "missingRootChildExitCode":  2,
+                                      "missingRootAutoCreated":  false,
+                                      "validOverrideChildExitCode":  2,
+                                      "validOverrideSandboxCreated":  false,
+                                      "defaultEvidenceUntouched":  true,
+                                      "canaryIntactAfterLinkCleanup":  true
+                                  },
+                           "f2":  {
+                                      "normal":  {
+                                                     "safe":  true,
+                                                     "recursiveDeletePerformed":  true,
+                                                     "stopCode":  "",
+                                                     "targetCanaryIntact":  true
+                                                 },
+                                      "deleteFailure":  {
+                                                            "safe":  false,
+                                                            "recursiveDeletePerformed":  false,
+                                                            "stopCode":  "trackedLinkDeleteFailed",
+                                                            "sandboxPreserved":  true,
+                                                            "targetCanaryIntact":  true,
+                                                            "faultInjectionType":  "controlled FaultHook injection",
+                                                             "hookStage":  "beforeLinkDelete",
+                                                             "faultInjection":  "FaultHook throws a deterministic exception before the real Junction-delete call; Windows ACL is not modified.",
+                                                             "windowsAclModified":  false,
+                                                             "actualWindowsAclDenialTested":  false,
+                                                             "actualAccessDeniedObserved":  false
+                                                        },
+                                      "reappear":  {
+                                                       "safe":  false,
+                                                       "recursiveDeletePerformed":  false,
+                                                       "stopCode":  "trackedLinkStillExists",
+                                                       "sandboxPreserved":  true,
+                                                       "targetCanaryIntact":  true
+                                                   },
+                                      "untrackedReparsePoint":  {
+                                                                    "safe":  false,
+                                                                    "recursiveDeletePerformed":  false,
+                                                                    "stopCode":  "unexpectedReparsePoint",
+                                                                    "sandboxPreserved":  true,
+                                                                    "targetCanaryIntact":  true
+                                                                },
+                                      "identityChange":  {
+                                                             "safe":  false,
+                                                             "recursiveDeletePerformed":  false,
+                                                             "stopCode":  "sandboxIdentityChanged",
+                                                             "sandboxPreserved":  true,
+                                                             "targetCanaryIntact":  true
+                                                         },
+                                      "canaryRecheckUnchanged":  true,
+                                      "allFailuresStoppedBeforeRecursiveDelete":  true
+                                  }
+                       },
+    "round3CheckCountPreserved":  60,
+    "round4NewCheckTarget":  31,
+    "originalCheckCount":  23,
+    "checkCount":  93,
+    "failed":  [
+
+               ],
+    "checks":  [
+                   {
+                       "name":  "unit.freshNewUatDirectoryAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\fresh-20261120-181355"
+                   },
+                   {
+                       "name":  "unit.emptyExistingDirectoryAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\empty-existing"
+                   },
+                   {
+                       "name":  "unit.caseInsensitiveRootAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cdrive-root\u003e\\workmanager-test-data\\t1-03-path-safety-20261120-181355-38528\\fresh-20261120-181355"
+                   },
+                   {
+                       "name":  "unit.normalizedDotDotInsideAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\fresh-normalized"
+                   },
+                   {
+                       "name":  "unit.cDriveRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录必须位于专用测试根目录 \u003cuat-root\u003e 之下（实际：\u003cdrive-root\u003e\\WorkManager-test-data\\t1-03-ui-reject）。请使用新的 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.formalRootRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 禁止使用正式应用目录 \u003cformal-root\u003e 作为 UAT 输出目录（实际：\u003cformal-root\u003e）。请使用新的测试目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.formalRootSubdirectoryRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 禁止使用正式应用目录 \u003cformal-root\u003e 作为 UAT 输出目录（实际：\u003cformal-root\u003e\\data\\uat）。请使用新的测试目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.outsideTestRootDDriveRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录必须位于专用测试根目录 \u003cuat-root\u003e 之下（实际：\u003cdrive-root\u003e\\OtherWorkManagerDir\\t1-03-ui）。请使用新的 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.dotDotEscapeToFormalRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 禁止使用正式应用目录 \u003cformal-root\u003e 作为 UAT 输出目录（实际：\u003cformal-root\u003e）。请使用新的测试目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.dotDotEscapeOutsideRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录必须位于专用测试根目录 \u003cuat-root\u003e 之下（实际：\u003cdrive-root\u003e\\OtherWorkManagerDir）。请使用新的 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.testRootItselfRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录不能是专用测试根目录本身：\u003cuat-root\u003e。请使用该根目录下的新 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.testRootWithTrailingSlashRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录不能是专用测试根目录本身：\u003cuat-root\u003e。请使用该根目录下的新 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.relativePathRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录必须是本地盘符绝对路径，拒绝相对路径：t1-03-ui-relative-dir。必须位于专用测试根目录 \u003cuat-root\u003e 之下。"
+                   },
+                   {
+                       "name":  "unit.nonEmptyUnknownDirectoryRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 目标 UAT 目录已存在且非空（1 个条目），拒绝覆盖或删除未知内容。请使用新的测试目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "unit.existingDatabaseDirectoryRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 目标 UAT 目录已包含数据库文件（1 个），默认拒绝复用旧数据库。请使用新的测试目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                   },
+                   {
+                       "name":  "integration.cDriveRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=PRECONDITION_FAILED"
+                   },
+                   {
+                       "name":  "integration.formalRootRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=正式应用目录"
+                   },
+                   {
+                       "name":  "integration.outsideTestRootRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=专用测试根目录"
+                   },
+                   {
+                       "name":  "integration.dotDotEscapeRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=正式应用目录"
+                   },
+                   {
+                       "name":  "integration.nonEmptyUnknownDirectoryRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=非空"
+                   },
+                   {
+                       "name":  "integration.existingDatabaseDirectoryRejected",
+                       "pass":  true,
+                       "detail":  "exit=2; keyword=数据库"
+                   },
+                   {
+                       "name":  "integration.nonEmptyDirectoryNotDeletedOrModified",
+                       "pass":  true,
+                       "detail":  "marker=must-not-be-deleted"
+                   },
+                   {
+                       "name":  "integration.existingDatabaseNotOverwritten",
+                       "pass":  true,
+                       "detail":  "database content preserved=True"
+                   },
+                   {
+                       "name":  "native.newDirectoryUnderRealRootAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\native-fresh-20261120-181355"
+                   },
+                   {
+                       "name":  "native.newDirectoryNotCreatedByValidation",
+                       "pass":  true,
+                       "detail":  "existsAfterValidation=False"
+                   },
+                   {
+                       "name":  "native.nestedNewDirectoryUnderRealRootAllowed",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\nested-plain-parent\\deep\\native-nested"
+                   },
+                   {
+                       "name":  "native.nestedDirectoryNotCreatedByValidation",
+                       "pass":  true,
+                       "detail":  "existsAfterValidation=False"
+                   },
+                   {
+                       "name":  "native.missingParentAllowedWithSafetyRules",
+                       "pass":  true,
+                       "detail":  "allowed: \u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\missing-parent-not-exist\\child-output"
+                   },
+                   {
+                       "name":  "native.missingParentNotCreatedByValidation",
+                       "pass":  true,
+                       "detail":  "missing parent still absent"
+                   },
+                   {
+                       "name":  "native.testRootIsJunctionRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\synth\\root-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.testRootPathContainsJunctionRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\synth\\root-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.middleComponentJunctionRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\junction-mid-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.outputDirectoryJunctionRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\output-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.junctionToFormalRootRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\junction-formal-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.junctionToCDriveRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\junction-c-drive-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.reparsePointInsideTestRootRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\junction-inside-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+                   },
+                   {
+                       "name":  "native.uncPathRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录不能使用 UNC、设备路径（\\\\?\\ / \\\\.\\ / \\??\\）或根相对路径：\\\\server\\share\\t1-03-ui。必须位于专用测试根目录 \u003cuat-root\u003e 之下并使用普通本地盘符绝对路径。"
+                   },
+                   {
+                       "name":  "native.devicePathRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录不能使用 UNC、设备路径（\\\\?\\ / \\\\.\\ / \\??\\）或根相对路径：\\\\?\\\u003cuat-root\u003e\\t1-03-ui。必须位于专用测试根目录 \u003cuat-root\u003e 之下并使用普通本地盘符绝对路径。"
+                   },
+                   {
+                       "name":  "native.wildcardPathRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径包含 Windows 文件名非法字符（\u003c\u003e:\"|?*）：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\bad*name。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.trailingDotComponentRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径组件以点或空白结尾（Windows 会归一化名称，可能造成路径别名）：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\dot-suffix.（组件：dot-suffix.）。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.trailingSpaceComponentRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径组件以点或空白结尾（Windows 会归一化名称，可能造成路径别名）：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\space suffix \\child（组件：space suffix ）。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.reservedCom0Rejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径组件是 Windows 保留设备名：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\COM0（组件：COM0）。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.reservedConinRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 输出目录路径组件是 Windows 保留设备名：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\CONIN$（组件：CONIN$）。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.missingTestRootRejected",
+                       "pass":  true,
+                       "detail":  "rejected: 无法确认专用测试根目录的真实文件系统身份：目录不存在或路径组件缺失：\u003cuat-root\u003e\\t1-03-path-safety-20261120-181355-38528\\missing-test-root。已按 fail-closed 拒绝。"
+                   },
+                   {
+                       "name":  "native.guardSummaryVolumeAndFinalPathChecks",
+                       "pass":  true,
+                       "detail":  "volumeIdentityMatch=True; finalPathInsideRoot=True; checkedComponents=5"
+                   },
+                   {
+                       "name":  "integration.junctionOutputRejected",
+                       "pass":  true,
+                       "detail":  "exit=2"
+                   },
+                   {
+                       "name":  "integration.junctionOutputRejectedByReparsePoint",
+                       "pass":  true,
+                       "detail":  "keyword=重解析点; exit=2"
+                   },
+                   {
+                       "name":  "integration.sideEffectSnapshotUnchanged",
+                       "pass":  true,
+                       "detail":  "removed=0; added=0; changed=0"
+                   },
+                   {
+                       "name":  "integration.sideEffectCanaryUnchanged",
+                       "pass":  true,
+                       "detail":  "canaryPreserved=True"
+                   },
+                   {
+                       "name":  "integration.sideEffectExistingDatabaseUnchanged",
+                       "pass":  true,
+                       "detail":  "databasePreserved=True"
+                   },
+                   {
+                       "name":  "integration.sideEffectNoExeCopied",
+                       "pass":  true,
+                       "detail":  "exeCount=0"
+                   },
+                   {
+                       "name":  "integration.sideEffectNoDatabaseWriteArtifacts",
+                       "pass":  true,
+                       "detail":  "orchestrationOrWalArtifacts=0; existingDatabasePreserved=True"
+                   },
+                   {
+                       "name":  "integration.sideEffectJunctionStillPresent",
+                       "pass":  true,
+                       "detail":  "junction link preserved after rejection"
+                   },
+                   {
+                       "name":  "integration.sideEffectNoChildDirectoryCreated",
+                       "pass":  true,
+                       "detail":  "no child directory created in junction target"
+                   },
+                   {
+                       "name":  "integration.formalRootRejectedWithoutCreation",
+                       "pass":  true,
+                       "detail":  "exit=2; formalRootExistedBefore=False; formalRootExistsAfter=False"
+                   },
+                   {
+                       "name":  "cleanup.junctionLinkRemovedWithoutTouchingTarget",
+                       "pass":  true,
+                       "detail":  "linkRemoved=True; targetCanaryAlive=True"
+                   },
+                   {
+                       "name":  "cleanup.junctionTargetCanaryIntact",
+                       "pass":  true,
+                       "detail":  "canaryPreserved=True"
+                   },
+                   {
+                       "name":  "f1.trustAnchorDefaultRootVerified",
+                       "pass":  true,
+                       "detail":  "pathMatches=True; components=2"
+                   },
+                   {
+                       "name":  "f1.trustAnchorIdentityRecorded",
+                       "pass":  true,
+                       "detail":  "fileIdLength=32; volumeSerialRecorded=True"
+                   },
+                   {
+                       "name":  "f1.defaultTestRootConstantUnchanged",
+                       "pass":  true,
+                       "detail":  "defaultRoot=\u003cuat-root\u003e; overrideActive=False"
+                   },
+                   {
+                       "name":  "f1.mainRunUsesDefaultTrustedRoot",
+                       "pass":  true,
+                       "detail":  "sandboxInsideDefaultRoot=True"
+                   },
+                   {
+                       "name":  "f1.rootJunctionChildExitCode2",
+                       "pass":  true,
+                       "detail":  "exit=2"
+                   },
+                   {
+                       "name":  "f1.rootJunctionRejectedBeforeAnyWrite",
+                       "pass":  true,
+                       "detail":  "exit=2; rejectedByTrustAnchor=True; reparseKeyword=True"
+                   },
+                   {
+                       "name":  "f1.rootJunctionCanaryUnchanged",
+                       "pass":  true,
+                       "detail":  "filesRemoved=0; filesAdded=0; filesChanged=0; dirsBefore=1; dirsAfter=1"
+                   },
+                   {
+                       "name":  "f1.rootJunctionNoSandboxCreated",
+                       "pass":  true,
+                       "detail":  "sandboxDirsCreated=0; childEvidenceWritten=False"
+                   },
+                   {
+                       "name":  "f1.rootJunctionDefaultRootUntouched",
+                       "pass":  true,
+                       "detail":  "added=0; removed=0"
+                   },
+                   {
+                       "name":  "f1.missingRootChildExitCode2",
+                       "pass":  true,
+                       "detail":  "exit=2"
+                   },
+                   {
+                       "name":  "f1.missingRootNotAutoCreated",
+                       "pass":  true,
+                       "detail":  "missingParentCreated=False; keywordMissing=True"
+                   },
+                   {
+                       "name":  "f1.missingRootNoWriteSideEffects",
+                       "pass":  true,
+                       "detail":  "childEvidenceWritten=False"
+                   },
+                   {
+                       "name":  "f1.validOverrideChildExitCode2",
+                       "pass":  true,
+                       "detail":  "exit=2"
+                   },
+                   {
+                       "name":  "f1.validOverrideNoSandboxCreated",
+                       "pass":  true,
+                       "detail":  "entriesInOverrideRoot=0"
+                   },
+                   {
+                       "name":  "f1.canaryIntactAfterLinkCleanup",
+                       "pass":  true,
+                       "detail":  "linkStillPresent=False; canaryChanged=0"
+                   },
+                   {
+                       "name":  "f1.childDidNotWriteDefaultEvidence",
+                       "pass":  true,
+                       "detail":  "defaultEvidenceChanged=False"
+                   },
+                   {
+                       "name":  "f2.normalJunctionRemovalSucceeds",
+                       "pass":  true,
+                       "detail":  "safe=True; stopCode=; sandboxGone=True"
+                   },
+                   {
+                       "name":  "f2.normalCleanupTargetCanaryIntact",
+                       "pass":  true,
+                       "detail":  "canaryPreserved=True"
+                   },
+                   {
+                       "name":  "f2.trackedDeleteFailureStopsRecursiveDelete",
+                       "pass":  true,
+                       "detail":  "safe=False; recursiveDeletePerformed=False; stopCode=trackedLinkDeleteFailed"
+                   },
+                   {
+                       "name":  "f2.trackedDeleteFailurePreservesSandbox",
+                       "pass":  true,
+                       "detail":  "sandboxPreserved=True; linkPreserved=True; sentinelPreserved=True"
+                   },
+                   {
+                       "name":  "f2.trackedDeleteFailureTargetCanaryIntact",
+                       "pass":  true,
+                       "detail":  "canaryPreserved=True"
+                   },
+                   {
+                       "name":  "f2.trackedDeleteFailureReportsLocatablePath",
+                       "pass":  true,
+                       "detail":  "unsafePathCount=1; stopReasonPresent=True"
+                   },
+                   {
+                       "name":  "f2.linkReappearsAfterDeleteDetected",
+                       "pass":  true,
+                       "detail":  "safe=False; stopCode=trackedLinkStillExists"
+                   },
+                   {
+                       "name":  "f2.linkReappearsSandboxPreserved",
+                       "pass":  true,
+                       "detail":  "sandboxPreserved=True; sentinelPreserved=True"
+                   },
+                   {
+                       "name":  "f2.untrackedReparsePointDetected",
+                       "pass":  true,
+                       "detail":  "safe=False; stopCode=unexpectedReparsePoint; sandboxPreserved=True; untrackedPathReported=True"
+                   },
+                   {
+                       "name":  "f2.untrackedReparsePointTargetCanaryIntact",
+                       "pass":  true,
+                       "detail":  "trackedTargetCanaryPreserved=True; untrackedTargetCanaryPreserved=True"
+                   },
+                   {
+                       "name":  "f2.identityChangeBeforeCleanupDetected",
+                       "pass":  true,
+                       "detail":  "safe=False; stopCode=sandboxIdentityChanged; sandboxPreserved=True"
+                   },
+                   {
+                       "name":  "f2.identityChangeTargetCanaryIntact",
+                       "pass":  true,
+                       "detail":  "swappedTargetCanaryPreserved=True"
+                   },
+                   {
+                       "name":  "f2.failureCasesRecheckCanaryUnchanged",
+                       "pass":  true,
+                       "detail":  "canariesChecked=5; unchanged=True"
+                   },
+                   {
+                       "name":  "f2.noRecursiveDeleteInFailureCases",
+                       "pass":  true,
+                       "detail":  "failureCases=4; allStoppedBeforeRecursiveDelete=True"
+                   },
+                   {
+                       "name":  "cleanup.sandboxRemovedSafely",
+                       "pass":  true,
+                       "detail":  "steps=11; recursiveDeletePerformed=True"
+                   },
+                   {
+                       "name":  "evidence.original23ChecksPreserved",
+                       "pass":  true,
+                       "detail":  "originalExpected=23; missing=0"
+                   },
+                   {
+                       "name":  "evidence.machineIdentifiersRedacted",
+                       "pass":  true,
+                       "detail":  "sensitivePatternsFound=False; patternsChecked=5"
+                   },
+                   {
+                       "name":  "evidence.round3ChecksPreserved",
+                       "pass":  true,
+                       "detail":  "round3Expected=60; missing=0; selfReferentialExcluded=evidence.passState"
+                   },
+                   {
+                       "name":  "evidence.round4NewChecksPresent",
+                       "pass":  true,
+                       "detail":  "round4Expected=31; missing=0; missingNames="
+                   },
+                   {
+                       "name":  "evidence.passState",
+                       "pass":  true,
+                       "detail":  "failed=0"
+                   }
+               ],
+    "skipped":  [
+                    {
+                        "name":  "native.symbolicLinkToExternalRejected",
+                        "reason":  "当前进程无法创建 Windows Symbolic Link（mklink /D 退出码=1；SeCreateSymbolicLinkPrivilege 未启用/未以管理员运行）。该场景未执行，不计为 PASS。"
+                    }
+                ],
+    "skipCount":  1,
+    "nativeGuard":  {
+                        "checkedComponentCount":  5,
+                        "testRootExists":  true,
+                        "testRootReparsePoint":  false,
+                        "requestedPathExists":  false,
+                        "missingComponentCount":  1,
+                        "reparsePointAllowed":  false,
+                        "finalPathInsideRoot":  true,
+                        "finalPathOutsideFormal":  true,
+                        "volumeIdentityMatch":  true,
+                        "fileIdConsistency":  true,
+                        "checkedAt":  "2026-11-20T10:14:05.3646152Z"
+                    },
+    "pass":  true
+}

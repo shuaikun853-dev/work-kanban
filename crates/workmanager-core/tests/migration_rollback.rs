@@ -34,18 +34,19 @@ fn failed_migration_rolls_back_and_keeps_previous_version() {
         LATEST_SCHEMA_VERSION
     );
 
-    // 在最新内置 schema 之后追加自定义 migration：版本 3 成功，版本 4 在创建表后执行失败。
+    // 在最新内置 schema（版本 3）之后追加自定义 migration：版本 4 成功，版本 5 在创建表后执行失败。
     let migrations = [
         MIGRATIONS[0],
         MIGRATIONS[1],
+        MIGRATIONS[2],
         Migration {
-            version: 3,
-            name: "0003-create-test-parent",
+            version: 4,
+            name: "0004-create-test-parent",
             sql: "CREATE TABLE test_parent (id INTEGER PRIMARY KEY);",
         },
         Migration {
-            version: 4,
-            name: "0004-broken",
+            version: 5,
+            name: "0005-broken",
             sql: "CREATE TABLE test_child (id INTEGER PRIMARY KEY);\n\
                   INSERT INTO test_child (id, missing_column) VALUES (1, 2);",
         },
@@ -55,22 +56,22 @@ fn failed_migration_rolls_back_and_keeps_previous_version() {
         database.connection_mut(),
         paths.database_file(),
         &migrations,
-        4,
+        5,
     )
-    .expect_err("版本 4 必须失败");
+    .expect_err("版本 5 必须失败");
     match error {
-        DatabaseError::MigrationFailed { version, .. } => assert_eq!(version, 4),
+        DatabaseError::MigrationFailed { version, .. } => assert_eq!(version, 5),
         other => panic!("期望 migration-failed，实际：{other:?}"),
     }
 
-    // 版本 3 已提交，版本 4 完全回滚：user_version 停在 3。
+    // 版本 4 已提交，版本 5 完全回滚：user_version 停在 4。
     assert_eq!(
         read_schema_version(database.connection(), paths.database_file()).expect("version"),
-        3
+        4
     );
     assert!(
         table_exists(database.connection(), "test_parent"),
-        "已提交的版本 3 必须保留"
+        "已提交的版本 4 必须保留"
     );
     assert!(
         !table_exists(database.connection(), "test_child"),
@@ -83,7 +84,7 @@ fn failed_migration_rolls_back_and_keeps_previous_version() {
             row.get(0)
         })
         .expect("migration 行数");
-    assert_eq!(migration_rows, 3, "只应记录已提交的版本 1、2 与 3");
+    assert_eq!(migration_rows, 4, "只应记录已提交的版本 1、2、3 与 4");
 
     // 数据库仍然完整可用。
     database.check_foreign_keys().expect("回滚后外键检查");
@@ -95,16 +96,16 @@ fn failed_migration_rolls_back_and_keeps_previous_version() {
         database.connection_mut(),
         paths.database_file(),
         &migrations,
-        4,
+        5,
     )
     .expect_err("再次执行仍必须失败");
     assert!(matches!(
         second_error,
-        DatabaseError::MigrationFailed { version: 4, .. }
+        DatabaseError::MigrationFailed { version: 5, .. }
     ));
     assert_eq!(
         read_schema_version(database.connection(), paths.database_file()).expect("version"),
-        3
+        4
     );
 }
 
@@ -211,7 +212,7 @@ fn embedded_migrations_do_not_manage_transactions() {
 }
 
 #[test]
-fn latest_schema_creates_projects_table_but_no_premature_business_tables() {
+fn latest_schema_creates_projects_and_work_items_but_no_premature_business_tables() {
     let dir = TestDir::new("migration-scope");
     let paths = dir.release_paths();
     let database = Database::initialize(&paths).expect("初始化数据库");
@@ -231,15 +232,28 @@ fn latest_schema_creates_projects_table_but_no_premature_business_tables() {
         vec![
             "projects".to_string(),
             "schema_migrations".to_string(),
-            "settings".to_string()
+            "settings".to_string(),
+            "work_items".to_string()
         ],
-        "T1-02 只新增 projects 表，不得提前创建工作事项等业务表"
+        "T1-02 新增 projects、T1-03 新增 work_items，不得提前创建其余业务表"
     );
 
-    for business_table in ["work_items", "daily_plans", "daily_reviews", "attachments"] {
+    for business_table in [
+        "daily_plans",
+        "daily_plan_items",
+        "daily_reviews",
+        "daily_review_entries",
+        "attachments",
+        "work_logs",
+        "work_item_history",
+        "work_item_creation_groups",
+        "work_item_creation_group_members",
+        "subtasks",
+        "focus_state",
+    ] {
         assert!(
             !tables.contains(&business_table.to_string()),
-            "T1-02 不得提前创建未授权业务表 {business_table}"
+            "T1-03 不得提前创建未授权业务表 {business_table}"
         );
     }
 }

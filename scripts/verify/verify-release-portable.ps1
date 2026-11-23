@@ -6,11 +6,11 @@
 # 覆盖检查（a-g）：
 #   a. 记录 Release EXE 路径、大小、SHA-256；
 #   b. 在隔离目录复制 EXE 并启动，验证主窗口标题、data/ 子目录、work.db 创建；
-#   c. 用 python sqlite3 只读验证 user_version=2、integrity_check=ok、
-#      journal_mode=wal、schema_migrations 表及版本 1、2、主数据库文件大于 0；
+#   c. 用 python sqlite3 只读验证 user_version=3、integrity_check=ok、
+#      journal_mode=wal、schema_migrations 表及版本 1、2、3、主数据库文件大于 0；
 #   d. 关闭应用后验证 WAL/SHM 无残留数据、数据库仍可只读打开且完整性 ok；
 #   e. 持久化：关闭后写入虚构 canary 到 settings(key='test-canary')，重启应用，
-#      验证 canary 仍在、user_version 仍为 2、schema_migrations 仍只有 2 条；
+#      验证 canary 仍在、user_version 仍为 3、schema_migrations 仍只有 3 条；
 #   f. Release 忽略 WORKMANAGER_TEST_PORTABLE_ROOT：设置诱饵目录后启动，验证
 #      数据库创建在 EXE 同级 data/ 而诱饵目录保持为空；
 #   g. 汇总 PASS/FAIL，任一 FAIL 时退出码 1。

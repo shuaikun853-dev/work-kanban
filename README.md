@@ -1,6 +1,6 @@
 # WorkManager
 
-Windows 本地工作管理软件（绿色便携版）。当前进度：**T1-01 已于 2026-11-18 经第四轮独立审计及用户验收，验收完成**。R3-01/R3-02 修复提交分别为 `ae1eb65`、`4942eb0`；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 已于 2026-11-18 合并到 main（commit `260e6c0`）；审计结论见[第四轮独立审计报告](docs/testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户确认见[验收记录](docs/testing/reports/T1-01-USER-ACCEPTANCE.md)。TOCTOU 按 DEC-029 接受并延期至独立[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。**T1-02 项目创建、编辑、归档已完成开发与自测，第一轮独立审计问题（P2-01/P3-01/P3-02）已修复并重新回归，当前状态“待审计”（等待第二轮独立审计，PR #7 未合并）**，详见 [T1-02 测试报告](docs/testing/reports/T1-02-REPORT.md) 与 [返工修复报告](docs/testing/reports/T1-02-AUDIT-FIX-REPORT.md)。T1-03 及后续工作事项、每日复盘、报表、附件等业务功能尚未实现；本仓库不表示这些功能已经可用。
+Windows 本地工作管理软件（绿色便携版）。当前进度：**T1-01 已于 2026-11-18 经第四轮独立审计及用户验收，验收完成**。R3-01/R3-02 修复提交分别为 `ae1eb65`、`4942eb0`；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 已于 2026-11-18 合并到 main（commit `260e6c0`）；审计结论见[第四轮独立审计报告](docs/testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户确认见[验收记录](docs/testing/reports/T1-01-USER-ACCEPTANCE.md)。TOCTOU 按 DEC-029 接受并延期至独立[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。**T1-02 项目创建、编辑、归档已完成验收并合并到 main**（PR #7，merge commit `ab6aba32a94d7d091b20f0ab49b25badf26377c4`），详见 [T1-02 测试报告](docs/testing/reports/T1-02-REPORT.md)。**T1-03 工作事项快速创建和待安排区域：第三轮独立审计未通过，第四轮 F1/F2 定向修复完成，等待第四轮独立审计；P2-01 保持 OPEN（旧提交与 9 个原始日志仍可经 GitHub API 读取，待 GitHub Support 服务端清理）**；[PR #8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 OPEN、未合并；详见 [T1-03 测试与交付报告](docs/testing/reports/T1-03-REPORT.md) 与 [第四轮机器可读证据](docs/testing/reports/T1-03-assets/evidence/round4/round4-verification-summary.json)。每日复盘、报表、附件等后续业务功能尚未实现；本仓库不表示这些功能已经可用。
 
 ## 文档
 
@@ -13,6 +13,7 @@ Windows 本地工作管理软件（绿色便携版）。当前进度：**T1-01 �
 - [开发与协作规范](AGENTS.md)
 - [T1-01 测试报告](docs/testing/reports/T1-01-REPORT.md)
 - [T1-02 测试报告](docs/testing/reports/T1-02-REPORT.md) / [第一轮独立审计报告](docs/testing/reports/T1-02-INDEPENDENT-AUDIT-REPORT.md) / [返工修复报告](docs/testing/reports/T1-02-AUDIT-FIX-REPORT.md)
+- [T1-03 测试与交付报告](docs/testing/reports/T1-03-REPORT.md) / [T1-03 证据索引](docs/testing/reports/T1-03-assets/README.md) / [T1-03 任务说明](docs/development/tasks/T1-03-Quick-Work-Item-Creation.md) / [第四轮机器可读汇总](docs/testing/reports/T1-03-assets/evidence/round4/round4-verification-summary.json)
 
 ## 项目基线
 
@@ -76,7 +77,20 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-releas
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-release-faults.ps1
 ```
 
-详见 [scripts/verify/README.md](scripts/verify/README.md) 与 [T1-01 测试报告](docs/testing/reports/T1-01-REPORT.md)。
+T1-03 专项验证（UAT 输出目录必须位于专用测试根目录 `D:\WorkManager-test-data` 下的新/空目录；
+测试根目录在任何写操作前用 Windows 原生句柄验证，缺失或身份无法确认时 fail closed 且不会自动创建）：
+
+```powershell
+# 路径安全专项（F1/F2；第四轮证据写入新文件，不覆盖第三轮证据）
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\test-t1-03-uat-path.ps1 `
+    -EvidencePath docs\testing\reports\T1-03-assets\evidence\round4\t1-03-uat-path-evidence.json
+
+# Release UI/IPC/持久化端到端编排
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-t1-03-ui.ps1 `
+    -OutputDir D:\WorkManager-test-data\t1-03-ui-<timestamp>
+```
+
+详见 [scripts/verify/README.md](scripts/verify/README.md)、[T1-01 测试报告](docs/testing/reports/T1-01-REPORT.md) 与 [T1-03 测试与交付报告](docs/testing/reports/T1-03-REPORT.md)。
 
 ## 数据目录（Release）
 

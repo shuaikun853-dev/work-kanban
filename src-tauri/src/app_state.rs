@@ -6,12 +6,16 @@
 //!
 //! T1-02 新增项目上下文：命令层只通过 [`ProjectService`] 调用项目业务规则，
 //! Tauri 适配层不包含项目业务判断，也不向前端暴露 SQL。
+//!
+//! T1-03 新增工作事项上下文：命令层只通过 [`WorkItemService`] 调用工作事项业务规则；
+//! 标题校验、项目归档校验（DEC-033）与事务边界都在 Rust Core 中。
 
 use std::sync::{Arc, Mutex};
 
 use serde::Serialize;
 use workmanager_core::{
-    Database, DatabaseError, DatabaseHealth, PortablePaths, Project, ProjectError, ProjectService,
+    Database, DatabaseError, DatabaseHealth, PendingWorkItem, PortablePaths, Project, ProjectError,
+    ProjectService, WorkItem, WorkItemError, WorkItemService,
 };
 
 use crate::APP_NAME;
@@ -56,6 +60,13 @@ impl AppState {
     /// 创建可移动到 `spawn_blocking` 任务中的项目命令上下文。
     pub fn project_context(&self) -> ProjectContext {
         ProjectContext {
+            database: Arc::clone(&self.database),
+        }
+    }
+
+    /// 创建可移动到 `spawn_blocking` 任务中的工作事项命令上下文。
+    pub fn work_item_context(&self) -> WorkItemContext {
+        WorkItemContext {
             database: Arc::clone(&self.database),
         }
     }
@@ -176,6 +187,61 @@ fn database_closed_error(context: &'static str) -> ProjectError {
 
 fn database_unavailable_error(context: &'static str, detail: &str) -> ProjectError {
     ProjectError::Database(DatabaseError::Sqlite {
+        context,
+        detail: detail.to_string(),
+    })
+}
+
+/// 工作事项命令的线程安全上下文（`Send + 'static`，供 `spawn_blocking` 使用）。
+///
+/// 命令层只能调用本上下文暴露的业务方法；不返回 SQLite 连接、不执行任意 SQL。
+#[derive(Clone)]
+pub struct WorkItemContext {
+    database: Arc<Mutex<Option<Database>>>,
+}
+
+impl WorkItemContext {
+    /// 创建工作事项（标题校验与项目归档校验在 Rust Core 事务内完成）。
+    pub fn create_work_item(
+        &self,
+        title: &str,
+        project_id: Option<&str>,
+    ) -> Result<WorkItem, WorkItemError> {
+        let mut guard = self.lock_database()?;
+        let database = guard
+            .as_mut()
+            .ok_or_else(|| work_item_database_closed_error("创建工作事项"))?;
+        WorkItemService::create(database, title, project_id)
+    }
+
+    /// 查询待安排工作事项（只读连接）。
+    pub fn list_pending_work_items(&self) -> Result<Vec<PendingWorkItem>, WorkItemError> {
+        let guard = self.lock_database()?;
+        let database = guard
+            .as_ref()
+            .ok_or_else(|| work_item_database_closed_error("查询待安排工作列表"))?;
+        WorkItemService::list_pending(database)
+    }
+
+    fn lock_database(&self) -> Result<std::sync::MutexGuard<'_, Option<Database>>, WorkItemError> {
+        self.database.lock().map_err(|_| {
+            work_item_database_error(
+                "数据库连接互斥锁",
+                "数据库连接锁已中毒（前一次操作发生 panic），请重启 WorkManager",
+            )
+        })
+    }
+}
+
+fn work_item_database_closed_error(context: &'static str) -> WorkItemError {
+    work_item_database_error(
+        context,
+        "数据库连接已关闭（应用正在退出），无法处理工作事项请求",
+    )
+}
+
+fn work_item_database_error(context: &'static str, detail: &str) -> WorkItemError {
+    WorkItemError::Database(DatabaseError::Sqlite {
         context,
         detail: detail.to_string(),
     })
@@ -305,6 +371,100 @@ mod tests {
         state.shutdown();
         let error = context
             .list_projects()
+            .expect_err("数据库关闭后必须返回结构化错误");
+        assert_eq!(error.code(), "database-sqlite-error");
+
+        let _ = std::fs::remove_dir_all(&data_root);
+    }
+
+    /// T1-03：工作事项命令上下文必须通过 Rust Core 完成真实创建/查询，
+    /// 并在事务内遵守 DEC-033（归档项目拒绝新关联，历史关联保留）。
+    #[test]
+    fn work_item_context_runs_real_lifecycle_against_database() {
+        let data_root = unique_test_data_root();
+        std::fs::create_dir_all(&data_root).expect("create D-drive test data root");
+        let exe_path = data_root.join("WorkManager.exe");
+        let paths = PortablePaths::resolve(RuntimeMode::DebugTest, &exe_path, Some(&data_root))
+            .expect("resolve test portable paths");
+        paths.ensure_directories().expect("ensure portable layout");
+        let database = Database::initialize(&paths).expect("initialize database");
+
+        let state = AppState::new(paths.clone(), database);
+        let work_item_context = state.work_item_context();
+        assert_send(&work_item_context);
+        let project_context = state.project_context();
+
+        assert!(
+            work_item_context
+                .list_pending_work_items()
+                .expect("empty pending list")
+                .is_empty(),
+            "新数据库不应包含工作事项"
+        );
+
+        // 未归属工作：仅标题即可创建，默认 pending。
+        let unassigned = work_item_context
+            .create_work_item("  整理中核商品数据  ", None)
+            .expect("create unassigned work item");
+        assert_eq!(unassigned.title, "整理中核商品数据");
+        assert_eq!(unassigned.lifecycle_status, "pending");
+        assert_eq!(unassigned.project_id, None);
+        assert_ne!(unassigned.id, "");
+        assert_eq!(unassigned.created_at, unassigned.updated_at);
+
+        // 相同标题产生独立记录。
+        let duplicate = work_item_context
+            .create_work_item("整理中核商品数据", None)
+            .expect("create duplicate title work item");
+        assert_ne!(duplicate.id, unassigned.id);
+
+        // 有效未归档项目关联成功。
+        let project = project_context
+            .create_project("虚构 IPC 项目")
+            .expect("create project");
+        let linked = work_item_context
+            .create_work_item("关联项目的工作", Some(&project.id))
+            .expect("create linked work item");
+        assert_eq!(linked.project_id.as_deref(), Some(project.id.as_str()));
+
+        // 归档项目后：既有工作关联保留；新建关联被拒绝（DEC-033）。
+        project_context
+            .archive_project(&project.id)
+            .expect("archive project");
+        let pending = work_item_context
+            .list_pending_work_items()
+            .expect("list pending work items");
+        assert_eq!(pending.len(), 3);
+        let archived_link = pending
+            .iter()
+            .find(|item| item.id == linked.id)
+            .expect("archived linked item must remain in pending list");
+        assert_eq!(
+            archived_link.project_name.as_deref(),
+            Some("虚构 IPC 项目"),
+            "历史关联必须保留项目名称"
+        );
+        assert!(archived_link.project_is_archived);
+
+        let error = work_item_context
+            .create_work_item("不应创建的工作", Some(&project.id))
+            .expect_err("已归档项目必须拒绝");
+        assert_eq!(error.code(), "project-archived");
+
+        let error = work_item_context
+            .create_work_item("不存在项目的工作", Some("missing-project-id"))
+            .expect_err("不存在项目必须拒绝");
+        assert_eq!(error.code(), "project-not-found");
+
+        let error = work_item_context
+            .create_work_item("   ", None)
+            .expect_err("空白标题必须拒绝");
+        assert_eq!(error.code(), "work-item-title-empty");
+
+        // 应用退出关闭连接后，工作事项命令必须返回结构化错误而不是 panic。
+        state.shutdown();
+        let error = work_item_context
+            .list_pending_work_items()
             .expect_err("数据库关闭后必须返回结构化错误");
         assert_eq!(error.code(), "database-sqlite-error");
 
