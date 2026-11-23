@@ -115,7 +115,7 @@
     ],
     "f2Scenarios": [
       "normal: real junction removed, sandbox safely deleted, external canary intact",
-      "delete failure: controlled FaultHook throws a deterministic exception at beforeLinkDelete before the real Junction-delete call; no Windows ACL change and no actual Access Denied/ACL-denial test; trackedLinkDeleteFailed, no recursive delete, sandbox/sentinel/canary preserved",
+      "controlled delete-failure fault injection: test hook throws immediately before the real Junction-delete operation; no Windows ACL/security descriptor is changed and no actual OS Access Denied/ACL-denial behavior is exercised; trackedLinkDeleteFailed, no recursive delete, sandbox/sentinel/canary preserved, unsafe path reported",
       "link reappears after delete: trackedLinkStillExists, sandbox preserved",
       "untracked reparse point: unexpectedReparsePoint, sandbox and both external canaries preserved",
       "identity swap before cleanup: sandboxIdentityChanged, sandbox preserved, swapped target canary intact",
@@ -124,13 +124,12 @@
     "round4NewChecksPresent": true,
     "evidence": "docs/testing/reports/T1-03-assets/evidence/round4/t1-03-uat-path-evidence.json",
     "f2DeleteFailureTest": {
-      "type": "controlled_fault_hook_injection",
-      "hookStage": "beforeLinkDelete",
-      "mechanism": "The FaultHook throws a deterministic exception before the real Junction-delete call.",
+      "type:": "controlled fault injection",
+      "mechanism": "FaultHook throws at beforeLinkDelete immediately before the real Junction-delete operation",
+      "realJunctionPresent": true,
       "windowsAclModified": false,
-      "actualWindowsAclDenialTested": false,
-      "actualAccessDeniedObserved": false,
-      "interpretation": "This verifies fail-closed handling of an injected delete failure; it does not demonstrate Windows ACL denial behavior."
+      "actualOsAccessDeniedTested": false,
+      "claim": "This validates fail-closed handling of a simulated delete failure, not an actual Windows ACL permission-denial scenario."
     }
   },
   "releaseE2E": {
@@ -285,5 +284,6 @@
   ],
   "thirdRoundEvidencePreserved": true,
   "thirdRoundCommit": "b6a54591b783049142cbbffecd107ec9086723eb",
-  "finalDocsCommitNote": "第四轮证据/文档同步提交见 PR #8 时间线；本轮未重写历史、未强制推送、未删除备份分支/bundle"
+  "finalDocsCommitNote": "第四轮证据/文档同步提交见 PR #8 时间线；本轮未重写历史、未强制推送、未删除备份分支/bundle",
+  "generatedAtNote": "UTC timestamp; equivalent local time Asia/Shanghai (UTC+08:00): 2026-11-20T18:40:00+08:00"
 }
