@@ -24,6 +24,18 @@ pub enum WorkItemError {
     #[error("所选项目已归档，不能再关联新工作。请选择其他项目或不选择项目。")]
     ProjectArchived,
 
+    /// 多项目批量创建时项目数量少于 2。
+    ///
+    /// 批量创建接口只接受 2 个及以上项目；0 / 1 个项目应使用 T1-03 单条创建接口。
+    #[error("批量创建至少需要两个不同的项目。")]
+    CopiesTooFewProjects,
+
+    /// 多项目批量创建时项目 ID 出现重复。
+    ///
+    /// 不得静默去重后继续创建：去重会改变用户在界面上确认的预计创建数量。
+    #[error("所选项目存在重复，请重新选择项目后提交。")]
+    CopiesDuplicateProject,
+
     /// 创建事务提交后无法按 ID 读回刚写入的记录（不应发生的内部一致性错误）。
     #[error("工作事项已写入但无法读取，请重试或检查数据库状态。")]
     PersistenceVerificationFailed,
@@ -40,6 +52,8 @@ impl WorkItemError {
             Self::EmptyTitle => "work-item-title-empty",
             Self::ProjectNotFound => "project-not-found",
             Self::ProjectArchived => "project-archived",
+            Self::CopiesTooFewProjects => "work-item-copies-too-few",
+            Self::CopiesDuplicateProject => "work-item-copies-duplicate-project",
             Self::PersistenceVerificationFailed => "work-item-persistence-verification-failed",
             Self::Database(error) => error.code(),
         }
@@ -56,6 +70,8 @@ mod tests {
             WorkItemError::EmptyTitle,
             WorkItemError::ProjectNotFound,
             WorkItemError::ProjectArchived,
+            WorkItemError::CopiesTooFewProjects,
+            WorkItemError::CopiesDuplicateProject,
             WorkItemError::PersistenceVerificationFailed,
         ] {
             let message = error.to_string();
@@ -70,6 +86,14 @@ mod tests {
         assert_eq!(WorkItemError::EmptyTitle.code(), "work-item-title-empty");
         assert_eq!(WorkItemError::ProjectNotFound.code(), "project-not-found");
         assert_eq!(WorkItemError::ProjectArchived.code(), "project-archived");
+        assert_eq!(
+            WorkItemError::CopiesTooFewProjects.code(),
+            "work-item-copies-too-few"
+        );
+        assert_eq!(
+            WorkItemError::CopiesDuplicateProject.code(),
+            "work-item-copies-duplicate-project"
+        );
         assert_eq!(
             WorkItemError::PersistenceVerificationFailed.code(),
             "work-item-persistence-verification-failed"

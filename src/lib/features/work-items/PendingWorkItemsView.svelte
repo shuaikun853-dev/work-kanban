@@ -5,6 +5,7 @@
   import {
     WorkItemIpcError,
     createWorkItem,
+    createWorkItemCopies,
     listPendingWorkItems
   } from '../../bridge/workItems';
   import type { ProjectDto } from '../../contracts/projects';
@@ -23,6 +24,8 @@
    * 创建成功与列表刷新结果分开记录，避免把“创建成功”误报成“列表已刷新成功”：
    * - success：创建成功且随后从后端重新读取待安排列表成功；
    * - warning：创建成功但列表刷新失败（不得再次创建同一工作，只允许重试读取）。
+   *
+   * T1-04：批量创建时必须显示后端返回的实际创建数量（而不是前端预计数量）。
    */
   type CreateOutcome = {
     readonly kind: 'success' | 'warning';
@@ -124,7 +127,16 @@
     }
   }
 
-  async function submitCreate(title: string, projectId: string | null): Promise<void> {
+  /**
+   * 创建编排（T1-04）：
+   * - 0 个项目：T1-03 未归属创建工作，调用单条接口；
+   * - 1 个项目：T1-03 单项目创建工作，调用单条接口；
+   * - 2 个及以上项目：调用批量接口，整批原子创建独立副本（DEC-034）。
+   *
+   * 失败时保留对话框中的标题与全部原始选择（对话框组件自身状态），
+   * 刷新项目列表让失效项目明确标出，但绝不自动移除后创建剩余项目。
+   */
+  async function submitCreate(title: string, projectIds: string[]): Promise<void> {
     // 同步守卫：同一个事件循环内的重复点击不会产生第二次创建请求。
     if (creating || !createOpen) {
       return;
@@ -133,31 +145,38 @@
     createError = null;
 
     try {
-      await createWorkItem(title, projectId);
+      let createdCount = 1;
+      if (projectIds.length >= 2) {
+        const created = await createWorkItemCopies(title, projectIds);
+        // 使用后端权威数量，而不是前端预计数量。
+        createdCount = created.workItems.length;
+      } else {
+        await createWorkItem(title, projectIds.length === 1 ? projectIds[0] : null);
+      }
       // 创建已成功：立即关闭创建弹窗，并明确告知“正在刷新”，不提前宣称列表已更新。
       createOpen = false;
       createOutcome = {
         kind: 'success',
-        text: '工作已创建，正在从数据库刷新待安排列表…'
+        text: `已创建 ${createdCount} 项工作，正在从数据库刷新待安排列表…`
       };
 
       const refreshed = await loadPending(false);
       if (refreshed) {
         createOutcome = {
           kind: 'success',
-          text: '工作已创建，待安排列表已从数据库更新。'
+          text: `已创建 ${createdCount} 项独立工作，待安排列表已从数据库更新。`
         };
       } else {
         // 创建成功但刷新失败：不得再次创建同一工作，只提示用户重试读取。
         createOutcome = {
           kind: 'warning',
-          text: '工作已创建，但待安排列表刷新失败；请使用“重新加载”确认最新状态。'
+          text: `已创建 ${createdCount} 项工作，但待安排列表刷新失败；请使用“重新加载”确认最新状态。`
         };
       }
     } catch (cause: unknown) {
       createError = toFailure(cause);
-      // 项目在列表加载后、提交前被归档/删除：Core 拒绝创建；刷新选项与待安排列表，
-      // 让失效项目从选择器消失，并让历史关联的“项目已归档”标识基于数据库最新状态展示。
+      // 项目在对话框打开后、提交前被归档/删除：整批已回滚；刷新项目选项，
+      // 让失效项目在对话框中继续保留并标记为不可用，由用户主动移除或调整。
       if (createError.code === 'project-archived' || createError.code === 'project-not-found') {
         await loadProjectOptions();
         await loadPending(false);
@@ -257,7 +276,7 @@
   projectsError={projectsError}
   submitting={creating}
   error={createError}
-  onSubmit={(title, projectId) => void submitCreate(title, projectId)}
+  onSubmit={(title, projectIds) => void submitCreate(title, projectIds)}
   onCancel={closeCreateDialog}
 />
 

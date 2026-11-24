@@ -255,7 +255,7 @@ async function waitForIpcReady(timeoutMs = 20000) {
     if (
       lastProbe.ok === true &&
       lastProbe.value?.database?.status === 'ok' &&
-      lastProbe.value?.database?.schemaVersion === 3
+      lastProbe.value?.database?.schemaVersion === 4
     ) {
       return lastProbe;
     }
@@ -604,14 +604,15 @@ try {
   const health = await directIpc('get_database_health');
   const healthDatabase = health.ok === true ? health.value?.database : null;
   check('ipc.diagnosticsAlive', health.ok === true && healthDatabase?.status === 'ok');
-  check('ipc.schemaVersion3', healthDatabase?.schemaVersion === 3);
+  check('ipc.schemaVersion4', healthDatabase?.schemaVersion === 4);
   check(
-    'ipc.migrations1To3',
+    'ipc.migrations1To4',
     Array.isArray(healthDatabase?.appliedMigrations) &&
-      healthDatabase.appliedMigrations.length === 3 &&
+      healthDatabase.appliedMigrations.length === 4 &&
       healthDatabase.appliedMigrations[0]?.version === 1 &&
       healthDatabase.appliedMigrations[1]?.version === 2 &&
-      healthDatabase.appliedMigrations[2]?.version === 3
+      healthDatabase.appliedMigrations[2]?.version === 3 &&
+      healthDatabase.appliedMigrations[3]?.version === 4
   );
   check('ipc.integrityOk', healthDatabase?.integrityCheck === 'ok');
 
@@ -787,10 +788,11 @@ try {
   check('diagnostics.threePortablePaths', diagnostics.pathValues.length === 3);
   check(
     'diagnostics.migrationRows',
-    diagnostics.migrationRows.length === 3 &&
+    diagnostics.migrationRows.length === 4 &&
       diagnostics.migrationRows[0][0] === '1' &&
       diagnostics.migrationRows[1][0] === '2' &&
-      diagnostics.migrationRows[2][0] === '3'
+      diagnostics.migrationRows[2][0] === '3' &&
+      diagnostics.migrationRows[3][0] === '4'
   );
   check('diagnostics.unencryptedNote', (diagnostics.note || '').includes('未加密'));
   await checkNoOverflow('diagnostics.noHorizontalOverflow');

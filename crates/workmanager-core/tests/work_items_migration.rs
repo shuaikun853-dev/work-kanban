@@ -1,10 +1,10 @@
-//! T1-03 schema 2 → 3 migration 专项测试。
+//! T1-03 schema 2 → 3 migration 专项测试（T1-04 起同时验证升级到最新 schema 4）。
 //!
 //! 重点验证：
-//! - 从已有 schema 2 数据库升级到 schema 3，原有项目数据（含归档项目）完整保留；
-//! - `user_version` 前进到 3、`schema_migrations` 追加且只追加 0003；
+//! - 从已有 schema 2 数据库升级到最新 schema（当前 4），原有项目数据（含归档项目）完整保留；
+//! - `user_version` 前进到最新版本、`schema_migrations` 按顺序追加；
 //! - 已是最新版本时重复打开安全（不重复执行 migration）；
-//! - 注入迁移失败时事务回滚：`user_version` 停在 2，不留 `work_items` 半成品表；
+//! - 注入 0003 迁移失败时事务回滚：`user_version` 停在 2，不留 `work_items` 半成品表；
 //! - 新表约束（STRICT、外键 RESTRICT、状态/评分 CHECK）真实生效。
 
 mod support;
@@ -71,8 +71,8 @@ fn upgrades_real_schema_two_database_and_preserves_projects() {
     prepare_schema_two_database(&paths);
 
     let database = Database::initialize(&paths).expect("打开并升级 schema 2 数据库");
-    assert_eq!(database.schema_version().expect("schema version"), 3);
-    assert_eq!(LATEST_SCHEMA_VERSION, 3);
+    assert_eq!(database.schema_version().expect("schema version"), 4);
+    assert_eq!(LATEST_SCHEMA_VERSION, 4);
 
     // 项目数据完整保留，归档标记不变。
     let projects: Vec<(String, String, i64)> = {
@@ -120,12 +120,12 @@ fn upgrades_real_schema_two_database_and_preserves_projects() {
             .collect::<Result<_, _>>()
             .expect("收集 migration 版本")
     };
-    assert_eq!(migrations, vec![1, 2, 3]);
+    assert_eq!(migrations, vec![1, 2, 3, 4]);
 
     database.check_foreign_keys().expect("升级后外键检查");
     let health = database.health_report().expect("升级后健康检查");
     assert_eq!(health.integrity_check, "ok");
-    assert_eq!(health.schema_version, 3);
+    assert_eq!(health.schema_version, 4);
 }
 
 #[test]
@@ -139,7 +139,7 @@ fn reopening_latest_schema_does_not_reapply_migrations_or_lose_data() {
 
     let paths = dir.release_paths();
     let database = Database::initialize(&paths).expect("再次打开最新 schema");
-    assert_eq!(database.schema_version().expect("schema version"), 3);
+    assert_eq!(database.schema_version().expect("schema version"), 4);
 
     let migration_count: i64 = database
         .connection()
@@ -147,7 +147,7 @@ fn reopening_latest_schema_does_not_reapply_migrations_or_lose_data() {
             row.get(0)
         })
         .expect("migration 记录数");
-    assert_eq!(migration_count, 3, "重复打开不得重复执行 migration");
+    assert_eq!(migration_count, 4, "重复打开不得重复执行 migration");
     let project_count: i64 = database
         .connection()
         .query_row("SELECT COUNT(*) FROM projects", [], |row| row.get(0))
@@ -214,7 +214,7 @@ fn injected_work_items_migration_failure_rolls_back_and_keeps_schema_two() {
     // 数据库仍可正常升级。
     drop(connection);
     let database = Database::initialize(&paths).expect("回滚后重新升级");
-    assert_eq!(database.schema_version().expect("schema version"), 3);
+    assert_eq!(database.schema_version().expect("schema version"), 4);
 }
 
 #[test]

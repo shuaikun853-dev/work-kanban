@@ -1,9 +1,10 @@
 /**
- * T1-03 工作事项 IPC 契约（前端唯一工作事项数据契约来源）。
+ * T1-03 / T1-04 工作事项 IPC 契约（前端唯一工作事项数据契约来源）。
  *
  * 字段必须与 Rust 后端 serde camelCase 输出逐字段一致：
- * - 命令：`create_work_item` / `list_pending_work_items`
- * - 成功：`WorkItem`（创建返回，10 字段）、`PendingWorkItem`（待安排列表，8 字段）
+ * - 命令：`create_work_item` / `list_pending_work_items` / `create_work_item_copies`
+ * - 成功：`WorkItem`（创建返回，10 字段）、`PendingWorkItem`（待安排列表，8 字段）、
+ *   `CreatedWorkItemCopies`（多项目批量创建，`{groupId, workItems}`）
  *   （crates/workmanager-core/src/work_items/model.rs）
  * - 失败：`IpcErrorPayload`（src-tauri/src/commands/mod.rs 的 CommandError）
  *
@@ -12,13 +13,15 @@
  * - 未列出的额外字段一律拒绝（不允许静默忽略未知字段）；
  * - `importance`、`urgency` 为 `null` 或 1–5 的整数；
  * - `dueDate`、`description` 为 `null` 或字符串；
- * - `lifecycleStatus` 在待安排/创建场景只接受 `"pending"`。
+ * - `lifecycleStatus` 在待安排/创建场景只接受 `"pending"`；
+ * - 批量创建响应数量必须与请求项目数一致，且每个项目恰好一个副本。
  *
  * 工作事项 ID 由 Rust Core 生成；前端禁止自行生成业务 ID。
  * 前端不直接访问 SQLite，也不在前端保存/模拟工作事项状态。
  */
 
 export const CREATE_WORK_ITEM_COMMAND = 'create_work_item' as const;
+export const CREATE_WORK_ITEM_COPIES_COMMAND = 'create_work_item_copies' as const;
 export const LIST_PENDING_WORK_ITEMS_COMMAND = 'list_pending_work_items' as const;
 
 /** T1-03 唯一会写入的生命周期状态：待安排。 */
@@ -69,4 +72,27 @@ export interface PendingWorkItemDto {
 export interface CreateWorkItemInput {
   readonly title: string;
   readonly projectId: string | null;
+}
+
+/**
+ * `create_work_item_copies` 请求体（对应 Rust `CreateWorkItemCopiesRequest`）。
+ *
+ * - `projectIds` 必须包含 2 个及以上不同项目；少于 2 个或重复项目由 Rust Core 拒绝；
+ * - 项目顺序即返回 `workItems` 的顺序；前端不得自行去重后提交。
+ */
+export interface CreateWorkItemCopiesInput {
+  readonly title: string;
+  readonly projectIds: readonly string[];
+}
+
+/**
+ * `create_work_item_copies` 成功响应（对应 Rust `CreatedWorkItemCopies`）。
+ *
+ * - `groupId`：Rust Core 生成的创建组稳定 UUID；
+ * - `workItems`：每个请求项目恰好一个独立工作副本，全部为 `pending`；
+ * - 整批原子提交（DEC-034）：成功响应保证全部副本与成员关系已提交，不存在部分成功。
+ */
+export interface CreatedWorkItemCopiesDto {
+  readonly groupId: string;
+  readonly workItems: readonly WorkItemDto[];
 }

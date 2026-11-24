@@ -14,8 +14,8 @@ use std::sync::{Arc, Mutex};
 
 use serde::Serialize;
 use workmanager_core::{
-    Database, DatabaseError, DatabaseHealth, PendingWorkItem, PortablePaths, Project, ProjectError,
-    ProjectService, WorkItem, WorkItemError, WorkItemService,
+    CreatedWorkItemCopies, Database, DatabaseError, DatabaseHealth, PendingWorkItem, PortablePaths,
+    Project, ProjectError, ProjectService, WorkItem, WorkItemError, WorkItemService,
 };
 
 use crate::APP_NAME;
@@ -221,6 +221,19 @@ impl WorkItemContext {
             .as_ref()
             .ok_or_else(|| work_item_database_closed_error("查询待安排工作列表"))?;
         WorkItemService::list_pending(database)
+    }
+
+    /// 为多个项目批量创建独立工作副本（整批原子提交在 Rust Core 事务内完成）。
+    pub fn create_work_item_copies(
+        &self,
+        title: &str,
+        project_ids: &[String],
+    ) -> Result<CreatedWorkItemCopies, WorkItemError> {
+        let mut guard = self.lock_database()?;
+        let database = guard
+            .as_mut()
+            .ok_or_else(|| work_item_database_closed_error("批量创建工作事项副本"))?;
+        WorkItemService::create_copies(database, title, project_ids)
     }
 
     fn lock_database(&self) -> Result<std::sync::MutexGuard<'_, Option<Database>>, WorkItemError> {
@@ -466,6 +479,76 @@ mod tests {
         let error = work_item_context
             .list_pending_work_items()
             .expect_err("数据库关闭后必须返回结构化错误");
+        assert_eq!(error.code(), "database-sqlite-error");
+
+        let _ = std::fs::remove_dir_all(&data_root);
+    }
+
+    /// T1-04：多项目批量创建必须通过 Rust Core 在同一事务内完成；
+    /// 归档项目导致整批失败，不得留下任何部分记录。
+    #[test]
+    fn work_item_context_batch_creates_copies_and_rolls_back_whole_batch() {
+        let data_root = unique_test_data_root();
+        std::fs::create_dir_all(&data_root).expect("create D-drive test data root");
+        let exe_path = data_root.join("WorkManager.exe");
+        let paths = PortablePaths::resolve(RuntimeMode::DebugTest, &exe_path, Some(&data_root))
+            .expect("resolve test portable paths");
+        paths.ensure_directories().expect("ensure portable layout");
+        let database = Database::initialize(&paths).expect("initialize database");
+
+        let state = AppState::new(paths.clone(), database);
+        let work_item_context = state.work_item_context();
+        let project_context = state.project_context();
+        assert_send(&work_item_context);
+
+        let project_a = project_context
+            .create_project("虚构 IPC 批量项目甲")
+            .expect("create project A");
+        let project_b = project_context
+            .create_project("虚构 IPC 批量项目乙")
+            .expect("create project B");
+        let batch_ids = vec![project_a.id.clone(), project_b.id.clone()];
+
+        let created = work_item_context
+            .create_work_item_copies("  IPC 批量创建  ", &batch_ids)
+            .expect("batch create via context");
+        assert!(!created.group_id.is_empty(), "必须返回创建组 ID");
+        assert_eq!(created.work_items.len(), 2);
+        assert_eq!(created.work_items[0].title, "IPC 批量创建");
+        assert_eq!(created.work_items[0].lifecycle_status, "pending");
+        let pending = work_item_context
+            .list_pending_work_items()
+            .expect("list pending after batch");
+        assert_eq!(pending.len(), 2);
+
+        // 归档项目乙：包含甲+乙的批量创建必须整批失败，不得为甲写入部分副本。
+        project_context
+            .archive_project(&project_b.id)
+            .expect("archive project B");
+        let error = work_item_context
+            .create_work_item_copies("整批失败工作", &batch_ids)
+            .expect_err("archived project must fail whole batch");
+        assert_eq!(error.code(), "project-archived");
+        let pending = work_item_context
+            .list_pending_work_items()
+            .expect("list pending after failed batch");
+        assert_eq!(pending.len(), 2, "失败批次不得留下部分记录");
+        assert!(
+            !pending.iter().any(|item| item.title == "整批失败工作"),
+            "失败批次标题不得落库"
+        );
+
+        // 少于两个项目属于 Rust Core 业务校验。
+        let error = work_item_context
+            .create_work_item_copies("单项目批量请求", &[project_a.id.clone()])
+            .expect_err("too few projects must fail");
+        assert_eq!(error.code(), "work-item-copies-too-few");
+
+        // 应用退出关闭连接后，批量创建必须返回结构化错误而不是 panic。
+        state.shutdown();
+        let error = work_item_context
+            .create_work_item_copies("数据库关闭后的批量请求", &batch_ids)
+            .expect_err("database closed must fail with structured error");
         assert_eq!(error.code(), "database-sqlite-error");
 
         let _ = std::fs::remove_dir_all(&data_root);

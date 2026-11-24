@@ -42,6 +42,21 @@ pub struct WorkItem {
     pub updated_at: String,
 }
 
+/// 多项目批量创建的权威结果（T1-04）。
+///
+/// - `group_id`：Rust Core 在写事务内生成的创建组稳定 UUID；
+/// - `work_items`：按请求项目顺序返回的事务内读回记录，每个项目恰好一条独立工作副本。
+///
+/// **序列化契约（与 `src/lib/contracts/workItems.ts` 的 `CreatedWorkItemCopiesDto` 一致）：**
+/// 恰好两个 camelCase 字段 `groupId`、`workItems`；`workItems` 复用 [`WorkItem`] 的 10 字段
+/// camelCase 契约。整批创建采用原子提交（DEC-034），任一项目或任一写入失败都不返回该结构。
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreatedWorkItemCopies {
+    pub group_id: String,
+    pub work_items: Vec<WorkItem>,
+}
+
 /// 待安排列表读模型。
 ///
 /// 通过 `LEFT JOIN projects` 一次性返回项目名称与归档标记：

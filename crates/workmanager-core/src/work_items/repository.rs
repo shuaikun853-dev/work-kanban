@@ -83,6 +83,109 @@ pub(crate) fn find(
         .map_err(|error| map_error("查询工作事项", database_path, error))
 }
 
+/// 创建组事务内读回行。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct CreationGroupRow {
+    pub source_title: String,
+    pub created_at: String,
+}
+
+/// 成员关系事务内读回行（含工作事项真实 `project_id`）。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct CreationGroupMemberRow {
+    pub group_id: String,
+    pub work_item_id: String,
+    pub project_id: Option<String>,
+}
+
+/// 插入创建组（T1-04 多项目批量创建来源记录）。
+pub(crate) fn insert_creation_group(
+    transaction: &Transaction<'_>,
+    database_path: &Path,
+    group_id: &str,
+    source_title: &str,
+    created_at: &str,
+) -> Result<(), WorkItemError> {
+    transaction
+        .execute(
+            "INSERT INTO work_item_creation_groups (id, source_title, created_at) \
+             VALUES (?1, ?2, ?3)",
+            params![group_id, source_title, created_at],
+        )
+        .map_err(|error| map_error("写入工作事项创建组", database_path, error))?;
+    Ok(())
+}
+
+/// 插入创建组与工作副本的成员关系。
+pub(crate) fn insert_creation_group_member(
+    transaction: &Transaction<'_>,
+    database_path: &Path,
+    group_id: &str,
+    work_item_id: &str,
+) -> Result<(), WorkItemError> {
+    transaction
+        .execute(
+            "INSERT INTO work_item_creation_group_members (group_id, work_item_id) \
+             VALUES (?1, ?2)",
+            params![group_id, work_item_id],
+        )
+        .map_err(|error| map_error("写入工作事项创建组成员关系", database_path, error))?;
+    Ok(())
+}
+
+/// 在写事务内按 ID 读回创建组，用于提交前的持久化验证。
+pub(crate) fn find_creation_group(
+    transaction: &Transaction<'_>,
+    database_path: &Path,
+    group_id: &str,
+) -> Result<Option<CreationGroupRow>, WorkItemError> {
+    transaction
+        .query_row(
+            "SELECT source_title, created_at FROM work_item_creation_groups WHERE id = ?1",
+            params![group_id],
+            |row| {
+                Ok(CreationGroupRow {
+                    source_title: row.get(0)?,
+                    created_at: row.get(1)?,
+                })
+            },
+        )
+        .optional()
+        .map_err(|error| map_error("读回工作事项创建组", database_path, error))
+}
+
+/// 在写事务内读回创建组全部成员关系，并 JOIN 工作副本取真实 `project_id`。
+pub(crate) fn list_creation_group_members(
+    transaction: &Transaction<'_>,
+    database_path: &Path,
+    group_id: &str,
+) -> Result<Vec<CreationGroupMemberRow>, WorkItemError> {
+    let mut statement = transaction
+        .prepare(
+            "SELECT m.group_id, m.work_item_id, w.project_id \
+             FROM work_item_creation_group_members m \
+             JOIN work_items w ON w.id = m.work_item_id \
+             WHERE m.group_id = ?1 \
+             ORDER BY m.work_item_id",
+        )
+        .map_err(|error| map_error("准备读回创建组成员关系", database_path, error))?;
+    let rows = statement
+        .query_map(params![group_id], |row| {
+            Ok(CreationGroupMemberRow {
+                group_id: row.get(0)?,
+                work_item_id: row.get(1)?,
+                project_id: row.get(2)?,
+            })
+        })
+        .map_err(|error| map_error("读回创建组成员关系", database_path, error))?;
+
+    let mut members = Vec::new();
+    for row in rows {
+        members.push(row.map_err(|error| map_error("解析创建组成员关系", database_path, error))?);
+    }
+    Ok(members)
+}
+
 /// 查询待安排工作事项：有/无项目均返回，项目归档后历史关联继续展示。
 ///
 /// 排序固定为创建时间倒序、稳定 ID 次级键；T1-03 不实现手动排序或优先级排序。

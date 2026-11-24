@@ -266,7 +266,7 @@ const assertions = {
   ipcAppName: ipcResult !== null && ipcResult.appName === 'WorkManager',
   ipcAppVersion: ipcResult !== null && ipcResult.appVersion === '0.1.0',
   ipcRuntimeModeRelease: ipcResult !== null && ipcResult.runtimeMode === 'release',
-  ipcSchemaVersion: database !== null && database.schemaVersion === 3,
+  ipcSchemaVersion: database !== null && database.schemaVersion === 4,
   ipcIntegrityOk: database !== null && database.integrityCheck === 'ok',
   ipcJournalModeWal: database !== null && String(database.journalMode).toLowerCase() === 'wal',
   ipcForeignKeysEnabled: database !== null && database.foreignKeys === true,
@@ -275,10 +275,11 @@ const assertions = {
   ipcMigrationRecorded:
     database !== null &&
     Array.isArray(database.appliedMigrations) &&
-    database.appliedMigrations.length === 3 &&
+    database.appliedMigrations.length === 4 &&
     database.appliedMigrations[0].version === 1 &&
     database.appliedMigrations[1].version === 2 &&
-    database.appliedMigrations[2].version === 3,
+    database.appliedMigrations[2].version === 3 &&
+    database.appliedMigrations[3].version === 4,
   ipcDatabasePathPortable:
     database !== null &&
     String(database.databasePath).toLowerCase().endsWith('\\app\\data\\database\\work.db'),

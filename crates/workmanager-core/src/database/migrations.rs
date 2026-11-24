@@ -15,7 +15,7 @@ use super::connection::map_sqlite_error;
 use crate::error::DatabaseError;
 
 /// 当前应用支持的最新 schema 版本。
-pub const LATEST_SCHEMA_VERSION: i64 = 3;
+pub const LATEST_SCHEMA_VERSION: i64 = 4;
 
 /// 一个编号 SQL migration。
 #[derive(Debug, Clone, Copy)]
@@ -41,6 +41,11 @@ pub const MIGRATIONS: &[Migration] = &[
         version: 3,
         name: "0003_work_items",
         sql: include_str!("../../migrations/0003_work_items.sql"),
+    },
+    Migration {
+        version: 4,
+        name: "0004_work_item_creation_groups",
+        sql: include_str!("../../migrations/0004_work_item_creation_groups.sql"),
     },
 ];
 

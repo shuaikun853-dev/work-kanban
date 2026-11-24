@@ -9,12 +9,14 @@
 
   interface Props {
     open: boolean;
+    /** 可选的未归档项目（安全边界在 Rust Core 事务内，前端过滤只用于展示）。 */
     projects: readonly ProjectDto[];
     projectsLoading?: boolean;
     projectsError?: string | null;
     submitting?: boolean;
     error?: CreateFailure | null;
-    onSubmit: (title: string, projectId: string | null) => void;
+    /** 0 个项目 = 未归属；1 个项目 = 单条创建；2+ 个项目 = 批量创建独立副本。 */
+    onSubmit: (title: string, projectIds: string[]) => void;
     onCancel: () => void;
   }
 
@@ -32,12 +34,44 @@
   let dialogElement = $state<HTMLDialogElement | null>(null);
   let titleInput = $state<HTMLInputElement | null>(null);
   let title = $state('');
-  let selectedProjectId = $state('');
+  /** 已选择的项目 ID；空数组表示“未归属项目”。 */
+  let selectedProjectIds = $state<string[]>([]);
+  /** 选择时记住项目名称，供项目后来失效时仍能向用户展示原选择（不自动删除）。 */
+  let knownProjectNames = $state<Record<string, string>>({});
   let touched = $state(false);
-  let selectionResetNotice = $state<string | null>(null);
 
   const trimmedTitle = $derived(title.trim());
-  const canSubmit = $derived(trimmedTitle.length > 0 && !submitting);
+  const availableProjectIds = $derived(new Set(projects.map((project) => project.id)));
+  /** 项目列表成功刷新后仍不在可选列表中的已选项目：保留展示，禁止自动移除。 */
+  const invalidProjectIds = $derived(
+    !projectsLoading && projectsError === null
+      ? selectedProjectIds.filter((projectId) => !availableProjectIds.has(projectId))
+      : []
+  );
+  const hasInvalidSelection = $derived(invalidProjectIds.length > 0);
+  const expectedCopyCount = $derived(
+    selectedProjectIds.length === 0 ? 1 : selectedProjectIds.length
+  );
+  const createMode = $derived(
+    selectedProjectIds.length === 0
+      ? 'unassigned'
+      : selectedProjectIds.length === 1
+        ? 'single'
+        : 'copies'
+  );
+  const selectionSummary = $derived(
+    selectedProjectIds.length === 0
+      ? '未选择项目，将创建 1 项未归属工作'
+      : selectedProjectIds.length === 1
+        ? '已选择 1 个项目，将创建 1 项独立工作'
+        : `已选择 ${selectedProjectIds.length} 个项目，将创建 ${selectedProjectIds.length} 项独立工作`
+  );
+  const canSubmit = $derived(
+    trimmedTitle.length > 0 &&
+      !submitting &&
+      !projectsLoading &&
+      !hasInvalidSelection
+  );
   const showEmptyHint = $derived(touched && trimmedTitle.length === 0 && !submitting);
 
   $effect(() => {
@@ -49,9 +83,9 @@
     if (open) {
       if (!dialog.open) {
         title = '';
-        selectedProjectId = '';
+        selectedProjectIds = [];
+        knownProjectNames = {};
         touched = false;
-        selectionResetNotice = null;
         dialog.showModal();
         queueMicrotask(() => titleInput?.focus());
       }
@@ -60,18 +94,40 @@
     }
   });
 
-  // 项目列表刷新后（例如提交时项目刚被归档），若当前选择已不可用，回退为未归属项目，
-  // 由用户决定是否重新选择；不会自动提交或静默改写已提交的标题。
-  $effect(() => {
-    if (!open || selectedProjectId.length === 0) {
+  function projectLabel(projectId: string): string {
+    const name = knownProjectNames[projectId];
+    if (typeof name === 'string' && name.length > 0) {
+      return name;
+    }
+    return `项目 ${projectId.slice(0, 8)}…`;
+  }
+
+  function clearProjects(): void {
+    if (submitting) {
       return;
     }
-    if (projects.some((project) => project.id === selectedProjectId)) {
+    selectedProjectIds = [];
+  }
+
+  function toggleProject(project: ProjectDto): void {
+    if (submitting || projectsLoading) {
       return;
     }
-    selectedProjectId = '';
-    selectionResetNotice = '所选项目已不可用（可能已被归档），已改为未归属项目。';
-  });
+    if (selectedProjectIds.includes(project.id)) {
+      selectedProjectIds = selectedProjectIds.filter((projectId) => projectId !== project.id);
+      return;
+    }
+    knownProjectNames = { ...knownProjectNames, [project.id]: project.name };
+    selectedProjectIds = [...selectedProjectIds, project.id];
+  }
+
+  /** 失效项目必须由用户主动移除；不提供自动删除或自动替换。 */
+  function removeInvalidProject(projectId: string): void {
+    if (submitting) {
+      return;
+    }
+    selectedProjectIds = selectedProjectIds.filter((selected) => selected !== projectId);
+  }
 
   function handleSubmit(event: SubmitEvent): void {
     event.preventDefault();
@@ -79,7 +135,7 @@
     if (!canSubmit) {
       return;
     }
-    onSubmit(trimmedTitle, selectedProjectId.length === 0 ? null : selectedProjectId);
+    onSubmit(trimmedTitle, [...selectedProjectIds]);
   }
 
   function requestCancel(): void {
@@ -94,6 +150,7 @@
   class="quick-create-dialog"
   aria-labelledby="work-item-dialog-title"
   aria-describedby="work-item-dialog-description"
+  data-create-mode={createMode}
   oncancel={(event) => {
     event.preventDefault();
     requestCancel();
@@ -108,7 +165,7 @@
     <div class="dialog-body">
       <h2 id="work-item-dialog-title" class="dialog-title">快速创建工作</h2>
       <p id="work-item-dialog-description" class="dialog-description">
-        只需填写标题即可保存；工作会立即进入待安排。
+        只需填写标题即可保存；选择一个项目创建单条工作，选择多个项目将为每个项目创建独立副本。
       </p>
 
       <label class="field" for="work-item-title">
@@ -134,27 +191,74 @@
         <p class="field-hint field-hint--error" id="work-item-title-hint">工作标题不能为空。</p>
       {/if}
 
-      <label class="field" for="work-item-project">
-        <span class="field-label">所属项目（可选）</span>
-        <select
-          id="work-item-project"
-          class="field-select"
-          bind:value={selectedProjectId}
-          disabled={submitting || projectsLoading}
-        >
-          <option value="">未归属项目</option>
+      <fieldset class="field project-field" disabled={submitting || projectsLoading}>
+        <legend class="field-label">所属项目（可选，可多选）</legend>
+        <div class="project-options" id="work-item-project-options">
+          <label class="project-option">
+            <input
+              type="checkbox"
+              class="project-option__checkbox"
+              checked={selectedProjectIds.length === 0}
+              aria-label="未归属项目"
+              data-project-unassigned
+              onclick={(event) => {
+                event.preventDefault();
+                clearProjects();
+              }}
+            />
+            <span class="project-option__label">未归属项目</span>
+          </label>
           {#each projects as project (project.id)}
-            <option value={project.id}>{project.name}</option>
+            <label class="project-option">
+              <input
+                type="checkbox"
+                class="project-option__checkbox"
+                checked={selectedProjectIds.includes(project.id)}
+                data-project-id={project.id}
+                onclick={(event) => {
+                  event.preventDefault();
+                  toggleProject(project);
+                }}
+              />
+              <span class="project-option__label">{project.name}</span>
+            </label>
           {/each}
-        </select>
-      </label>
+        </div>
+      </fieldset>
+
+      <p class="selection-summary" role="status">
+        <span data-selected-project-count={selectedProjectIds.length}>{selectionSummary}</span>
+        <span class="selection-summary__expected" data-expected-copy-count={expectedCopyCount}>
+          预计创建 {expectedCopyCount} 项
+        </span>
+      </p>
+
       {#if projectsLoading}
         <p class="field-hint">正在读取可选项目…</p>
       {:else if projectsError}
         <p class="field-hint field-hint--warning">{projectsError}</p>
       {/if}
-      {#if selectionResetNotice}
-        <p class="field-hint field-hint--warning" role="status">{selectionResetNotice}</p>
+
+      {#if hasInvalidSelection}
+        <div class="invalid-selection" role="alert" data-invalid-project-selections>
+          <p class="invalid-selection__title">以下已选项目已不可用（可能已被归档或删除）：</p>
+          <ul class="invalid-selection__list">
+            {#each invalidProjectIds as projectId (projectId)}
+              <li class="invalid-selection__item">
+                <span class="invalid-selection__name">{projectLabel(projectId)}</span>
+                <button
+                  type="button"
+                  class="invalid-selection__remove"
+                  disabled={submitting}
+                  onclick={() => removeInvalidProject(projectId)}
+                >
+                  移除
+                </button>
+              </li>
+            {/each}
+          </ul>
+          <p class="invalid-selection__hint">请主动移除失效项目或调整选择后重新提交；不会自动创建剩余项目。</p>
+        </div>
       {/if}
 
       {#if error}
@@ -174,7 +278,7 @@
 
 <style>
   .quick-create-dialog {
-    width: min(92vw, 460px);
+    width: min(92vw, 480px);
     max-height: 90vh;
     margin: auto;
     padding: 0;
@@ -196,6 +300,7 @@
 
   .dialog-body {
     padding: var(--space-6) var(--space-6) var(--space-2);
+    overflow-y: auto;
   }
 
   .dialog-title {
@@ -223,8 +328,7 @@
     font-weight: 600;
   }
 
-  .field-input,
-  .field-select {
+  .field-input {
     width: 100%;
     min-height: 38px;
     padding: 8px 12px;
@@ -235,8 +339,7 @@
     font-size: var(--font-size-body);
   }
 
-  .field-input:focus,
-  .field-select:focus {
+  .field-input:focus {
     border-color: var(--color-accent);
     outline: var(--focus-ring);
     outline-offset: 1px;
@@ -244,6 +347,131 @@
 
   .field-input[aria-invalid='true'] {
     border-color: var(--color-danger);
+  }
+
+  .project-field {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .project-options {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 188px;
+    padding: 6px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+  }
+
+  .project-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--font-size-body);
+  }
+
+  .project-option:hover {
+    background-color: var(--color-surface-hover);
+  }
+
+  .project-option__checkbox {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    accent-color: var(--color-accent);
+    flex: none;
+  }
+
+  .project-option__checkbox:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .project-option__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .selection-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-auxiliary);
+  }
+
+  .selection-summary__expected {
+    color: var(--color-accent-strong);
+    font-weight: 600;
+  }
+
+  .invalid-selection {
+    margin-top: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-warning-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning-text);
+    font-size: var(--font-size-auxiliary);
+  }
+
+  .invalid-selection__title {
+    font-weight: 600;
+  }
+
+  .invalid-selection__list {
+    margin: var(--space-1) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .invalid-selection__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: 2px 0;
+  }
+
+  .invalid-selection__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .invalid-selection__remove {
+    padding: 1px 6px;
+    border: 1px solid var(--color-warning-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-surface);
+    color: var(--color-warning-text);
+    font-size: var(--font-size-caption);
+    cursor: pointer;
+  }
+
+  .invalid-selection__remove:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .invalid-selection__hint {
+    margin-top: var(--space-1);
+    color: var(--color-warning-text);
+    font-size: var(--font-size-caption);
   }
 
   .field-hint {

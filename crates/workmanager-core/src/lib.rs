@@ -5,7 +5,7 @@
 //! - [`database`]：普通 SQLite 连接、PRAGMA 配置、`user_version` migration、完整性检查与健康快照；
 //! - [`error`]：结构化错误码；
 //! - [`projects`]：项目创建、编辑、归档（T1-02）；
-//! - [`work_items`]：工作事项快速创建与待安排查询（T1-03）。
+//! - [`work_items`]：工作事项快速创建、待安排查询与多项目独立副本批量创建（T1-03 / T1-04）。
 //!
 //! Tauri 适配层（`src-tauri`）只负责命令、窗口和 IPC DTO，不在此 crate 内出现。
 
@@ -25,5 +25,6 @@ pub use portable_paths::{
 };
 pub use projects::{Project, ProjectError, ProjectService};
 pub use work_items::{
-    PendingWorkItem, WORK_ITEM_STATUS_PENDING, WorkItem, WorkItemError, WorkItemService,
+    CreatedWorkItemCopies, PendingWorkItem, WORK_ITEM_STATUS_PENDING, WorkItem, WorkItemError,
+    WorkItemService,
 };

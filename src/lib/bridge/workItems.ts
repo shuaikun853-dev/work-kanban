@@ -1,5 +1,6 @@
 /**
- * 工作事项 Tauri Bridge：类型安全地封装 `create_work_item` / `list_pending_work_items`。
+ * 工作事项 Tauri Bridge：类型安全地封装
+ * `create_work_item` / `create_work_item_copies` / `list_pending_work_items`。
  *
  * 职责：
  * - 只调用明确的业务命令，不提供任意 SQL / 任意文件读写入口；
@@ -13,20 +14,24 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 import type { IpcErrorPayload } from '../contracts/ipc';
 import {
   CREATE_WORK_ITEM_COMMAND,
+  CREATE_WORK_ITEM_COPIES_COMMAND,
   LIST_PENDING_WORK_ITEMS_COMMAND
 } from '../contracts/workItems';
 import type {
+  CreateWorkItemCopiesInput,
   CreateWorkItemInput,
+  CreatedWorkItemCopiesDto,
   PendingWorkItemDto,
   WorkItemDto
 } from '../contracts/workItems';
 import {
   WorkItemIpcError,
+  parseCreatedWorkItemCopies,
   parsePendingWorkItemList,
   parseWorkItem
 } from './workItemValidation';
 
-export { WorkItemIpcError, parsePendingWorkItemList, parseWorkItem };
+export { WorkItemIpcError, parseCreatedWorkItemCopies, parsePendingWorkItemList, parseWorkItem };
 
 const COMMAND_FAILED_CODE = 'ipc-command-failed';
 const UNKNOWN_IPC_ERROR_CODE = 'ipc-unknown-error';
@@ -41,6 +46,23 @@ export async function createWorkItem(
   const input: CreateWorkItemInput = { title, projectId };
   const raw = await invokeWorkItemCommand(CREATE_WORK_ITEM_COMMAND, { input });
   return parseWorkItem(raw);
+}
+
+/**
+ * 为多个项目批量创建互相独立的工作事项副本（整批原子提交，DEC-034）。
+ *
+ * - `projectIds` 必须包含 2 个及以上不同项目；少于 2 个或重复项目由 Rust Core 拒绝；
+ * - 响应必须通过严格运行时契约校验（数量、项目一一对应、ID 唯一、全部 pending）；
+ * - 任一项目不存在/已归档时后端整批失败，不会返回部分成功。
+ */
+export async function createWorkItemCopies(
+  title: string,
+  projectIds: readonly string[]
+): Promise<CreatedWorkItemCopiesDto> {
+  ensureDesktopRuntime();
+  const input: CreateWorkItemCopiesInput = { title, projectIds: [...projectIds] };
+  const raw = await invokeWorkItemCommand(CREATE_WORK_ITEM_COPIES_COMMAND, { input });
+  return parseCreatedWorkItemCopies(raw, projectIds);
 }
 
 /** 查询待安排工作事项（排序由 Rust Core 决定：created_at DESC, id DESC）。 */

@@ -18,6 +18,7 @@ import { test } from 'node:test';
 import {
   CONTRACT_VIOLATION_CODE,
   WorkItemIpcError,
+  parseCreatedWorkItemCopies,
   parsePendingWorkItemList,
   parseWorkItem
 } from '../../src/lib/bridge/workItemValidation.ts';
@@ -247,5 +248,176 @@ test('拒绝时错误信息包含字段路径且错误码稳定', () => {
     assert.ok(error instanceof WorkItemIpcError);
     assert.equal(error.code, 'ipc-contract-violation');
     assert.match(error.message, /工作事项\.importance/);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 多项目批量创建响应 DTO（Rust CreatedWorkItemCopies：groupId + workItems）
+// ---------------------------------------------------------------------------
+
+const PROJECT_A = '11111111-1111-4111-8111-111111111111';
+const PROJECT_B = '22222222-2222-4222-8222-222222222222';
+const PROJECT_C = '33333333-3333-4333-8333-333333333333';
+const GROUP_ID = '44444444-4444-4444-8444-444444444444';
+
+/** 与 Rust `CreatedWorkItemCopies` serde(camelCase) 输出一致的夹具。 */
+function rustSerializedCreatedCopies(projectIds, overrides = {}) {
+  const workItems = projectIds.map((projectId, index) =>
+    rustSerializedWorkItem({
+      id: `aaaaaaa${index}-aaaa-4aaa-8aaa-aaaaaaaaaaa${index}`,
+      projectId,
+      title: '中核商品价格异常排查'
+    })
+  );
+  return { groupId: GROUP_ID, workItems, ...overrides };
+}
+
+test('合法批量创建响应（两项目）通过严格校验', () => {
+  const raw = rustSerializedCreatedCopies([PROJECT_A, PROJECT_B]);
+  const parsed = parseCreatedWorkItemCopies(raw, [PROJECT_A, PROJECT_B]);
+  assert.equal(parsed.groupId, GROUP_ID);
+  assert.equal(parsed.workItems.length, 2);
+  assert.deepEqual(
+    parsed.workItems.map((item) => item.projectId),
+    [PROJECT_A, PROJECT_B]
+  );
+  assert.ok(parsed.workItems.every((item) => item.lifecycleStatus === 'pending'));
+});
+
+test('合法批量创建响应（三项目、乱序返回）通过严格校验', () => {
+  const raw = rustSerializedCreatedCopies([PROJECT_C, PROJECT_A, PROJECT_B]);
+  const parsed = parseCreatedWorkItemCopies(raw, [PROJECT_A, PROJECT_B, PROJECT_C]);
+  assert.equal(parsed.workItems.length, 3);
+  assert.deepEqual(
+    parsed.workItems.map((item) => item.projectId).sort(),
+    [PROJECT_A, PROJECT_B, PROJECT_C]
+  );
+});
+
+test('批量创建响应的 groupId 必须是规范 UUID', () => {
+  for (const groupId of ['', '   ', 'not-a-uuid', 123, null, `${GROUP_ID}-extra`]) {
+    expectContractViolation(() =>
+      parseCreatedWorkItemCopies(
+        rustSerializedCreatedCopies([PROJECT_A, PROJECT_B], { groupId }),
+        [PROJECT_A, PROJECT_B]
+      )
+    );
+  }
+});
+
+test('批量创建响应缺少/多出顶层字段被拒绝', () => {
+  for (const field of ['groupId', 'workItems']) {
+    const malformed = rustSerializedCreatedCopies([PROJECT_A, PROJECT_B]);
+    delete malformed[field];
+    expectContractViolation(() =>
+      parseCreatedWorkItemCopies(malformed, [PROJECT_A, PROJECT_B])
+    );
+  }
+  expectContractViolation(() =>
+    parseCreatedWorkItemCopies(
+      rustSerializedCreatedCopies([PROJECT_A, PROJECT_B], { extra: true }),
+      [PROJECT_A, PROJECT_B]
+    )
+  );
+  expectContractViolation(() =>
+    parseCreatedWorkItemCopies(
+      rustSerializedCreatedCopies([PROJECT_A, PROJECT_B], { work_items: [] }),
+      [PROJECT_A, PROJECT_B]
+    )
+  );
+});
+
+test('批量创建响应 workItems 非数组或数量与请求项目数不一致被拒绝', () => {
+  expectContractViolation(() =>
+    parseCreatedWorkItemCopies(
+      rustSerializedCreatedCopies([PROJECT_A, PROJECT_B], { workItems: null }),
+      [PROJECT_A, PROJECT_B]
+    )
+  );
+  expectContractViolation(() =>
+    parseCreatedWorkItemCopies(
+      rustSerializedCreatedCopies([PROJECT_A]),
+      [PROJECT_A, PROJECT_B]
+    )
+  );
+  expectContractViolation(() =>
+    parseCreatedWorkItemCopies(
+      rustSerializedCreatedCopies([PROJECT_A, PROJECT_B]),
+      [PROJECT_A, PROJECT_B, PROJECT_C]
+    )
+  );
+});
+
+test('批量创建响应的每个项目必须恰好一个副本', () => {
+  // 同一项目出现两次（另一个项目缺失）。
+  const duplicated = rustSerializedCreatedCopies([PROJECT_A, PROJECT_A]);
+  expectContractViolation(() =>
+    parseCreatedWorkItemCopies(duplicated, [PROJECT_A, PROJECT_B])
+  );
+  // 每个工作副本内部 ID 重复。
+  const duplicatedId = rustSerializedCreatedCopies([PROJECT_A, PROJECT_B]);
+  duplicatedId.workItems[1].id = duplicatedId.workItems[0].id;
+  expectContractViolation(() =>
+    parseCreatedWorkItemCopies(duplicatedId, [PROJECT_A, PROJECT_B])
+  );
+  // 返回了请求之外的项目。
+  expectContractViolation(() =>
+    parseCreatedWorkItemCopies(
+      rustSerializedCreatedCopies([PROJECT_A, PROJECT_C]),
+      [PROJECT_A, PROJECT_B]
+    )
+  );
+  // 副本项目为 null。
+  const unassigned = rustSerializedCreatedCopies([PROJECT_A, PROJECT_B]);
+  unassigned.workItems[1].projectId = null;
+  expectContractViolation(() =>
+    parseCreatedWorkItemCopies(unassigned, [PROJECT_A, PROJECT_B])
+  );
+});
+
+test('批量创建响应中任一副本非 pending 被拒绝', () => {
+  for (const status of ['not_started', 'in_progress', 'completed', 'abandoned']) {
+    const raw = rustSerializedCreatedCopies([PROJECT_A, PROJECT_B]);
+    raw.workItems[1].lifecycleStatus = status;
+    expectContractViolation(() => parseCreatedWorkItemCopies(raw, [PROJECT_A, PROJECT_B]));
+  }
+});
+
+test('批量创建响应中任一副本缺字段/多字段被拒绝', () => {
+  const missing = rustSerializedCreatedCopies([PROJECT_A, PROJECT_B]);
+  delete missing.workItems[1].description;
+  expectContractViolation(() => parseCreatedWorkItemCopies(missing, [PROJECT_A, PROJECT_B]));
+
+  const extra = rustSerializedCreatedCopies([PROJECT_A, PROJECT_B]);
+  extra.workItems[0].unexpectedField = true;
+  expectContractViolation(() => parseCreatedWorkItemCopies(extra, [PROJECT_A, PROJECT_B]));
+});
+
+test('调用方请求项目列表本身不合法时拒绝', () => {
+  const raw = rustSerializedCreatedCopies([PROJECT_A, PROJECT_B]);
+  expectContractViolation(() => parseCreatedWorkItemCopies(raw, [PROJECT_A]));
+  expectContractViolation(() => parseCreatedWorkItemCopies(raw, []));
+  expectContractViolation(() =>
+    parseCreatedWorkItemCopies(rustSerializedCreatedCopies([PROJECT_A, PROJECT_A]), [
+      PROJECT_A,
+      PROJECT_A
+    ])
+  );
+  expectContractViolation(() =>
+    parseCreatedWorkItemCopies(raw, [PROJECT_A, '   '])
+  );
+  expectContractViolation(() => parseCreatedWorkItemCopies(raw, undefined));
+});
+
+test('批量创建响应契约错误包含字段路径且错误码稳定', () => {
+  try {
+    const raw = rustSerializedCreatedCopies([PROJECT_A, PROJECT_B]);
+    raw.workItems[1].projectId = PROJECT_C;
+    parseCreatedWorkItemCopies(raw, [PROJECT_A, PROJECT_B]);
+    assert.fail('必须抛出契约错误');
+  } catch (error) {
+    assert.ok(error instanceof WorkItemIpcError);
+    assert.equal(error.code, 'ipc-contract-violation');
+    assert.match(error.message, /批量创建工作结果\.workItems\[1\]\.projectId/);
   }
 });

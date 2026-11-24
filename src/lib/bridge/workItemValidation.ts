@@ -13,10 +13,16 @@
  * - `importance` / `urgency` 支持 `null` 或 1–5 的整数；
  * - `dueDate` / `description` 支持 `null` 或字符串；
  * - 待安排列表与创建响应只接受 `lifecycleStatus = 'pending'`；
+ * - 批量创建响应必须恰好包含 `{groupId, workItems}`，数量与请求项目数一致、
+ *   每个请求项目恰好一个副本、工作事项 ID 不重复、全部 pending；
  * - 校验失败抛出稳定错误码 `ipc-contract-violation` 的 `WorkItemIpcError`。
  */
 
-import type { PendingWorkItemDto, WorkItemDto } from '../contracts/workItems';
+import type {
+  CreatedWorkItemCopiesDto,
+  PendingWorkItemDto,
+  WorkItemDto
+} from '../contracts/workItems';
 
 export const CONTRACT_VIOLATION_CODE = 'ipc-contract-violation';
 
@@ -49,6 +55,12 @@ const PENDING_WORK_ITEM_KEYS = [
   'updatedAt'
 ] as const;
 
+/** Rust `CreatedWorkItemCopies` serialize 后的完整字段集合（2 字段，serde camelCase）。 */
+const CREATED_COPIES_KEYS = ['groupId', 'workItems'] as const;
+
+/** 规范 UUID 文本（8-4-4-4-12 十六进制）；Rust Core 只生成此类稳定 ID。 */
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** 面向 UI 的工作事项 IPC 错误：稳定错误码 + 中文可读消息。 */
 export class WorkItemIpcError extends Error {
   readonly code: string;
@@ -62,20 +74,27 @@ export class WorkItemIpcError extends Error {
 
 /** 校验并解析创建接口返回的单个工作事项 DTO（Rust `WorkItem`，10 字段）。 */
 export function parseWorkItem(raw: unknown): WorkItemDto {
-  const record = expectStrictRecord(raw, WORK_ITEM_KEYS, '工作事项');
-  const lifecycleStatus = expectPendingStatus(record.lifecycleStatus, '工作事项.lifecycleStatus');
+  return parseWorkItemAt(raw, '工作事项');
+}
+
+function parseWorkItemAt(raw: unknown, path: string): WorkItemDto {
+  const record = expectStrictRecord(raw, WORK_ITEM_KEYS, path);
+  const lifecycleStatus = expectPendingStatus(
+    record.lifecycleStatus,
+    `${path}.lifecycleStatus`
+  );
 
   return {
-    id: expectNonEmptyString(record.id, '工作事项.id'),
-    projectId: expectNullableNonEmptyString(record.projectId, '工作事项.projectId'),
-    title: expectNonEmptyString(record.title, '工作事项.title'),
+    id: expectNonEmptyString(record.id, `${path}.id`),
+    projectId: expectNullableNonEmptyString(record.projectId, `${path}.projectId`),
+    title: expectNonEmptyString(record.title, `${path}.title`),
     lifecycleStatus,
-    importance: expectNullableScore(record.importance, '工作事项.importance'),
-    urgency: expectNullableScore(record.urgency, '工作事项.urgency'),
-    dueDate: expectNullableNonEmptyString(record.dueDate, '工作事项.dueDate'),
-    description: expectNullableString(record.description, '工作事项.description'),
-    createdAt: expectString(record.createdAt, '工作事项.createdAt'),
-    updatedAt: expectString(record.updatedAt, '工作事项.updatedAt')
+    importance: expectNullableScore(record.importance, `${path}.importance`),
+    urgency: expectNullableScore(record.urgency, `${path}.urgency`),
+    dueDate: expectNullableNonEmptyString(record.dueDate, `${path}.dueDate`),
+    description: expectNullableString(record.description, `${path}.description`),
+    createdAt: expectString(record.createdAt, `${path}.createdAt`),
+    updatedAt: expectString(record.updatedAt, `${path}.updatedAt`)
   };
 }
 
@@ -130,6 +149,99 @@ function parsePendingWorkItemAt(raw: unknown, path: string): PendingWorkItemDto 
 }
 
 /**
+ * 校验并解析多项目批量创建响应（Rust `CreatedWorkItemCopies`）。
+ *
+ * 除严格字段校验外，还必须验证整批语义：
+ * 1. 响应数量必须等于请求项目数（不允许部分成功后返回较短数组）；
+ * 2. 每个请求项目恰好出现一次（不重复、不缺失、不能被替换成其他项目）；
+ * 3. 每个副本工作事项 ID 唯一；
+ * 4. 全部副本 `lifecycleStatus = 'pending'` 且 DTO 无缺失/额外字段（由 `parseWorkItem` 保证）。
+ *
+ * 任一不满足都抛 `ipc-contract-violation`，不静默忽略契约错误。
+ */
+export function parseCreatedWorkItemCopies(
+  raw: unknown,
+  requestedProjectIds: readonly string[]
+): CreatedWorkItemCopiesDto {
+  const expectedProjectIds = expectRequestedProjectIds(requestedProjectIds);
+  const record = expectStrictRecord(raw, CREATED_COPIES_KEYS, '批量创建工作结果');
+  const groupId = expectCanonicalUuid(record.groupId, '批量创建工作结果.groupId');
+  if (!Array.isArray(record.workItems)) {
+    throw contractViolation('批量创建工作结果.workItems', '数组', record.workItems);
+  }
+  if (record.workItems.length !== expectedProjectIds.size) {
+    throw contractViolation(
+      '批量创建工作结果.workItems',
+      `长度为 ${expectedProjectIds.size}（与请求项目数量一致）`,
+      record.workItems.length
+    );
+  }
+
+  const workItems = record.workItems.map((item, index) =>
+    parseWorkItemAt(item, `批量创建工作结果.workItems[${index}]`)
+  );
+
+  const seenProjectIds = new Set<string>();
+  const seenWorkItemIds = new Set<string>();
+  workItems.forEach((item, index) => {
+    const path = `批量创建工作结果.workItems[${index}]`;
+    if (item.projectId === null) {
+      throw contractViolation(`${path}.projectId`, '请求项目 ID 字符串', null);
+    }
+    if (!expectedProjectIds.has(item.projectId)) {
+      throw contractViolation(
+        `${path}.projectId`,
+        '请求项目之一（不得替换为其他项目）',
+        item.projectId
+      );
+    }
+    if (seenProjectIds.has(item.projectId)) {
+      throw contractViolation(`${path}.projectId`, '每个请求项目恰好一个副本', item.projectId);
+    }
+    seenProjectIds.add(item.projectId);
+    if (seenWorkItemIds.has(item.id)) {
+      throw contractViolation(`${path}.id`, '唯一的工作事项 ID', item.id);
+    }
+    seenWorkItemIds.add(item.id);
+  });
+
+  if (seenProjectIds.size !== expectedProjectIds.size) {
+    throw contractViolation(
+      '批量创建工作结果.workItems',
+      '每个请求项目恰好一个副本',
+      Array.from(expectedProjectIds)
+    );
+  }
+
+  return { groupId, workItems };
+}
+
+/**
+ * 校验批量创建调用方传入的请求项目 ID：
+ * 必须是 2 个及以上、互不相同、非空白的字符串（与 Rust Core 批量接口规则一致）。
+ */
+function expectRequestedProjectIds(value: readonly string[]): Set<string> {
+  if (!Array.isArray(value)) {
+    throw contractViolation('请求 projectIds', '字符串数组', value);
+  }
+  if (value.length < 2) {
+    throw contractViolation('请求 projectIds', '至少两个项目 ID', value.length);
+  }
+  const unique = new Set<string>();
+  value.forEach((projectId, index) => {
+    const path = `请求 projectIds[${index}]`;
+    if (typeof projectId !== 'string' || projectId.trim().length === 0) {
+      throw contractViolation(path, '非空字符串', projectId);
+    }
+    if (unique.has(projectId)) {
+      throw contractViolation(path, '不重复的项目 ID（不得静默去重）', projectId);
+    }
+    unique.add(projectId);
+  });
+  return unique;
+}
+
+/**
  * 严格对象校验：必须包含全部约定字段，且不得包含任何额外字段。
  *
  * 缺失字段与未知字段都按 `ipc-contract-violation` 拒绝，避免后端契约漂移被静默忽略。
@@ -166,6 +278,15 @@ function expectNonEmptyString(value: unknown, path: string): string {
   const text = expectString(value, path);
   if (text.trim().length === 0) {
     throw contractViolation(path, '非空字符串', value);
+  }
+  return text;
+}
+
+/** 规范 UUID 字符串（Rust Core 生成的创建组 / 工作事项稳定 ID）。 */
+function expectCanonicalUuid(value: unknown, path: string): string {
+  const text = expectNonEmptyString(value, path);
+  if (!UUID_PATTERN.test(text)) {
+    throw contractViolation(path, '规范 UUID 字符串', value);
   }
   return text;
 }
