@@ -332,6 +332,7 @@ T1-04 新增 Rust 测试：`work_item_copies.rs` **16 项**、`creation_groups_m
 - 真实 IPC 幂等重试：第一次真实请求提交 2 项目批次，传输层将响应替换为异常载荷；UI 保留请求标识；第二次保存复用同一 requestId；数据库仍 1 组 / 2 副本 / 2 成员。
 - CSP 实际采集 `[]`；页面未捕获异常 0。
 - 探针：主阶段 14 工作 / 5 组 / 11 成员；故障回滚后完全一致；重启并再次创建后 16 工作 / 6 组 / 13 成员；外键违规 0、孤儿成员 0、多组副本 0、全部 batch 副本 pending。
+- Release migration 失败回滚：真实 schema 3 数据库 + 与 0004 同名冲突索引启动 Release EXE → 原生“WorkManager 启动失败”对话框显示 `migration-failed`，退出码 1；回滚后 `user_version=3`、无 version 4、无两个新表、历史项目/工作事项不变、完整性 ok。证据 `T104-04-release-migration-rollback.txt`。
 - 继承回归：T1-01 便携 **106（PASS 90 / FAIL 0 / WARN 1 / INFO 15）**；T1-01 异常注入 **73（PASS 64 / FAIL 0 / INFO 9）**；T1-02 UI **73/73 + 12/12**；全部退出码 0。
 
 ### 10.6 证据与剩余风险

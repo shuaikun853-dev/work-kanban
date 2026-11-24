@@ -31,6 +31,7 @@
 | `guard-t1-04-path.ps1` | 上述模块的 CLI 守卫（database / evidence-dir / evidence-file）；stdout 只输出结构化 JSON，失败退出码 3，供 Python 在连接 SQLite/写文件前调用。 |
 | `t1_04_path_guard.py` | Python 适配层：调用 PowerShell 原生守卫；进程失败/超时/JSON 无法解析/缺少 `ok=true` 全部 fail-closed，抛 `PathGuardError`。 |
 | `test-t1-04-path.py` | Windows 真实 Junction/重解析点专项：正常 UAT 允许；祖先 Junction/叶子重解析点/证据目录 Junction 拒绝；失败时不连接数据库、不写外部文件；文件符号链接无权限时显式 SKIP。 |
+| `verify-t1-04-migration-failure.ps1` | **Release migration 失败回滚专项**：构造真实 schema 3 隔离 UAT + 真实 0004 同名冲突索引，启动 Release EXE，验证原生启动失败对话框、非零退出码、回滚后 user_version=3、无新表/version 4、历史数据不变；`t1-04-migration-fixture.py` 提供真实 migration SQL fixture 与只读探针。 |
 | `test-t1-03-uat-path.ps1` | T1-03 UAT 路径安全专项测试（第四轮 93 项）：第三轮 60 项全部保留；1 项 Symbolic Link 场景因权限限制显式 SKIP、不计 PASS。 |
 | `verify-t1-04-ui.ps1` | **T1-04 真实 Release UI/IPC/原子回滚/持久化端到端编排**：启动 Release → 多项目 E2E 主检查（107 项）→ 最小窗口 860×640（11 项，含真实关闭按钮）→ 关闭 → 原生路径守卫后数据库只读探针 → 关闭时向 UAT 数据库安装真实 SQLite trigger 制造第二条副本插入失败 → 重新启动验证整批回滚且无残留（13 项）→ 移除 trigger → 再次启动验证 14 条记录/创建组持久化并再批量创建（15 项）→ 关闭 → 最终探针（62 项数据库检查）。故障注入只作用于 D 盘独立 UAT 数据库，不进入正式数据目录。 |
 | `inspect-t1-04-ui.mjs` | T1-04 主 UI/IPC 检查（由编排脚本调用）：应用壳/导航不变、多项目选择对话框、两项目/三项目真实 UI 批量创建、T1-03 回归、真实 IPC 响应异常后的 requestId 幂等重试、重复提交保护与提交中锁定、归档竞态整批失败、绕过 UI 直接 IPC、Bridge 严格契约违规、创建成功但刷新失败三态、CSP 实际采集/异常/截图。 |
@@ -106,6 +107,7 @@ SHA-256 `0bbe1dc43f59644e51126aeb277abd98cb124e506f69f25d35ef767010ab4166`。
 |---|---|---|
 | `verify-t1-04-ui.ps1`（UAT `<uat-root>`） | 0 | 主 UI/IPC **107/107**；最小窗口 **11/11**；真实 SQLite trigger 原子回滚 **13/13**；重启持久化 **15/15**；数据库只读探针 **62/62**；三次真实关闭退出码 **0/0/0**；CSP 实际采集 0；未捕获异常 0 |
 | `test-t1-04-path.py`（真实 Junction） | 0 | 9 PASS / 0 FAIL / 1 SKIP（文件符号链接权限不足，显式记录） |
+| Release migration failure（真实 schema 3 + 0004 索引冲突） | 1（预期失败） | 原生“WorkManager 启动失败”对话框；回滚后 user_version=3、无新表/version 4、历史数据不变；验证脚本判定 PASS/退出码 0 |
 | `verify-release-portable.ps1`（继承回归） | 0 | TOTAL=106 PASS=90 FAIL=0 WARN=1（保留既有 WARN） INFO=15 |
 | `verify-release-faults.ps1`（继承回归） | 0 | TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9 |
 | `verify-t1-02-ui.ps1`（继承回归） | 0 | 主 UI/IPC **73/73**；最小窗口 **12/12**；关闭按钮后进程退出码 0；CSP 0；页面异常 0 |

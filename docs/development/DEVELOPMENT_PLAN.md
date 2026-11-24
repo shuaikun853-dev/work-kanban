@@ -339,6 +339,7 @@
 - `npm run build`：退出码 0（167 modules）。
 - Release E2E（独立 UAT、虚构数据）：主 UI/IPC **107/107**、最小窗口 **11/11**、真实 trigger 回滚 **13/13**、重启持久化 **15/15**、数据库只读探针 **62/62**；三次真实关闭退出码 **0/0/0**；CSP 实际采集 0；页面异常 0。
 - 探针：主阶段 14 工作 / 5 组 / 11 成员；故障回滚后完全一致；重启并再次创建后 16 工作 / 6 组 / 13 成员；外键 0 违规、无孤儿成员、无多组副本。
+- Release migration 失败回滚：真实 schema 3 + 0004 同名冲突索引启动 Release EXE → `migration-failed` 原生对话框、退出码 1；`user_version` 仍 3、无 version 4、无新表、历史数据不变。证据 `T104-04-release-migration-rollback.txt`。
 - 继承回归：便携 106 项（PASS 90 / FAIL 0 / WARN 1 / INFO 15）、异常注入 73 项（PASS 64 / FAIL 0 / INFO 9）、T1-02 UI 73/73 + 12/12，全部退出码 0。
 - Release EXE：**10,457,600 字节**，SHA-256 `0bbe1dc43f59644e51126aeb277abd98cb124e506f69f25d35ef767010ab4166`。
 

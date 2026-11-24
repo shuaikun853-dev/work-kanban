@@ -9,6 +9,7 @@ Release SQLite trigger rollback: 13/13
 Release restart persistence: 15/15
 Release DB read-only probe checks: 62/62
 Release close exit codes: 0/0/0
+Release migration failure rollback: PASS (exit 1; user_version remains 3; no new tables/version 4; historical rows unchanged)
 CSP violations: captured [] (0), page exceptions 0
 Path/Junction security: 9 passed, 1 skipped (file symlink privilege unavailable), 0 failed
 T1-01 portable regression: 106 total (PASS 90 / FAIL 0 / WARN 1 / INFO 15)

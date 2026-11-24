@@ -71,6 +71,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-t1-04-
 | `T104-03-green-work-item-copies.txt` | `work_item_copies` Green：24 passed / 0 failed |
 | `T104-03-gate-cargo-*.txt` | `cargo fmt --check` / `cargo check` / `cargo test --workspace` 完整输出（158 passed / 0 failed） |
 | `T104-04-green-migration.txt` | schema 专项 Green：6 passed / 0 failed（含真实 0004 索引冲突回滚） |
+| `T104-04-release-migration-rollback.txt` | Release EXE 真实 schema 3 + 0004 同名冲突索引启动：原生错误对话框、退出码 1、user_version 仍 3、无新表/version 4、历史数据不变 |
 | `T104-06-csp-evidence.json` | 实际 CSP 采集数组、采集状态、页面异常分离记录 |
 | `T104-06-release-e2e-output.txt` | 第五轮完整 Release E2E 输出（已脱敏本地路径） |
 | `t1-04-*.json` | 第五轮主 UI、最小窗口、故障回滚、持久化、只读探针、编排汇总 |

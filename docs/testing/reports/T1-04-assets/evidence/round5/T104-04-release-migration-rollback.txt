@@ -1,0 +1,10 @@
+SETUP_SCHEMA_VERSION=3
+SETUP_CONFLICT_INDEX=idx_work_item_creation_groups_created_at
+MIGRATION_FAILURE_DIALOG_FOUND=True
+MIGRATION_FAILURE_DIALOG_TITLE=WorkManager 启动失败
+MIGRATION_FAILURE_DIALOG_CLOSE=CloseMainWindow
+MIGRATION_FAILURE_EXIT_CODE=1
+MIGRATION_FAILURE_DB={"user_version": 3, "projects": 1, "work_items": 1, "schema_migrations": 3, "version4_rows": 0, "group_table": 0, "member_table": 0, "integrity_check": "ok"}
+MIGRATION_FAILURE_ROLLBACK=PASS
+
+__EXIT_CODE__=0
