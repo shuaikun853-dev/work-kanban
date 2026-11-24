@@ -24,7 +24,9 @@
 | `release-e2e-output.txt` | 第六轮重建 EXE 后的 T1-04 Release E2E 原始输出（主 UI/IPC、最小窗口、原子回滚、重启持久化、数据库探针） |
 | `release-e2e-evidence/` | E2E 机器可读证据 JSON 与截图（从 UAT 证据目录复制） |
 | `inherited-*.txt` | 继承回归原始输出：T1-01 便携、T1-01 异常注入、T1-02 UI E2E、T1-03 路径安全专项 |
-| `git-diff.patch` / `git-diff-stat.txt` | 本轮修复的完整 Git diff 与统计（不含本证据目录） |
+| `git-diff.patch` / `git-diff-stat.txt` | 实现提交 `aefa0f6` 的完整 diff 与统计（生成时不含本证据目录自身） |
+| `git-log-round6.txt` | 第六轮修复提交列表（`7754965..HEAD`） |
+| `git-diff-docs-sync.txt` | 文档状态同步提交 `52ea858` 的变更统计 |
 | `test-counts.txt` | 新增/保留测试数量、PASS/FAIL/SKIP 与退出码汇总 |
 
 ## 复现命令（Windows PowerShell 5.1）

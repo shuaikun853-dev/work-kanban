@@ -1,0 +1,2 @@
+﻿52ea858 docs(T1-04): record round-6 fix commit and self-test status
+aefa0f6 fix(T1-04): round-6 path guards, migration guards, Bridge contract and docs consistency

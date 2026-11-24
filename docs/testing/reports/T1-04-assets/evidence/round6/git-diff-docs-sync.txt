@@ -1,0 +1,12 @@
+﻿commit 52ea8582132a74e4f2f30ddef5278f7763eeda92
+Author: rsk <350889214@qq.com>
+Date:   Tue Nov 24 14:36:30 2026 +0800
+
+    docs(T1-04): record round-6 fix commit and self-test status
+    
+    Sync STATUS, DEVELOPMENT_PLAN and T1-04 report with round-6 fix commit aefa0f6 and completed self-test evidence (R2-01~R2-04). Status remains: development and self-test complete, awaiting independent code audit; no audit/user acceptance claim.
+
+ docs/STATUS.md                       | 45 +++++++++++++++++++++++++++++++++---
+ docs/development/DEVELOPMENT_PLAN.md | 34 ++++++++++++++++++++++-----
+ docs/testing/reports/T1-04-REPORT.md |  2 +-
+ 3 files changed, 71 insertions(+), 10 deletions(-)
