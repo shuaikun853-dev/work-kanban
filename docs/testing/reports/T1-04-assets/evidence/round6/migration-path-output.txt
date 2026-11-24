@@ -1,0 +1,32 @@
+PASS trustRoot.defaultRootVerified — componentCount=2
+PASS evidence.targetPrepared — evidencePath=<test-root>\t1-04-path-evidence-mig-20261124-141934\evidence\t1-04-migration-path-evidence.json
+PASS fixture.normalSetup — exit=0 databaseCreated=True
+PASS fixture.normalProbe — exit=0 report={"user_version": 3, "projects": 1, "work_items": 1, "schema_migrations": 3, "version4_rows": 0, "group_table": 0, "member_table": 0, "integrity_check": "ok"}
+PASS fixture.probeReadOnlyConnection — connectCalls=1 modeRo=True
+PASS fixture.setupExistingTargetRejected — 数据库创建目标已存在，拒绝复用/覆盖旧数据库：<test-root>\t1-04-path-test-migration-existing-target-32432-1795501402804\app\data\database\work.db。请使用新的 UAT 目录。
+PASS fixture.setupExistingTargetNotOverwritten — existingTargetUnchanged=True
+PASS fixture.setupParentJunctionRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-migration-parent-junction-32432-1795501409689\app\data\database。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS fixture.setupParentJunctionNoWrite — connectCalled=False canaryUnchanged=True
+PASS fixture.setupLeafReparseRejected — 数据库创建目标是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point，tag=0xA0000003）：<test-root>\t1-04-path-test-migration-leaf-junction-32432-1795501421258\app\data\database\work.db。已按 fail-closed 拒绝。
+PASS fixture.setupLeafReparseNoWrite — connectCalled=False canaryUnchanged=True
+PASS fixture.setupGuardFailureRejected — 路径守卫脚本不存在：missing-migration-guard-for-test.ps1。已按 fail-closed 停止。
+PASS fixture.setupGuardFailureNoCreate — connectCalled=False databaseCreated=False
+PASS fixture.probeGuardFailureRejected — 路径守卫脚本不存在：missing-migration-guard-for-test.ps1。已按 fail-closed 停止。
+PASS fixture.probeGuardFailureNoConnect — connectCalled=False
+PASS fixture.probeParentJunctionRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-migration-probe-parent-junction-32432-1795501437195\app\data\database。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS fixture.probeSafetyFailureNoConnect — connectCalled=False
+PASS migrationScript.nativeGuardsPresent — trust-anchor/planned-database/planned-evidence/database guards present
+PASS migrationScript.failClosedCleanupReused — fail-closed cleanup reused; forced recursive cleanup removed
+PASS migrationScript.realMigrationRollbackTestPreserved — real Release migration rollback assertions preserved
+PASS migrationScript.outputAncestorJunctionRejected — exit=2 createdUnderJunction=False canaryUnchanged=True
+PASS migrationScript.outsideTestRootRejected — exit=2
+PASS migrationScript.formalRootOutputRejected — exit=2
+PASS cleanup.identityChangedRejected — identityChanged=True rejected=True retained=True
+PASS canary.allTargetsUnchanged — targets=migration-parent,migration-leaf,migration-probe-parent,migration-output; unchanged=True
+PASS cleanup.allSandboxesRemovedSafely — cases=13 allSafe=True allRemoved=True
+PASS cleanup.failClosedMechanismUsed — stepsObserved=39
+PASS evidence.requiredChecksPresent — missing=none
+PASS formalRoot.identityUnchanged — existedBefore=False existedAfter=False
+PASS evidence.writeSucceeded — evidencePath=<test-root>\t1-04-path-evidence-mig-20261124-141934\evidence\t1-04-migration-path-evidence.json
+PASS evidence.machineIdentifiersRedacted — rawMachineValuesPresent=False
+{"checks": 31, "failed": 0, "skips": 0, "cleanupCases": 13, "evidenceWritten": true}

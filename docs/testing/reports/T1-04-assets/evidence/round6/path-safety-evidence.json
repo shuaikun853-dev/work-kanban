@@ -1,0 +1,690 @@
+{
+  "task": "T1-04",
+  "round": "round6",
+  "scope": "T104-01 Windows real Junction / reparse-point path security",
+  "generatedAt": "2026-11-24T06:23:03Z",
+  "testRoot": "<test-root>",
+  "formalRoot": {
+    "path": "<formal-root>",
+    "existedBefore": false,
+    "existedAfter": false,
+    "identityBeforeDigest": "",
+    "identityAfterDigest": "",
+    "identityEvidenceAvailable": true,
+    "identityUnchanged": true,
+    "guardRejectedFormalPath": true,
+    "limitation": "只读目录身份快照 + 守卫拒绝正式路径的证据；不构成正式目录内容未被外部进程修改的绝对证明，也不消除 TOCTOU（DEC-029 / Issue #2）"
+  },
+  "trustAnchor": {
+    "verified": true,
+    "componentCount": 2,
+    "identityDigest": "89d79083853f29a1"
+  },
+  "checks": [
+    {
+      "name": "trustRoot.defaultRootVerified",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "trustRoot.identityRecorded",
+      "pass": true,
+      "detail": "componentCount=2"
+    },
+    {
+      "name": "formalRoot.guardRejectsFormalPath",
+      "pass": true,
+      "detail": "UAT 待创建目录不在专用测试根目录内（不能是测试根目录本身，也不能位于正式应用目录）：<formal-root>。已按 fail-closed 拒绝。"
+    },
+    {
+      "name": "evidence.targetPrepared",
+      "pass": true,
+      "detail": "evidencePath=<test-root>\\t1-04-path-evidence-r6-20261124-141934\\evidence\\t1-04-path-evidence.json"
+    },
+    {
+      "name": "normal.uatRootTargetAccepted",
+      "pass": true,
+      "detail": "planned=True targetExists=False"
+    },
+    {
+      "name": "normal.uatRootTargetNotCreatedByValidation",
+      "pass": true,
+      "detail": "created=False"
+    },
+    {
+      "name": "normal.uatRootCreatedAndVerified",
+      "pass": true,
+      "detail": "identityDigest=<test-root>\\t1-04-path-test-normal-25096-1795501186013"
+    },
+    {
+      "name": "normal.databaseTargetAccepted",
+      "pass": true,
+      "detail": "targetExists=False"
+    },
+    {
+      "name": "normal.databasePathAccepted",
+      "pass": true,
+      "detail": "databaseIdentityVerified=True"
+    },
+    {
+      "name": "normal.evidenceDirTargetAccepted",
+      "pass": true,
+      "detail": "targetExists=False"
+    },
+    {
+      "name": "normal.evidenceDirectoryAccepted",
+      "pass": true,
+      "detail": "evidenceDirectoryIdentityVerified=True"
+    },
+    {
+      "name": "normal.evidenceFilePathAccepted",
+      "pass": true,
+      "detail": "targetExists=False"
+    },
+    {
+      "name": "normal.evidenceFileWritten",
+      "pass": true,
+      "detail": "writtenFileIdentityVerified=True"
+    },
+    {
+      "name": "trustRoot.syntheticRealRootAccepted",
+      "pass": true,
+      "detail": "syntheticTrustAnchorIdentityVerified=True"
+    },
+    {
+      "name": "junction.testRootRedirectedRejected",
+      "pass": true,
+      "detail": "专用测试根目录信任锚验证失败，已按 fail-closed 停止（未执行任何写操作）：专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-trust-anchor-25096-1795501205883\\fake-root。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "junction.testRootRedirectedNoCreateRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-trust-anchor-25096-1795501205883\\fake-root。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "junction.testRootRedirectedNoWriteSideEffect",
+      "pass": true,
+      "detail": "createdUnderJunction=False canaryUnchanged=True"
+    },
+    {
+      "name": "junction.testRootAncestorRejected",
+      "pass": true,
+      "detail": "专用测试根目录信任锚验证失败，已按 fail-closed 停止（未执行任何写操作）：专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-trust-anchor-25096-1795501205883\\junction-ancestor。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "junction.testRootAncestorNoCreateRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-trust-anchor-25096-1795501205883\\junction-ancestor。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "junction.testRootAncestorNoWriteSideEffect",
+      "pass": true,
+      "detail": "canaryUnchanged=True"
+    },
+    {
+      "name": "junction.databaseAncestorRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-junction-db-ancestor-25096-1795501231489\\app。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "junction.databaseLeafReparseRejected",
+      "pass": true,
+      "detail": "数据库创建目标是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point，tag=0xA0000003）：<test-root>\\t1-04-path-test-junction-db-leaf-25096-1795501242292\\app\\data\\database\\work.db。已按 fail-closed 拒绝。"
+    },
+    {
+      "name": "junction.databaseLeafExistingReparseRejected",
+      "pass": true,
+      "detail": "UAT 数据库文件本身是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point，tag=0xA0000003）：<test-root>\\t1-04-path-test-junction-db-leaf-25096-1795501242292\\app\\data\\database\\work.db。已按 fail-closed 拒绝。"
+    },
+    {
+      "name": "junction.evidenceDirectoryRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-junction-evidence-25096-1795501261328\\evidence。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "junction.evidenceFileRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-junction-evidence-25096-1795501261328\\evidence。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "junction.evidenceJunctionNoExternalWrite",
+      "pass": true,
+      "detail": "externalFileExists=False"
+    },
+    {
+      "name": "junction.uatRootReplacedRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-uat-root-replaced-25096-1795501275287。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "junction.uatRootGuardRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-uat-root-replaced-25096-1795501275287。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "cleanup.reparsePointRejected",
+      "pass": true,
+      "detail": "rejected=True retained=True message=sandboxIdentityChanged: 清理前无法确认测试沙箱身份：测试沙箱是重解析点（tag=0xA0000003），无法确认其真实目录身份：<test-root>\\t1-04-path-test-uat-root-replaced-25096-1795501275287。已按 fail-closed 停止。"
+    },
+    {
+      "name": "junction.uatRootReplacedCanaryUnchanged",
+      "pass": true,
+      "detail": "canaryUnchanged=True"
+    },
+    {
+      "name": "junction.databaseDirectoryReplacedRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-database-dir-replaced-25096-1795501285788\\app\\data\\database。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "junction.databaseDirectoryReplacedCanaryUnchanged",
+      "pass": true,
+      "detail": "canaryUnchanged=True"
+    },
+    {
+      "name": "junction.evidenceDirReplacedRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-evidence-dir-replaced-25096-1795501298452\\evidence。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "junction.evidenceDirReplacedCanaryUnchanged",
+      "pass": true,
+      "detail": "canaryUnchanged=True"
+    },
+    {
+      "name": "cleanup.identityChangedRejected",
+      "pass": true,
+      "detail": "rejected=True retained=True message=sandboxIdentityChanged: 清理前无法确认测试沙箱身份：目录身份与预期不一致（差异：fileId）：<test-root>\\t1-04-path-test-cleanup-identity-change-25096-1795501322442。已按 fail-closed 停止。"
+    },
+    {
+      "name": "cleanup.identityChangedDetected",
+      "pass": true,
+      "detail": "fileIdChanged=True"
+    },
+    {
+      "name": "cleanup.guardFailureRefusedDelete",
+      "pass": true,
+      "detail": "refused=True retained=True"
+    },
+    {
+      "name": "guard.failureNoCreate",
+      "pass": true,
+      "detail": "rejected=True created=False"
+    },
+    {
+      "name": "guard.failureNoSqliteConnect",
+      "pass": true,
+      "detail": "exit=3 connectCalled=False"
+    },
+    {
+      "name": "guard.failureNoProbeConnect",
+      "pass": true,
+      "detail": "exit=3 connectCalled=False"
+    },
+    {
+      "name": "guard.failureNoProbeWrite",
+      "pass": true,
+      "detail": "probeWritten=False"
+    },
+    {
+      "name": "guard.noDatabaseConnectOnAncestorJunction",
+      "pass": true,
+      "detail": "exit=3 connectCalled=False"
+    },
+    {
+      "name": "guard.noDatabaseConnectOnEvidenceJunction",
+      "pass": true,
+      "detail": "exit=3 connectCalled=False"
+    },
+    {
+      "name": "guard.noExternalWriteOnEvidenceJunction",
+      "pass": true,
+      "detail": "externalFileExists=False"
+    },
+    {
+      "name": "evidence.writePathStructureEnforced",
+      "pass": true,
+      "detail": "acceptedInvalid=0 rejectedInvalid=5"
+    },
+    {
+      "name": "evidence.writeRejectsSubdirectoryFile",
+      "pass": true,
+      "detail": "证据文件必须是证据目录的直接子文件，不允许写入子目录或任意路径：<test-root>\\t1-04-path-test-normal-25096-1795501186013\\evidence\\sub\\x.json。已按 fail-closed 拒绝。"
+    },
+    {
+      "name": "evidence.writeRejectsNonJsonFile",
+      "pass": true,
+      "detail": "证据文件扩展名必须为 .json：<test-root>\\t1-04-path-test-normal-25096-1795501186013\\evidence\\evidence.txt。已按 fail-closed 拒绝。"
+    },
+    {
+      "name": "evidence.writeRejectsOutsideUat",
+      "pass": true,
+      "detail": "outsideUatCreated=False"
+    },
+    {
+      "name": "canary.allTargetsUnchanged",
+      "pass": true,
+      "detail": "targets=test-root-redirect,test-root-ancestor,db-ancestor,db-leaf,external-evidence,uat-root-replaced-target,database-dir-target,evidence-dir-target,tracked-link-target,no-connect-target,no-connect-ancestor-target; unchanged=True"
+    },
+    {
+      "name": "cleanup.allSandboxesRemovedSafely",
+      "pass": true,
+      "detail": "cases=25 allSafe=True allRemoved=True"
+    },
+    {
+      "name": "cleanup.failClosedMechanismUsed",
+      "pass": true,
+      "detail": "stepsObserved=75"
+    },
+    {
+      "name": "cleanup.trackedLinkRemovedSafely",
+      "pass": true,
+      "detail": "trackedLinkEntry=1"
+    },
+    {
+      "name": "cleanup.noResidueUnderTestRoot",
+      "pass": true,
+      "detail": "residueCount=0"
+    },
+    {
+      "name": "formalRoot.identityUnchanged",
+      "pass": true,
+      "detail": "existedBefore=False existedAfter=False unchanged=True"
+    },
+    {
+      "name": "evidence.round5ChecksPreserved",
+      "pass": true,
+      "detail": "missing=none"
+    },
+    {
+      "name": "evidence.round6NewChecksPresent",
+      "pass": true,
+      "detail": "missing=none"
+    }
+  ],
+  "failed": [],
+  "skips": [
+    {
+      "name": "symlink.databaseFileRejected",
+      "reason": "file symlink unavailable (mklink exit=1; SeCreateSymbolicLinkPrivilege/developer mode required)"
+    }
+  ],
+  "cleanup": [
+    {
+      "label": "canary-no-connect-ancestor-target",
+      "path": "<test-root>\\t1-04-path-test-canary-no-connect-ancestor-target-25096-1795501349523",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "no-connect-ancestor",
+      "path": "<test-root>\\t1-04-path-test-no-connect-ancestor-25096-1795501342656",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 1,
+      "steps": [
+        "sandbox.identityVerified",
+        "link.alreadyAbsent",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-no-connect-target",
+      "path": "<test-root>\\t1-04-path-test-canary-no-connect-target-25096-1795501337801",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "no-connect",
+      "path": "<test-root>\\t1-04-path-test-no-connect-25096-1795501330998",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "cleanup-guard-failure",
+      "path": "<test-root>\\t1-04-path-test-cleanup-guard-failure-25096-1795501328172",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "cleanup-identity-change",
+      "path": "<test-root>\\t1-04-path-test-cleanup-identity-change-25096-1795501322442",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-tracked-link-target",
+      "path": "<test-root>\\t1-04-path-test-canary-tracked-link-target-25096-1795501317706",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "tracked-link",
+      "path": "<test-root>\\t1-04-path-test-tracked-link-25096-1795501314872",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 1,
+      "steps": [
+        "sandbox.identityVerified",
+        "link.removed",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-evidence-dir-target",
+      "path": "<test-root>\\t1-04-path-test-canary-evidence-dir-target-25096-1795501307170",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "evidence-dir-replaced",
+      "path": "<test-root>\\t1-04-path-test-evidence-dir-replaced-25096-1795501298452",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-database-dir-target",
+      "path": "<test-root>\\t1-04-path-test-canary-database-dir-target-25096-1795501290552",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "database-dir-replaced",
+      "path": "<test-root>\\t1-04-path-test-database-dir-replaced-25096-1795501285788",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-uat-root-replaced-target",
+      "path": "<test-root>\\t1-04-path-test-canary-uat-root-replaced-target-25096-1795501278122",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "uat-root-replaced",
+      "path": "<test-root>\\t1-04-path-test-uat-root-replaced-25096-1795501275287",
+      "removed": true,
+      "safe": true,
+      "stopCode": "alreadyAbsent",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [],
+      "error": ""
+    },
+    {
+      "label": "canary-external-evidence",
+      "path": "<test-root>\\t1-04-path-test-canary-external-evidence-25096-1795501268446",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "junction-evidence",
+      "path": "<test-root>\\t1-04-path-test-junction-evidence-25096-1795501261328",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "file-symlink",
+      "path": "<test-root>\\t1-04-path-test-file-symlink-25096-1795501256139",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-db-leaf",
+      "path": "<test-root>\\t1-04-path-test-canary-db-leaf-25096-1795501248399",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "junction-db-leaf",
+      "path": "<test-root>\\t1-04-path-test-junction-db-leaf-25096-1795501242292",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-db-ancestor",
+      "path": "<test-root>\\t1-04-path-test-canary-db-ancestor-25096-1795501234890",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "junction-db-ancestor",
+      "path": "<test-root>\\t1-04-path-test-junction-db-ancestor-25096-1795501231489",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 1,
+      "steps": [
+        "sandbox.identityVerified",
+        "link.removed",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-test-root-ancestor",
+      "path": "<test-root>\\t1-04-path-test-canary-test-root-ancestor-25096-1795501220875",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-test-root-redirect",
+      "path": "<test-root>\\t1-04-path-test-canary-test-root-redirect-25096-1795501213125",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "trust-anchor",
+      "path": "<test-root>\\t1-04-path-test-trust-anchor-25096-1795501205883",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "normal",
+      "path": "<test-root>\\t1-04-path-test-normal-25096-1795501186013",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    }
+  ],
+  "pass": true,
+  "residualRisk": "TOCTOU concurrent replacement remains deferred by DEC-029 / Issue #2"
+}

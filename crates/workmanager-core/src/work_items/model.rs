@@ -44,8 +44,10 @@ pub struct WorkItem {
 
 /// 多项目批量创建的权威结果（T1-04）。
 ///
-/// - `group_id`：Rust Core 在写事务内生成的创建组稳定 UUID；
-/// - `work_items`：按请求项目顺序返回的事务内读回记录，每个项目恰好一条独立工作副本。
+/// - `group_id`：客户端为一次逻辑创建操作生成的规范 UUID `requestId`；Rust Core 校验
+///   后**直接复用**为 `work_item_creation_groups.id`，不是 Rust Core 新生成的 UUID；
+/// - `work_items`：按请求项目顺序返回的事务内读回记录，每个项目恰好一条独立工作副本；
+///   每个工作副本的 `WorkItem::id` 仍由 Rust Core 生成（UUID v4），与 `group_id` 无关。
 ///
 /// **序列化契约（与 `src/lib/contracts/workItems.ts` 的 `CreatedWorkItemCopiesDto` 一致）：**
 /// 恰好两个 camelCase 字段 `groupId`、`workItems`；`workItems` 复用 [`WorkItem`] 的 10 字段

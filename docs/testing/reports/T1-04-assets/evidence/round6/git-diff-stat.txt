@@ -1,0 +1,24 @@
+﻿ crates/workmanager-core/src/work_items/model.rs    |    6 +-
+ crates/workmanager-core/src/work_items/service.rs  |    9 +-
+ docs/STATUS.md                                     |   45 +-
+ docs/architecture/TECHNICAL_DESIGN.md              |   23 +-
+ docs/development/DEVELOPMENT_PLAN.md               |   33 +-
+ .../tasks/T1-04-Implementation-Design.md           |   73 +-
+ .../T1-04-Multi-Project-Independent-Copies.md      |   16 +-
+ docs/testing/reports/T1-04-REPORT.md               |  110 +-
+ docs/testing/reports/T1-04-assets/README.md        |   61 +
+ scripts/quality/work-item-bridge.test.mjs          |  235 +++-
+ scripts/verify/README.md                           |   15 +-
+ scripts/verify/T1-04UatPath.ps1                    |  228 ++++
+ scripts/verify/guard-t1-04-cleanup.ps1             |  132 ++
+ scripts/verify/guard-t1-04-path.ps1                |  233 +++-
+ scripts/verify/t1-04-migration-fixture.py          |  148 ++-
+ scripts/verify/t1_04_path_guard.py                 |  169 ++-
+ scripts/verify/t1_04_path_test_support.py          |  476 ++++++++
+ scripts/verify/test-t1-04-migration-path.py        |  708 +++++++++++
+ scripts/verify/test-t1-04-path.py                  | 1262 ++++++++++++++++----
+ scripts/verify/verify-t1-04-migration-failure.ps1  |  425 ++++++-
+ src/lib/bridge/workItemValidation.ts               |  109 +-
+ src/lib/bridge/workItems.ts                        |   13 +-
+ src/lib/contracts/workItems.ts                     |   28 +-
+ 23 files changed, 4101 insertions(+), 456 deletions(-)

@@ -1,0 +1,36 @@
+{
+  "task": "T1-04",
+  "stage": "after-fault",
+  "status": "ok",
+  "scope": "uat",
+  "schema_version": 4,
+  "migration_versions": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "integrity_check": "ok",
+  "journal_mode": "wal",
+  "foreign_keys": true,
+  "required_tables_present": true,
+  "projects_total": 4,
+  "projects_archived": 1,
+  "work_items_total": 14,
+  "work_items_pending": 14,
+  "work_items_other_status": 0,
+  "work_items_null_project": 1,
+  "work_items_linked_archived": 1,
+  "work_items_linked_active": 12,
+  "creation_groups_total": 5,
+  "creation_group_members_total": 11,
+  "creation_group_size_histogram": {
+    "2": 4,
+    "3": 1
+  },
+  "creation_groups_without_members": 0,
+  "orphan_creation_group_members": 0,
+  "work_items_with_multiple_groups": 0,
+  "batch_items_not_pending": 0,
+  "foreign_key_violations": 0
+}

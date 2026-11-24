@@ -3,12 +3,14 @@
 //! Rust Core 是工作事项状态的唯一权威来源：
 //! - 创建操作在 [`crate::database::Database::write_transaction`] 的 `IMMEDIATE` 事务内完成；
 //! - 项目存在性与归档状态（DEC-033）与工作事项插入处于同一事务，前端过滤不是安全边界；
-//! - 工作事项 ID 由 Rust Core 生成（UUID v4），前端不得自行构造业务身份；
+//! - 工作事项 ID 由 Rust Core 生成（UUID v4），前端不得自行构造工作事项业务身份；
 //! - 创建后的状态固定为 `pending`（待安排），不伪造重要程度/紧急程度/日期等未设置字段；
 //! - 待安排查询只返回数据库中的真实 `pending` 记录（含关联归档项目的历史工作）；
 //! - 多项目批量创建采用**整批原子提交**（DEC-034）：同一 `IMMEDIATE` 事务内验证全部项目、
 //!   写入创建组与全部独立副本及成员关系、事务内读回验证；任一步失败整批回滚，
-//!   不允许部分成功、静默跳过或补偿删除。
+//!   不允许部分成功、静默跳过或补偿删除；
+//! - 批量创建组 ID 直接复用客户端生成的规范 UUID `requestId`（用于幂等重试，不新增
+//!   schema 字段）；每个工作事项副本 ID 仍由 Rust Core 生成，二者不得混淆。
 
 use std::collections::{HashMap, HashSet};
 
@@ -160,7 +162,8 @@ impl WorkItemService {
                 }
             }
 
-            // 5.3 创建组（客户端请求标识 + 来源标题 + 创建时间）。
+            // 5.3 创建组：主键直接复用客户端 requestId（已校验为规范 UUID），
+            //     写入来源标题与创建时间；不新增 request_id 字段或 schema 版本。
             repository::insert_creation_group(
                 transaction,
                 &database_path,

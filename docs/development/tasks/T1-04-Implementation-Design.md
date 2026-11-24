@@ -5,7 +5,7 @@
 **堆叠基线：** `e8205cae22e98afce6480f5a5a0695543a61dee3`（T1-03 分支 HEAD，PR #8 Open）  
 **main 基线：** `018e851e8daf5835391a7b61caf881bc57c2ad42`（未包含 T1-03/T1-04）  
 **编写时间：** 2026-11-24  
-**状态：** 编码前设计。实现必须严格按本设计与权威文档执行；若实现与设计不一致，必须在测试报告或本文件补充说明原因。
+**状态：** 编码前设计（第五轮 T104-01～T104-06、第六轮 R2-01～R2-04 修复后已按实际实现补充说明，见第 12 节）。实现必须严格按本与权威文档执行；若实现与设计不一致，必须在测试报告或本文件补充说明原因。
 
 本设计依据（按优先级）：
 
@@ -90,29 +90,31 @@ pub struct CreatedWorkItemCopies {
 
 ### 3.2 服务接口
 
-`WorkItemService::create_copies(database: &mut Database, raw_title: &str, project_ids: &[String]) -> Result<CreatedWorkItemCopies, WorkItemError>`
+`WorkItemService::create_copies(database: &mut Database, request_id: &str, raw_title: &str, project_ids: &[String]) -> Result<CreatedWorkItemCopies, WorkItemError>`
 
 执行顺序：
 
 1. 标题 trim 与非空校验（`normalize_title`，空 → `work-item-title-empty`）；
-2. 项目数量校验：`project_ids.len() >= 2`，否则 `work-item-copies-too-few`；
-3. 项目 ID 去重校验：出现重复 → `work-item-copies-duplicate-project`（不得静默去重）；
-4. 生成创建组 UUID、每个项目一个独立工作事项 UUID、统一 UTC RFC3339 毫秒时间戳；
-5. 在**一个** `Database::write_transaction`（`IMMEDIATE`）内：
-   1. **先验证全部项目**（循环全部 `project_id`，不插入任何记录）：
+2. 客户端 `request_id` 必须是规范小写连字符 UUID（`Uuid::parse_str` 后 `hyphenated()` 与原文逐字相等），否则 `work-item-create-request-id-invalid`；该标识直接作为创建组主键，不新增 schema 字段；
+3. 项目数量校验：`project_ids.len() >= 2`，否则 `work-item-copies-too-few`；
+4. 项目 ID 去重校验：出现重复 → `work-item-copies-duplicate-project`（不得静默去重）；
+5. 为每个项目生成一个独立工作事项 UUID（由 Rust Core 生成）与统一 UTC RFC3339 毫秒时间戳；创建组 ID 直接复用客户端 requestId，不另行生成创建组 UUID；
+6. 在**一个** `Database::write_transaction`（`IMMEDIATE`）内：
+   1. 先按请求标识读取既有创建组：相同标题与项目列表 → 原样返回既有批次，不写任何行；不同标题/项目列表 → `work-item-create-request-conflict`；不存在才继续；
+   2. **先验证全部项目**（循环全部 `project_id`，不插入任何记录）：
       - 不存在 → `project-not-found`；
       - 已归档 → `project-archived`；
       - 全部未归档才继续；
-   2. 插入创建组（`id`、`source_title`、`created_at`）；
-   3. 依次插入全部 `work_items`（`project_id` 各自对应、`lifecycle_status = pending`、未设置字段保持 NULL）；
-   4. 依次插入全部成员关系（`group_id`、`work_item_id`）；
-   5. **事务内读回验证**：
+   3. 插入创建组（`id` = 请求标识、`source_title`、`created_at`）；
+   4. 依次插入全部 `work_items`（`project_id` 各自对应、`lifecycle_status = pending`、未设置字段保持 NULL）；
+   5. 依次插入全部成员关系（`group_id`、`work_item_id`）；
+   6. **事务内读回验证**：
       - 创建组按 ID 读回，`source_title` / `created_at` 必须一致；
       - 每个工作事项按 ID 读回，必须与内存记录逐字段一致；
       - 成员关系读回数量必须等于项目数，且每个成员 `group_id` 正确、`work_item_id` 对应的工作事项 `project_id` 与请求项目一一对应；
       - 任一项不一致 → `work-item-persistence-verification-failed`（回滚）；
-   6. 全部成功才提交并返回读回记录。
-6. 失败路径由 `write_transaction` 显式回滚；不允许部分成功、静默跳过或补偿删除。
+   7. 全部成功才提交并返回读回记录。
+7. 失败路径由 `write_transaction` 显式回滚；不允许部分成功、静默跳过或补偿删除。
 
 读回查询使用事务连接（`Transaction` 可解引用为 `Connection`），复用现有 `repository::find`。
 
@@ -157,7 +159,8 @@ pub struct CreatedWorkItemCopies {
 3. 幂等读取发生在项目归档校验之前：已提交批次的项目后来归档时，重试仍返回既有结果，而不是 `project-archived`；
 4. 同一请求标识的两个并发请求由 SQLite `IMMEDIATE` 写事务串行化，第一个提交后第二个读取既有批次，只能存在一个批次；
 5. 不再需要单独的 `request_id` 列或唯一索引，也不需要新增 schema 版本；
-6. 组内成员 JOIN 行数与原始成员行数交叉校验；内部不一致 fail-closed 为 `work-item-persistence-verification-failed`，绝不静默重建。
+6. 组内每个工作副本的 ID 仍由 Rust Core 生成独立 UUID v4，与 `requestId` 无关；创建组主键才复用 `requestId`；
+7. 组内成员 JOIN 行数与原始成员行数交叉校验；内部不一致 fail-closed 为 `work-item-persistence-verification-failed`，绝不静默重建。
 
 前端请求标识生命周期：
 
@@ -245,21 +248,23 @@ export async function createWorkItemCopies(
 - 调用 `invoke('create_work_item_copies', { input: { requestId, title, projectIds } })`；
 - `requestId` 由页面容器在“标题 + 项目顺序”未变化时复用，成功确认后清理；
 - 失败载荷统一转换为 `WorkItemIpcError`（复用现有逻辑）；
-- 成功返回值必须通过 `parseCreatedWorkItemCopies(raw, projectIds)`。
+- 成功返回值必须通过 `parseCreatedWorkItemCopies(raw, { requestId, title, projectIds })`。
 
 ### 5.3 严格运行时校验（`src/lib/bridge/workItemValidation.ts`）
 
-`parseCreatedWorkItemCopies(raw, requestedProjectIds)` 必须验证：
+`parseCreatedWorkItemCopies(raw, request)`（`request: CreatedCopiesRequestContext`）必须验证：
 
 1. 响应是严格对象，恰好 `groupId`、`workItems` 两个字段（缺字段/未知字段拒绝）；
-2. `groupId` 是非空、规范的 UUID 字符串；
-3. `requestedProjectIds` 为非空字符串数组且无重复（请求本身不合法 → 契约违规，不进行部分解析）；
-4. `workItems` 是数组，长度等于请求项目数；
-5. 每个元素通过现有 `parseWorkItem` 严格校验（10 字段、无缺失/额外字段、状态 `pending`）；
-6. 每个副本 `projectId` 非空，且必须属于请求项目集合；
-7. 每个请求项目恰好出现一次（不重复、不缺失、不替换为其他项目）；
-8. 工作事项 ID 全部唯一；
-9. 任一项失败抛出稳定错误码 `ipc-contract-violation` 的 `WorkItemIpcError`，不静默忽略。
+2. `request.requestId` 必须是规范小写连字符 UUID（Rust 拒绝大写/非规范形式）；
+3. `groupId` 必须是规范 UUID，且必须与 `request.requestId` 逐字相等（合法但不同的 UUID 也拒绝）；
+4. `request.title` 必须是字符串且去除首尾空白后非空；每个副本 `title` 必须等于该 trim 结果（不改变大小写、不折叠内部空白）；
+5. `requestedProjectIds` 为非空字符串数组、至少 2 个且无重复（请求本身不合法 → 契约违规，不进行部分解析）；
+6. `workItems` 是数组，长度等于请求项目数；
+7. 每个元素通过现有 `parseWorkItem` 严格校验（10 字段、无缺失/额外字段、状态 `pending`）；
+8. 每个副本 `projectId` 非空，且必须属于请求项目集合；
+9. 每个请求项目恰好出现一次（不重复、不缺失、不替换为其他项目）；
+10. 工作事项 ID 全部唯一；
+11. 任一项失败抛出稳定错误码 `ipc-contract-violation` 的 `WorkItemIpcError`，不静默忽略。
 
 本模块保持无 Tauri / DOM 依赖，便于 `node:test` 直接加载。
 
@@ -472,15 +477,29 @@ git diff --check
 
 最终实现与本编码前设计总体一致，以下为需要审计核对的实现事实与少量补充说明：
 
-1. **Tauri 请求包装：** 新命令使用与既有命令一致的 `input` 参数包装（前端发送 `{ input: { title, projectIds } }`），业务请求 DTO 内容与设计要求一致（camelCase `title` / `projectIds`）；响应直接为 `{ groupId, workItems }`。
+1. **Tauri 请求包装：** 新命令使用与既有命令一致的 `input` 参数包装（前端发送 `{ input: { requestId, title, projectIds } }`），业务请求 DTO 内容与设计要求一致（camelCase `requestId` / `title` / `projectIds`）；响应直接为 `{ groupId, workItems }`，其中 `groupId` 是服务端校验后直接复用的客户端 `requestId`。
 2. **成员关系表字段：** `work_item_creation_group_members` 只包含设计要求的最低字段 `group_id`、`work_item_id`（技术设计 5.1 未要求其他字段）；使用复合主键 `(group_id, work_item_id)` 与 `work_item_id UNIQUE` 实现“每个工作事项最多一个创建组”，不额外增加冗余索引。
 3. **“验证全部项目”的实现语义：** Core 在任何插入之前按请求顺序逐个查询全部项目状态；遇到第一个不存在/已归档项目立即返回业务错误并回滚（此时尚未插入任何记录）。该实现满足“不得只检查第一个项目、全部验证通过后才开始插入、任一无效整批失败”的原子性要求，但不会在已发现一个无效项目后继续查询其余项目（对用户可见行为与回滚结果无差异）。审计如需“必须查询全部项目”的更强定义，可在后续任务调整。
 4. **时间戳：** 一次批量创建的全部副本与创建组共享同一 UTC RFC3339 毫秒时间戳；待安排排序仍为 `created_at DESC, id DESC`，因此同批次内以稳定 ID 次级排序，顺序稳定。
 5. **创建组读回验证：** 提交前在事务内读回创建组（`source_title`/`created_at`）、每个工作副本（逐字段相等）与全部成员关系（数量、group、work_item→project 映射）；成员集合与请求副本集合双向比对，防止多余/缺失成员。读回不一致统一返回 `work-item-persistence-verification-failed`。
 6. **故障注入：** Rust 测试使用真实 SQLite `TRIGGER`（第二条副本插入失败、第二条成员关系失败、事务内读回篡改）制造真实数据库错误，不在生产代码增加故障开关。Release E2E 通过 `control-t1-04-fault.py` 仅在 D 盘独立 UAT 数据库安装 `BEFORE INSERT` trigger，验证整批回滚、无残留；未在正式数据目录执行，未修改 Windows ACL。
-7. **Bridge 契约：** `parseCreatedWorkItemCopies` 在响应校验之外还校验调用方请求项目列表（≥2、非空、不重复）；若调用方传入非法请求列表，即使后端返回成功也按 `ipc-contract-violation` 拒绝，避免“请求与响应数量不一致被静默接受”。
+7. **Bridge 契约：** `parseCreatedWorkItemCopies(raw, request)` 必须获得完整请求上下文（`requestId`、`title`、`projectIds`）：除响应字段/数量/项目一一对应/ID 唯一/pending 外，还验证 `groupId === requestId`（合法但不同 UUID 拒绝）与每个副本 `title === request.title.trim()`；并校验调用方请求项目列表（≥2、非空、不重复）；若调用方传入非法请求列表，即使后端返回成功也按 `ipc-contract-violation` 拒绝，避免“请求与响应不一致被静默接受”。
 8. **UI 成功提示：** 单条创建显示“已创建 1 项工作”；批量创建使用 Rust 返回的 `workItems.length` 作为实际数量，不使用前端预计数量。创建成功与列表刷新成功/失败三态沿用 T1-03 的分离策略。
 9. **失效选择：** T1-03 的“项目列表刷新后自动回退为未归属项目”逻辑已移除；T1-04 中失效项目选择保留在对话框中，标记为不可用，Submit 被禁用，必须由用户点击“移除”或调整选择后才能再次提交。
 10. **测试/验证脚本调整：** schema 3→4 导致 `VerifyCommon.ps1`、`inspect-release-ui.mjs`、`inspect-t1-02-ui.mjs` 的 schema/migration 期望更新；T1-02 诊断页 migrationRows 期望由 1–3 更新为 1–4。T1-03 历史证据 JSON、历史审计报告与 T1-03 分支未修改；T1-03 原 UI E2E 脚本因控件从单选扩展为多选不再作为可执行回归基线（未修改），T1-03 业务规则回归由 Rust 测试与 T1-04 E2E 场景覆盖。
 11. **最小窗口 E2E 时序：** 首次 E2E 运行时 WebView2 对 `SetWindowPos` 的布局传播存在时序差异，导致最小窗口检查读取到旧视口。修复仅位于测试脚本（`inspect-t1-04-min-window.mjs` 增加 `waitForViewportSettled` 确定性等待），未修改产品代码；修复后最小窗口 11/11 通过。
-12. **实际结果：** `cargo test --workspace` 149/149；Release E2E 主 96/96 + 最小窗口 11/11 + 故障回滚 13/13 + 持久化 15/15 + 数据库探针 57/57；三次真实关闭退出码 0/0/0。详见 [T1-04-REPORT.md](../../testing/reports/T1-04-REPORT.md)。
+12. **实际结果（第二轮交付基线）：** `cargo test --workspace` 149/149；Release E2E 主 96/96 + 最小窗口 11/11 + 故障回滚 13/13 + 持久化 15/15 + 数据库探针 57/57；三次真实关闭退出码 0/0/0。详见 [T1-04-REPORT.md](../../testing/reports/T1-04-REPORT.md)。
+
+### 12.1 第五轮定向修复记录（2026-11-24）
+
+- **T104-01：** 新增 `T1-04UatPath.ps1` / `guard-t1-04-path.ps1` / `t1_04_path_guard.py`，复用 T1-03 Windows 原生句柄、测试根目录信任锚、重解析点拒绝、卷序列号 + 文件 ID + 真实最终路径校验；Python 故障注入控制器与只读探针在任何 `sqlite3.connect()` / 写文件前 fail-closed；证据目录固定 `<uat-root>\evidence`。
+- **T104-02：** 客户端 `requestId` 直接复用为 `work_item_creation_groups.id`，服务端写事务内返回既有批次或稳定冲突；真实 IPC 响应异常后同标识重试仍 1 组 / 2 副本 / 2 成员。
+- **T104-03～T104-06：** Red/Green 证据、真实 0004 索引冲突回滚、CSP 实际采集、STATUS/DEVELOPMENT_PLAN 状态统一。
+- 测试先行提交 `b4f641a`、实现与验证工具提交 `e6b3f22`；最新质量门禁与 Release E2E 结果见报告第 10 节。
+
+### 12.2 第六轮定向修复记录（2026-11-24）
+
+1. **R2-01 路径安全测试自身信任锚与 fail-closed 清理：** `test-t1-04-path.py` 在创建任何测试目录之前调用 `guard-t1-04-path.ps1 -Kind test-root` 验证测试根目录信任锚（自身 + 全部祖先 + 重解析点 + 卷身份 + 文件 ID + 真实最终路径）；测试根 / UAT 根 / 数据库目录 / 证据目录创建前后均通过 `uat-root-target` / `uat-root` 原生守卫复验；清理改为 `guard-t1-04-cleanup.ps1`（复用 T1-03 `Invoke-T103FailClosedSandboxCleanup`），身份变化 / 重解析点 / 守卫失败拒绝删除；证据写入固定 `<UAT根>\evidence\<file>.json` 并写入前后守卫；`formalRootTouched` 硬编码字段替换为正式目录只读身份快照（前后比对 + 守卫拒绝正式路径证据），无法读取时明确标记证据不足。
+2. **R2-02 Migration 验证工具原生守卫：** `verify-t1-04-migration-failure.ps1` 不再使用 `GetFullPath().StartsWith` 字符串判断；UAT 根 / 数据库目录 / 数据库文件 / 证据目录在创建、复制 EXE、启动 Release 前通过 T1-04 原生守卫，清理只清理 `migration-failure-uat` 子目录且复用 fail-closed 身份复验（证据目录保留用于写入证据）；`t1-04-migration-fixture.py` setup 在 `sqlite3.connect()` 前执行 `database-target` 守卫、独占创建文件、创建后再执行 `database` 守卫，probe 在只读连接前执行 `database` 守卫且失败不降级。
+3. **R2-03 Bridge 严格业务契约：** `parseCreatedWorkItemCopies(raw, request)` 获得完整请求上下文，新增 `groupId === requestId`（合法但不同 UUID 拒绝）与每个副本 `title === request.title.trim()` 校验；Bridge `createWorkItemCopies` 传入完整上下文；Node Bridge 契约测试 27 → 35 项。
+4. **R2-04 文档与契约描述统一：** 技术设计 5.4.1、Rust model/service 注释、TypeScript contracts/bridge 注释、任务说明与报告统一为“客户端生成 `requestId`，Rust Core 校验并直接作为创建组主键；工作副本 ID 由 Rust Core 生成；不新增数据库字段或 migration”。未改变 DEC-034 整批原子事务语义；未新增 schema 字段或 migration。

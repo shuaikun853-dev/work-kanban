@@ -1,0 +1,37 @@
+git : warning: in the working copy of 'crates/workmanager-core/src/work_items/model.rs', LF will be replaced by CRLF th
+e next time Git touches it
+所在位置 行:1 字符: 375
++ ... d.log -Encoding utf8; $b=$LASTEXITCODE; git diff --check 2>&1 | Out-F ...
++                                             ~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'crates/workmanager-core/src/work_items/service.rs', LF will be replaced by CRLF the ne
+xt time Git touches it
+warning: in the working copy of 'docs/STATUS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/development/DEVELOPMENT_PLAN.md', LF will be replaced by CRLF the next time Git t
+ouches it
+warning: in the working copy of 'docs/development/tasks/T1-04-Implementation-Design.md', LF will be replaced by CRLF th
+e next time Git touches it
+warning: in the working copy of 'docs/development/tasks/T1-04-Multi-Project-Independent-Copies.md', LF will be replaced
+ by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/quality/work-item-bridge.test.mjs', LF will be replaced by CRLF the next time 
+Git touches it
+warning: in the working copy of 'scripts/verify/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/verify/T1-04UatPath.ps1', LF will be replaced by CRLF the next time Git touche
+s it
+warning: in the working copy of 'scripts/verify/guard-t1-04-path.ps1', LF will be replaced by CRLF the next time Git to
+uches it
+warning: in the working copy of 'scripts/verify/t1-04-migration-fixture.py', LF will be replaced by CRLF the next time 
+Git touches it
+warning: in the working copy of 'scripts/verify/t1_04_path_guard.py', LF will be replaced by CRLF the next time Git tou
+ches it
+warning: in the working copy of 'scripts/verify/test-t1-04-path.py', LF will be replaced by CRLF the next time Git touc
+hes it
+warning: in the working copy of 'scripts/verify/verify-t1-04-migration-failure.ps1', LF will be replaced by CRLF the ne
+xt time Git touches it
+warning: in the working copy of 'src/lib/bridge/workItemValidation.ts', LF will be replaced by CRLF the next time Git t
+ouches it
+warning: in the working copy of 'src/lib/bridge/workItems.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/contracts/workItems.ts', LF will be replaced by CRLF the next time Git touches
+ it

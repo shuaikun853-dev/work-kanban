@@ -105,12 +105,14 @@
 
 - schema 从 3 升级到 4；新增 migration 必须沿用现有引擎规则（独立 `IMMEDIATE` 事务、失败回滚、`user_version` 只在成功后前进），不得修改 0001/0002/0003。
 - 创建组与成员关系表必须具有正确外键、唯一约束与查询索引；同一工作事项最多属于一个创建组。
+- 客户端为一次逻辑批量创建生成规范小写连字符 UUID `requestId`；Rust Core 在 `IMMEDIATE` 写事务内校验后**直接作为** `work_item_creation_groups.id`（幂等重试），不新增 `request_id` 字段或 migration；每个工作副本的 ID 仍由 Rust Core 生成独立 UUID，二者不得混淆。
+- 相同 `requestId` + 相同标题 + 相同项目列表返回既有批次；相同 `requestId` + 不同业务参数返回稳定冲突；不同 `requestId` 可创建新的独立批次。
 - 批量创建的全部校验、创建组写入、工作副本写入、成员关系写入和读回验证必须在**同一个** `IMMEDIATE` 写事务内完成。
 - 必须验证全部项目后再开始插入；不得只检查第一个项目。
 - 使用现有 `WorkItemError` / `DatabaseError` 体系，新增必要的稳定错误码；错误消息不得包含标题、项目名称或 SQL 参数。
 - SQLite 访问只在 Rust Core；所有 SQL 参数绑定；命令层只做 DTO、`spawn_blocking`、错误转换。
 - IPC 使用 serde camelCase、请求 `deny_unknown_fields`、复用现有 `WorkItemDto` 与 `CommandError`；不提供任意 SQL / 文件 / 命令接口。
-- Bridge 必须严格验证响应：groupId 合法、workItems 数组、数量与请求项目数一致、每个项目恰好一个副本、工作事项 ID 不重复、全部 pending、DTO 无缺失/额外字段；不得静默忽略契约错误。
+- Bridge 必须严格验证响应：groupId 必须是规范 UUID 且等于请求 `requestId`、workItems 数组、数量与请求项目数一致、每个项目恰好一个副本、每个副本标题等于请求标题去除首尾空白后的字符串、工作事项 ID 不重复、全部 pending、DTO 无缺失/额外字段；不得静默忽略契约错误。
 - 不新增 ORM、migration crate、前端测试框架或其他第三方依赖。
 - 不记录工作标题、项目名称或 SQL 参数到日志。
 
@@ -143,10 +145,10 @@
 
 ### 8.2 Tauri IPC / Frontend
 
-- 请求 camelCase + `deny_unknown_fields`；响应 `{groupId, workItems}` 字段精确；
+- 请求 camelCase + `deny_unknown_fields`；请求必须包含客户端生成的规范 UUID `requestId`；响应 `{groupId, workItems}` 字段精确，`groupId` 必须等于请求 `requestId`；
 - 复用 `WorkItemDto`（10 字段）与 `CommandError` 稳定错误码；
 - `spawn_blocking`，命令层不实现业务规则；
-- Bridge 严格运行时契约（含数量、项目对应关系、ID 唯一、pending、未知字段拒绝）；
+- Bridge 严格运行时契约（含 `groupId === requestId`、每个副本标题等于请求标题 trim 结果、数量、项目对应关系、ID 唯一、pending、未知字段拒绝）；
 - UI 覆盖 0 / 1 / 2+ 项目语义、选择计数、提交锁、失败保留选择、归档竞态整批失败、成功后实际数量提示与权威刷新、刷新失败不重复创建。
 
 ### 8.3 Windows Release / 回归
@@ -193,9 +195,9 @@ git diff --check
 **实际交付：**
 
 - **数据库：** migration `0004_work_item_creation_groups.sql`，schema 3 → 4；`work_item_creation_groups`、`work_item_creation_group_members`（真实外键、`work_item_id UNIQUE`、STRICT、创建组查询索引）；未修改 0001/0002/0003；失败 migration 回滚测试通过。
-- **Rust Core：** `WorkItemService::create_copies` 在同一个 `IMMEDIATE` 写事务内先验证全部项目，再写创建组、全部独立副本、全部成员关系并做事务内读回验证；新增 `work-item-copies-too-few`、`work-item-copies-duplicate-project` 稳定错误码；任意失败整批回滚。
-- **Tauri IPC：** `create_work_item_copies`（camelCase、`deny_unknown_fields`、`spawn_blocking`、复用 `WorkItemDto`/`CommandError`；响应 `{groupId, workItems}`）。
-- **Bridge：** 批量响应严格运行时契约（数量/项目一一对应/ID 唯一/pending/无缺失或额外字段）；Node 契约测试 27/27。
+- **Rust Core：** `WorkItemService::create_copies` 在同一个 `IMMEDIATE` 写事务内先按客户端规范 UUID `requestId` 查找既有批次，再验证全部项目，然后写创建组（主键直接复用 `requestId`）、全部独立副本（ID 由 Rust Core 生成）、全部成员关系并做事务内读回验证；新增 `work-item-copies-too-few`、`work-item-copies-duplicate-project`、`work-item-create-request-id-invalid`、`work-item-create-request-conflict` 稳定错误码；任意失败整批回滚；不新增数据库字段或 migration。
+- **Tauri IPC：** `create_work_item_copies`（camelCase、`deny_unknown_fields`、必填 `requestId`、`spawn_blocking`、复用 `WorkItemDto`/`CommandError`；响应 `{groupId, workItems}`，`groupId` 为服务端校验后复用的请求标识）。
+- **Bridge：** 批量响应严格运行时契约（`groupId === requestId`、副本标题等于请求标题 trim 结果、数量/项目一一对应/ID 唯一/pending/无缺失或额外字段）；Node 契约测试 27 → **35/35**。
 - **UI：** 快速创建对话框支持多项目选择（0/1 沿用 T1-03 单条创建，2+ 调用批量接口）；显示已选数量与预计创建数量；创建中锁定输入与选择；失败保留标题与原始选择、失效选择需用户主动移除、不自动创建剩余项目；成功使用后端实际数量并从数据库刷新，刷新失败不重复创建。
 - **验证工具：** `verify-t1-04-ui.ps1` + 4 个 CDP 检查脚本 + 只读数据库探针 + 仅限 UAT 的 trigger 故障控制器；复用 T1-03 已验证 UAT 路径安全设施；未修改历史证据。
 
@@ -222,5 +224,7 @@ git diff --check
 **证据与报告：** `docs/testing/reports/T1-04-REPORT.md`；证据 `docs/testing/reports/T1-04-assets/`（14 张截图 + 9 个 JSON + test-counts）。
 
 **第五轮定向修复（2026-11-24）：** 第二轮独立审计 T104-01～T104-06 已修复：原生 UAT 路径守卫与真实 Junction 测试、真实 IPC 响应异常后的 requestId 幂等重试、TDD Red/Green 证据、真实 0004 migration 索引冲突回滚、CSP 实际采集、STATUS/PLAN 状态统一。测试先行提交 `b4f641a`、实现提交 `e6b3f22`；最新质量门禁 `cargo test --workspace` **158 passed / 0 failed**、Release E2E 主 **107/107** + 最小窗口 **11/11** + 回滚 **13/13** + 持久化 **15/15** + 探针 **62/62**、继承回归全部通过；Release EXE 10,457,600 字节、SHA-256 `0bbe1dc4…4166`。详见 `docs/testing/reports/T1-04-REPORT.md` 第 10 节与 `T1-04-assets/evidence/round5/`。本轮仍不构成独立审计或用户验收。
+
+**第六轮定向修复（2026-11-24）：** 第五轮修复后的独立复审提出的四项问题已修复：R2-01 路径安全测试自身信任锚与 fail-closed 清理（测试根 / UAT 根 / 数据库目录 / 证据目录创建前后原生守卫、Junction 重定向场景覆盖、清理复用 T1-03 fail-closed 机制、`formalRootTouched` 硬编码替换为只读身份快照证据）、R2-02 Migration 验证工具原生守卫（PowerShell / Python 双侧在创建 / 复制 / 启动 / 连接前守卫；清理 fail-closed 且保留证据目录）、R2-03 Bridge 业务契约（`groupId === requestId`、副本标题 trim 校验，Node 契约测试 27 → 35）、R2-04 文档 / Rust 注释 / TypeScript 契约对创建组 ID 来源统一为“客户端 requestId 直接复用为创建组主键，工作副本 ID 由 Rust Core 生成，不新增 schema 字段或 migration”。未改变 DEC-034 整批原子事务语义、未重新开发 T1-04、未合并 PR；本轮仍不构成独立审计或用户验收。详见 `docs/testing/reports/T1-04-REPORT.md` 第 11 节与 `T1-04-assets/evidence/round6/`。
 
 **状态与停止条件：** 等待独立代码审计；PR #8 保持 Open，未在 PR #8 合并前创建 T1-04 main PR；未合并任何 PR、未修改 main、未开始 T1-05；不自行宣布审计/验收通过。

@@ -1,0 +1,154 @@
+T1-02 UI 验证：exe=<repo-root>\target\release\workmanager.exe sha256=eae180c83cd880cf72063ea353214291a6eebe4c74d920cf09d6adf96022d149 output=<test-root>\t1-02-ui-20261124-143207 port=9334
+--- 运行 T1-02 主 UI/IPC 检查 ---
+PASS shell.rendered
+PASS shell.titlebarAppName
+PASS shell.threeWindowControls — [{"label":"关闭 WorkManager","title":"关闭"},{"label":"最小化窗口","title":"最小化"},{"label":"最大化窗口","title":"最大化"}]
+PASS shell.windowControlsEnabled
+PASS shell.titlebarNoActionError
+PASS shell.sidebarNavigation — 工作总览 / 今日工作 / 未来 7 天 / 历史记录 / 报告 / 设置
+PASS shell.defaultOverview
+PASS shell.overviewActiveNav
+PASS shell.noHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[]}
+PASS nav.todayClicked
+PASS today.pageRendered
+PASS today.noHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[]}
+PASS nav.settingsClicked
+PASS settings.pageRendered
+PASS settings.noHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[]}
+PASS projects.openViaSettings
+PASS projects.loadingStateVisible — {"clicked":true,"loading":true,"statusCount":2,"heading":"项目管理"}
+PASS projects.emptyStateRendered — {"mounted":true,"ready":true,"page":"项目管理","loading":false,"empty":true,"rows":0,"error":false,"errorText":null}
+PASS projects.emptyStateCreateAction
+PASS projects.emptyNoHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[]}
+PASS ipc.listProjectsEmpty — {"ok":true,"value":[]}
+PASS ipc.diagnosticsAlive
+PASS ipc.schemaVersion4
+PASS ipc.migrations1To4
+PASS ipc.integrityOk
+PASS ipc.noArbitrarySqlCommand — Command execute_sql not found
+PASS projects.createDialogOpened
+PASS projects.createDialogRendered
+PASS projects.createInputFilled
+PASS projects.createSubmitted
+PASS projects.createRowVisible
+PASS ipc.createPersisted — [{"id":"6b49daf9-5058-4fb6-a76c-599364daf715","name":"T1-02 验收项目","isArchived":false,"createdAt":"2026-11-24T06:32:11.679Z","updatedAt":"2026-11-24T06:32:11.679Z"}]
+PASS projects.longCreateDialogOpened
+PASS projects.longInputFilled
+PASS projects.longSubmitted
+PASS projects.longNameFullTitleAvailable — title=超长项目名称用于验证项目管理列表布局不会横向溢出也不会撑破窗口——这是第二段用于…
+PASS projects.longNameNoHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[]}
+PASS ipc.longNamePersisted
+PASS projects.editActionClicked
+PASS projects.editDialogPrefilled
+PASS projects.editInputChanged
+PASS projects.editSubmitted
+PASS projects.editRowUpdated
+PASS ipc.editPersisted — {"id":"6b49daf9-5058-4fb6-a76c-599364daf715","name":"T1-02 验收项目（已编辑）","isArchived":false,"createdAt":"2026-11-24T06:32:11.679Z","updatedAt":"2026-11-24T06:32:12.039Z"}
+PASS projects.archiveActionClicked
+PASS projects.archiveConfirmExplainsNonDestructive
+PASS projects.archiveConfirmed
+PASS projects.archivedBadgeVisible
+PASS projects.archivedRowHasNoEditOrArchive
+PASS ipc.archivePersistedWithoutDeleting — {"id":"24d95c61-658a-4403-90c3-d1b641de629a","name":"超长项目名称用于验证项目管理列表布局不会横向溢出也不会撑破窗口——这是第二段用于增加长度的虚构项目名称内容——T1-02-LONG-PROJECT-NAME-0123456789-ABCDEFGHIJ","isArchived":true,"createdAt":"2026-11-24T06:32:11.833Z","updatedAt":"2026-11-24T06:32:12.245Z"}
+PASS projects.archivedNoHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[]}
+PASS projects.errorScenarioEditOpened
+PASS projects.errorScenarioArchiveViaIpc
+PASS projects.errorScenarioSaveClicked
+PASS projects.errorStateVisible
+PASS projects.errorDialogStillOpen
+PASS projects.errorDialogCancelled
+PASS projects.refreshViaSettings
+PASS projects.reopenProjects
+PASS projects.archivedRecordsStillExistAfterReload
+PASS diagnostics.navigateSettings
+PASS diagnostics.open
+PASS diagnostics.heading
+PASS diagnostics.healthOk
+PASS diagnostics.noErrorAlert
+PASS diagnostics.threePortablePaths
+PASS diagnostics.migrationRows
+PASS diagnostics.unencryptedNote
+PASS diagnostics.noHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[{"tag":"CAPTION","cls":"visually-hidden","text":"已应用的数据库 migration 记录","left":253,"right":254,"width":1,"scrollWidth":180,"clientWidth":1}]}
+PASS titlebar.maximizeCallsRealWindowApi — 1100 → 1920
+PASS titlebar.restoreCallsRealWindowApi — 1920 → 1100 (before 1100)
+PASS csp.noViolations — []
+PASS page.noUncaughtErrors
+{
+  "evidencePath": "D:\\WorkManager-test-data\\t1-02-ui-20261124-143207\\t1-02-ui-evidence.json",
+  "total": 73,
+  "failed": [],
+  "pass": true
+}
+T1_02_RELEASE_UI_CHECK=PASS
+--- 调整到最小支持窗口 860x640 ---
+--- 运行最小窗口/关闭按钮检查 ---
+PASS minWindow.sizeNear860x640 — {"innerWidth":844,"innerHeight":632,"outerWidth":844,"outerHeight":632}
+PASS minWindow.navigateOverview
+PASS minWindow.overviewNoHorizontalOverflow — {"innerWidth":844,"docScrollWidth":844,"clientWidth":844,"bodyScrollWidth":844,"overflow":false,"offenders":[]}
+PASS minWindow.navigateSettings
+PASS minWindow.openProjects
+PASS minWindow.projectsNoHorizontalOverflow — {"innerWidth":844,"docScrollWidth":844,"clientWidth":844,"bodyScrollWidth":844,"overflow":false,"offenders":[]}
+PASS minWindow.projectsArchivedRowsVisible — {"rowCount":2,"archivedRows":2,"newProjectVisible":true,"headerRight":828}
+PASS minWindow.newProjectButtonVisible
+PASS minWindow.openCreateDialog
+PASS minWindow.dialogFullyVisible — {"top":193.296875,"left":202,"right":642,"bottom":438.703125,"innerWidth":844,"innerHeight":632,"fullyVisible":true}
+PASS minWindow.cancelDialog
+PASS minWindow.closeButtonClicked
+{
+  "total": 12,
+  "failed": [],
+  "pass": true,
+  "evidencePath": "D:\\WorkManager-test-data\\t1-02-ui-20261124-143207\\t1-02-min-window-evidence.json"
+}
+T1-02 证据摘要：<test-root>\t1-02-ui-20261124-143207\t1-02-ui-orchestration.json
+{
+    "task":  "T1-02",
+    "generatedAt":  "2026-11-24T06:32:18.5942560Z",
+    "exePath":  "D:\\工作事项看板\\target\\release\\workmanager.exe",
+    "exeSha256":  "eae180c83cd880cf72063ea353214291a6eebe4c74d920cf09d6adf96022d149",
+    "exeSizeBytes":  10458112,
+    "outputDir":  "D:\\WorkManager-test-data\\t1-02-ui-20261124-143207",
+    "remoteDebugPort":  9334,
+    "mainUiCheckExitCode":  0,
+    "mainUiCheckCount":  73,
+    "mainUiFailedCheckCount":  0,
+    "minWindowCheckExit":  0,
+    "minWindowCheckCount":  12,
+    "minWindowFailedCheckCount":  0,
+    "closeButtonCheckPassed":  true,
+    "closeExitCode":  0,
+    "evidenceFiles":  [
+                          "diagnostics.png",
+                          "overview-min.png",
+                          "overview-normal.png",
+                          "projects-archive-confirm.png",
+                          "projects-archived.png",
+                          "projects-dialog-min.png",
+                          "projects-empty.png",
+                          "projects-error.png",
+                          "projects-list.png",
+                          "projects-loading.png",
+                          "projects-min.png",
+                          "settings-normal.png",
+                          "t1-02-min-window-evidence.json",
+                          "t1-02-ui-evidence.json",
+                          "today-normal.png"
+                      ],
+    "screenshots":  [
+                        "diagnostics.png",
+                        "overview-min.png",
+                        "overview-normal.png",
+                        "projects-archive-confirm.png",
+                        "projects-archived.png",
+                        "projects-dialog-min.png",
+                        "projects-empty.png",
+                        "projects-error.png",
+                        "projects-list.png",
+                        "projects-loading.png",
+                        "projects-min.png",
+                        "settings-normal.png",
+                        "today-normal.png"
+                    ],
+    "pass":  true
+}
+T1_02_RELEASE_UI_E2E=PASS

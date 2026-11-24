@@ -14,9 +14,18 @@
  * - `importance`、`urgency` 为 `null` 或 1–5 的整数；
  * - `dueDate`、`description` 为 `null` 或字符串；
  * - `lifecycleStatus` 在待安排/创建场景只接受 `"pending"`；
- * - 批量创建响应数量必须与请求项目数一致，且每个项目恰好一个副本。
+ * - 批量创建响应数量必须与请求项目数一致，且每个项目恰好一个副本；
+ * - 批量创建 `groupId` 必须与本次请求的 `requestId` 逐字相等（Rust Core 校验后直接
+ *   复用请求标识作为创建组主键，合法但不同的 UUID 也是契约错误）；
+ * - 批量创建每个副本 `title` 必须等于请求 `title.trim()`（Rust 只做首尾 trim，
+ *   不改变大小写或内部空白）。
  *
- * 工作事项 ID 由 Rust Core 生成；前端禁止自行生成业务 ID。
+ * 身份来源（创建组与工作事项不同，不得混淆）：
+ * - 工作事项 ID 由 Rust Core 生成，前端禁止自行生成工作事项业务 ID；
+ * - 批量创建组 ID（`groupId`）由客户端为一次逻辑创建操作生成规范 UUID `requestId`，
+ *   Rust Core 在同一 `IMMEDIATE` 写事务内校验后直接复用为创建组主键；不新增数据库
+ *   字段或 migration。
+ *
  * 前端不直接访问 SQLite，也不在前端保存/模拟工作事项状态。
  */
 
@@ -77,9 +86,11 @@ export interface CreateWorkItemInput {
 /**
  * `create_work_item_copies` 请求体（对应 Rust `CreateWorkItemCopiesRequest`）。
  *
- * - `requestId` 必须由客户端为一次逻辑创建操作生成规范 UUID，并在 IPC/Bridge 结果
- *   不确定或用户重试时复用；成功确认后必须丢弃。服务端以该标识作为创建组主键
- *   实现幂等，不新增 schema 字段；
+ * - `requestId` 必须由客户端为一次逻辑创建操作生成**规范小写连字符 UUID**，并在 IPC/
+ *   Bridge 结果不确定或用户重试时复用；成功确认后必须丢弃。Rust Core 在同一个
+ *   `IMMEDIATE` 写事务内校验该标识并**直接复用**为创建组主键（`groupId`）实现幂等：
+ *   相同 `requestId` + 相同标题 + 相同项目列表返回既有批次；相同 `requestId` 不同业务
+ *   参数返回稳定冲突；不同 `requestId` 可创建新的独立批次；不新增 schema 字段或 migration；
  * - `projectIds` 必须包含 2 个及以上不同项目；少于 2 个或重复项目由 Rust Core 拒绝；
  * - 项目顺序即返回 `workItems` 的顺序；前端不得自行去重后提交。
  */
@@ -92,8 +103,11 @@ export interface CreateWorkItemCopiesInput {
 /**
  * `create_work_item_copies` 成功响应（对应 Rust `CreatedWorkItemCopies`）。
  *
- * - `groupId`：Rust Core 生成的创建组稳定 UUID；
- * - `workItems`：每个请求项目恰好一个独立工作副本，全部为 `pending`；
+ * - `groupId`：客户端本次请求的 `requestId`（规范 UUID）——Rust Core 校验后直接复用
+ *   为 `work_item_creation_groups.id`，不是 Rust Core 新生成的 UUID；Bridge 必须验证
+ *   `groupId === requestId`；
+ * - `workItems`：每个请求项目恰好一个独立工作副本，全部为 `pending`；副本 ID 由 Rust
+ *   Core 生成，标题等于请求标题去除首尾空白后的字符串；
  * - 整批原子提交（DEC-034）：成功响应保证全部副本与成员关系已提交，不存在部分成功。
  */
 export interface CreatedWorkItemCopiesDto {

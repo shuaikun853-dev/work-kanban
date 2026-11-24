@@ -1,0 +1,6 @@
+npm-check=0
+npm-build=0
+git-diff-check=0
+cargo-fmt=0
+cargo-check=0
+cargo-test=0

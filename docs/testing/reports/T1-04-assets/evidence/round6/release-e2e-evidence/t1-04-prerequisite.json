@@ -1,0 +1,48 @@
+{
+  "task": "T1-04",
+  "generatedAt": "2026-11-24T06:29:37.716Z",
+  "outputDir": "<test-root>\\t1-04-ui-r6-20261124-142930",
+  "port": 9355,
+  "projects": {
+    "A": {
+      "id": "3fe7870d-dd34-493e-a132-5ac9c486932f",
+      "name": "T1-04 虚构未归档项目甲"
+    },
+    "B": {
+      "id": "5b48c221-1127-4bda-a6aa-ccae0b171aec",
+      "name": "T1-04 虚构未归档项目乙"
+    },
+    "C": {
+      "id": "641b20ba-4b5c-4002-8910-cd4e154806ae",
+      "name": "T1-04 虚构未归档项目丙"
+    },
+    "D": {
+      "id": "1eebccbd-70bb-4737-aa62-145ba04db78d",
+      "name": "T1-04 虚构将归档项目丁"
+    }
+  },
+  "titles": {
+    "batchTwo": "T1-04 虚构 两项目价格异常排查",
+    "batchThree": "T1-04 虚构 三项目进度同步",
+    "unassigned": "T1-04 虚构 未归属快速工作",
+    "single": "T1-04 虚构 单项目快速工作",
+    "duplicate": "T1-04 虚构 重复提交批次工作",
+    "doubleSubmit": "T1-04 虚构 双击保护批次工作",
+    "archivedLink": "T1-04 虚构 归档项目历史关联工作",
+    "archiveRace": "T1-04 虚构 归档竞态不应创建",
+    "contractViolation": "T1-04 虚构 契约违规不应创建",
+    "refreshFailure": "T1-04 虚构 刷新失败批次工作",
+    "bypass": "T1-04 虚构 绕过 UI 的批量请求"
+  },
+  "pendingAfterMain": 14,
+  "groupsAfterMain": 5,
+  "membersAfterMain": 11,
+  "archivedLinkItemId": "80c27528-e397-4d17-b3d2-a3b988c4e22e",
+  "expectedGroupTitles": [
+    "T1-04 虚构 两项目价格异常排查",
+    "T1-04 虚构 三项目进度同步",
+    "T1-04 虚构 重复提交批次工作",
+    "T1-04 虚构 双击保护批次工作",
+    "T1-04 虚构 刷新失败批次工作"
+  ]
+}

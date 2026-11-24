@@ -93,3 +93,64 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-t1-04-
 | `screenshots/round5/create-dialog-multi-projects.png` | 多项目选择基线回归 |
 
 > 证据边界：上述为开发代理执行结果，不构成独立审计或用户验收。T1-03 历史证据、审计状态、PR #8、P2-01 与 DEC-029 / Issue #2 风险均未改变。
+
+---
+
+## 第六轮定向修复证据（2026-11-24，R2-01～R2-04）
+
+本轮证据保存在 `evidence/round6/` 与 `screenshots/round6/`，**不覆盖**第五轮/历史证据。所有 UAT 数据均为虚构；正式运行目录 `D:\WorkManager` 本机不存在，仅做只读身份快照，未被打开、修改或写入。
+
+- **Release EXE（第六轮重建，含 Bridge 变更）：** 10,458,112 字节，SHA-256 `eae180c83cd880cf72063ea353214291a6eebe4c74d920cf09d6adf96022d149`
+- **新增/重写专项：** `test-t1-04-path.py` **58 PASS / 0 FAIL / 1 SKIP**（文件符号链接权限不足，显式记录）；`test-t1-04-migration-path.py` **31 PASS / 0 FAIL**；Bridge Node 契约 **35/35**（Red 11 失败 → Green 35/35）；真实 Release migration 失败回滚 `ROLLBACK/CLEANUP/EVIDENCE` 全 PASS（脚本退出码 0）
+- **Release E2E：** 主 UI/IPC **107/107**、最小窗口 **11/11**、真实 SQLite trigger 原子回滚 **13/13**、重启持久化 **15/15**、数据库只读探针 **62/62**；三次真实关闭退出码 **0/0/0**；CSP 实际采集、页面异常 0
+- **继承回归：** T1-01 便携 106（PASS 90 / WARN 1 / INFO 15）、T1-01 异常注入 73（PASS 64 / INFO 9）、T1-02 UI 73/73 + 12/12、T1-03 路径安全 93（SKIPPED=1，FAILED=0）；全部退出码 0
+- **安全证据：** 真实 `mklink /J` 测试根重定向/祖先 Junction/UAT 根/数据库目录/证据目录替换全部被拒绝（重解析 tag `0xA0000003`）；Junction 目标 Canary 内容与目录结构前后一致；清理身份变化/重解析点/守卫失败均 fail-closed 拒绝删除；control/probe/Fixture 守卫失败均未调用 `sqlite3.connect`；正式目录只读身份快照前后一致（existed=false）
+- **残余风险：** DEC-029 / Issue #2 TOCTOU 并发路径替换窗口仍存在，本轮只治理静态 Junction / 重解析点 / 路径身份校验，不宣称消除并发替换；P2-01 仍未关闭；普通 SQLite 未加密
+
+| 证据文件（`evidence/round6/`） | 内容 |
+|---|---|
+| `environment.txt` | 机器/工具链、分支、基线 HEAD、时间 |
+| `release-exe.sha256` | 第六轮 Release EXE 大小与 SHA-256 |
+| `bridge-baseline-subagent.txt` | R2-03 修改前 Bridge 基线（27/27） |
+| `bridge-red.txt` | R2-03 新测试 + 旧实现 Red（35 项中 11 项失败） |
+| `bridge-green.txt` | R2-03 实现后 Green（35/35） |
+| `bridge-svelte-check.txt` | `svelte-check` 0 errors / 0 warnings |
+| `path-safety-red.txt` | R2-01 新测试首次执行失败证据（守卫能力未实现） |
+| `path-safety-output.txt` | R2-01 专项最终原始输出 |
+| `path-safety-evidence.json` | R2-01 机器可读证据（58 项、Junction 拒绝、Canary、清理、正式目录快照） |
+| `migration-path-red.txt` | R2-02 旧工具穿过祖先 Junction 写入并继续执行的漏洞 Red 证据 |
+| `migration-path-output.txt` | R2-02 专项最终原始输出 |
+| `migration-path-evidence.json` | R2-02 机器可读证据（31 项） |
+| `migration-failure-output.txt` | 真实 Release migration 失败回滚原始输出（原生守卫 PASS、回滚不变量、fail-closed 清理、证据写入） |
+| `migration-failure-evidence.json` | 真实 Release migration 失败回滚机器可读证据 |
+| `release-e2e-output.txt` | Release E2E 原始输出（已脱敏本地路径） |
+| `release-e2e-evidence/` | 主 UI/最小窗口/故障回滚/持久化/数据库探针/编排 JSON（9 个） |
+| `inherited-T1-01-portable.txt` | 继承 T1-01 便携回归（106 项） |
+| `inherited-T1-01-faults.txt` | 继承 T1-01 异常注入（73 项） |
+| `inherited-T1-02-ui.txt` | 继承 T1-02 UI E2E（73/73 + 12/12） |
+| `inherited-T1-03-path.txt` | 继承 T1-03 路径安全专项（93 项，1 SKIP） |
+| `inherited-summary.txt` | 继承回归退出码汇总 |
+| `gate-cargo-fmt.txt` / `gate-cargo-check.txt` / `gate-cargo-test.txt` | Rust 质量门禁原始输出（158 passed / 0 failed） |
+| `gate-npm-check.txt` / `gate-npm-build.txt` | 前端质量门禁原始输出（Bridge 35/35、Token 49/49、167 modules） |
+| `gate-git-diff-check.txt` / `gate-summary.txt` | `git diff --check` 输出与全部质量门禁退出码 |
+| `test-counts.txt` | 新增/保留测试数量、PASS/FAIL/SKIP 与退出码汇总 |
+| `git-diff.patch` / `git-diff-stat.txt` | 本轮修复 Git diff 与统计（不含本证据目录） |
+| `README.md` | 本证据说明与复现命令 |
+
+### 第六轮截图（`screenshots/round6/`）
+
+| 文件 | 内容 |
+|---|---|
+| `pending-after-main-checks.png` | 主检查后的待安排列表 |
+| `pending-two-project-copies.png` / `pending-three-project-copies.png` | 两/三项目批量创建结果 |
+| `pending-unassigned-regression.png` | T1-03 未归属创建回归 |
+| `pending-archived-project.png` | 归档项目历史关联保留 |
+| `create-dialog-multi-projects.png` / `create-dialog-min.png` | 多项目选择对话框（正常/最小窗口） |
+| `create-error-contract-violation-batch.png` | Bridge 严格契约拒绝非法批量响应 |
+| `create-error-project-archived-batch.png` | 归档竞态整批失败 |
+| `batch-rollback-error.png` | 真实 SQLite trigger 整批回滚 |
+| `pending-refresh-recovered.png` | 刷新失败后重试恢复 |
+| `pending-empty.png` / `pending-min.png` | 空状态 / 最小窗口 |
+| `pending-after-restart.png` | 重启持久化 |
+
+> 证据边界：上述为开发代理执行结果，不构成独立审计或用户验收。T1-03 历史证据、审计状态、PR #8、P2-01 与 DEC-029 / Issue #2 风险均未改变。

@@ -15,6 +15,8 @@
 > **状态边界：** 本报告记录开发代理执行的真实命令与结果，不构成独立审计或用户验收。T1-03 仍未完成独立审计、PR #8 仍未合并、P2-01 仍未关闭；T1-04 的堆叠开发不改变这些状态。
 >
 > **第五轮更新（2026-11-24）：** 第二轮独立审计 T104-01～T104-06 已完成定向修复；最新测试先行提交 `b4f641a`、实现提交 `e6b3f22`。最新质量门禁、真实 IPC 幂等重试、Junction 专项、CSP 实际采集与 Release E2E 结果见[第 10 节](#10-第五轮定向修复2026-11-24t104-01t104-06)；第 1–9 节保留上一轮历史记录，不覆盖、不改写。
+>
+> **第六轮更新（2026-11-24）：** 第五轮修复后的独立复审提出的 R2-01～R2-04 四项问题已完成定向修复（路径安全测试自身信任锚与 fail-closed 清理、Migration 验证工具原生守卫、Bridge 业务契约校验、文档/注释/契约的创建组 ID 来源统一）；新增测试与证据见[第 11 节](#11-第六轮定向修复2026-11-24r2-01r2-04)。第 1–10 节保留历史记录；其中涉及批量创建组 ID 来源、Bridge 解析接口的历史描述已按当前真实实现同步更正，不改变历史测试结论。
 
 ---
 
@@ -81,19 +83,19 @@
 
 ### 3.2 Rust Core
 
-- `WorkItemService::create_copies(database, raw_title, project_ids) -> CreatedWorkItemCopies`：
-  1. `normalize_title` / 批量项目数量 / 重复项目校验（失败不触碰数据库）；
-  2. 生成创建组 UUID、每个项目独立工作副本 UUID、统一 UTC 时间戳；
-  3. 在同一个 `Database::write_transaction`（`IMMEDIATE`）内：**先循环验证全部项目**（存在且未归档）→ 插入创建组 → 插入全部 `work_items`（`pending`，未设置字段 NULL）→ 插入全部成员关系 → 按 ID 读回创建组、全部副本、全部成员关系并逐项比对 → 全部一致才提交；
+- `WorkItemService::create_copies(database, request_id, raw_title, project_ids) -> CreatedWorkItemCopies`：
+  1. `normalize_title` / 批量项目数量 / 重复项目校验（失败不触碰数据库）；客户端 `request_id` 必须是规范小写连字符 UUID，否则 `work-item-create-request-id-invalid`；
+  2. 创建组 ID 直接复用客户端 `requestId`（不是 Rust Core 新生成）；为每个项目生成独立工作事项 UUID（由 Rust Core 生成）与统一 UTC 时间戳；
+  3. 在同一个 `Database::write_transaction`（`IMMEDIATE`）内：先按请求标识幂等查重（相同内容返回既有批次、不同内容稳定冲突）→ **先循环验证全部项目**（存在且未归档）→ 插入创建组（主键 = requestId）→ 插入全部 `work_items`（`pending`，未设置字段 NULL）→ 插入全部成员关系 → 按 ID 读回创建组、全部副本、全部成员关系并逐项比对 → 全部一致才提交；
   4. 任一步失败由事务显式回滚；读回不一致返回 `work-item-persistence-verification-failed`。
 - 新增稳定错误码：`work-item-copies-too-few`、`work-item-copies-duplicate-project`；复用 `work-item-title-empty`、`project-not-found`、`project-archived`、`work-item-persistence-verification-failed`、数据库错误码。
 - 错误消息不含工作标题、项目名称或 SQL 参数；本模块不写日志。
 
 ### 3.3 Tauri IPC
 
-- 新增命令 `create_work_item_copies`，参数 `input: CreateWorkItemCopiesRequest { title, projectIds }`：
-  - serde camelCase、`deny_unknown_fields`；`projectIds` 必须是字符串数组；
-  - 复用 `WorkItemDto`（Rust `WorkItem`）与 `CommandError`；响应 `{ groupId, workItems }`；
+- 新增命令 `create_work_item_copies`，参数 `input: CreateWorkItemCopiesRequest { requestId, title, projectIds }`：
+  - serde camelCase、`deny_unknown_fields`；`requestId` 必填且必须是规范 UUID，`projectIds` 必须是字符串数组；
+  - 复用 `WorkItemDto`（Rust `WorkItem`）与 `CommandError`；响应 `{ groupId, workItems }`，其中 `groupId` 是服务端校验后直接复用的客户端 `requestId`；
   - `async` + `spawn_blocking`；命令层只做 DTO/转发/错误转换，不实现业务规则；不暴露 SQL/文件/命令接口。
 - `WorkItemContext::create_work_item_copies` 在 `Arc<Mutex<Option<Database>>>` 下调用 Core；数据库关闭时返回结构化错误。
 - `src-tauri/src/lib.rs` 注册新命令；启动/退出逻辑未修改。
@@ -101,16 +103,17 @@
 ### 3.4 TypeScript Contracts / Bridge
 
 - `contracts/workItems.ts`：新增 `CREATE_WORK_ITEM_COPIES_COMMAND`、`CreateWorkItemCopiesInput`、`CreatedWorkItemCopiesDto`。
-- `bridge/workItemValidation.ts`：新增 `parseCreatedWorkItemCopies(raw, requestedProjectIds)`，严格验证：
+- `bridge/workItemValidation.ts`：新增 `parseCreatedWorkItemCopies(raw, request)`（`request: CreatedCopiesRequestContext`），严格验证：
   - 顶层恰好 `{groupId, workItems}`；
-  - `groupId` 为规范 UUID；
+  - `request.requestId` 必须是规范小写连字符 UUID；
+  - `groupId` 为规范 UUID 且必须等于 `request.requestId`（合法但不同的 UUID 拒绝）；
   - 请求项目列表 ≥ 2、非空、不重复；
   - `workItems` 数量与请求项目数一致；
-  - 每项通过既有 `parseWorkItem`（10 字段、无缺失/额外字段、`pending`）；
+  - 每项通过既有 `parseWorkItem`（10 字段、无缺失/额外字段、`pending`）；每个副本标题等于 `request.title.trim()`（不改变大小写/内部空白）；
   - 每个请求项目恰好出现一次（不重复/不缺失/不替换）、工作事项 ID 唯一；
   - 任一项违反 → `ipc-contract-violation`。
-- `bridge/workItems.ts`：新增 `createWorkItemCopies(title, projectIds)`；失败载荷统一转 `WorkItemIpcError`。
-- `scripts/quality/work-item-bridge.test.mjs`：批量契约测试由 17 项扩展为 **27 项**，仍使用 Node 内置 `node:test`，未新增依赖。
+- `bridge/workItems.ts`：新增 `createWorkItemCopies(requestId, title, projectIds)`；调用响应解析时传入完整请求上下文；失败载荷统一转 `WorkItemIpcError`。
+- `scripts/quality/work-item-bridge.test.mjs`：批量契约测试由 17 项扩展为 **35 项**（第六轮新增 `groupId === requestId` 与标题 trim 校验场景），仍使用 Node 内置 `node:test`，未新增依赖。
 
 ### 3.5 Svelte UI（不新增一级导航 / Token / 依赖）
 
@@ -347,3 +350,86 @@ T1-04 新增 Rust 测试：`work_item_copies.rs` **16 项**、`creation_groups_m
 ### 10.7 最终状态
 
 **T1-04 第五轮定向修复完成，开发与自测结果待独立代码审计。**
+
+---
+
+## 11. 第六轮定向修复（2026-11-24，R2-01～R2-04）
+
+> 本节记录第五轮修复后独立复审所提四项问题的定向修复与开发自测结果；**不构成独立审计或用户验收通过**。T1-03 状态、P2-01、PR #8 与 DEC-029 / Issue #2 风险均未改变。
+
+### 11.1 Git 基线与修复范围
+
+- 修复前 HEAD：`775496591275be833c688397f323d1990367e4d3`（与复审基线一致）。
+- 分支：`task/T1-04-multi-project-copies`；T1-03 堆叠基线 `e8205cae22e98afce6480f5a5a0695543a61dee3`；main `018e851e8daf5835391a7b61caf881bc57c2ad42` 未修改；PR #8 Open、未合并。
+- 本轮仅修复四项复审问题，**未重新开发 T1-04**：未改 Rust 批量创建业务逻辑、IMMEDIATE 整批原子事务、创建组/成员设计、服务端幂等事务逻辑、已通过的并发同步测试、Migration 业务实现与 Release UI 交互；未新增数据库字段或 migration；未改变 DEC-034 整批原子事务语义。
+- 本轮修复提交：见最终交付报告与 Git 日志（未 rebase / reset / squash / 强制推送；未改写历史提交）。
+
+### 11.2 四项问题逐项结果
+
+| 编号 | 原问题 | 修改文件 | 修复内容 | 测试证据 | 结果 |
+|---|---|---|---|---|---|
+| R2-01 | 路径安全测试自身信任锚与 fail-closed 清理缺陷 | `scripts/verify/test-t1-04-path.py`（重写）、`T1-04UatPath.ps1`、`guard-t1-04-path.ps1`、`guard-t1-04-cleanup.ps1`（新增）、`t1_04_path_guard.py`、`t1_04_path_test_support.py`（新增）、`scripts/verify/README.md` | 创建任何测试目录前调用 `test-root` 原生守卫验证测试根目录信任锚（自身 + 全部已存在祖先 + 重解析点 + 卷身份 + 文件 ID + 真实最终路径）；测试根 / UAT 根 / 数据库目录 / 证据目录创建前后经 `uat-root-target` / `uat-root` 复验；新增真实 Junction 重定向测试根/祖先、UAT 根替换、数据库目录替换、证据目录替换场景（使用测试根内隔离合成信任锚，不替换真实共享测试根）；清理复用 T1-03 `Invoke-T103FailClosedSandboxCleanup`（`guard-t1-04-cleanup.ps1`），身份变化/重解析点/守卫失败时拒绝删除且不得 `ignore_errors`；证据输出固定 `<UAT根>\evidence\<file>.json`，写入前后守卫；删除硬编码 `formalRootTouched:false`，改为正式目录只读身份快照（前后比对）+ 守卫拒绝正式路径证据，无法读取时显式标记证据不足 | `test-t1-04-path.py`：**58 项 / 0 FAIL / 1 SKIP**（文件符号链接权限不足，显式记录，不计 PASS），退出码 0；`path-safety-output.txt`、`path-safety-evidence.json`；Red 原始输出 `path-safety-red.txt` | 已修复 |
+| R2-02 | Migration 验证工具绕过原生路径守卫 | `scripts/verify/verify-t1-04-migration-failure.ps1`（重写）、`t1-04-migration-fixture.py`、`test-t1-04-migration-path.py`（新增）、`T1-04UatPath.ps1`、`guard-t1-04-path.ps1`、`t1_04_path_guard.py` | PowerShell 移除 `GetFullPath().StartsWith` 字符串判断：信任锚 → 规划期 UAT 根/数据库目标/证据目录守卫 → 创建后身份复验 → 复制 EXE 与启动 Release 前复验；清理只删除 `migration-failure-uat` 子目录并复用 fail-closed 身份复验（证据目录保留用于证据写入）；Python Fixture `setup()` 在创建文件前执行 `database-target` 守卫、独占创建、创建后执行 `database` 守卫、写入后再次复验身份，通过后才 `sqlite3.connect()`；`probe()` 在只读连接前执行 `database` 守卫，失败不降级、不尝试其他路径 | `test-t1-04-migration-path.py`：**31 项 / 0 FAIL**，退出码 0；`migration-failure-output.txt`、`migration-failure-evidence.json`（真实 Release 回滚：对话框 found、Release 退出码 1、user_version=3、无 version 4/新表、历史数据不变、integrity ok、原生守卫全部 PASS、fail-closed 清理 PASS、证据写入 PASS，脚本退出码 0）；真实 `verify-t1-04-migration-failure.ps1` 退出码 0 | 已修复 |
+| R2-03 | Bridge 对批量创建响应业务契约校验不足 | `src/lib/bridge/workItemValidation.ts`、`bridge/workItems.ts`、`scripts/quality/work-item-bridge.test.mjs` | `parseCreatedWorkItemCopies(raw, request)` 接收完整请求上下文 `{requestId,title,projectIds}`：新增 `requestId` 规范小写连字符 UUID 校验、`groupId === requestId`（合法但不同 UUID 拒绝）、每个副本 `title === request.title.trim()`（不改变大小写/内部空白）；保留原有严格字段/数量/项目一一对应/ID 唯一/pending/未知字段拒绝；Bridge 传入完整上下文；不新增依赖 | Node 契约测试原 27 项全部保留并扩展为 **35 项**：Red **24 pass / 11 fail**（缺失检查）→ Green **35/35 PASS**，`bridge-red.txt` / `bridge-green.txt`；`svelte-check` 0 errors / 0 warnings | 已修复 |
+| R2-04 | 技术设计、Rust 注释、TypeScript 契约对创建组 ID 来源描述不一致 | `docs/architecture/TECHNICAL_DESIGN.md`、`crates/workmanager-core/src/work_items/model.rs`、`service.rs`、`src/lib/contracts/workItems.ts`、`bridge/workItemValidation.ts`、`docs/development/tasks/T1-04-Implementation-Design.md`、`T1-04-Multi-Project-Independent-Copies.md`、本报告 | 统一描述：客户端生成规范 UUID `requestId`；Rust Core 在 `IMMEDIATE` 写事务内校验并直接复用为 `work_item_creation_groups.id`；相同 requestId 相同标题+项目列表返回既有批次、不同业务参数返回 `work-item-create-request-conflict`、不同 requestId 可创建新批次；工作事项副本 ID 由 Rust Core 生成；不新增数据库字段或 migration；未改变 DEC-034 语义 | 文档/注释一致性复核通过；Rust 测试与 Bridge 契约测试回归通过（`cargo test --workspace` 全绿、Bridge 35/35） | 已修复 |
+
+### 11.3 TDD 与 Red/Green 证据
+
+- 新增路径安全测试先于守卫能力实现执行：`path-safety-red.txt` 记录首次执行在信任锚阶段失败（`未知路径守卫类型：test-root`，退出码 2）——证明测试确实依赖新增原生守卫能力，而非“先实现再写测试”。
+- R2-02 新增测试先于 Migration 工具修改执行：`migration-path-red.txt` 记录 **31 项中 16 项失败**，其中 `migrationScript.outputAncestorJunctionRejected` 为 `exit=0 createdUnderJunction=True canaryUnchanged=False`——直接复现旧脚本穿过 Junction 写入并继续执行真实回滚测试的漏洞；`fixture.setup*GuardFailure*` 显示旧 Fixture 在守卫失败时仍调用 `sqlite3.connect()`。
+- R2-03 Bridge：先扩展测试并在旧实现上得到 **35 项中 11 项失败**（`bridge-red.txt`），再实现并得到 **35/35 PASS**（`bridge-green.txt`）。
+- 未故意破坏生产代码制造 Red；未删除或放宽既有测试；未把 SKIP 伪报为 PASS；验证脚本退出码与被测产品行为分开记录。
+
+### 11.4 完整质量门禁（全部真实执行）
+
+Release EXE（第六轮重建，含 Bridge 变更）：**10,458,112 字节**，SHA-256 `eae180c83cd880cf72063ea353214291a6eebe4c74d920cf09d6adf96022d149`。
+
+| 命令 | 退出码 | 结果 |
+|---|---|---|
+| `cargo fmt --all -- --check` | 0 | PASS |
+| `cargo check --workspace --all-targets` | 0 | PASS |
+| `cargo test --workspace --no-fail-fast` | 0 | **158 passed / 0 failed / 0 ignored（20 套件）** |
+| `npm run check` | 0 | svelte-check 0 errors / 0 warnings；Bridge **35/35**；Design Token 22 文件 0 违规、**49/49** |
+| `npm run build` | 0 | 167 modules |
+| `git diff --check` | 0 | 仅 CRLF 提示，无空白错误 |
+| `test-t1-04-path.py` | 0 | **58 项 / 0 FAIL / 1 SKIP** |
+| `test-t1-04-migration-path.py` | 0 | **31 项 / 0 FAIL** |
+| `verify-t1-04-migration-failure.ps1`（真实 Release） | 0 | `MIGRATION_FAILURE_ROLLBACK=PASS`、`MIGRATION_FAILURE_CLEANUP=PASS`、`MIGRATION_FAILURE_EVIDENCE=PASS` |
+
+原始输出：`T1-04-assets/evidence/round6/gate-*.txt`、`*output.txt`。
+
+### 11.5 Windows Release E2E（第六轮重建 EXE，独立 UAT，虚构数据）
+
+- 主 UI/IPC **107/107**；最小窗口 **11/11**（真实关闭按钮）；真实 SQLite trigger 原子回滚 **13/13**；重启持久化 **15/15**；数据库只读探针 **62/62**；三次真实关闭退出码 **0/0/0**；CSP 实际采集、页面未捕获异常 0。
+- 探针：主阶段 14 工作 / 5 创建组 / 11 成员；故障回滚后完全一致（14 / 5 / 11，无残留）；重启并再次批量创建后 16 工作 / 6 创建组 / 13 成员；schema 4、完整性 ok、外键 0 违规、无孤儿成员、无多组副本。
+- 证据：`T1-04-assets/evidence/round6/release-e2e-evidence/`（9 个 JSON）与 `screenshots/round6/`（14 张 PNG）；原始输出 `release-e2e-output.txt`。
+
+### 11.6 继承回归（全部真实执行）
+
+- T1-01 便携：**106 项（PASS 90 / FAIL 0 / WARN 1 / INFO 15）**，退出码 0。
+- T1-01 异常注入：**73 项（PASS 64 / FAIL 0 / INFO 9）**，退出码 0。
+- T1-02 UI E2E：主 **73/73** + 最小窗口 **12/12**，关闭退出码 0。
+- T1-03 路径安全专项（`test-t1-03-uat-path.ps1`）：原 60 项全部保留 + F1/F2 新增 31 项，FAILED=0、SKIPPED=1（显式记录），退出码 0。
+- 未修改 T1-03 历史提交/证据；T1-03 审计/验收状态保持原样。
+
+### 11.7 安全证据与剩余风险
+
+- **正式运行目录 `D:\WorkManager`：本机不存在**；测试仅做只读身份快照（前后 `existed=false`、身份一致），未打开、未修改、未写入。`formalRoot.guardRejectedFormalPath` 证明守卫拒绝正式目录路径。
+- **测试根目录信任锚：** 每项写操作前重新验证；测试根目录本身从未被替换、重命名或删除；Junction 重定向场景使用测试根内隔离合成信任锚构造。
+- **Junction 拒绝原始证据：** `path-safety-evidence.json` / `path-safety-output.txt` 包含真实 `mklink /J` 创建的测试根重定向、祖先 Junction、UAT 根/数据库目录/证据目录替换全部被拒（重解析 tag `0xA0000003`）；`migration-path-evidence.json` 包含旧工具穿过 Junction 写入的 Red 证据与修复后拒绝证据。
+- **Canary：** 所有 Junction 目标目录（Canary）内容/目录结构前后完全一致（`canary.allTargetsUnchanged` = true）。
+- **清理 fail-closed：** 身份变化、重解析点、清理守卫进程失败三类场景均拒绝删除并保留现场；正常沙箱经 T1-03 安全清理（身份复验 → 跟踪链接删除 → 重解析点扫描 → 身份复验 → 逐条目删除）全部安全移除，无残留。
+- **SQLite 连接前原生守卫：** control/probe/Fixture 的守卫失败测试均验证 `sqlite3.connect` 未被调用、无文件写入/目录创建/删除。
+- **未解决风险：** DEC-029 / Issue #2 TOCTOU 并发路径替换窗口仍存在；本轮不实施 custom SQLite VFS、不设计新的 Windows 文件系统安全架构、不宣称消除并发替换。P2-01 仍等待 GitHub Support；普通 SQLite 未加密。
+- 文件符号链接场景因当前进程无 `SeCreateSymbolicLinkPrivilege` 显式 SKIP，未伪造 PASS。
+
+### 11.8 遗留问题
+
+- **本轮已修复：** R2-01～R2-04 四项。
+- **本轮未修复（且不在本轮授权范围）：** DEC-029 / Issue #2 TOCTOU；P2-01（GitHub Support 服务端清理）；T1-05 及后续任务。
+- **本轮未验证：** 独立代码审计、用户验收。
+- **需要后续独立审计确认：** 本轮守卫/清理能力与测试证据的充分性；R2-04 文档一致性；Release E2E 与继承回归结果。
+
+### 11.9 最终状态
+
+**T1-04 第六轮定向修复完成，开发与自测结果待独立代码审计。**
