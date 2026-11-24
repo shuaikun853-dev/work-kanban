@@ -13,6 +13,8 @@
 **证据目录：** [T1-04-assets/](T1-04-assets/README.md)
 
 > **状态边界：** 本报告记录开发代理执行的真实命令与结果，不构成独立审计或用户验收。T1-03 仍未完成独立审计、PR #8 仍未合并、P2-01 仍未关闭；T1-04 的堆叠开发不改变这些状态。
+>
+> **第五轮更新（2026-11-24）：** 第二轮独立审计 T104-01～T104-06 已完成定向修复；最新测试先行提交 `b4f641a`、实现提交 `e6b3f22`。最新质量门禁、真实 IPC 幂等重试、Junction 专项、CSP 实际采集与 Release E2E 结果见[第 10 节](#10-第五轮定向修复2026-11-24t104-01t104-06)；第 1–9 节保留上一轮历史记录，不覆盖、不改写。
 
 ---
 
@@ -277,3 +279,70 @@ T1-04 新增 Rust 测试：`work_item_copies.rs` **16 项**、`creation_groups_m
 ## 9. 停止条件
 
 已完成代码开发、自动化测试、Release E2E、继承回归与文档同步；**立即停止，等待独立代码审计**。未合并 PR #8、未在 PR #8 合并前创建 T1-04 main PR、未进入 T1-05，不自行宣布独立审计或用户验收通过。
+
+---
+
+## 10. 第五轮定向修复（2026-11-24，T104-01～T104-06）
+
+> 本节记录第二轮独立审计发现问题的定向修复与开发自测结果；**不构成独立审计或用户验收通过**。T1-03 状态、P2-01、PR #8 与 DEC-029 / Issue #2 风险均未改变。
+
+### 10.1 Git 基线与提交
+
+- 修复前 HEAD：`2c73ca1ef99246b566750511a1410ce5f4b0334f`（与审计基线一致）。
+- 本轮测试先行提交：`b4f641a`。
+- 本轮实现与验证工具提交：`e6b3f22`。
+- 文档与证据提交：见 Git 日志/最终交付回复；未 squash、未 rebase、未强制推送。
+- 分支：`task/T1-04-multi-project-copies`；堆叠基线 `e8205cae22e98afce6480f5a5a0695543a61dee3`；main `018e851e8daf5835391a7b61caf881bc57c2ad42` 未修改；PR #8 Open、未合并。
+
+### 10.2 六项审计问题逐项结果
+
+| 审计编号 | 原问题 | 修改文件 | 修复内容 | 测试证据 | 结果 |
+|---|---|---|---|---|---|
+| T104-01 | UAT 故障注入/数据库探针路径安全 | `scripts/verify/T1-04UatPath.ps1`、`guard-t1-04-path.ps1`、`t1_04_path_guard.py`、`control-t1-04-fault.py`、`probe-t1-04-db.py`、`verify-t1-04-ui.ps1`、`test-t1-04-path.py` | 复用 T1-03 `CreateFileW`/`GetFileInformationByHandleEx`/`GetFinalPathNameByHandleW`、信任锚、卷身份/文件 ID/最终路径校验；拒绝 Junction、符号链接、其他重解析点及未批准路径；数据库父目录与全部祖先、数据库文件自身、SQLite sidecar 均检查；证据目录固定 `<uat-root>\evidence`，输出只允许其直接 `.json` 子文件；Python 在 `sqlite3.connect()`/写文件前 fail-closed；探针不再输出标题、项目名称或绝对路径 | 真实 Junction 专项 **9 PASS / 0 FAIL / 1 SKIP**（文件符号链接权限不足）；祖先 Junction、叶子重解析点、证据目录 Junction、失败不连接数据库、失败不写外部文件均通过；Release E2E 三阶段探针 62/62 | 已修复 |
+| T104-02 | IPC 已提交但响应异常导致重复创建 | `service.rs`、`repository.rs`、`error.rs`、`app_state.rs`、`commands/work_items.rs`、`contracts/workItems.ts`、`bridge/workItems.ts`、`PendingWorkItemsView.svelte`、`inspect-t1-04-ui.mjs` | 客户端为一次逻辑批量操作生成规范 UUID requestId，与标题+项目顺序绑定；IPC/Bridge 失败时保留，内容变化换新，成功确认后清理；Rust Core 在同一 `IMMEDIATE` 写事务内复用 `work_item_creation_groups.id` 为请求标识，相同内容返回既有批次，不同内容返回 `work-item-create-request-conflict`；并发同标识由写事务串行化；无新增 migration | Rust 24/24（同标识返回、标题冲突、项目列表冲突、归档后重试、并发同标识、非法标识）；真实 Release IPC 响应替换后重试：同 requestId，仍 1 组 / 2 副本 / 2 成员；真实 IPC 检查 10 项全通过 | 已修复 |
+| T104-03 | TDD Red/Green 阶段证据不足 | `work_item_copies.rs`、`creation_groups_migration.rs`、`Cargo.toml`（测试同步函数 feature） | 先写测试并提交 `b4f641a`；先记录缺失 4 参数 API 的编译 Red；加入最小接口骨架后记录 18 passed / 6 failed 的行为 Red；再实现并记录 Green。并发归档改用 Barrier/Channel + SQLite 测试 UDF 的确定性同步，不使用随机 sleep | `T104-03-red-compile.txt`、`T104-03-red-behavior.txt`、`T104-03-green-work-item-copies.txt`、`T104-03-gate-cargo-test.txt` | 已补齐 |
+| T104-04 | Migration 与原子性测试覆盖不足 | `work_item_copies.rs`、`creation_groups_migration.rs` | 新增创建组 INSERT 真实 SQLite trigger 回滚；新增真实 0004 migration 测试：从真实 SQL 读取索引名、预先创建同名冲突索引、真实引擎执行、两张表创建后因索引失败整体回滚；验证 user_version=3、两表不存在、无 version 4、历史行不变；删除冲突索引后成功升级 schema 4 | `creation_group_insert_failure_rolls_back_everything`、`real_0004_migration_failure_rolls_back_all_changes`；migration 6/6 | 已修复 |
+| T104-05 | STATUS 与 DEVELOPMENT_PLAN 状态不一致 | `docs/STATUS.md`、`docs/development/DEVELOPMENT_PLAN.md` | 两文档统一为“第五轮定向修复完成；开发与自测完成，等待独立代码审计”；未标记独立审计/用户验收通过；T1-03 状态未改 | 两文档状态一致；T1-04 进度记录已追加 | 已修复 |
+| T104-06 | CSP 机器证据字段未正确采集 | `inspect-t1-04-ui.mjs` | 导航/刷新前安装 `securitypolicyviolation` 监听器；记录 blockedURI/violatedDirective/effectiveDirective/originalPolicy/disposition/source/line/column/sample；实际数组写入 JSON；采集失败明确 `collection-failed`，不伪造 0；页面异常与 CSP 分开统计；重新执行 Release E2E | CSP 实际采集 `[]`，`cspCapture.status=captured`；页面异常 0；`T104-06-csp-evidence.json` | 已修复 |
+
+### 10.3 TDD 证据
+
+- 测试先行提交：`b4f641a`。
+- 编译 Red：`cargo test -p workmanager-core --test work_item_copies --no-run`，退出码 **101**（缺少 `create_copies` 4 参数 API）。
+- 行为 Red：加入最小接口骨架后 `cargo test -p workmanager-core --test work_item_copies -- --nocapture`，退出码 **101**，**18 passed / 6 failed**；6 项失败均为 T104-02 幂等语义（同标识返回既有批次、标题冲突、项目列表冲突、归档后重试、并发同标识、非法标识拒绝）。
+- Green：`work_item_copies` **24 passed / 0 failed**；`creation_groups_migration` **6 passed / 0 failed**。
+- 已正确的基线覆盖（如创建组 INSERT 回滚、确定性并发同步、真实 0004 冲突回滚）第一次执行即 PASS，如实记录为基线 PASS，未故意破坏生产代码制造虚假 Red。
+
+### 10.4 完整质量门禁（全部真实执行）
+
+| 命令 | 退出码 | 结果 |
+|---|---|---|
+| `cargo fmt --all -- --check` | 0 | PASS |
+| `cargo check --workspace --all-targets` | 0 | PASS |
+| `cargo test --workspace --no-fail-fast` | 0 | **158 passed / 0 failed / 0 ignored（20 套件）** |
+| `npm run check` | 0 | svelte-check 0 errors/0 warnings；Bridge 27/27；Design Token 22 文件 0 违规、49/49 |
+| `npm run build` | 0 | 167 modules |
+| `python scripts/verify/test-t1-04-path.py` | 0 | 真实 Junction 专项 9 PASS / 1 SKIP / 0 FAIL |
+| `git diff --check` | 0 | 最终提交前复核通过（见最终 Git 记录） |
+
+### 10.5 Windows Release E2E（独立 UAT，虚构数据）
+
+- Release EXE：**10,457,600 字节**，SHA-256 `0bbe1dc43f59644e51126aeb277abd98cb124e506f69f25d35ef767010ab4166`。
+- 主 UI/IPC **107/107**；最小窗口 **11/11**（视口 844×632）；SQLite trigger 原子回滚 **13/13**；重启持久化 **15/15**；数据库只读探针 **62/62**；三次真实关闭退出码 **0/0/0**。
+- 真实 IPC 幂等重试：第一次真实请求提交 2 项目批次，传输层将响应替换为异常载荷；UI 保留请求标识；第二次保存复用同一 requestId；数据库仍 1 组 / 2 副本 / 2 成员。
+- CSP 实际采集 `[]`；页面未捕获异常 0。
+- 探针：主阶段 14 工作 / 5 组 / 11 成员；故障回滚后完全一致；重启并再次创建后 16 工作 / 6 组 / 13 成员；外键违规 0、孤儿成员 0、多组副本 0、全部 batch 副本 pending。
+- 继承回归：T1-01 便携 **106（PASS 90 / FAIL 0 / WARN 1 / INFO 15）**；T1-01 异常注入 **73（PASS 64 / FAIL 0 / INFO 9）**；T1-02 UI **73/73 + 12/12**；全部退出码 0。
+
+### 10.6 证据与剩余风险
+
+- 第五轮证据：`docs/testing/reports/T1-04-assets/evidence/round5/` 与 `screenshots/round5/`；不覆盖历史证据。
+- **T1-04 仍未独立审计、未用户验收。**
+- **T1-03 状态未改变**；P2-01 仍等待 GitHub Support，旧提交 `2342828` 仍可经 GitHub API 读取；PR #8 仍未合并。
+- **DEC-029 / Issue #2 TOCTOU 并发路径替换风险仍按原决策延期**；本轮只治理静态 Junction/重解析点/路径身份校验，不宣称解决并发替换。
+- 文件符号链接场景因当前进程无 `SeCreateSymbolicLinkPrivilege` 显式 SKIP，未伪造 PASS。
+- 未创建 T1-04 main PR；未开始 T1-05。
+
+### 10.7 最终状态
+
+**T1-04 第五轮定向修复完成，开发与自测结果待独立代码审计。**

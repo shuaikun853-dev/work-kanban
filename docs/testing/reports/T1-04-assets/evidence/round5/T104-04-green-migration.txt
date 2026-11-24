@@ -1,0 +1,23 @@
+cargo.exe :    Compiling workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+所在位置 行:8 字符: 1
++ & cargo test -p workmanager-core --test creation_groups_migration --  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling wo...rkmanager-core):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.93s
+     Running tests\creation_groups_migration.rs (target\debug\build\workmanager-core/49dce107603b9544\out\creation_grou
+ps_migration-49dce107603b9544.exe)
+
+running 6 tests
+test creation_group_tables_only_add_expected_business_tables ... ok
+test injected_creation_groups_migration_failure_rolls_back_and_keeps_schema_three ... ok
+test upgrades_real_schema_three_database_and_preserves_existing_rows ... ok
+test real_0004_migration_failure_rolls_back_all_changes ... ok
+test reopening_latest_schema_does_not_reapply_migration_or_lose_data ... ok
+test creation_group_tables_enforce_strict_foreign_key_and_unique_constraints ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+__EXIT_CODE__=0

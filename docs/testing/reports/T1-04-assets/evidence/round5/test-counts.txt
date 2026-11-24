@@ -1,0 +1,16 @@
+Rust cargo test --workspace: 158 passed / 0 failed / 0 ignored (20 suites)
+T1-04 work_item_copies: 24 passed
+T1-04 creation_groups_migration: 6 passed
+npm run check: svelte-check 0 errors/0 warnings; Bridge 27/27; Design Token 22 files 0 violations; 49/49 token tests
+npm run build: 167 modules, exit 0
+Release main UI/IPC: 107/107
+Release minimum window: 11/11
+Release SQLite trigger rollback: 13/13
+Release restart persistence: 15/15
+Release DB read-only probe checks: 62/62
+Release close exit codes: 0/0/0
+CSP violations: captured [] (0), page exceptions 0
+Path/Junction security: 9 passed, 1 skipped (file symlink privilege unavailable), 0 failed
+T1-01 portable regression: 106 total (PASS 90 / FAIL 0 / WARN 1 / INFO 15)
+T1-01 fault regression: 73 total (PASS 64 / FAIL 0 / INFO 9)
+T1-02 UI regression: main 73/73 + minimum 12/12

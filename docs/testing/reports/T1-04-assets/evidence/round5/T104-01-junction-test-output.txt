@@ -1,0 +1,14 @@
+PASS normal.databasePathAccepted
+PASS normal.evidenceDirectoryAccepted
+PASS normal.evidenceFilePathAccepted
+PASS junction.databaseAncestorRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-path> fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS junction.databaseLeafReparseRejected — UAT 数据库文件本身是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point，tag=0xA0000003）：<uat-path> fail-closed 拒绝。
+SKIP symlink.databaseFileRejected — file symlink unavailable (mklink exit=1; SeCreateSymbolicLinkPrivilege/developer mode required)
+PASS junction.evidenceDirectoryRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-path> fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS guard.noDatabaseConnectOnAncestorJunction — exit=3 connectCalled=False
+PASS guard.noDatabaseConnectOnEvidenceJunction — exit=3 connectCalled=False
+PASS guard.noExternalWriteOnEvidenceJunction — externalFileExists=False
+PATH_GUARD_EVIDENCE=test-artifacts\t1-04-round5\path-guard-evidence.json
+{"checks": 9, "failed": 0, "skips": 1}
+
+__EXIT_CODE__=0

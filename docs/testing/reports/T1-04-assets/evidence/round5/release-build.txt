@@ -1,0 +1,35 @@
+
+> workmanager@0.1.0 tauri
+> tauri build --no-bundle
+
+node.exe :         Info `tauri-build` dependency has workspace inheritance enabled. The features array won't be automat
+ically rewritten. Expected features: []
+所在位置 行:1 字符: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (        Info `t...ed features: []:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+        Info `tauri` dependency has workspace inheritance enabled. The features array won't be automatically rewritten.
+ Expected features: []
+        Info Looking up installed tauri packages to check mismatched versions...
+     Running beforeBuildCommand `npm run build`
+
+> workmanager@0.1.0 build
+> vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 167 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.39 kB │ gzip:  0.27 kB
+dist/assets/index-CDwtqLqF.css   36.05 kB │ gzip:  5.95 kB
+dist/assets/index-Bd58i5li.js   115.69 kB │ gzip: 37.12 kB
+
+✓ built in 1.16s
+   Compiling rusqlite v0.43.0
+   Compiling workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+   Compiling workmanager v0.1.0 (<repo>\src-tauri)
+    Finished `release` profile [optimized] target(s) in 3m 47s
+       Built application at: <repo>\target\release\workmanager.exe

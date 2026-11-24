@@ -48,3 +48,47 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-t1-04-
 ```
 
 退出码：`0` = 全部通过；`1` = 存在检查失败；`2` = 前置条件不满足/路径安全检查失败。
+
+---
+
+## 第五轮定向修复证据（2026-11-24，T104-01～T104-06）
+
+本轮证据保存在 `evidence/round5/` 与 `screenshots/round5/`，**不覆盖**上一轮证据。所有 UAT 数据均为虚构；正式目录 `D:\WorkManager` 未被打开、修改或故障注入。
+
+- **Release EXE：** 10,457,600 字节，SHA-256 `0bbe1dc43f59644e51126aeb277abd98cb124e506f69f25d35ef767010ab4166`
+- **UAT：** `<uat-root>`（`D:\WorkManager-test-data` 下独立目录；JSON 已脱敏绝对路径）
+- **Release 结果：** 主 UI/IPC **107/107**、最小窗口 **11/11**、真实 trigger 回滚 **13/13**、重启持久化 **15/15**、数据库只读探针 **62/62**；三次真实关闭退出码 **0/0/0**
+- **CSP：** `securitypolicyviolation` 监听器实际采集到 `[]`（0 违规），采集状态 `captured`；页面未捕获异常 0
+- **幂等重试：** 第一次真实 Tauri IPC 提交 2 个项目批次；传输层丢弃响应并替换为异常响应；UI 保留请求标识；第二次保存复用同一 `requestId`，数据库仍为 1 个创建组 / 2 个副本 / 2 条成员关系
+
+| 证据文件 | 内容 |
+|---|---|
+| `T104-01-junction-test-evidence.json` | Windows 真实 Junction/重解析点路径安全专项：9 PASS / 0 FAIL / 1 SKIP（文件符号链接无权限，显式记录） |
+| `T104-01-junction-test-output.txt` | 上述专项原始输出 |
+| `T104-02-ipc-idempotency-evidence.json` | 真实 IPC 响应异常 + 同一 requestId 重试的 UI 检查与数据库权威数量 |
+| `T104-03-red-compile.txt` | 测试先行提交后的编译 Red（缺少 4 参数幂等 API） |
+| `T104-03-red-behavior.txt` | 最小接口骨架后的行为 Red：18 passed / 6 failed，6 项均为幂等语义 |
+| `T104-03-green-work-item-copies.txt` | `work_item_copies` Green：24 passed / 0 failed |
+| `T104-03-gate-cargo-*.txt` | `cargo fmt --check` / `cargo check` / `cargo test --workspace` 完整输出（158 passed / 0 failed） |
+| `T104-04-green-migration.txt` | schema 专项 Green：6 passed / 0 failed（含真实 0004 索引冲突回滚） |
+| `T104-06-csp-evidence.json` | 实际 CSP 采集数组、采集状态、页面异常分离记录 |
+| `T104-06-release-e2e-output.txt` | 第五轮完整 Release E2E 输出（已脱敏本地路径） |
+| `t1-04-*.json` | 第五轮主 UI、最小窗口、故障回滚、持久化、只读探针、编排汇总 |
+| `T1-01-portable-regression.txt` | 继承 T1-01 便携回归：106 项（PASS 90 / FAIL 0 / WARN 1 / INFO 15） |
+| `T1-01-fault-regression.txt` | 继承 T1-01 异常注入：73 项（PASS 64 / FAIL 0 / INFO 9） |
+| `T1-02-ui-regression.txt` | 继承 T1-02 UI 回归：主 73/73 + 最小窗口 12/12 |
+| `environment.txt` / `release-exe.sha256` / `test-counts.txt` | 环境、EXE 哈希与统计口径 |
+
+### 第五轮截图
+
+| 文件 | 内容 |
+|---|---|
+| `screenshots/round5/create-error-contract-violation-batch.png` | 真实 IPC 已提交但返回异常载荷时，Bridge 拒绝、对话框保留输入（第五轮幂等重试场景后续复用同一 requestId） |
+| `screenshots/round5/pending-after-main-checks.png` | 第五轮主检查后的正常窗口 |
+| `screenshots/round5/pending-min.png` | 第五轮最小窗口 |
+| `screenshots/round5/create-dialog-min.png` | 第五轮最小窗口多项目对话框 |
+| `screenshots/round5/batch-rollback-error.png` | 真实 SQLite trigger 回滚 |
+| `screenshots/round5/pending-after-restart.png` | 重启持久化 |
+| `screenshots/round5/create-dialog-multi-projects.png` | 多项目选择基线回归 |
+
+> 证据边界：上述为开发代理执行结果，不构成独立审计或用户验收。T1-03 历史证据、审计状态、PR #8、P2-01 与 DEC-029 / Issue #2 风险均未改变。

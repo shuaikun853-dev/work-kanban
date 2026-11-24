@@ -1,0 +1,24 @@
+{
+  "task": "T1-04",
+  "issue": "T104-06",
+  "cspViolations": [],
+  "cspViolationCount": 0,
+  "cspCapture": {
+    "status": "captured",
+    "error": null,
+    "source": "WebView2 securitypolicyviolation listener installed before navigation/reload"
+  },
+  "pageExceptionCount": 0,
+  "checks": [
+    {
+      "name": "security.cspViolationsZero",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "security.pageExceptionsZero",
+      "pass": true,
+      "detail": "[]"
+    }
+  ]
+}

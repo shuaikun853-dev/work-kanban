@@ -1,0 +1,63 @@
+{
+  "task": "T1-04",
+  "scope": "T104-01 Windows real Junction / reparse-point path security",
+  "generatedAt": "2026-11-24T04:44:09Z",
+  "testRoot": "<test-root>",
+  "formalRootTouched": false,
+  "checks": [
+    {
+      "name": "normal.databasePathAccepted",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "normal.evidenceDirectoryAccepted",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "normal.evidenceFilePathAccepted",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "junction.databaseAncestorRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-path> fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "junction.databaseLeafReparseRejected",
+      "pass": true,
+      "detail": "UAT 数据库文件本身是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point，tag=0xA0000003）：<uat-path> fail-closed 拒绝。"
+    },
+    {
+      "name": "junction.evidenceDirectoryRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-path> fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "guard.noDatabaseConnectOnAncestorJunction",
+      "pass": true,
+      "detail": "exit=3 connectCalled=False"
+    },
+    {
+      "name": "guard.noDatabaseConnectOnEvidenceJunction",
+      "pass": true,
+      "detail": "exit=3 connectCalled=False"
+    },
+    {
+      "name": "guard.noExternalWriteOnEvidenceJunction",
+      "pass": true,
+      "detail": "externalFileExists=False"
+    }
+  ],
+  "failed": [],
+  "skips": [
+    {
+      "name": "symlink.databaseFileRejected",
+      "reason": "file symlink unavailable (mklink exit=1; SeCreateSymbolicLinkPrivilege/developer mode required)"
+    }
+  ],
+  "pass": true,
+  "residualRisk": "TOCTOU concurrent replacement remains deferred by DEC-029 / Issue #2"
+}

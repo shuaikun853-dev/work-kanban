@@ -1,0 +1,10 @@
+Task: T1-04 round 5 targeted audit fixes
+Date: 2026-11-24 (Asia/Shanghai)
+Platform: Windows 10 real desktop, Tauri 2 Release (--no-bundle)
+Rust: rustc 1.100.0 / cargo 1.100.0
+Node: v22.20.0 / npm 10.9.3
+Python: 3.14.5
+PowerShell: Windows PowerShell 5.1
+UAT root: <uat-root> (isolated directory under the dedicated D-drive test root)
+Formal data root: <formal-root>; it was not opened, written or fault-injected.
+All project/work-item test data is fictional.

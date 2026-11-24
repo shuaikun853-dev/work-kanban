@@ -1,0 +1,16 @@
+
+> workmanager@0.1.0 build
+> vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 167 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.39 kB │ gzip:  0.27 kB
+dist/assets/index-CDwtqLqF.css   36.05 kB │ gzip:  5.95 kB
+dist/assets/index-Bd58i5li.js   115.69 kB │ gzip: 37.12 kB
+
+✓ built in 956ms
+
+__EXIT_CODE__=0

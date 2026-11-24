@@ -1,0 +1,69 @@
+{
+  "task": "T1-04",
+  "issue": "T104-02",
+  "method": "real Tauri IPC first request committed; transport response replaced with malformed payload; UI retained requestId; second save reused it",
+  "checks": [
+    {
+      "name": "idempotency.titleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "idempotency.responseLossInjected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "idempotency.firstSaveClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "idempotency.uiTreatsResultAsUncertainAndKeepsInput",
+      "pass": true,
+      "detail": "{\"dialogOpen\":true,\"message\":\"工作事项 IPC 返回值不符合契约：批量创建工作结果.groupId 应为 规范 UUID 字符串，实际为 string。请检查前后端版本是否一致。 错误码：ipc-contract-violation\",\"code\":\"错误码：ipc-contract-violation\",\"titleValue\":\"T1-04 虚构 重复提交批次工作\",\"selectedCount\":2}"
+    },
+    {
+      "name": "idempotency.firstRequestCommittedExactlyOneBatch",
+      "pass": true,
+      "detail": "[{\"id\":\"e65ff203-cedb-4d5f-a513-069699f40224\",\"projectId\":\"4778d2d7-3a67-4e91-9e3d-0e23108a38ef\",\"projectName\":\"T1-04 虚构未归档项目甲\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 重复提交批次工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T04:57:57.163Z\",\"updatedAt\":\"2026-11-24T04:57:57.163Z\"},{\"id\":\"dbdb574f-4b72-448d-9531-29fd9cea9015\",\"projectId\":\"9ce26154-97ef-43bd-b4a8-2b91fb3d05ae\",\"projectName\":\"T1-04 虚构未归档项目乙\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 重复提交批次工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T04:57:57.163Z\",\"updatedAt\":\"2026-11-24T04:57:57.163Z\"}]"
+    },
+    {
+      "name": "idempotency.firstRequestCarriesRequestId",
+      "pass": true,
+      "detail": "{\"firstRequestId\":\"e255f478-d5b9-4c0d-8dab-9dbc1ea7c8ee\",\"bodyCount\":1}"
+    },
+    {
+      "name": "idempotency.retryRecordingInstalled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "idempotency.retrySaveClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "idempotency.retryReusesSameRequestId",
+      "pass": true,
+      "detail": "{\"firstRequestId\":\"e255f478-d5b9-4c0d-8dab-9dbc1ea7c8ee\",\"retryRequestId\":\"e255f478-d5b9-4c0d-8dab-9dbc1ea7c8ee\"}"
+    },
+    {
+      "name": "idempotency.retryDoesNotCreateSecondBatch",
+      "pass": true,
+      "detail": "{\"count\":2,\"before\":[\"dbdb574f-4b72-448d-9531-29fd9cea9015\",\"e65ff203-cedb-4d5f-a513-069699f40224\"],\"after\":[\"dbdb574f-4b72-448d-9531-29fd9cea9015\",\"e65ff203-cedb-4d5f-a513-069699f40224\"]}"
+    }
+  ],
+  "failed": [],
+  "pass": true,
+  "dbProbeAfterMain": {
+    "work_items_total": 14,
+    "creation_groups_total": 5,
+    "creation_group_members_total": 11,
+    "creation_group_size_histogram": {
+      "2": 4,
+      "3": 1
+    }
+  },
+  "requestIdReuse": "{\"firstRequestId\":\"e255f478-d5b9-4c0d-8dab-9dbc1ea7c8ee\",\"retryRequestId\":\"e255f478-d5b9-4c0d-8dab-9dbc1ea7c8ee\"}"
+}

@@ -1,0 +1,274 @@
+cargo.exe :    Compiling workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+所在位置 行:4 字符: 1
++ & cargo test -p workmanager-core --test work_item_copies --no-run *>  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling wo...rkmanager-core):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+  --> crates\workmanager-core\tests\work_item_copies.rs:50:5
+   |
+50 |     WorkItemService::create_copies(database, &new_request_id(), title, project_ids)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                              ----- unexpected argument #3 of type `&str`
+   |
+note: associated function defined here
+  --> crates\workmanager-core\src\work_items\service.rs:97:12
+   |
+97 |     pub fn create_copies(
+   |            ^^^^^^^^^^^^^
+help: remove the extra argument
+   |
+50 -     WorkItemService::create_copies(database, &new_request_id(), title, project_ids)
+50 +     WorkItemService::create_copies(database, &new_request_id(), project_ids)
+   |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:353:17
+    |
+353 |     let first = WorkItemService::create_copies(&mut database, &request_id, "幂等批次工作", &ids)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                             -------------- unexpected argument #3 
+of type `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+353 -     let first = WorkItemService::create_copies(&mut database, &request_id, "幂等批次工作", &ids)
+353 +     let first = WorkItemService::create_copies(&mut database, &request_id, &ids)
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:361:17
+    |
+361 |     let retry = WorkItemService::create_copies(&mut database, &request_id, "幂等批次工作", &ids)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                             -------------- unexpected argument #3 
+of type `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+361 -     let retry = WorkItemService::create_copies(&mut database, &request_id, "幂等批次工作", &ids)
+361 +     let retry = WorkItemService::create_copies(&mut database, &request_id, &ids)
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:382:17
+    |
+382 |     let first = WorkItemService::create_copies(&mut database, &request_id, "原始批次标题", &ids)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                             -------------- unexpected argument #3 
+of type `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+382 -     let first = WorkItemService::create_copies(&mut database, &request_id, "原始批次标题", &ids)
+382 +     let first = WorkItemService::create_copies(&mut database, &request_id, &ids)
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:387:9
+    |
+387 |         WorkItemService::create_copies(&mut database, &request_id, "被修改的批次标题", &ids)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                             ------------------ unexpected argument #3 of t
+ype `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+387 -         WorkItemService::create_copies(&mut database, &request_id, "被修改的批次标题", &ids)
+387 +         WorkItemService::create_copies(&mut database, &request_id, &ids)
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:417:5
+    |
+417 |     WorkItemService::create_copies(&mut database, &request_id, "项目列表绑定批次", &first_ids)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                             ------------------ unexpected argument #3 of type 
+`&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+417 -     WorkItemService::create_copies(&mut database, &request_id, "项目列表绑定批次", &first_ids)
+417 +     WorkItemService::create_copies(&mut database, &request_id, &first_ids)
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:429:21
+    |
+429 |         let error = WorkItemService::create_copies(
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+432 |             "项目列表绑定批次",
+    |             ------------------ unexpected argument #3 of type `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+431 -             &request_id,
+432 -             "项目列表绑定批次",
+431 +             &request_id,
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:461:9
+    |
+461 |         WorkItemService::create_copies(&mut database, &request_id, "归档后的幂等重试", &ids)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                             ------------------ unexpected argument #3 of t
+ype `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+461 -         WorkItemService::create_copies(&mut database, &request_id, "归档后的幂等重试", &ids)
+461 +         WorkItemService::create_copies(&mut database, &request_id, &ids)
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:468:9
+    |
+468 |         WorkItemService::create_copies(&mut database, &request_id, "归档后的幂等重试", &ids)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                             ------------------ unexpected argument #3 of t
+ype `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+468 -         WorkItemService::create_copies(&mut database, &request_id, "归档后的幂等重试", &ids)
+468 +         WorkItemService::create_copies(&mut database, &request_id, &ids)
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:501:13
+    |
+501 |             WorkItemService::create_copies(creator_ref, request_id_ref, "并发幂等批次", ids_ref)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                              -------------- unexpected argument #3 of 
+type `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+501 -             WorkItemService::create_copies(creator_ref, request_id_ref, "并发幂等批次", ids_ref)
+501 +             WorkItemService::create_copies(creator_ref, request_id_ref, ids_ref)
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:505:13
+    |
+505 |             WorkItemService::create_copies(retry_ref, request_id_ref, "并发幂等批次", ids_ref)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                            -------------- unexpected argument #3 of ty
+pe `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+505 -             WorkItemService::create_copies(retry_ref, request_id_ref, "并发幂等批次", ids_ref)
+505 +             WorkItemService::create_copies(retry_ref, request_id_ref, ids_ref)
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:543:17
+    |
+543 |     let first = WorkItemService::create_copies(
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+546 |         "允许重复标题的新批次",
+    |         ---------------------- unexpected argument #3 of type `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+545 -         &new_request_id(),
+546 -         "允许重复标题的新批次",
+545 +         &new_request_id(),
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:550:18
+    |
+550 |     let second = WorkItemService::create_copies(
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+553 |         "允许重复标题的新批次",
+    |         ---------------------- unexpected argument #3 of type `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+552 -         &new_request_id(),
+553 -         "允许重复标题的新批次",
+552 +         &new_request_id(),
+    |
+
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> crates\workmanager-core\tests\work_item_copies.rs:580:21
+    |
+580 |         let error = WorkItemService::create_copies(
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+583 |             "非法请求标识不得创建",
+    |             ---------------------- unexpected argument #3 of type `&'static str`
+    |
+note: associated function defined here
+   --> crates\workmanager-core\src\work_items\service.rs:97:12
+    |
+ 97 |     pub fn create_copies(
+    |            ^^^^^^^^^^^^^
+help: remove the extra argument
+    |
+582 -             invalid_request_id,
+583 -             "非法请求标识不得创建",
+582 +             invalid_request_id,
+    |
+
+For more information about this error, try `rustc --explain E0061`.
+error: could not compile `workmanager-core` (test "work_item_copies") due to 14 previous errors
+
+__EXIT_CODE__=101

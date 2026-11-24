@@ -1,0 +1,99 @@
+cargo.exe :    Compiling workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+所在位置 行:4 字符: 1
++ & cargo test -p workmanager-core --test work_item_copies -- --nocaptu ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling wo...rkmanager-core):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.77s
+     Running tests\work_item_copies.rs (target\debug\build\workmanager-core/759e8a0a0d2c8a64\out\work_item_copies-759e8
+a0a0d2c8a64.exe)
+
+running 24 tests
+
+thread 'idempotent_retry_after_project_archive_returns_existing_batch' (12476) panicked at crates\workmanager-core\test
+s\work_item_copies.rs:469:14:
+已提交请求的重试必须在项目归档后仍返回既有结果: ProjectArchived
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test creation_group_insert_failure_rolls_back_everything ... ok
+test idempotent_retry_after_project_archive_returns_existing_batch ... FAILED
+test different_request_ids_allow_same_title_as_new_independent_batches ... ok
+test archived_project_rolls_back_entire_batch ... ok
+
+thread 'concurrent_same_request_id_creates_only_one_batch' (8284) panicked at crates\workmanager-core\tests\work_item_c
+opies.rs:515:5:
+assertion `left == right` failed
+  left: "0fb497bf-33a8-4e38-aa04-214b2c3fd629"
+ right: "267f7e3f-8a1e-4c14-bdf9-aa81a791c6fd"
+test failed_batch_keeps_previous_successful_batches_unchanged ... ok
+test creates_independent_pending_copies_for_each_project ... ok
+test member_relation_insert_failure_rolls_back_everything ... ok
+test creates_three_independent_copies_for_three_projects ... ok
+test batch_create_waits_for_in_flight_archive_then_fails_entirely ... ok
+test concurrent_same_request_id_creates_only_one_batch ... FAILED
+test batch_rows_and_members_persist_across_restart ... ok
+test only_first_project_validated_would_have_passed_but_second_fails_batch ... ok
+
+thread 'same_request_id_returns_same_batch_without_writing_again' (29016) panicked at crates\workmanager-core\tests\wor
+k_item_copies.rs:355:5:
+assertion `left == right` failed: 创建组主键必须就是客户端请求标识
+  left: "065ca0d8-bf2e-49b0-95c1-85e961259aa3"
+ right: "2533e58d-90f3-4329-92b4-94e52bcf9c24"
+test rejects_duplicate_project_ids_without_silently_deduplicating ... ok
+test missing_project_rolls_back_entire_batch ... ok
+test rejects_batch_with_fewer_than_two_projects ... ok
+test concurrent_archive_and_batch_create_never_produces_partial_batch ... ok
+test read_back_verification_failure_rolls_back_everything ... ok
+test same_request_id_returns_same_batch_without_writing_again ... FAILED
+
+thread 'rejects_non_canonical_request_id_without_writing_any_rows' (31216) panicked at crates\workmanager-core\tests\wo
+rk_item_copies.rs:586:10:
+非规范 UUID 请求标识必须拒绝: CreatedWorkItemCopies { group_id: "be0217df-f51f-4d3b-a64c-35dad435582f", work_items: [WorkItem { id
+: "a51a359f-9792-48d2-9afa-cbfad7ffee1f", project_id: Some("96af7b1b-3887-48b6-971e-32068e82e07d"), title: "非法请求标识不得创建"
+, lifecycle_status: "pending", importance: None, urgency: None, due_date: None, description: None, created_at: "2026-11
+-24T04:34:28.995Z", updated_at: "2026-11-24T04:34:28.995Z" }, WorkItem { id: "d7934132-c130-4a89-b9c8-fbc797973529", pr
+oject_id: Some("f26b71d2-c6ac-4adb-8308-b5d78aba20cb"), title: "非法请求标识不得创建", lifecycle_status: "pending", importance: N
+one, urgency: None, due_date: None, description: None, created_at: "2026-11-24T04:34:28.995Z", updated_at: "2026-11-24T
+04:34:28.995Z" }] }
+test same_title_can_be_batched_again_as_new_independent_group ... ok
+test rejects_non_canonical_request_id_without_writing_any_rows ... FAILED
+
+thread 'same_request_id_with_different_project_list_is_rejected_stably' (32272) panicked at crates\workmanager-core\tes
+ts\work_item_copies.rs:435:10:
+相同请求标识对应不同项目列表必须拒绝: CreatedWorkItemCopies { group_id: "77f3582a-3ba0-4844-b04e-afd19bf26e9b", work_items: [WorkItem { i
+d: "1b48e91f-73fc-4c0d-b6a7-62927d59d071", project_id: Some("ec4e308a-c7bc-4232-97be-74cc45210eb6"), title: "项目列表绑定批次",
+ lifecycle_status: "pending", importance: None, urgency: None, due_date: None, description: None, created_at: "2026-11-
+24T04:34:29.017Z", updated_at: "2026-11-24T04:34:29.017Z" }, WorkItem { id: "690aeac8-1008-4ebb-a1a4-092711b86040", pro
+ject_id: Some("f1bda739-ce37-4a75-911b-f9df4ae50cb7"), title: "项目列表绑定批次", lifecycle_status: "pending", importance: None
+, urgency: None, due_date: None, description: None, created_at: "2026-11-24T04:34:29.017Z", updated_at: "2026-11-24T04:
+34:29.017Z" }] }
+test rejects_empty_title_without_writing_any_batch_rows ... ok
+
+thread 'same_request_id_with_different_title_is_rejected_stably' (3492) panicked at crates\workmanager-core\tests\work_
+item_copies.rs:388:14:
+相同请求标识对应不同标题必须拒绝: CreatedWorkItemCopies { group_id: "4e09642a-9f45-4f7b-a849-1bd8051e343b", work_items: [WorkItem { id:
+ "815e98d1-5c05-46d8-8cdc-0f59f7e5630a", project_id: Some("b14b7b9f-bd12-4af0-a91f-7b9690a372e6"), title: "被修改的批次标题", l
+ifecycle_status: "pending", importance: None, urgency: None, due_date: None, description: None, created_at: "2026-11-24
+T04:34:29.020Z", updated_at: "2026-11-24T04:34:29.020Z" }, WorkItem { id: "dcea461d-0ac2-4d38-8241-5feb7dd5c389", proje
+ct_id: Some("45909306-dd58-4876-b8bf-7519fa6e4c13"), title: "被修改的批次标题", lifecycle_status: "pending", importance: None, 
+urgency: None, due_date: None, description: None, created_at: "2026-11-24T04:34:29.020Z", updated_at: "2026-11-24T04:34
+:29.020Z" }] }
+test same_request_id_with_different_project_list_is_rejected_stably ... FAILED
+test same_request_id_with_different_title_is_rejected_stably ... FAILED
+test work_item_insert_failure_on_second_copy_rolls_back_everything ... ok
+
+failures:
+
+failures:
+    concurrent_same_request_id_creates_only_one_batch
+    idempotent_retry_after_project_archive_returns_existing_batch
+    rejects_non_canonical_request_id_without_writing_any_rows
+    same_request_id_returns_same_batch_without_writing_again
+    same_request_id_with_different_project_list_is_rejected_stably
+    same_request_id_with_different_title_is_rejected_stably
+
+test result: FAILED. 18 passed; 6 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.51s
+
+error: test failed, to rerun pass `-p workmanager-core --test work_item_copies`
+
+__EXIT_CODE__=101

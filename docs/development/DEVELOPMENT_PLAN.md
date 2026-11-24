@@ -5,7 +5,7 @@
 **文档状态：** 开发执行基线（阶段 0 已放行；T1-01、T1-02 均已验收完成并合并到 main；T1-03 第三轮独立审计未通过，第四轮 F1/F2 定向修复完成，等待第四轮独立审计；P2-01 待 GitHub Support 服务端历史清理后关闭；TOCTOU 按 DEC-029 接受并延期） \
 **项目目标：** Windows 10 本地工作管理软件  
 **开发方式：** AI Agent 辅助开发 + 独立审计 + 用户验收  
-**当前进度：** 阶段 0 已放行；T1-01、T1-02 均已验收完成并合并到 main。T1-03「工作事项快速创建和待安排区域」第一轮独立审计未通过后，已完成三轮定向修复；第三轮独立审计未通过，阻塞项为 F1（测试根目录未验证就创建沙箱）与 F2（Junction 清理失败仍递归删除）。第四轮已修复 F1/F2：测试根目录在任何写操作前完成 Windows 原生信任锚验证，缺失/身份无法确认时 fail closed 且不自动创建；清理在链接删除失败/链接仍存在/未预期 reparse point/身份变化时停止整个沙箱递归删除并保留现场；路径安全专项 93 项（第三轮 60 项全部保留）、FAILED=0、SKIPPED=1（显式记录），质量门禁、Release E2E、路径安全专项与继承回归均通过；第四轮同时修正了第三轮遗留的 UAT 目录/资产数/提交数/PR 正文与评论数不一致。P2-01 复核仍为具体机器标识 0 命中，但旧提交 `2342828` 仍可经 GitHub API 读取（9 个原始日志仍可列出/下载），GitHub Support 服务端清理未完成（需仓库所有者提交工单），**P2-01 仍未关闭**。PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open，main 未修改；T1-04 已按用户 2026-11-24 授权堆叠开发（开发与自测完成，等待独立审计；PR #8 未合并前不创建 T1-04 main PR），T1-05 未启动。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。
+**当前进度：** 阶段 0 已放行；T1-01、T1-02 均已验收完成并合并到 main。T1-03「工作事项快速创建和待安排区域」第一轮独立审计未通过后，已完成三轮定向修复；第三轮独立审计未通过，阻塞项为 F1（测试根目录未验证就创建沙箱）与 F2（Junction 清理失败仍递归删除）。第四轮已修复 F1/F2：测试根目录在任何写操作前完成 Windows 原生信任锚验证，缺失/身份无法确认时 fail closed 且不自动创建；清理在链接删除失败/链接仍存在/未预期 reparse point/身份变化时停止整个沙箱递归删除并保留现场；路径安全专项 93 项（第三轮 60 项全部保留）、FAILED=0、SKIPPED=1（显式记录），质量门禁、Release E2E、路径安全专项与继承回归均通过；第四轮同时修正了第三轮遗留的 UAT 目录/资产数/提交数/PR 正文与评论数不一致。P2-01 复核仍为具体机器标识 0 命中，但旧提交 `2342828` 仍可经 GitHub API 读取（9 个原始日志仍可列出/下载），GitHub Support 服务端清理未完成（需仓库所有者提交工单），**P2-01 仍未关闭**。PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open，main 未修改；T1-04 已按用户 2026-11-24 授权堆叠开发；第五轮针对第二轮独立审计 T104-01～T104-06 完成定向修复（原生路径守卫与真实 Junction、真实 IPC 响应异常后的幂等重试、TDD Red/Green、真实 0004 migration 回滚、CSP 实际采集、文档状态统一），开发与自测完成，等待独立审计；PR #8 未合并前不创建 T1-04 main PR。T1-05 未启动。TOCTOU 按 DEC-029 接受并延期至[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。
 
 ---
 
@@ -169,7 +169,7 @@
 | T1-01 | 正式工程骨架、便携路径接入与 SQLite 基础设施 | Tauri 2 + Svelte 5 + TypeScript + Rust 可构建；SQLite 初始化、user_version migration、外键、WAL、事务和测试通过 |
 | T1-02 | 项目创建、编辑、归档 | 项目 CRUD；归档不删除工作历史 | **验收完成**（用户接受；PR #7 于 2026-11-19 合并，commit `ab6aba32a94d7d091b20f0ab49b25badf26377c4`） |
 | T1-03 | 工作事项快速创建和待安排区域 | 标题快速录入并立即保存；默认待安排；仅可选未归档项目或不归属；待安排列表显示两类记录 | **第三轮独立审计未通过；第四轮 F1/F2 定向修复完成，等待第四轮独立审计**（F1 测试根目录信任锚、F2 清理 fail-closed 已修复并通过真实文件系统对象场景与受控删除失败注入（未修改 Windows ACL、未执行实际 `Access Denied` 测试）；P2-01 仍开放，待 GitHub Support 服务端清理；第四轮修复提交 `d82bdd4`，随后证据/文档同步提交；PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open） |
-| T1-04 | 多项目独立副本创建（整批原子提交） | 多项目创建时每个项目有独立工作记录、状态、日志和附件关联；整批原子提交 | **开发与自测完成，等待独立审计**（DEC-034 / PRD-AT-18；分支 `task/T1-04-multi-project-copies`；Release E2E 主 96/96 + 最小窗口 11/11 + 故障回滚 13/13 + 持久化 15/15 + 数据库探针 57/57；三次真实关闭退出码 0/0/0；PR #8 未合并，暂不创建 T1-04 main PR） |
+| T1-04 | 多项目独立副本创建（整批原子提交） | 多项目创建时每个项目有独立工作记录、状态、日志和附件关联；整批原子提交 | **第五轮定向修复完成；开发与自测完成，等待独立审计**（DEC-034 / PRD-AT-18；T104-01～T104-06 已修复；分支 `task/T1-04-multi-project-copies`；Release E2E 主 107/107 + 最小窗口 11/11 + 故障回滚 13/13 + 持久化 15/15 + 数据库探针 62/62；三次真实关闭退出码 0/0/0；CSP 实际采集 0；PR #8 未合并，暂不创建 T1-04 main PR） |
 | T1-05 | 工作事项状态流转和历史记录 | 待安排、未开始、进行中、已完成、已放弃规则正确；状态变更可追溯 |
 | T1-06 | 六位数字应用密码与锁屏 | 取消（DEC-028）；第一版不实现 |
 | T1-07 | 首次初始化与 SQLite 异常保护 | 初始化原子性；数据库损坏、migration 失败、磁盘不足时不覆盖原数据 |
@@ -303,34 +303,49 @@
 
 **第四轮状态：** F1/F2 已修复并完成本地验证，等待第四轮独立审计；P2-01 保持 OPEN/未关闭（旧提交 `2342828` 仍可经 GitHub API 读取，GitHub Support 服务端清理未完成，需仓库所有者提交工单）。PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 Open；main 未修改（基线 `018e851`）；T1-04/T1-05 未启动。第四轮修复提交：`d82bdd47ae7c3c27fb4383d72ee16a131c89036d`（随后为第四轮证据/文档同步提交）。TOCTOU 未消除，DEC-029 延期至 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2) 仍适用。开发代理不自行宣布审计/验收通过。
 
-### T1-04 详细范围与实际交付（2026-11-24，开发与自测完成，等待独立审计）
+### T1-04 详细范围与实际交付（2026-11-24，第五轮定向修复完成，等待独立审计）
 
-**当前状态：** **开发与自测完成，等待独立代码审计**。开发代理不自行宣布独立审计或用户验收通过；T1-03 的独立审计/验收状态保持原样（尚未完成独立审计）。
+**当前状态：** **第五轮 T104-01～T104-06 定向修复完成；开发与自测完成，等待独立代码审计**。开发代理不自行宣布独立审计或用户验收通过；T1-03 的独立审计/验收状态保持原样（尚未完成独立审计）。
 **授权：** 用户 2026-11-24 明确授权在 T1-03 未完成独立审计的情况下进行堆叠开发，并要求保留 T1-03 状态、不得宣称 T1-03 已完成。
-**分支：** `task/T1-04-multi-project-copies`，从 T1-03 最新真实 HEAD `e8205cae22e98afce6480f5a5a0695543a61dee3` 堆叠创建；PR #8 于 2026-11-24 核实为 Open、未合并；main 基线 `018e851e8daf5835391a7b61caf881bc57c2ad42` 未修改。
+**分支：** `task/T1-04-multi-project-copies`，从 T1-03 最新真实 HEAD `e8205cae22e98afce6480f5a5a0695543a61dee3` 堆叠创建；PR #8 为 Open、未合并；main 基线 `018e851e8daf5835391a7b61caf881bc57c2ad42` 未修改。
+**第五轮提交：** 测试先行 `b4f641a`；实现与验证工具 `e6b3f22`；文档/证据提交见 Git 日志。未 squash 或重写既有 T1-04 历史提交。
 **Pull Request：** 暂不创建指向 main 的 T1-04 PR（PR #8 未合并，直接创建会把 T1-03 变更重复带入）；只推送独立任务分支。
 **测试报告：** [T1-04-REPORT.md](../testing/reports/T1-04-REPORT.md)；证据：[T1-04-assets/](../testing/reports/T1-04-assets/README.md)；预编码设计：[T1-04-Implementation-Design.md](tasks/T1-04-Implementation-Design.md)。
 
 **实际实现范围：**
 
-- **数据库：** migration `0004_work_item_creation_groups.sql`，schema version 3 → 4；`work_item_creation_groups`（id/source_title/created_at）与 `work_item_creation_group_members`（group_id、work_item_id；`work_item_id UNIQUE`，每个工作事项最多一个创建组；外键删除行为只清除成员关系，不连带删除其他副本/创建组）；STRICT、查询索引；未修改 0001/0002/0003，migration 失败回滚。
-- **Rust Core：** `WorkItemService::create_copies`：标题/数量/重复项目校验；在同一个 SQLite `IMMEDIATE` 写事务内先验证全部项目存在且未归档，再写创建组、全部独立工作副本、全部成员关系，最后事务内读回验证；任一失败整批回滚，不允许部分成功/静默跳过/补偿删除；新增 `work-item-copies-too-few`、`work-item-copies-duplicate-project` 稳定错误码。
-- **Tauri IPC：** `create_work_item_copies`（camelCase、`deny_unknown_fields`、`spawn_blocking`，复用 `WorkItemDto` 与 `CommandError`；响应 `{groupId, workItems}`）。
-- **Bridge：** 批量响应严格运行时契约——groupId 规范 UUID、数量与请求一致、每个项目恰好一个副本、ID 唯一、全部 pending、无缺失/额外字段；Node 契约测试 17 → 27。
-- **UI：** 快速创建对话框由单项目选择扩展为多项目选择；0/1 个项目沿用 T1-03 单条创建，2+ 调用批量接口；显示已选数量与预计创建数量；创建中锁定输入与选择、防重复点击；失败保留标题与原始选择、刷新项目列表并将失效选择标记为不可用（必须用户主动移除，不得自动创建剩余项目）；成功显示后端实际创建数量并从数据库刷新，刷新失败不重复创建。未新增一级导航、全局 Token 或 UI 依赖。
-- **验证工具：** 新增 T1-04 Release E2E 编排（主 UI/IPC、最小窗口、真实 SQLite trigger 原子回滚、重启持久化、数据库只读探针）；复用 T1-03 已验证 UAT 路径安全设施；未修改历史证据。
+- **数据库：** 保持 migration `0004_work_item_creation_groups.sql`、schema 4，不新增 migration；`work_item_creation_groups.id` 复用为客户端幂等请求标识，因此无需新增字段或唯一索引。
+- **Rust Core：** `WorkItemService::create_copies(database, request_id, title, project_ids)`：请求标识必须是规范 UUID；在同一 `IMMEDIATE` 写事务内先按请求标识读取既有批次——相同标题与项目列表返回原批次、不写行；不同内容返回 `work-item-create-request-conflict`；不存在时才验证全部项目、写创建组/全部副本/全部成员关系并读回验证；任一步失败整批回滚。新增 `work-item-create-request-id-invalid`、`work-item-create-request-conflict` 稳定错误码。
+- **Tauri IPC：** `create_work_item_copies` 请求新增必填 `requestId`（camelCase、`deny_unknown_fields`）；命令层只转发，幂等语义在 Rust Core 事务内完成；响应仍为 `{groupId, workItems}`。
+- **Bridge/UI：** 批量创建调用新增 `requestId`；页面容器以“规范化标题 + 项目顺序”绑定请求标识，IPC/Bridge 结果不确定时保留，内容变化生成新标识，成功确认后清理；真实 IPC 响应异常后同标识重试返回原批次。保留 0/1 单条创建、多选、创建中锁定与防重复点击。
+- **验证工具：** 新增 `T1-04UatPath.ps1` / `guard-t1-04-path.ps1` / `t1_04_path_guard.py`，复用 T1-03 原生句柄/信任锚/卷身份/最终路径校验；故障注入与只读探针在任何 `sqlite3.connect()` 或写文件前 fail-closed；探针只输出审计字段，不输出标题/项目名称/绝对路径；CSP 改为实际采集 `securitypolicyviolation`；新增真实 Junction 专项测试。
 
-**验证结果（开发自测）：**
+**第二轮独立审计问题逐项结果：**
 
-- 质量门禁全部退出码 0：`cargo fmt --check`、`cargo check --workspace --all-targets`、`cargo test --workspace` **149 passed / 0 failed**、`npm run check`（svelte-check 0/0、Bridge 27/27、Design Token 22 文件 0 违规、49/49）、`npm run build`（167 modules）、`git diff --check`。
-- Release E2E（独立 UAT 目录、虚构数据）：主 **96/96**、最小窗口 **11/11**、故障回滚 **13/13**、重启持久化 **15/15**、数据库探针 **57/57**；三次真实关闭退出码 **0/0/0**；CSP 违规 0、页面未捕获异常 0。
-- 数据库探针：主阶段 12 工作 / 4 创建组 / 9 成员；SQLite trigger 故障回滚后完全不变；重启并再次批量创建后 14 / 5 / 11；schema 4、完整性 ok、外键 0 违规。
-- Release EXE `10,435,072` 字节，SHA-256 `2d997dea7c44ff323e902478063e01465a42e0544bfd0ff5b05359f38a3f7d79`。
-- 继承回归：便携 106 项（PASS 90 / FAIL 0 / WARN 1 既有 / INFO 15）、异常注入 73 项（PASS 64 / FAIL 0 / INFO 9）、T1-02 UI E2E 73/73 + 12/12，全部退出码 0；T1-03 业务规则由既有 Rust 测试与 T1-04 E2E 场景回归（T1-03 原 UI E2E 脚本以单选控件为基线，不适用于多选控件，未修改历史脚本/证据）。
+| 编号 | 修复结果 |
+|---|---|
+| T104-01 | 路径安全已修复：静态 Junction/符号链接/重解析点、祖先目录、数据库文件自身、卷身份、最终路径均走 T1-03 原生守卫；证据目录固定 `<uat-root>\evidence`；失败时不连接数据库、不写外部文件。真实 Junction 专项 9 PASS / 0 FAIL / 1 SKIP（文件符号链接权限不足，显式记录）。 |
+| T104-02 | 幂等重试已修复：真实 Release IPC 第一次提交 2 个项目批次，响应被替换为异常载荷；UI 保留请求标识，第二次保存复用同一 `requestId`；数据库仍为 1 组 / 2 副本 / 2 成员。Rust 覆盖同标识同内容、标题冲突、项目列表冲突、归档后重试、并发同标识。 |
+| T104-03 | TDD 证据已补齐：测试先行提交 `b4f641a`；编译 Red、6 项行为 Red、Green 24/24 与 6/6 原始输出均保存。 |
+| T104-04 | 新增创建组 INSERT trigger 回滚、真实 0004 索引冲突失败回滚、删除冲突索引后成功升级测试；`creation_groups_migration` 6/6。 |
+| T104-05 | 本文件与 `docs/STATUS.md` 统一为“第五轮定向修复完成，开发与自测完成，等待独立代码审计”；未标记审计/验收通过，T1-03 状态未变。 |
+| T104-06 | CSP 实际采集 `[]`（0 违规，状态 `captured`）；采集失败状态不会被伪报为 0；页面异常与 CSP 分开记录；重新生成 Release E2E 机器证据。 |
 
-**未实现 / 遗留：** T1-05 状态流转与历史、每日计划/优先级/当前工作、复盘、日志、附件、报表、清理、备份恢复；T1-03 P2-01 与 DEC-029 / Issue #2 TOCTOU 加固不属于 T1-04 范围。独立审计与用户验收未进行；PR #8 未合并时不创建 T1-04 main PR。
+**验证结果（开发自测，全部真实执行）：**
+
+- `cargo fmt --all -- --check`、`cargo check --workspace --all-targets`：退出码 0。
+- `cargo test --workspace`：**158 passed / 0 failed / 0 ignored（20 套件）**；其中 `work_item_copies` 24、`creation_groups_migration` 6。
+- `npm run check`：svelte-check **0 errors / 0 warnings**；Bridge **27/27**；Design Token 22 文件 0 违规、**49/49**。
+- `npm run build`：退出码 0（167 modules）。
+- Release E2E（独立 UAT、虚构数据）：主 UI/IPC **107/107**、最小窗口 **11/11**、真实 trigger 回滚 **13/13**、重启持久化 **15/15**、数据库只读探针 **62/62**；三次真实关闭退出码 **0/0/0**；CSP 实际采集 0；页面异常 0。
+- 探针：主阶段 14 工作 / 5 组 / 11 成员；故障回滚后完全一致；重启并再次创建后 16 工作 / 6 组 / 13 成员；外键 0 违规、无孤儿成员、无多组副本。
+- 继承回归：便携 106 项（PASS 90 / FAIL 0 / WARN 1 / INFO 15）、异常注入 73 项（PASS 64 / FAIL 0 / INFO 9）、T1-02 UI 73/73 + 12/12，全部退出码 0。
+- Release EXE：**10,457,600 字节**，SHA-256 `0bbe1dc43f59644e51126aeb277abd98cb124e506f69f25d35ef767010ab4166`。
+
+**未实现 / 遗留：** T1-05 状态流转与历史、每日计划/优先级/当前工作、复盘、日志、附件、报表、清理、备份恢复不在本轮范围；T1-03 P2-01 仍等待 GitHub Support；DEC-029 / Issue #2 TOCTOU 并发路径替换风险仍按原决策延期，本轮仅解决静态 Junction/重解析点/路径身份校验，不宣称消除并发替换。独立审计与用户验收未进行；PR #8 未合并时不创建 T1-04 main PR。
 
 **停止条件：** 已停止开发，等待独立代码审计；未合并 PR #8、未创建 T1-04 main PR、未修改 main、未开始 T1-05；不自行宣布独立审计/用户验收通过。
+
 ## 7. 阶段 2：计划、优先级与当前工作
 
 **目标：** 交付日常工作安排、稳定排序和当前工作切换。
@@ -622,3 +637,5 @@
 | 2026-11-24 | T1-04 编码前设计提交 | 新增 `docs/development/tasks/T1-04-Multi-Project-Independent-Copies.md` 与 `T1-04-Implementation-Design.md`（业务范围、migration、Core 事务边界、IPC DTO、Bridge 契约、Svelte 组件树/状态流、测试计划、文件清单、回归范围、GitHub 交付流程），提交 `e207ea9`；随后按设计先写失败测试再实现。 |
 | 2026-11-24 | T1-04 代码、测试、Release E2E 与文档完成（待独立审计） | 实现提交 `3031552e33e6cae2085a99910b73d769b6aa7a6b`； 实现 migration 0004（schema 3→4）、Rust Core `create_copies` 整批原子事务、Tauri `create_work_item_copies`、Bridge 严格契约、多项目选择 UI 与验证工具。质量门禁：`cargo test --workspace` **149 passed / 0 failed**、npm check（svelte-check 0/0、Bridge 27/27、Design Token 22 文件 0 违规、49/49）、npm build、git diff --check 全部退出码 0；Release E2E 主 96/96 + 最小窗口 11/11 + 故障回滚 13/13 + 持久化 15/15 + 数据库探针 57/57，三次真实关闭退出码 0/0/0；继承便携 106 项（PASS 90 / FAIL 0 / WARN 1 保留）、异常注入 73 项（PASS 64 / FAIL 0）、T1-02 UI E2E 73/73 + 12/12；Release EXE 10,435,072 字节、SHA-256 `2d997dea…f7d79`。DEC-034 / PRD-AT-18 已记录；T1-03 状态未改变；PR #8 保持 Open、未合并；未创建 T1-04 main PR；未开始 T1-05。报告：`docs/testing/reports/T1-04-REPORT.md`；证据：`docs/testing/reports/T1-04-assets/`。 |
 | 2026-11-20 | T1-03 第四轮 F1/F2 定向修复完成（待第四轮独立审计） | 第三轮独立审计未通过，阻塞项为 F1（测试根目录未验证就创建沙箱）与 F2（Junction 清理失败仍递归删除），并要求修正证据/文档一致性。第四轮仅改验证脚本/测试脚本/文档，未改产品代码。F1：`test-t1-03-uat-path.ps1` 在任何写操作前调用信任锚 `Assert-T103UatTrustedTestRoot`（原生句柄：存在/真实目录/全部祖先/重解析点拒绝/最终路径一致/卷身份/正式目录排除；缺失或身份无法确认时 fail closed 且不自动创建测试根目录）；新增真实 Junction 根替换 + 外部 Canary 的真实入口子进程无副作用测试；`-TestRootOverride` 仅用于故障注入、不影响默认路径且不能执行完整套件；`verify-t1-03-ui.ps1` 同样在写前验证信任锚。F2：新增 fail-closed 沙箱清理（先复验沙箱身份，再逐个删除并复验跟踪链接、扫描未预期 reparse point、再次复验身份；任一失败立即停止整个沙箱递归删除、保留现场并输出可定位 WARN/FAIL；仅全部通过后逐条目校验安全递归删除），新增 4 类真实文件系统故障注入（删除失败/链接重建/未跟踪链接/身份替换）与失败后 Canary 复检。验证：路径安全专项 **93 项（第三轮 60 项全部保留 + 第四轮新增 31 项）、FAILED=0、SKIPPED=1 已记录（无符号链接创建权限，不计 PASS）**；质量门禁全部退出码 0：`cargo test --workspace` 124/124（18 套件）、`npm run check`（svelte-check 0/0、Bridge 17/17、Design Token 22 文件 0 违规、49/49）、`npm run build`（167 modules）、`node --test` Bridge 17/17、`git diff --check`；Release E2E 主 84/84 + 最小窗口 12/12 + 持久化 17/17 + 数据库探针 25/25，两次真实关闭退出码 0/0，新 UAT 目录 `<uat-root>\t1-03-ui-r4-20261120-181549`；继承便携 106 项（PASS 90 / FAIL 0 / WARN 1 保留）、异常注入 73 项（PASS 64 / FAIL 0）、T1-02 UI E2E 73/73 + 12/12 + 关闭退出码 0（首次执行环境性失败，无并发负载重跑通过）。证据/文档一致性：重新采集分支 HEAD/main/提交数（扫描时 22，含证据同步提交）/分支增量扫描/资产数（62）/PNG 数（38）/PR 正文 3,957 字符 SHA-256 `725d5df3…0ae0`/4 条 issue 评论/18 个远程 refs/tags 0/旧 SHA 可访问状态；修正第三轮遗留的 UAT 目录（075440→081100）、资产数（33→34）、提交数（18→20/21）、PR 评论数（3→4）不一致；第四轮证据位于 `evidence/round4/`，不覆盖第三轮证据。P2-01：旧提交 `2342828` 及 9 个原始日志（147,009 字节）仍可经 GitHub API 读取，GitHub Support 服务端清理未完成，**P2-01 保持 OPEN/未关闭**；本轮未重写历史、未强制推送、未删除备份分支/bundle。第四轮修复提交：`d82bdd47ae7c3c27fb4383d72ee16a131c89036d`（随后为证据/文档同步提交）。状态：等待第四轮独立审计；PR #8 Open，未合并；main 未修改；T1-04/T1-05 不开始。报告：`docs/testing/reports/T1-03-REPORT.md`；第四轮汇总：`docs/testing/reports/T1-03-assets/evidence/round4/round4-verification-summary.json`。 |
+
+| 2026-11-24 | T1-04 第五轮 T104-01～T104-06 定向修复完成（待独立审计） | 测试先行提交 `b4f641a`（幂等/创建组 trigger/并发同步/真实 0004 冲突测试）；实现与验证工具提交 `e6b3f22`。T104-01：新增原生 UAT 路径守卫并复用 T1-03 信任锚/句柄/卷身份，Python 故障注入与只读探针在任何连接/写入前 fail-closed，证据目录固定 `<uat-root>\evidence`，探针移除标题/项目名称/路径；真实 Junction 专项 9 PASS / 0 FAIL / 1 SKIP（文件符号链接权限不足）。T104-02：`work_item_creation_groups.id` 复用为客户端 requestId，服务端写事务内返回既有批次或稳定冲突；真实 Release IPC 首请求提交后响应异常，重试复用同标识，仍 1 组 / 2 副本 / 2 成员。T104-03：Red 编译失败 + 18/6 行为 Red 原始输出、Green 24/24；T104-04：真实 0004 索引冲突回滚 + 创建组 trigger 回滚，migration 6/6；T104-05：STATUS/PLAN 统一为待独立审计；T104-06：CSP 实际采集 `[]`（captured）。验证：`cargo test --workspace` 158 passed / 0 failed（20 套件）、npm check（0/0、Bridge 27/27、Token 49/49）、npm build、Release E2E 主 107/107 + 最小窗口 11/11 + 故障回滚 13/13 + 持久化 15/15 + 探针 62/62、关闭退出码 0/0/0；继承便携 106、异常注入 73、T1-02 UI 73/73 + 12/12；Release EXE 10,457,600 字节、SHA-256 `0bbe1dc4…4166`。T1-03 状态、P2-01、PR #8、DEC-029 / Issue #2 风险均未改变；未创建 T1-04 main PR；未开始 T1-05。 |

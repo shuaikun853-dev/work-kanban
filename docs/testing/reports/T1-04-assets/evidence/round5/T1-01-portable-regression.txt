@@ -1,0 +1,515 @@
+
+==================== WorkManager T1-01 Release 便携/持久化运行时验证（task-2） ====================
+
+==================== 0. 环境与 Release EXE 记录 ====================
+[12:58:43][INFO] Release EXE：<repo>\target\release\workmanager.exe
+[12:58:43][INFO] 大小（字节）：10457600
+[12:58:43][INFO] SHA-256：0BBE1DC43F59644E51126AEB277ABD98CB124E506F69F25D35EF767010AB4166
+[12:58:43][INFO] python：<python> 3.50.4）
+[12:58:43][INFO] 输出目录：<uat-path>
+[12:58:43][INFO] PowerShell：5.1.19041.6456，OS：Microsoft Windows NT 10.0.19045.0
+[12:58:43][INFO] precondition.release_exe :: path=<repo>\target\release\workmanager.exe；size_bytes=10457600；sha256=0BBE1DC43F59644E51126AEB277ABD98CB124E506F69F25D35EF767010AB4166
+[12:58:43][INFO] precondition.python :: <python> 3.14.5 / sqlite 3.50.4
+[12:58:43][INFO] precondition.output_dir :: <uat-path>
+[12:58:43][INFO] precondition.source_exe_data_directory :: 源 EXE 目录尚无 data/（本次验证只写入隔离复制目录）
+
+==================== 0b. C 盘边界基线（启动前） ====================
+[12:58:43][INFO] C 盘边界基线：LOCALAPPDATA\com.workmanager.portable exists=False；APPDATA\com.workmanager.portable exists=False；LOCALAPPDATA\EBWebView exists=True
+[12:58:43][INFO] c_drive.baseline :: LOCALAPPDATA\com.workmanager.portable exists=False；APPDATA\com.workmanager.portable exists=False；LOCALAPPDATA\EBWebView exists=True
+[12:58:43][WARN] C 盘路径启动前已存在：<user-home>\AppData\Local\EBWebView；creation_time_utc=2024-07-15T07:29:20.1195506Z；last_write_utc=2026-11-20T07:06:21.0558912Z；top_level_entries=24
+
+==================== 用例 1：首次启动、便携目录、SQLite 基础检查 ====================
+[12:58:43][PASS] case1.exe_copy_sha256_matches :: sha256=0BBE1DC43F59644E51126AEB277ABD98CB124E506F69F25D35EF767010AB4166
+[12:58:44][PASS] case1.main_window_visible :: title=WorkManager；hwnd=6624654；elapsed_ms=348
+[12:58:44][PASS] case1.main_window_title :: 窗口标题=WorkManager（期望 WorkManager）
+[12:58:45][PASS] case1.main_window_screenshot :: png=<uat-path>；1116x788
+[12:58:45][PASS] case1.webview2_ebwebview_dir :: WebView2 profile 目录存在：<uat-path>；等待 1 ms
+[12:58:45][EVID] --- JSON 证据开始: case1 进程运行期间数据库文件与 WAL/SHM 快照 ---
+[12:58:45][EVID]     {
+[12:58:45][EVID]         "captured_at":  "2026-11-24T12:58:45.6026378+08:00",
+[12:58:45][EVID]         "database_path":  "<local-path>",
+[12:58:45][EVID]         "database_exists":  true,
+[12:58:45][EVID]         "database_size_bytes":  73728,
+[12:58:45][EVID]         "sidecars":  {
+[12:58:45][EVID]                          "database_path":  "<local-path>",
+[12:58:45][EVID]                          "wal_path":  "<local-path>",
+[12:58:45][EVID]                          "shm_path":  "<local-path>",
+[12:58:45][EVID]                          "journal_path":  "<local-path>",
+[12:58:45][EVID]                          "wal_exists":  true,
+[12:58:45][EVID]                          "wal_size_bytes":  0,
+[12:58:45][EVID]                          "shm_exists":  true,
+[12:58:45][EVID]                          "shm_size_bytes":  32768,
+[12:58:45][EVID]                          "journal_exists":  false,
+[12:58:45][EVID]                          "journal_size_bytes":  0,
+[12:58:45][EVID]                          "captured_at":  "2026-11-24T12:58:45.6096431+08:00"
+[12:58:45][EVID]                      }
+[12:58:45][EVID]     }
+[12:58:45][EVID] --- JSON 证据结束: case1 进程运行期间数据库文件与 WAL/SHM 快照 ---
+[12:58:45][PASS] case1.running_database_file :: 运行期间 work.db 存在且非空：size_bytes=73728
+[12:58:45][INFO] case1.running_sidecars :: 运行期间 sidecar 状态：-wal exists=True size=0；-shm exists=True size=32768；-journal exists=False
+[12:58:45][STEP] 关闭应用 case1 首次启动：method=CloseMainWindow exited=True exit_code=0 elapsed_ms=150
+[12:58:45][INFO] case1 首次启动 进程输出捕获：stdout 572 字符；stderr 0 字符；读取错误=
+[12:58:45][PASS] case1.process_exited :: method=CloseMainWindow elapsed_ms=150
+[12:58:45][PASS] case1.graceful_close :: CloseMainWindow 正常关闭，exit_code=0
+[12:58:45][PASS] case1.exit_code_zero :: exit_code=0
+[12:58:45][PASS] case1.data_root_created :: 目录存在：<uat-path>
+[12:58:45][PASS] case1.database_dir_created :: 目录存在：<uat-path>
+[12:58:45][PASS] case1.cache_dir_created :: 目录存在：<uat-path>
+[12:58:45][PASS] case1.webview2_dir_created :: 目录存在：<uat-path>
+[12:58:45][PASS] case1.config_dir_created :: 目录存在：<uat-path>
+[12:58:45][PASS] case1.logs_dir_created :: 目录存在：<uat-path>
+[12:58:45][PASS] case1.temp_dir_created :: 目录存在：<uat-path>
+[12:58:45][PASS] case1.backups_dir_created :: 目录存在：<uat-path>
+[12:58:45][PASS] case1.webview2_dir_populated :: WebView2 数据目录内有 25 个条目（截断=False）
+[12:58:45][PASS] case1.database_file_created :: work.db 存在且非空：size_bytes=73728
+[12:58:45][INFO] case1.data_directory_snapshot :: 条目数=10；truncated=False；快照=<uat-path>
+[12:58:45][EVID] --- JSON 证据开始: case1 正常关闭后 WAL/SHM/journal 残留状态 ---
+[12:58:45][EVID]     {
+[12:58:45][EVID]         "database_path":  "<local-path>",
+[12:58:45][EVID]         "wal_path":  "<local-path>",
+[12:58:45][EVID]         "shm_path":  "<local-path>",
+[12:58:45][EVID]         "journal_path":  "<local-path>",
+[12:58:45][EVID]         "wal_exists":  false,
+[12:58:45][EVID]         "wal_size_bytes":  0,
+[12:58:45][EVID]         "shm_exists":  false,
+[12:58:45][EVID]         "shm_size_bytes":  0,
+[12:58:46][EVID]         "journal_exists":  false,
+[12:58:46][EVID]         "journal_size_bytes":  0,
+[12:58:46][EVID]         "captured_at":  "2026-11-24T12:58:45.9826440+08:00"
+[12:58:46][EVID]     }
+[12:58:46][EVID] --- JSON 证据结束: case1 正常关闭后 WAL/SHM/journal 残留状态 ---
+[12:58:46][PASS] case1.wal_cleared_after_close :: -wal 不存在或为 0 字节（无未提交数据残留）：exists=False；size=0
+[12:58:46][PASS] case1.shm_cleared_after_close :: -shm 不存在（wal_exists=False；wal_size=0）
+[12:58:46][INFO] case1.journal_after_close :: -journal exists=False；size=0
+[12:58:46][EVID] --- JSON 证据开始: case1 关闭后 SQLite 检查 JSON（task-2 c/d） ---
+[12:58:46][EVID]     {
+[12:58:46][EVID]         "database":  {
+[12:58:46][EVID]                          "exists":  true,
+[12:58:46][EVID]                          "is_file":  true,
+[12:58:46][EVID]                          "size_bytes":  73728
+[12:58:46][EVID]                      },
+[12:58:46][EVID]         "database_path":  "<local-path>",
+[12:58:46][EVID]         "foreign_key_check":  [
+[12:58:46][EVID]     
+[12:58:46][EVID]                               ],
+[12:58:46][EVID]         "header":  {
+[12:58:46][EVID]                        "exists":  true,
+[12:58:46][EVID]                        "magic":  "SQLite format 3\u0000",
+[12:58:46][EVID]                        "page_size":  4096,
+[12:58:46][EVID]                        "read_version":  2,
+[12:58:46][EVID]                        "write_version":  2
+[12:58:46][EVID]                    },
+[12:58:46][EVID]         "integrity_check":  [
+[12:58:46][EVID]                                 "ok"
+[12:58:46][EVID]                             ],
+[12:58:46][EVID]         "journal_mode":  "wal",
+[12:58:46][EVID]         "open_errors":  [
+[12:58:46][EVID]     
+[12:58:46][EVID]                         ],
+[12:58:46][EVID]         "open_mode":  "mode=ro",
+[12:58:46][EVID]         "probe_connection_pragmas":  {
+[12:58:46][EVID]                                          "busy_timeout":  5000,
+[12:58:46][EVID]                                          "foreign_keys":  0,
+[12:58:46][EVID]                                          "page_count":  18,
+[12:58:46][EVID]                                          "page_size":  4096,
+[12:58:46][EVID]                                          "synchronous":  2,
+[12:58:46][EVID]                                          "temp_store":  0
+[12:58:46][EVID]                                      },
+[12:58:46][EVID]         "schema_migrations":  [
+[12:58:46][EVID]                                   {
+[12:58:46][EVID]                                       "applied_at":  "2026-11-24T04:58:44Z",
+[12:58:46][EVID]                                       "name":  "0001_initial_foundation",
+[12:58:46][EVID]                                       "version":  1
+[12:58:46][EVID]                                   },
+[12:58:46][EVID]                                   {
+[12:58:46][EVID]                                       "applied_at":  "2026-11-24T04:58:44Z",
+[12:58:46][EVID]                                       "name":  "0002_projects",
+[12:58:46][EVID]                                       "version":  2
+[12:58:46][EVID]                                   },
+[12:58:46][EVID]                                   {
+[12:58:46][EVID]                                       "applied_at":  "2026-11-24T04:58:44Z",
+[12:58:46][EVID]                                       "name":  "0003_work_items",
+[12:58:46][EVID]                                       "version":  3
+[12:58:46][EVID]                                   },
+[12:58:46][EVID]                                   {
+[12:58:46][EVID]                                       "applied_at":  "2026-11-24T04:58:44Z",
+[12:58:46][EVID]                                       "name":  "0004_work_item_creation_groups",
+[12:58:46][EVID]                                       "version":  4
+[12:58:46][EVID]                                   }
+[12:58:46][EVID]                               ],
+[12:58:46][EVID]         "schema_migrations_count":  4,
+[12:58:46][EVID]         "settings_canary":  null,
+[12:58:46][EVID]         "settings_row_count":  0,
+[12:58:46][EVID]         "sidecars_after_close":  {
+[12:58:46][EVID]                                      "-journal":  {
+[12:58:46][EVID]                                                       "exists":  false,
+[12:58:46][EVID]                                                       "path":  "<local-path>",
+[12:58:46][EVID]                                                       "size_bytes":  0
+[12:58:46][EVID]                                                   },
+[12:58:46][EVID]                                      "-shm":  {
+[12:58:46][EVID]                                                   "exists":  true,
+[12:58:46][EVID]                                                   "path":  "<local-path>",
+[12:58:46][EVID]                                                   "size_bytes":  32768
+[12:58:46][EVID]                                               },
+[12:58:46][EVID]                                      "-wal":  {
+[12:58:46][EVID]                                                   "exists":  true,
+[12:58:46][EVID]                                                   "path":  "<local-path>",
+[12:58:46][EVID]                                                   "size_bytes":  0
+[12:58:46][EVID]                                               }
+[12:58:46][EVID]                                  },
+[12:58:46][EVID]         "sidecars_before_open":  {
+[12:58:46][EVID]                                      "-journal":  {
+[12:58:46][EVID]                                                       "exists":  false,
+[12:58:46][EVID]                                                       "path":  "<local-path>",
+[12:58:46][EVID]                                                       "size_bytes":  0
+[12:58:46][EVID]                                                   },
+[12:58:46][EVID]                                      "-shm":  {
+[12:58:46][EVID]                                                   "exists":  false,
+[12:58:46][EVID]                                                   "path":  "<local-path>",
+[12:58:46][EVID]                                                   "size_bytes":  0
+[12:58:46][EVID]                                               },
+[12:58:46][EVID]                                      "-wal":  {
+[12:58:46][EVID]                                                   "exists":  false,
+[12:58:46][EVID]                                                   "path":  "<local-path>",
+[12:58:46][EVID]                                                   "size_bytes":  0
+[12:58:46][EVID]                                               }
+[12:58:46][EVID]                                  },
+[12:58:46][EVID]         "tables":  [
+[12:58:46][EVID]                        "projects",
+[12:58:46][EVID]                        "schema_migrations",
+[12:58:46][EVID]                        "settings",
+[12:58:46][EVID]                        "work_item_creation_group_members",
+[12:58:46][EVID]                        "work_item_creation_groups",
+[12:58:46][EVID]                        "work_items"
+[12:58:46][EVID]                    ],
+[12:58:46][EVID]         "user_version":  4
+[12:58:46][EVID]     }
+[12:58:46][EVID] --- JSON 证据结束: case1 关闭后 SQLite 检查 JSON（task-2 c/d） ---
+[12:58:46][PASS] case1.readonly_open :: open_mode=mode=ro
+[12:58:46][PASS] case1.database_size_positive :: size_bytes=73728
+[12:58:46][PASS] case1.user_version :: user_version=4（期望 4）
+[12:58:46][PASS] case1.integrity_ok :: PRAGMA integrity_check = ok
+[12:58:46][PASS] case1.journal_mode_wal :: journal_mode=wal
+[12:58:46][PASS] case1.schema_migrations_table :: tables=projects,schema_migrations,settings,work_item_creation_group_members,work_item_creation_groups,work_items
+[12:58:46][PASS] case1.settings_table :: settings 表存在
+[12:58:46][PASS] case1.schema_migrations_count :: schema_migrations 记录数=4
+[12:58:46][PASS] case1.schema_migration_versions :: versions=1,2,3,4
+[12:58:46][PASS] case1.foreign_keys_enabled_evidence :: schema_migrations 完整（versions=1,2,3,4，作为 foreign_keys=ON 初始化路径证据）
+[12:58:46][PASS] case1.foreign_key_check_clean :: PRAGMA foreign_key_check 无违规行
+[12:58:46][PASS] case1.canary_absent :: settings 中不存在 test-canary（首次启动应为空）
+[12:58:46][INFO] case1.probe_connection_pragmas :: python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{"busy_timeout":5000,"foreign_keys":0,"page_count":18,"page_size":4096,"synchronous":2,"temp_store":0}
+[12:58:46][INFO] case1.probe_side_effects :: python 只读探针会创建 -wal/-shm（SQLite WAL 只读访问的正常副作用）；探针后 -wal size=0；-shm size=32768
+
+==================== 用例 2：数据持久化（虚构 canary + 重启） ====================
+[12:58:46][STEP] 重启前清理验证探针生成的 sidecar（canary 插入前）：<uat-path>
+[12:58:46][STEP] 重启前清理验证探针生成的 sidecar（canary 插入前）：<uat-path>
+[12:58:46][PASS] persistence.canary_inserted :: settings(key=test-canary) value_json={"value": "release-verify-canary-20261124-125843"}
+[12:58:46][PASS] persistence.before_restart.readonly_open :: open_mode=mode=ro
+[12:58:46][PASS] persistence.before_restart.database_size_positive :: size_bytes=73728
+[12:58:47][PASS] persistence.before_restart.user_version :: user_version=4（期望 4）
+[12:58:47][PASS] persistence.before_restart.integrity_ok :: PRAGMA integrity_check = ok
+[12:58:47][PASS] persistence.before_restart.journal_mode_wal :: journal_mode=wal
+[12:58:47][PASS] persistence.before_restart.schema_migrations_table :: tables=projects,schema_migrations,settings,work_item_creation_group_members,work_item_creation_groups,work_items
+[12:58:47][PASS] persistence.before_restart.settings_table :: settings 表存在
+[12:58:47][PASS] persistence.before_restart.schema_migrations_count :: schema_migrations 记录数=4
+[12:58:47][PASS] persistence.before_restart.schema_migration_versions :: versions=1,2,3,4
+[12:58:47][PASS] persistence.before_restart.foreign_keys_enabled_evidence :: schema_migrations 完整（versions=1,2,3,4，作为 foreign_keys=ON 初始化路径证据）
+[12:58:47][PASS] persistence.before_restart.foreign_key_check_clean :: PRAGMA foreign_key_check 无违规行
+[12:58:47][PASS] persistence.before_restart.canary_present :: value_json={"value": "release-verify-canary-20261124-125843"}；updated_at=2026-11-24T04:58:46Z
+[12:58:47][INFO] persistence.before_restart.probe_connection_pragmas :: python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{"busy_timeout":5000,"foreign_keys":0,"page_count":18,"page_size":4096,"synchronous":2,"temp_store":0}
+[12:58:47][STEP] 重启前清理验证探针生成的 sidecar（重启前）：<uat-path>
+[12:58:47][STEP] 重启前清理验证探针生成的 sidecar（重启前）：<uat-path>
+[12:58:47][PASS] persistence.restart_window_visible :: title=WorkManager；elapsed_ms=317
+[12:58:47][PASS] persistence.restart_window_title :: 窗口标题=WorkManager
+[12:58:47][STEP] 关闭应用 case1 重启：method=CloseMainWindow exited=True exit_code=0 elapsed_ms=540
+[12:58:47][INFO] case1 重启 进程输出捕获：stdout 573 字符；stderr 0 字符；读取错误=
+[12:58:47][PASS] persistence.restart.process_exited :: method=CloseMainWindow elapsed_ms=540
+[12:58:47][PASS] persistence.restart.graceful_close :: CloseMainWindow 正常关闭，exit_code=0
+[12:58:47][PASS] persistence.restart.exit_code_zero :: exit_code=0
+[12:58:47][PASS] persistence.wal_cleared_after_restart :: -wal 不存在或为 0 字节：exists=False；size=0
+[12:58:47][PASS] persistence.shm_after_restart :: -shm 不存在
+[12:58:48][EVID] --- JSON 证据开始: persistence 重启后 SQLite 检查关键字段 ---
+[12:58:48][EVID]     {
+[12:58:48][EVID]         "user_version":  4,
+[12:58:48][EVID]         "integrity_check":  [
+[12:58:48][EVID]                                 "ok"
+[12:58:48][EVID]                             ],
+[12:58:48][EVID]         "journal_mode":  "wal",
+[12:58:48][EVID]         "schema_migrations_count":  4,
+[12:58:48][EVID]         "schema_migrations":  [
+[12:58:48][EVID]                                   {
+[12:58:48][EVID]                                       "applied_at":  "2026-11-24T04:58:44Z",
+[12:58:48][EVID]                                       "name":  "0001_initial_foundation",
+[12:58:48][EVID]                                       "version":  1
+[12:58:48][EVID]                                   },
+[12:58:48][EVID]                                   {
+[12:58:48][EVID]                                       "applied_at":  "2026-11-24T04:58:44Z",
+[12:58:48][EVID]                                       "name":  "0002_projects",
+[12:58:48][EVID]                                       "version":  2
+[12:58:48][EVID]                                   },
+[12:58:48][EVID]                                   {
+[12:58:48][EVID]                                       "applied_at":  "2026-11-24T04:58:44Z",
+[12:58:48][EVID]                                       "name":  "0003_work_items",
+[12:58:48][EVID]                                       "version":  3
+[12:58:48][EVID]                                   },
+[12:58:48][EVID]                                   {
+[12:58:48][EVID]                                       "applied_at":  "2026-11-24T04:58:44Z",
+[12:58:48][EVID]                                       "name":  "0004_work_item_creation_groups",
+[12:58:48][EVID]                                       "version":  4
+[12:58:48][EVID]                                   }
+[12:58:48][EVID]                               ],
+[12:58:48][EVID]         "settings_canary":  {
+[12:58:48][EVID]                                 "key":  "test-canary",
+[12:58:48][EVID]                                 "updated_at":  "2026-11-24T04:58:46Z",
+[12:58:48][EVID]                                 "value_json":  "{\"value\": \"release-verify-canary-20261124-125843\"}"
+[12:58:48][EVID]                             },
+[12:58:48][EVID]         "tables":  [
+[12:58:48][EVID]                        "projects",
+[12:58:48][EVID]                        "schema_migrations",
+[12:58:48][EVID]                        "settings",
+[12:58:48][EVID]                        "work_item_creation_group_members",
+[12:58:48][EVID]                        "work_item_creation_groups",
+[12:58:48][EVID]                        "work_items"
+[12:58:48][EVID]                    ]
+[12:58:48][EVID]     }
+[12:58:48][EVID] --- JSON 证据结束: persistence 重启后 SQLite 检查关键字段 ---
+[12:58:48][PASS] persistence.after_restart.readonly_open :: open_mode=mode=ro
+[12:58:48][PASS] persistence.after_restart.database_size_positive :: size_bytes=73728
+[12:58:48][PASS] persistence.after_restart.user_version :: user_version=4（期望 4）
+[12:58:48][PASS] persistence.after_restart.integrity_ok :: PRAGMA integrity_check = ok
+[12:58:48][PASS] persistence.after_restart.journal_mode_wal :: journal_mode=wal
+[12:58:48][PASS] persistence.after_restart.schema_migrations_table :: tables=projects,schema_migrations,settings,work_item_creation_group_members,work_item_creation_groups,work_items
+[12:58:48][PASS] persistence.after_restart.settings_table :: settings 表存在
+[12:58:48][PASS] persistence.after_restart.schema_migrations_count :: schema_migrations 记录数=4
+[12:58:48][PASS] persistence.after_restart.schema_migration_versions :: versions=1,2,3,4
+[12:58:48][PASS] persistence.after_restart.foreign_keys_enabled_evidence :: schema_migrations 完整（versions=1,2,3,4，作为 foreign_keys=ON 初始化路径证据）
+[12:58:48][PASS] persistence.after_restart.foreign_key_check_clean :: PRAGMA foreign_key_check 无违规行
+[12:58:48][PASS] persistence.after_restart.canary_present :: value_json={"value": "release-verify-canary-20261124-125843"}；updated_at=2026-11-24T04:58:46Z
+[12:58:48][INFO] persistence.after_restart.probe_connection_pragmas :: python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{"busy_timeout":5000,"foreign_keys":0,"page_count":18,"page_size":4096,"synchronous":2,"temp_store":0}
+
+==================== 用例 3：Release 忽略 WORKMANAGER_TEST_PORTABLE_ROOT ====================
+[12:58:48][PASS] env.exe_copy_sha256_matches :: sha256=0BBE1DC43F59644E51126AEB277ABD98CB124E506F69F25D35EF767010AB4166
+[12:58:48][INFO] env.decoy_root_empty_before :: 诱饵目录初始条目数=0；<uat-path>
+[12:58:48][STEP] 进程级 WORKMANAGER_TEST_PORTABLE_ROOT 原值=；用例期间临时设置为诱饵目录：<uat-path>
+[12:58:48][PASS] env.override_restored_after_start :: 子进程启动后父进程环境变量已恢复：
+[12:58:48][PASS] env.main_window_visible :: title=WorkManager；elapsed_ms=320
+[12:58:48][PASS] env.main_window_title :: 窗口标题=WorkManager
+[12:58:49][STEP] 关闭应用 case2 环境变量隔离：method=CloseMainWindow exited=True exit_code=0 elapsed_ms=591
+[12:58:49][INFO] case2 环境变量隔离 进程输出捕获：stdout 564 字符；stderr 0 字符；读取错误=
+[12:58:49][PASS] env.process_exited :: method=CloseMainWindow elapsed_ms=591
+[12:58:49][PASS] env.graceful_close :: CloseMainWindow 正常关闭，exit_code=0
+[12:58:49][PASS] env.exit_code_zero :: exit_code=0
+[12:58:49][PASS] env.database_created_adjacent_to_exe :: 数据库位于 EXE 同级 data/：<uat-path>
+[12:58:49][PASS] env.decoy_database_not_created :: 诱饵目录中未创建数据库：<uat-path>
+[12:58:49][PASS] env.decoy_root_still_empty :: 诱饵目录仍为空：<uat-path>
+[12:58:49][PASS] env.readonly_open :: open_mode=mode=ro
+[12:58:49][PASS] env.database_size_positive :: size_bytes=73728
+[12:58:49][PASS] env.user_version :: user_version=4（期望 4）
+[12:58:49][PASS] env.integrity_ok :: PRAGMA integrity_check = ok
+[12:58:49][PASS] env.journal_mode_wal :: journal_mode=wal
+[12:58:49][PASS] env.schema_migrations_table :: tables=projects,schema_migrations,settings,work_item_creation_group_members,work_item_creation_groups,work_items
+[12:58:49][PASS] env.settings_table :: settings 表存在
+[12:58:49][PASS] env.schema_migrations_count :: schema_migrations 记录数=4
+[12:58:49][PASS] env.schema_migration_versions :: versions=1,2,3,4
+[12:58:49][PASS] env.foreign_keys_enabled_evidence :: schema_migrations 完整（versions=1,2,3,4，作为 foreign_keys=ON 初始化路径证据）
+[12:58:49][PASS] env.foreign_key_check_clean :: PRAGMA foreign_key_check 无违规行
+[12:58:49][INFO] env.probe_connection_pragmas :: python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{"busy_timeout":5000,"foreign_keys":0,"page_count":18,"page_size":4096,"synchronous":2,"temp_store":0}
+
+==================== 清理 ====================
+[12:58:49][PASS] cleanup.process_cleanup :: 没有遗留的被测进程
+[12:58:49][INFO] 清理：已删除用例目录 case1-first-launch：<uat-path>
+[12:58:49][INFO] 清理：已删除用例目录 case2-env-ignore：<uat-path>
+[12:58:49][PASS] cleanup.case_directories :: 已删除本脚本创建的用例沙箱目录（证据在 evidence/ 与 summary/report 中保留）
+[12:58:49][INFO] cleanup.evidence_retained :: 证据与汇总保留在：<uat-path>
+
+==================== C 盘边界抽查（所有用例结束后） ====================
+[12:58:50][PASS] c_drive.LOCALAPPDATA_com.workmanager.portable :: C 盘路径不存在（符合便携边界预期）：path=<user-home>\AppData\Local\com.workmanager.portable；exists=False
+[12:58:50][PASS] c_drive.APPDATA_com.workmanager.portable :: C 盘路径不存在（符合便携边界预期）：path=<user-home>\AppData\Roaming\com.workmanager.portable；exists=False
+[12:58:50][WARN] c_drive.LOCALAPPDATA_EBWebView :: C 盘路径在验证开始前已存在且相同时刻/条目未变化（非本次验证创建，需人工确认来源）：path=<user-home>\AppData\Local\EBWebView；exists=True；last_write_utc=2026-11-20T07:06:21.0558912Z；creation_time_utc=2024-07-15T07:29:20.1195506Z；top_level_entries=24
+[12:58:50][EVID] --- JSON 证据开始: C 盘边界快照（before/after） ---
+[12:58:50][EVID]     {
+[12:58:50][EVID]         "before":  {
+[12:58:50][EVID]                        "label":  "before",
+[12:58:50][EVID]                        "captured_at":  "2026-11-24T12:58:43.7019875+08:00",
+[12:58:50][EVID]                        "locations":  [
+[12:58:50][EVID]                                          {
+[12:58:50][EVID]                                              "name":  "LOCALAPPDATA\\com.workmanager.portable",
+[12:58:50][EVID]                                              "path":  "<local-path>",
+[12:58:50][EVID]                                              "exists":  false,
+[12:58:50][EVID]                                              "is_directory":  false,
+[12:58:50][EVID]                                              "creation_time_utc":  null,
+[12:58:50][EVID]                                              "last_write_utc":  null,
+[12:58:50][EVID]                                              "top_level_entry_count":  null
+[12:58:50][EVID]                                          },
+[12:58:50][EVID]                                          {
+[12:58:50][EVID]                                              "name":  "APPDATA\\com.workmanager.portable",
+[12:58:50][EVID]                                              "path":  "<local-path>",
+[12:58:50][EVID]                                              "exists":  false,
+[12:58:50][EVID]                                              "is_directory":  false,
+[12:58:50][EVID]                                              "creation_time_utc":  null,
+[12:58:50][EVID]                                              "last_write_utc":  null,
+[12:58:50][EVID]                                              "top_level_entry_count":  null
+[12:58:50][EVID]                                          },
+[12:58:50][EVID]                                          {
+[12:58:50][EVID]                                              "name":  "LOCALAPPDATA\\EBWebView",
+[12:58:50][EVID]                                              "path":  "<local-path>",
+[12:58:50][EVID]                                              "exists":  true,
+[12:58:50][EVID]                                              "is_directory":  true,
+[12:58:50][EVID]                                              "creation_time_utc":  "2024-07-15T07:29:20.1195506Z",
+[12:58:50][EVID]                                              "last_write_utc":  "2026-11-20T07:06:21.0558912Z",
+[12:58:50][EVID]                                              "top_level_entry_count":  24
+[12:58:50][EVID]                                          }
+[12:58:50][EVID]                                      ]
+[12:58:50][EVID]                    },
+[12:58:50][EVID]         "after":  {
+[12:58:50][EVID]                       "label":  "after",
+[12:58:50][EVID]                       "captured_at":  "2026-11-24T12:58:50.0056888+08:00",
+[12:58:50][EVID]                       "locations":  [
+[12:58:50][EVID]                                         {
+[12:58:50][EVID]                                             "name":  "LOCALAPPDATA\\com.workmanager.portable",
+[12:58:50][EVID]                                             "path":  "<local-path>",
+[12:58:50][EVID]                                             "exists":  false,
+[12:58:50][EVID]                                             "is_directory":  false,
+[12:58:50][EVID]                                             "creation_time_utc":  null,
+[12:58:50][EVID]                                             "last_write_utc":  null,
+[12:58:50][EVID]                                             "top_level_entry_count":  null
+[12:58:50][EVID]                                         },
+[12:58:50][EVID]                                         {
+[12:58:50][EVID]                                             "name":  "APPDATA\\com.workmanager.portable",
+[12:58:50][EVID]                                             "path":  "<local-path>",
+[12:58:50][EVID]                                             "exists":  false,
+[12:58:50][EVID]                                             "is_directory":  false,
+[12:58:50][EVID]                                             "creation_time_utc":  null,
+[12:58:50][EVID]                                             "last_write_utc":  null,
+[12:58:50][EVID]                                             "top_level_entry_count":  null
+[12:58:50][EVID]                                         },
+[12:58:50][EVID]                                         {
+[12:58:50][EVID]                                             "name":  "LOCALAPPDATA\\EBWebView",
+[12:58:50][EVID]                                             "path":  "<local-path>",
+[12:58:50][EVID]                                             "exists":  true,
+[12:58:50][EVID]                                             "is_directory":  true,
+[12:58:50][EVID]                                             "creation_time_utc":  "2024-07-15T07:29:20.1195506Z",
+[12:58:50][EVID]                                             "last_write_utc":  "2026-11-20T07:06:21.0558912Z",
+[12:58:50][EVID]                                             "top_level_entry_count":  24
+[12:58:50][EVID]                                         }
+[12:58:50][EVID]                                     ]
+[12:58:50][EVID]                   }
+[12:58:50][EVID]     }
+[12:58:50][EVID] --- JSON 证据结束: C 盘边界快照（before/after） ---
+
+
+==================== verify-release-portable 检查汇总 ====================
+
+status name                                                     detail                                                                                                                                                                                              
+------ ----                                                     ------                                                                                                                                                                                              
+INFO   precondition.release_exe                                 path=<repo>\target\release\workmanager.exe；size_bytes=10457600；sha256=0BBE1DC43F59644E51126AEB277ABD98CB124E506F69F25D35EF767010AB4166                                                           
+INFO   precondition.python                                      <python> 3.14.5 / sqlite 3.50.4                                                                                                                                                      
+INFO   precondition.output_dir                                  <uat-path>                                                                                                                                  
+INFO   precondition.source_exe_data_directory                   源 EXE 目录尚无 data/（本次验证只写入隔离复制目录）                                                                                                                                                                     
+INFO   c_drive.baseline                                         LOCALAPPDATA\com.workmanager.portable exists=False；APPDATA\com.workmanager.portable exists=False；LOCALAPPDATA\EBWebView exists=True                                                                 
+PASS   case1.exe_copy_sha256_matches                            sha256=0BBE1DC43F59644E51126AEB277ABD98CB124E506F69F25D35EF767010AB4166                                                                                                                             
+PASS   case1.main_window_visible                                title=WorkManager；hwnd=6624654；elapsed_ms=348                                                                                                                                                       
+PASS   case1.main_window_title                                  窗口标题=WorkManager（期望 WorkManager）                                                                                                                                                                    
+PASS   case1.main_window_screenshot                             png=<uat-path>；1116x788                                                                                      
+PASS   case1.webview2_ebwebview_dir                             WebView2 profile 目录存在：<uat-path>；等待 1 ms                                                   
+PASS   case1.running_database_file                              运行期间 work.db 存在且非空：size_bytes=73728                                                                                                                                                                 
+INFO   case1.running_sidecars                                   运行期间 sidecar 状态：-wal exists=True size=0；-shm exists=True size=32768；-journal exists=False                                                                                                           
+PASS   case1.process_exited                                     method=CloseMainWindow elapsed_ms=150                                                                                                                                                               
+PASS   case1.graceful_close                                     CloseMainWindow 正常关闭，exit_code=0                                                                                                                                                                    
+PASS   case1.exit_code_zero                                     exit_code=0                                                                                                                                                                                         
+PASS   case1.data_root_created                                  目录存在：<uat-path>                                                                                                     
+PASS   case1.database_dir_created                               目录存在：<uat-path>                                                                                            
+PASS   case1.cache_dir_created                                  目录存在：<uat-path>                                                                                               
+PASS   case1.webview2_dir_created                               目录存在：<uat-path>                                                                                      
+PASS   case1.config_dir_created                                 目录存在：<uat-path>                                                                                              
+PASS   case1.logs_dir_created                                   目录存在：<uat-path>                                                                                                
+PASS   case1.temp_dir_created                                   目录存在：<uat-path>                                                                                                
+PASS   case1.backups_dir_created                                目录存在：<uat-path>                                                                                             
+PASS   case1.webview2_dir_populated                             WebView2 数据目录内有 25 个条目（截断=False）                                                                                                                                                                    
+PASS   case1.database_file_created                              work.db 存在且非空：size_bytes=73728                                                                                                                                                                      
+INFO   case1.data_directory_snapshot                            条目数=10；truncated=False；快照=<uat-path>                                                            
+PASS   case1.wal_cleared_after_close                            -wal 不存在或为 0 字节（无未提交数据残留）：exists=False；size=0                                                                                                                                                       
+PASS   case1.shm_cleared_after_close                            -shm 不存在（wal_exists=False；wal_size=0）                                                                                                                                                               
+INFO   case1.journal_after_close                                -journal exists=False；size=0                                                                                                                                                                        
+PASS   case1.readonly_open                                      open_mode=mode=ro                                                                                                                                                                                   
+PASS   case1.database_size_positive                             size_bytes=73728                                                                                                                                                                                    
+PASS   case1.user_version                                       user_version=4（期望 4）                                                                                                                                                                                
+PASS   case1.integrity_ok                                       PRAGMA integrity_check = ok                                                                                                                                                                         
+PASS   case1.journal_mode_wal                                   journal_mode=wal                                                                                                                                                                                    
+PASS   case1.schema_migrations_table                            tables=projects,schema_migrations,settings,work_item_creation_group_members,work_item_creation_groups,work_items                                                                                    
+PASS   case1.settings_table                                     settings 表存在                                                                                                                                                                                        
+PASS   case1.schema_migrations_count                            schema_migrations 记录数=4                                                                                                                                                                             
+PASS   case1.schema_migration_versions                          versions=1,2,3,4                                                                                                                                                                                    
+PASS   case1.foreign_keys_enabled_evidence                      schema_migrations 完整（versions=1,2,3,4，作为 foreign_keys=ON 初始化路径证据）                                                                                                                                   
+PASS   case1.foreign_key_check_clean                            PRAGMA foreign_key_check 无违规行                                                                                                                                                                       
+PASS   case1.canary_absent                                      settings 中不存在 test-canary（首次启动应为空）                                                                                                                                                                  
+INFO   case1.probe_connection_pragmas                           python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{"busy_timeout":5000,"foreign_keys":0,"page_count":18,"page_size":4096,"synchronous":2,"temp_store":0}                                                       
+INFO   case1.probe_side_effects                                 python 只读探针会创建 -wal/-shm（SQLite WAL 只读访问的正常副作用）；探针后 -wal size=0；-shm size=32768                                                                                                                     
+PASS   persistence.canary_inserted                              settings(key=test-canary) value_json={"value": "release-verify-canary-20261124-125843"}                                                                                                             
+PASS   persistence.before_restart.readonly_open                 open_mode=mode=ro                                                                                                                                                                                   
+PASS   persistence.before_restart.database_size_positive        size_bytes=73728                                                                                                                                                                                    
+PASS   persistence.before_restart.user_version                  user_version=4（期望 4）                                                                                                                                                                                
+PASS   persistence.before_restart.integrity_ok                  PRAGMA integrity_check = ok                                                                                                                                                                         
+PASS   persistence.before_restart.journal_mode_wal              journal_mode=wal                                                                                                                                                                                    
+PASS   persistence.before_restart.schema_migrations_table       tables=projects,schema_migrations,settings,work_item_creation_group_members,work_item_creation_groups,work_items                                                                                    
+PASS   persistence.before_restart.settings_table                settings 表存在                                                                                                                                                                                        
+PASS   persistence.before_restart.schema_migrations_count       schema_migrations 记录数=4                                                                                                                                                                             
+PASS   persistence.before_restart.schema_migration_versions     versions=1,2,3,4                                                                                                                                                                                    
+PASS   persistence.before_restart.foreign_keys_enabled_evidence schema_migrations 完整（versions=1,2,3,4，作为 foreign_keys=ON 初始化路径证据）                                                                                                                                   
+PASS   persistence.before_restart.foreign_key_check_clean       PRAGMA foreign_key_check 无违规行                                                                                                                                                                       
+PASS   persistence.before_restart.canary_present                value_json={"value": "release-verify-canary-20261124-125843"}；updated_at=2026-11-24T04:58:46Z                                                                                                       
+INFO   persistence.before_restart.probe_connection_pragmas      python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{"busy_timeout":5000,"foreign_keys":0,"page_count":18,"page_size":4096,"synchronous":2,"temp_store":0}                                                       
+PASS   persistence.restart_window_visible                       title=WorkManager；elapsed_ms=317                                                                                                                                                                    
+PASS   persistence.restart_window_title                         窗口标题=WorkManager                                                                                                                                                                                    
+PASS   persistence.restart.process_exited                       method=CloseMainWindow elapsed_ms=540                                                                                                                                                               
+PASS   persistence.restart.graceful_close                       CloseMainWindow 正常关闭，exit_code=0                                                                                                                                                                    
+PASS   persistence.restart.exit_code_zero                       exit_code=0                                                                                                                                                                                         
+PASS   persistence.wal_cleared_after_restart                    -wal 不存在或为 0 字节：exists=False；size=0                                                                                                                                                                 
+PASS   persistence.shm_after_restart                            -shm 不存在                                                                                                                                                                                            
+PASS   persistence.after_restart.readonly_open                  open_mode=mode=ro                                                                                                                                                                                   
+PASS   persistence.after_restart.database_size_positive         size_bytes=73728                                                                                                                                                                                    
+PASS   persistence.after_restart.user_version                   user_version=4（期望 4）                                                                                                                                                                                
+PASS   persistence.after_restart.integrity_ok                   PRAGMA integrity_check = ok                                                                                                                                                                         
+PASS   persistence.after_restart.journal_mode_wal               journal_mode=wal                                                                                                                                                                                    
+PASS   persistence.after_restart.schema_migrations_table        tables=projects,schema_migrations,settings,work_item_creation_group_members,work_item_creation_groups,work_items                                                                                    
+PASS   persistence.after_restart.settings_table                 settings 表存在                                                                                                                                                                                        
+PASS   persistence.after_restart.schema_migrations_count        schema_migrations 记录数=4                                                                                                                                                                             
+PASS   persistence.after_restart.schema_migration_versions      versions=1,2,3,4                                                                                                                                                                                    
+PASS   persistence.after_restart.foreign_keys_enabled_evidence  schema_migrations 完整（versions=1,2,3,4，作为 foreign_keys=ON 初始化路径证据）                                                                                                                                   
+PASS   persistence.after_restart.foreign_key_check_clean        PRAGMA foreign_key_check 无违规行                                                                                                                                                                       
+PASS   persistence.after_restart.canary_present                 value_json={"value": "release-verify-canary-20261124-125843"}；updated_at=2026-11-24T04:58:46Z                                                                                                       
+INFO   persistence.after_restart.probe_connection_pragmas       python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{"busy_timeout":5000,"foreign_keys":0,"page_count":18,"page_size":4096,"synchronous":2,"temp_store":0}                                                       
+PASS   env.exe_copy_sha256_matches                              sha256=0BBE1DC43F59644E51126AEB277ABD98CB124E506F69F25D35EF767010AB4166                                                                                                                             
+INFO   env.decoy_root_empty_before                              诱饵目录初始条目数=0；<uat-path>                                                                                 
+PASS   env.override_restored_after_start                        子进程启动后父进程环境变量已恢复：                                                                                                                                                                                   
+PASS   env.main_window_visible                                  title=WorkManager；elapsed_ms=320                                                                                                                                                                    
+PASS   env.main_window_title                                    窗口标题=WorkManager                                                                                                                                                                                    
+PASS   env.process_exited                                       method=CloseMainWindow elapsed_ms=591                                                                                                                                                               
+PASS   env.graceful_close                                       CloseMainWindow 正常关闭，exit_code=0                                                                                                                                                                    
+PASS   env.exit_code_zero                                       exit_code=0                                                                                                                                                                                         
+PASS   env.database_created_adjacent_to_exe                     数据库位于 EXE 同级 data/：<uat-path>                                                                        
+PASS   env.decoy_database_not_created                           诱饵目录中未创建数据库：<uat-path>                                                                
+PASS   env.decoy_root_still_empty                               诱饵目录仍为空：<uat-path>                                                                                     
+PASS   env.readonly_open                                        open_mode=mode=ro                                                                                                                                                                                   
+PASS   env.database_size_positive                               size_bytes=73728                                                                                                                                                                                    
+PASS   env.user_version                                         user_version=4（期望 4）                                                                                                                                                                                
+PASS   env.integrity_ok                                         PRAGMA integrity_check = ok                                                                                                                                                                         
+PASS   env.journal_mode_wal                                     journal_mode=wal                                                                                                                                                                                    
+PASS   env.schema_migrations_table                              tables=projects,schema_migrations,settings,work_item_creation_group_members,work_item_creation_groups,work_items                                                                                    
+PASS   env.settings_table                                       settings 表存在                                                                                                                                                                                        
+PASS   env.schema_migrations_count                              schema_migrations 记录数=4                                                                                                                                                                             
+PASS   env.schema_migration_versions                            versions=1,2,3,4                                                                                                                                                                                    
+PASS   env.foreign_keys_enabled_evidence                        schema_migrations 完整（versions=1,2,3,4，作为 foreign_keys=ON 初始化路径证据）                                                                                                                                   
+PASS   env.foreign_key_check_clean                              PRAGMA foreign_key_check 无违规行                                                                                                                                                                       
+INFO   env.probe_connection_pragmas                             python 只读探针连接 PRAGMA（每连接默认值，不代表应用进程配置）：{"busy_timeout":5000,"foreign_keys":0,"page_count":18,"page_size":4096,"synchronous":2,"temp_store":0}                                                       
+PASS   cleanup.process_cleanup                                  没有遗留的被测进程                                                                                                                                                                                           
+PASS   cleanup.case_directories                                 已删除本脚本创建的用例沙箱目录（证据在 evidence/ 与 summary/report 中保留）                                                                                                                                                 
+INFO   cleanup.evidence_retained                                证据与汇总保留在：<uat-path>                                                                                                                         
+PASS   c_drive.LOCALAPPDATA_com.workmanager.portable            C 盘路径不存在（符合便携边界预期）：path=<user-home>\AppData\Local\com.workmanager.portable；exists=False                                                                                                          
+PASS   c_drive.APPDATA_com.workmanager.portable                 C 盘路径不存在（符合便携边界预期）：path=<user-home>\AppData\Roaming\com.workmanager.portable；exists=False                                                                                                        
+WARN   c_drive.LOCALAPPDATA_EBWebView                           C 盘路径在验证开始前已存在且相同时刻/条目未变化（非本次验证创建，需人工确认来源）：path=<user-home>\AppData\Local\EBWebView；exists=True；last_write_utc=2026-11-20T07:06:21.0558912Z；creation_time_utc=2024-07-15T07:29:20.1195506Z；top...
+TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15 OVERALL=PASS
+SUMMARY=<uat-path>
+结论：全部检查通过（允许 WARN/INFO），退出码 0。
+
+__EXIT_CODE__=0

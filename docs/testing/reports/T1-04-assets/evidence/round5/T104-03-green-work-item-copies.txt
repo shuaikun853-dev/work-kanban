@@ -1,0 +1,41 @@
+cargo.exe :    Compiling workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+所在位置 行:4 字符: 1
++ & cargo test -p workmanager-core --test work_item_copies -- --nocaptu ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling wo...rkmanager-core):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.45s
+     Running tests\work_item_copies.rs (target\debug\build\workmanager-core/759e8a0a0d2c8a64\out\work_item_copies-759e8
+a0a0d2c8a64.exe)
+
+running 24 tests
+test archived_project_rolls_back_entire_batch ... ok
+test failed_batch_keeps_previous_successful_batches_unchanged ... ok
+test idempotent_retry_after_project_archive_returns_existing_batch ... ok
+test member_relation_insert_failure_rolls_back_everything ... ok
+test different_request_ids_allow_same_title_as_new_independent_batches ... ok
+test creates_independent_pending_copies_for_each_project ... ok
+test creation_group_insert_failure_rolls_back_everything ... ok
+test creates_three_independent_copies_for_three_projects ... ok
+test batch_rows_and_members_persist_across_restart ... ok
+test batch_create_waits_for_in_flight_archive_then_fails_entirely ... ok
+test concurrent_same_request_id_creates_only_one_batch ... ok
+test concurrent_archive_and_batch_create_never_produces_partial_batch ... ok
+test missing_project_rolls_back_entire_batch ... ok
+test only_first_project_validated_would_have_passed_but_second_fails_batch ... ok
+test rejects_duplicate_project_ids_without_silently_deduplicating ... ok
+test rejects_batch_with_fewer_than_two_projects ... ok
+test read_back_verification_failure_rolls_back_everything ... ok
+test same_request_id_with_different_project_list_is_rejected_stably ... ok
+test rejects_empty_title_without_writing_any_batch_rows ... ok
+test rejects_non_canonical_request_id_without_writing_any_rows ... ok
+test same_title_can_be_batched_again_as_new_independent_group ... ok
+test same_request_id_returns_same_batch_without_writing_again ... ok
+test work_item_insert_failure_on_second_copy_rolls_back_everything ... ok
+test same_request_id_with_different_title_is_rejected_stably ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s
+
+
+__EXIT_CODE__=0

@@ -27,14 +27,18 @@
 | `inspect-t1-03-ui.mjs` / `inspect-t1-03-min-window.mjs` / `inspect-t1-03-persistence.mjs` | T1-03 历史检查脚本（随 T1-03 UI 控件基线保留，未修改；不参与 T1-04 回归）。 |
 | `probe-t1-03-db.py` | T1-03 数据库只读探针（标准库 sqlite3）：schema/完整性/项目/工作事项分布；不修改数据。保留为 T1-03 历史工具。 |
 | `T1-03UatPath.ps1` | UAT 输出目录安全校验与 fail-closed 清理模块（T1-03 P3-02 + F1/F2）：专用测试根目录信任锚、Windows 原生句柄重解析点/最终路径/卷身份校验、fail-closed 沙箱清理。**T1-04 复用该设施，未修改。** |
+| `T1-04UatPath.ps1` | **T1-04 第五轮路径安全扩展**：复用 T1-03 原生句柄与信任锚；额外校验数据库文件自身、父目录/全部祖先、SQLite sidecar、UAT 根目录、卷身份、最终路径；证据目录固定为 `<uat-root>\evidence`。只读校验，不创建/删除文件。 |
+| `guard-t1-04-path.ps1` | 上述模块的 CLI 守卫（database / evidence-dir / evidence-file）；stdout 只输出结构化 JSON，失败退出码 3，供 Python 在连接 SQLite/写文件前调用。 |
+| `t1_04_path_guard.py` | Python 适配层：调用 PowerShell 原生守卫；进程失败/超时/JSON 无法解析/缺少 `ok=true` 全部 fail-closed，抛 `PathGuardError`。 |
+| `test-t1-04-path.py` | Windows 真实 Junction/重解析点专项：正常 UAT 允许；祖先 Junction/叶子重解析点/证据目录 Junction 拒绝；失败时不连接数据库、不写外部文件；文件符号链接无权限时显式 SKIP。 |
 | `test-t1-03-uat-path.ps1` | T1-03 UAT 路径安全专项测试（第四轮 93 项）：第三轮 60 项全部保留；1 项 Symbolic Link 场景因权限限制显式 SKIP、不计 PASS。 |
-| `verify-t1-04-ui.ps1` | **T1-04 真实 Release UI/IPC/原子回滚/持久化端到端编排**：启动 Release → 多项目 E2E 主检查（96 项）→ 最小窗口 860×640（11 项，含真实关闭按钮）→ 关闭 → 数据库只读探针 → **关闭时向 UAT 数据库安装真实 SQLite trigger** 制造第二条副本插入失败 → 重新启动验证整批回滚且无残留（13 项）→ 移除 trigger → 再次启动验证 12 条记录/创建组持久化并再批量创建（15 项）→ 关闭 → 最终探针（57 项数据库检查）。复用 T1-03 已验证 UAT 路径安全设施；故障注入只作用于 D 盘独立 UAT 数据库，不进入正式数据目录。 |
-| `inspect-t1-04-ui.mjs` | T1-04 主 UI/IPC 检查（由编排脚本调用）：应用壳/导航不变、多项目选择对话框、选择计数与预计创建数量、两项目/三项目真实 UI 批量创建、T1-03 未归属/单项目/归档历史关联回归、重复提交保护与提交中锁定、归档竞态整批失败且失效选择保留、绕过 UI 直接 IPC 校验、Bridge 严格契约违规、创建成功但刷新失败三态与无重复创建、CSP/异常/截图。 |
+| `verify-t1-04-ui.ps1` | **T1-04 真实 Release UI/IPC/原子回滚/持久化端到端编排**：启动 Release → 多项目 E2E 主检查（107 项）→ 最小窗口 860×640（11 项，含真实关闭按钮）→ 关闭 → 原生路径守卫后数据库只读探针 → 关闭时向 UAT 数据库安装真实 SQLite trigger 制造第二条副本插入失败 → 重新启动验证整批回滚且无残留（13 项）→ 移除 trigger → 再次启动验证 14 条记录/创建组持久化并再批量创建（15 项）→ 关闭 → 最终探针（62 项数据库检查）。故障注入只作用于 D 盘独立 UAT 数据库，不进入正式数据目录。 |
+| `inspect-t1-04-ui.mjs` | T1-04 主 UI/IPC 检查（由编排脚本调用）：应用壳/导航不变、多项目选择对话框、两项目/三项目真实 UI 批量创建、T1-03 回归、真实 IPC 响应异常后的 requestId 幂等重试、重复提交保护与提交中锁定、归档竞态整批失败、绕过 UI 直接 IPC、Bridge 严格契约违规、创建成功但刷新失败三态、CSP 实际采集/异常/截图。 |
 | `inspect-t1-04-min-window.mjs` | T1-04 最小窗口检查：等待窗口尺寸变化真实传播到 WebView2 布局；待安排列表无横向溢出、多项目选择对话框完整可见；最后点击真实关闭按钮（进程退出由编排脚本验证）。 |
 | `inspect-t1-04-fault.mjs` | T1-04 原子回滚证据：UAT 数据库已安装真实 SQLite trigger（项目 C 的第二条工作副本插入真实 ABORT），通过真实 UI 批量创建 A+C 必须整批失败、UI 显示数据库错误、标题/选择保留、无部分记录。 |
-| `inspect-t1-04-persistence.mjs` | T1-04 重启持久化：同一 UAT 目录重启后 12 条记录与创建组持久化、归档历史关联保留、选择器只含未归档项目；重启后再批量创建 A+B（14 工作 / 5 组 / 11 成员）；最后真实关闭。 |
-| `probe-t1-04-db.py` | T1-04 数据库只读探针：schema/完整性/schema_migrations、项目与工作事项分布、创建组与成员关系行数、组成员数量分布、孤儿成员、多组工作事项、外键违规；不修改任何数据。 |
-| `control-t1-04-fault.py` | T1-04 UAT 故障注入控制器：仅在 `D:\WorkManager-test-data\` 下的数据库安装/移除 `BEFORE INSERT` 测试 trigger，明确拒绝正式目录；不进入产品代码、不是生产故障开关。 |
+| `inspect-t1-04-persistence.mjs` | T1-04 重启持久化：同一 UAT 目录重启后 14 条记录与创建组持久化、归档历史关联保留、选择器只含未归档项目；重启后再批量创建 A+B（16 工作 / 6 组 / 13 成员）；最后真实关闭。 |
+| `probe-t1-04-db.py` | T1-04 数据库只读探针：schema/完整性/schema_migrations、创建组与成员关系行数、组成员数量分布、孤儿成员、多组工作事项、外键违规；不输出标题/项目名称/绝对路径；不修改任何数据；先经原生路径守卫。 |
+| `control-t1-04-fault.py` | T1-04 UAT 故障注入控制器：仅在 `D:\WorkManager-test-data\` 下独立 UAT 安装/移除测试 trigger；先经原生路径守卫，拒绝正式目录；不进入产品代码、不是生产故障开关。 |
 
 ## 用法
 
@@ -93,14 +97,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-t1-04-
 
 ## 当前验证结果
 
-### T1-04（2026-11-24，开发与自测完成，等待独立审计）
+### T1-04（2026-11-24 第五轮，开发与自测完成，等待独立审计）
 
-Release 产物：`target\release\workmanager.exe`，**10,435,072 字节**，
-SHA-256 `2d997dea7c44ff323e902478063e01465a42e0544bfd0ff5b05359f38a3f7d79`。
+Release 产物：`target\release\workmanager.exe`，**10,457,600 字节**，
+SHA-256 `0bbe1dc43f59644e51126aeb277abd98cb124e506f69f25d35ef767010ab4166`。
 
 | 脚本 | 退出码 | 结果 |
 |---|---|---|
-| `verify-t1-04-ui.ps1`（UAT `t1-04-ui-20261124-082717`） | 0 | 主 UI/IPC **96/96**；最小窗口 **11/11**；真实 SQLite trigger 原子回滚 **13/13**；重启持久化 **15/15**；数据库只读探针 **57/57**；三次真实关闭退出码 **0/0/0**；CSP 0；未捕获异常 0 |
+| `verify-t1-04-ui.ps1`（UAT `<uat-root>`） | 0 | 主 UI/IPC **107/107**；最小窗口 **11/11**；真实 SQLite trigger 原子回滚 **13/13**；重启持久化 **15/15**；数据库只读探针 **62/62**；三次真实关闭退出码 **0/0/0**；CSP 实际采集 0；未捕获异常 0 |
+| `test-t1-04-path.py`（真实 Junction） | 0 | 9 PASS / 0 FAIL / 1 SKIP（文件符号链接权限不足，显式记录） |
 | `verify-release-portable.ps1`（继承回归） | 0 | TOTAL=106 PASS=90 FAIL=0 WARN=1（保留既有 WARN） INFO=15 |
 | `verify-release-faults.ps1`（继承回归） | 0 | TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9 |
 | `verify-t1-02-ui.ps1`（继承回归） | 0 | 主 UI/IPC **73/73**；最小窗口 **12/12**；关闭按钮后进程退出码 0；CSP 0；页面异常 0 |
@@ -108,7 +113,7 @@ SHA-256 `2d997dea7c44ff323e902478063e01465a42e0544bfd0ff5b05359f38a3f7d79`。
 | `scripts/quality/check-design-tokens.mjs` | 0 | 0 违规（22 文件，由 `npm run check` 执行） |
 | `scripts/quality/design-tokens.test.mjs` | 0 | 49/49 正反向测试通过 |
 
-数据库探针：主检查后 12 工作 / 4 创建组 / 9 成员；故障回滚后完全一致；重启并再次批量创建后 14 / 5 / 11；schema 4、完整性 ok、外键 0 违规。
+数据库探针：主检查后 14 工作 / 5 创建组 / 11 成员；故障回滚后完全一致；重启并再次批量创建后 16 / 6 / 13；schema 4、完整性 ok、外键 0 违规。真实 IPC 响应异常后同 requestId 重试仍为 1 个创建组 / 2 个副本 / 2 条成员关系。
 
 ### T1-03（2026-11-20 第四轮 F1/F2 历史记录，保留原文，未修改）
 

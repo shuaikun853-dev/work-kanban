@@ -1,0 +1,81 @@
+{
+  "generatedAt": "2026-11-24T04:58:11.402Z",
+  "task": "T1-04",
+  "phase": "atomic-rollback-fault-injection",
+  "method": "Real Release UI + real SQLite TRIGGER in isolated UAT database: second work-item insert aborts; verification that whole batch rolls back and no partial rows remain",
+  "port": 9370,
+  "outputDir": "<uat-root>",
+  "prerequisitePath": "<uat-root>\\t1-04-prerequisite.json",
+  "faultTitle": "T1-04 虚构 原子回滚验证批次",
+  "checks": [
+    {
+      "name": "fault.navigateToday",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.pendingEntryClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.prerequisiteProjectsPresent",
+      "pass": true,
+      "detail": "{\"projectA\":\"4778d2d7-3a67-4e91-9e3d-0e23108a38ef\",\"projectC\":\"642dba70-6f7f-484e-a16d-afe5f8ba2d30\"}"
+    },
+    {
+      "name": "fault.openCreateDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.titleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.selectProjectA",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.selectProjectC",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.saveDispatched",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.databaseErrorShownAndDialogKept",
+      "pass": true,
+      "detail": "{\"message\":\"SQLite 操作失败（创建工作事项）：T1-04 injected second-copy insert failure。 错误码：database-sqlite-error\",\"code\":\"错误码：database-sqlite-error\",\"dialogStillOpen\":true,\"titlePreserved\":true}"
+    },
+    {
+      "name": "fault.selectionRetainedAfterRollback",
+      "pass": true,
+      "detail": "{\"mode\":\"copies\",\"selectedCount\":2,\"availableProjectIds\":[\"642dba70-6f7f-484e-a16d-afe5f8ba2d30\",\"9ce26154-97ef-43bd-b4a8-2b91fb3d05ae\",\"4778d2d7-3a67-4e91-9e3d-0e23108a38ef\"]}"
+    },
+    {
+      "name": "fault.noPartialCopiesInDatabaseOrUi",
+      "pass": true,
+      "detail": "{\"matching\":0,\"total\":14}"
+    },
+    {
+      "name": "fault.cancelDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.closeButtonClicked",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "failed": [],
+  "checkCount": 13,
+  "closeClicked": true,
+  "pass": true
+}

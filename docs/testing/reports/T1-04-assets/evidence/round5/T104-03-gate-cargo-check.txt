@@ -1,0 +1,12 @@
+cargo :     Checking rusqlite v0.43.0
+所在位置 行:6 字符: 1
++ cargo check --workspace --all-targets *> (Join-Path $dir 'gate-cargo- ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Checking rusqlite v0.43.0:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    Checking workmanager-core v0.1.0 (<repo>\crates\workmanager-core)
+    Checking workmanager v0.1.0 (<repo>\src-tauri)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 10.50s
+
+__EXIT_CODE__=0

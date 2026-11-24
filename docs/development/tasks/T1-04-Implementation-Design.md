@@ -137,9 +137,36 @@ pub struct CreatedWorkItemCopies {
 | 项目不存在 | `project-not-found`（复用） | 所选项目不存在或已被删除。请刷新项目列表后重试。 |
 | 项目已归档 | `project-archived`（复用） | 所选项目已归档，不能再关联新工作。请选择其他项目或不选择项目。 |
 | 读回验证失败 | `work-item-persistence-verification-failed`（复用） | 工作事项已写入但无法读取，请重试或检查数据库状态。 |
+| 请求标识非规范 UUID | `work-item-create-request-id-invalid`（第五轮新增） | 创建请求标识无效，请重新发起创建。 |
+| 同请求标识不同内容 | `work-item-create-request-conflict`（第五轮新增） | 该创建请求与已处理的内容不一致，请重新发起创建。 |
 | 数据库错误 | 透传 T1-01 结构化错误码 | 现有中文数据库错误消息 |
 
-错误消息不得包含标题、项目名称或 SQL 参数；不 panic 代替业务错误；本模块不写日志。
+错误消息不得包含标题、项目名称、请求标识或 SQL 参数；不 panic 代替业务错误；本模块不写日志。
+
+### 3.5 幂等请求标识（第五轮 T104-02）
+
+**结论：复用现有 `work_item_creation_groups.id` 作为客户端请求标识，不新增字段或 migration。**
+
+理由与约束：
+
+1. `work_item_creation_groups.id` 已是 `TEXT PRIMARY KEY`，UUID 语义与客户端请求标识一致；
+2. 服务端在同一 `IMMEDIATE` 写事务内先按请求标识读取创建组：
+   - 不存在 → 执行正常整批创建，组主键直接写入该请求标识；
+   - 存在且标题、项目列表完全一致 → 读回组内工作副本并按请求项目顺序返回，不写任何行；
+   - 存在但标题或项目列表不同 → `work-item-create-request-conflict`，不覆盖、不追加；
+3. 幂等读取发生在项目归档校验之前：已提交批次的项目后来归档时，重试仍返回既有结果，而不是 `project-archived`；
+4. 同一请求标识的两个并发请求由 SQLite `IMMEDIATE` 写事务串行化，第一个提交后第二个读取既有批次，只能存在一个批次；
+5. 不再需要单独的 `request_id` 列或唯一索引，也不需要新增 schema 版本；
+6. 组内成员 JOIN 行数与原始成员行数交叉校验；内部不一致 fail-closed 为 `work-item-persistence-verification-failed`，绝不静默重建。
+
+前端请求标识生命周期：
+
+- 第一次批量提交时用 `crypto.randomUUID()`（缺失时用 `crypto.getRandomValues` 生成 UUID v4）生成；
+- 与规范化标题、项目顺序绑定；
+- IPC 失败、Bridge 契约解析失败或用户重试时保留；
+- 用户修改标题或项目选择后生成新标识；
+- 只有服务端成功响应通过 Bridge 严格校验后才清理；
+- 不得因响应解析失败自动换新标识，也不得让不同创建操作共享同一标识。
 
 ---
 
@@ -157,6 +184,7 @@ pub struct CreatedWorkItemCopies {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CreateWorkItemCopiesRequest {
+    pub request_id: String,          // JSON: requestId，规范 UUID
     pub title: String,
     pub project_ids: Vec<String>,   // JSON: projectIds
 }
@@ -164,12 +192,14 @@ pub struct CreateWorkItemCopiesRequest {
 
 ```json
 {
+  "requestId": "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a030",
   "title": "中核商品价格异常排查",
   "projectIds": ["project-a", "project-b"]
 }
 ```
 
-- serde camelCase；`deny_unknown_fields`；`projectIds` 必填且必须是字符串数组（`null`/缺省/字符串均被拒绝）；
+- serde camelCase；`deny_unknown_fields`；`requestId` 必填且必须是规范 UUID 字符串；
+  `projectIds` 必填且必须是字符串数组（`null`/缺省/字符串均被拒绝）；
 - 业务校验（标题、数量、去重、项目状态、事务）全部在 Rust Core，命令层不实现业务规则；
 - 复用现有 `WorkItemDto`（Rust `WorkItem`）与 `CommandError`；
 - `async` 命令 + `spawn_blocking`；不暴露任意 SQL / 文件 / 命令。
@@ -191,6 +221,7 @@ pub struct CreateWorkItemCopiesRequest {
 export const CREATE_WORK_ITEM_COPIES_COMMAND = 'create_work_item_copies' as const;
 
 export interface CreateWorkItemCopiesInput {
+  readonly requestId: string;
   readonly title: string;
   readonly projectIds: readonly string[];
 }
@@ -205,12 +236,14 @@ export interface CreatedWorkItemCopiesDto {
 
 ```ts
 export async function createWorkItemCopies(
+  requestId: string,
   title: string,
   projectIds: readonly string[]
 ): Promise<CreatedWorkItemCopiesDto>
 ```
 
-- 调用 `invoke('create_work_item_copies', { input: { title, projectIds } })`；
+- 调用 `invoke('create_work_item_copies', { input: { requestId, title, projectIds } })`；
+- `requestId` 由页面容器在“标题 + 项目顺序”未变化时复用，成功确认后清理；
 - 失败载荷统一转换为 `WorkItemIpcError`（复用现有逻辑）；
 - 成功返回值必须通过 `parseCreatedWorkItemCopies(raw, projectIds)`。
 
