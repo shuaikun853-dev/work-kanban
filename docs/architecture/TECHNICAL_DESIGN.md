@@ -14,7 +14,7 @@ Modules、ADR、Research、TDD、Vertical Slices）
 
 ------------------------------------------------------------------------
 
-## 已确认的架构与产品决策（更新至 2026-11-17）
+## 已确认的架构与产品决策（更新至 2026-11-24）
 
 以下决策已由用户明确确认，后续设计和代码不得擅自改变：
 
@@ -27,6 +27,7 @@ Modules、ADR、Research、TDD、Vertical Slices）
 7. **开源边界：** 项目采用完全自研方式；可以研究开源项目的架构和交互，但不复制、移植其源代码。
 8. **本地数据边界：** 工作数据、数据库、缓存、日志、临时文件及 WebView2 用户数据均放在 D 盘便携目录，不上传云端；不得静默写入 C 盘。
 9. **UI 原型与前端分层：** 采用用户于 2026-11-18 确认的简洁 Apple 风格桌面 UI；Windows 10 主窗口使用 DEC-032 确认的 Tauri 自定义无边框标题栏及红/黄/绿真实窗口控制按钮；工作总览和今日工作为两个核心页面，具体规则见 [UI 设计规范](../design/UI-DESIGN-SPEC.md)。
+10. **多项目批量创建（DEC-034）：** 一次选择 2 个及以上项目创建独立工作副本时采用整批原子提交；同一 `IMMEDIATE` 事务内验证全部项目、写入创建组/副本/成员关系并做事务内读回验证，任一步失败整批回滚，不允许部分成功或补偿删除。
 
 仍待确认的事项包括自动备份、备份轮转和恢复策略，以及具体上班时间默认值和重复工作规则；最终 UI 布局与视觉方向已按 DEC-030 确认。
 
@@ -602,6 +603,42 @@ priority_score = importance + urgency
 
 两条工作记录的状态、进度、日志、计划和附件全部独立。
 
+### 5.4.1 多项目批量创建与创建组（T1-04，DEC-034）
+
+**创建组表（schema 4）：**
+
+``` sql
+CREATE TABLE work_item_creation_groups (
+    id           TEXT PRIMARY KEY NOT NULL,
+    source_title TEXT NOT NULL CHECK (length(trim(source_title)) > 0),
+    created_at   TEXT NOT NULL
+) STRICT;
+
+CREATE TABLE work_item_creation_group_members (
+    group_id     TEXT NOT NULL
+                 REFERENCES work_item_creation_groups(id) ON DELETE CASCADE ON UPDATE RESTRICT,
+    work_item_id TEXT NOT NULL UNIQUE
+                 REFERENCES work_items(id) ON DELETE CASCADE ON UPDATE RESTRICT,
+    PRIMARY KEY (group_id, work_item_id)
+) STRICT;
+```
+
+约束语义：
+
+- `work_item_id UNIQUE`：每个工作事项最多属于一个创建组；
+- 删除工作事项时只清除该事项自身的成员关联（`ON DELETE CASCADE`），不得连带删除同组其他副本或创建组；
+- 删除创建组时只清除成员关系，不删除任何工作副本；
+- 创建组只记录来源标题与创建时间，不共享工作状态、进度、日志、计划或附件。
+
+**整批原子事务规则（用户 2026-11-24 确认）：**
+
+1. 标题 trim 后非空；项目数量 >= 2；项目 ID 不重复（不得静默去重）。
+2. 在同一个 SQLite `IMMEDIATE` 写事务内**先验证全部项目**存在且未归档，验证完成前不插入任何记录。
+3. 同一事务内依次写入创建组、全部独立工作副本、全部成员关系；创建组 ID 与每个工作副本 ID 均由 Rust Core 生成独立 UUID。
+4. 提交前在事务内读回创建组、全部工作副本与成员关系并逐项比对；任一项不一致按持久化验证失败处理。
+5. 任意项目无效、任意一条写入失败或读回验证失败时整批回滚；不允许部分成功、静默跳过无效项目，也不允许先创建部分记录再补偿删除。
+6. 0 / 1 个项目沿用单条创建语义；相同标题可再次批量创建，产生新的创建组与新的独立副本。
+
 ### 5.5 关键索引
 
 建议至少建立：
@@ -747,6 +784,7 @@ SQLite 连接打开后，初始化以下配置：
 
 - 使用参数化 SQL，禁止拼接用户输入构造 SQL。
 - 所有多表写入必须在同一明确事务中完成。
+- 多项目批量创建（DEC-034）必须在同一个 `IMMEDIATE` 事务内完成“验证全部项目 → 写创建组 → 写全部工作副本 → 写全部成员关系 → 事务内读回验证”；任一步失败整批回滚，不允许部分成功或补偿删除。
 - migration 使用 `PRAGMA user_version` 管理版本，并在事务中执行；migration 失败时回滚。
 - 外键约束必须启用：`PRAGMA foreign_keys = ON`。
 - 推荐 WAL 模式，设置合理的 `busy_timeout`；`synchronous` 根据可靠性和性能测试确定，默认优先数据可靠性。

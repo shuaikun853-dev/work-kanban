@@ -1,0 +1,93 @@
+{
+  "generatedAt": "2026-11-24T00:27:26.706Z",
+  "task": "T1-04",
+  "method": "CDP at minimum supported window size 860x640: 待安排 layout checks, multi-project dialog bounds, real titlebar close button click; process exit verified by orchestration",
+  "port": 9355,
+  "target": {
+    "id": "D1951CA9C8B5034D0336641527E23870",
+    "title": "今日工作 · WorkManager",
+    "url": "http://tauri.localhost/"
+  },
+  "viewport": {
+    "innerWidth": 844,
+    "innerHeight": 632,
+    "outerWidth": 844,
+    "outerHeight": 632
+  },
+  "dialogLayout": {
+    "top": 80,
+    "left": 182,
+    "right": 662,
+    "bottom": 552,
+    "innerWidth": 844,
+    "innerHeight": 632,
+    "fullyVisible": true,
+    "projectOptionCount": 3,
+    "titleInputVisible": true,
+    "projectOptionsVisible": true,
+    "selectionSummaryVisible": true,
+    "saveVisible": true,
+    "cancelVisible": true
+  },
+  "checks": [
+    {
+      "name": "minWindow.sizeNear860x640",
+      "pass": true,
+      "detail": "{\"innerWidth\":844,\"innerHeight\":632,\"outerWidth\":844,\"outerHeight\":632}"
+    },
+    {
+      "name": "minWindow.navigateToday",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "minWindow.pendingEntryVisible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "minWindow.pendingNoHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":844,\"innerHeight\":632,\"docScrollWidth\":844,\"clientWidth\":844,\"bodyScrollWidth\":844,\"overflow\":false,\"offenders\":[]}"
+    },
+    {
+      "name": "minWindow.pendingRowsVisible",
+      "pass": true,
+      "detail": "{\"rowCount\":12,\"archivedBadgeCount\":1,\"createButtonVisible\":true,\"firstRowRight\":812}"
+    },
+    {
+      "name": "minWindow.createButtonClickable",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "minWindow.openCreateDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "minWindow.dialogFullyVisible",
+      "pass": true,
+      "detail": "{\"top\":80,\"left\":182,\"right\":662,\"bottom\":552,\"innerWidth\":844,\"innerHeight\":632,\"fullyVisible\":true,\"projectOptionCount\":3,\"titleInputVisible\":true,\"projectOptionsVisible\":true,\"selectionSummaryVisible\":true,\"saveVisible\":true,\"cancelVisible\":true}"
+    },
+    {
+      "name": "minWindow.multiProjectControlsVisible",
+      "pass": true,
+      "detail": "{\"top\":80,\"left\":182,\"right\":662,\"bottom\":552,\"innerWidth\":844,\"innerHeight\":632,\"fullyVisible\":true,\"projectOptionCount\":3,\"titleInputVisible\":true,\"projectOptionsVisible\":true,\"selectionSummaryVisible\":true,\"saveVisible\":true,\"cancelVisible\":true}"
+    },
+    {
+      "name": "minWindow.cancelDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "minWindow.closeButtonClicked",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "failed": [],
+  "checkCount": 11,
+  "closeClicked": true,
+  "pass": true
+}

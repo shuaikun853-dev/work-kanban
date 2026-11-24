@@ -1,0 +1,77 @@
+{
+  "task": "T1-04",
+  "stage": "after-restart",
+  "database_path": "<uat-root>\\app\\data\\database\\work.db",
+  "exists": true,
+  "user_version": 4,
+  "integrity_check": "ok",
+  "journal_mode": "wal",
+  "foreign_keys": 1,
+  "tables": [
+    "projects",
+    "schema_migrations",
+    "settings",
+    "work_item_creation_group_members",
+    "work_item_creation_groups",
+    "work_items"
+  ],
+  "schema_migrations": [
+    {
+      "version": 1,
+      "name": "0001_initial_foundation"
+    },
+    {
+      "version": 2,
+      "name": "0002_projects"
+    },
+    {
+      "version": 3,
+      "name": "0003_work_items"
+    },
+    {
+      "version": 4,
+      "name": "0004_work_item_creation_groups"
+    }
+  ],
+  "projects_total": 4,
+  "projects_archived": 1,
+  "work_items_total": 14,
+  "work_items_pending": 14,
+  "work_items_other_status": 0,
+  "work_items_null_project": 1,
+  "work_items_linked_archived": 1,
+  "work_items_linked_active": 12,
+  "creation_groups_total": 5,
+  "creation_group_members_total": 11,
+  "creation_group_size_histogram": {
+    "2": 4,
+    "3": 1
+  },
+  "creation_groups_without_members": 0,
+  "orphan_creation_group_members": 0,
+  "work_items_with_multiple_groups": 0,
+  "creation_group_titles": [
+    "T1-04 虚构 重启后新批次工作",
+    "T1-04 虚构 刷新失败批次工作",
+    "T1-04 虚构 重复提交批次工作",
+    "T1-04 虚构 三项目进度同步",
+    "T1-04 虚构 两项目价格异常排查"
+  ],
+  "pending_titles": [
+    "T1-04 虚构 重启后新批次工作",
+    "T1-04 虚构 重启后新批次工作",
+    "T1-04 虚构 刷新失败批次工作",
+    "T1-04 虚构 刷新失败批次工作",
+    "T1-04 虚构 归档项目历史关联工作",
+    "T1-04 虚构 重复提交批次工作",
+    "T1-04 虚构 重复提交批次工作",
+    "T1-04 虚构 单项目快速工作",
+    "T1-04 虚构 未归属快速工作",
+    "T1-04 虚构 三项目进度同步",
+    "T1-04 虚构 三项目进度同步",
+    "T1-04 虚构 三项目进度同步",
+    "T1-04 虚构 两项目价格异常排查",
+    "T1-04 虚构 两项目价格异常排查"
+  ],
+  "foreign_key_violations": 0
+}

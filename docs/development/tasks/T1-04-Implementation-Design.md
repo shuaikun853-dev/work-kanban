@@ -432,3 +432,22 @@ git diff --check
 - T1-04 的迁移测试会在失败注入时触发器改写/回滚真实 SQLite 测试数据库；所有故障注入仅用于 D 盘隔离测试目录与 UAT 目录，不在正式数据目录执行。
 - schema 4 会改变继承验证脚本的版本期望；只能更新仍有效的脚本，不能修改历史证据中的真实执行记录。
 - 普通 SQLite 未加密；TOCTOU 按 DEC-029 延期至 Issue #2，本任务不修复。
+
+---
+
+## 12. 实现记录与偏差说明（2026-11-24）
+
+最终实现与本编码前设计总体一致，以下为需要审计核对的实现事实与少量补充说明：
+
+1. **Tauri 请求包装：** 新命令使用与既有命令一致的 `input` 参数包装（前端发送 `{ input: { title, projectIds } }`），业务请求 DTO 内容与设计要求一致（camelCase `title` / `projectIds`）；响应直接为 `{ groupId, workItems }`。
+2. **成员关系表字段：** `work_item_creation_group_members` 只包含设计要求的最低字段 `group_id`、`work_item_id`（技术设计 5.1 未要求其他字段）；使用复合主键 `(group_id, work_item_id)` 与 `work_item_id UNIQUE` 实现“每个工作事项最多一个创建组”，不额外增加冗余索引。
+3. **“验证全部项目”的实现语义：** Core 在任何插入之前按请求顺序逐个查询全部项目状态；遇到第一个不存在/已归档项目立即返回业务错误并回滚（此时尚未插入任何记录）。该实现满足“不得只检查第一个项目、全部验证通过后才开始插入、任一无效整批失败”的原子性要求，但不会在已发现一个无效项目后继续查询其余项目（对用户可见行为与回滚结果无差异）。审计如需“必须查询全部项目”的更强定义，可在后续任务调整。
+4. **时间戳：** 一次批量创建的全部副本与创建组共享同一 UTC RFC3339 毫秒时间戳；待安排排序仍为 `created_at DESC, id DESC`，因此同批次内以稳定 ID 次级排序，顺序稳定。
+5. **创建组读回验证：** 提交前在事务内读回创建组（`source_title`/`created_at`）、每个工作副本（逐字段相等）与全部成员关系（数量、group、work_item→project 映射）；成员集合与请求副本集合双向比对，防止多余/缺失成员。读回不一致统一返回 `work-item-persistence-verification-failed`。
+6. **故障注入：** Rust 测试使用真实 SQLite `TRIGGER`（第二条副本插入失败、第二条成员关系失败、事务内读回篡改）制造真实数据库错误，不在生产代码增加故障开关。Release E2E 通过 `control-t1-04-fault.py` 仅在 D 盘独立 UAT 数据库安装 `BEFORE INSERT` trigger，验证整批回滚、无残留；未在正式数据目录执行，未修改 Windows ACL。
+7. **Bridge 契约：** `parseCreatedWorkItemCopies` 在响应校验之外还校验调用方请求项目列表（≥2、非空、不重复）；若调用方传入非法请求列表，即使后端返回成功也按 `ipc-contract-violation` 拒绝，避免“请求与响应数量不一致被静默接受”。
+8. **UI 成功提示：** 单条创建显示“已创建 1 项工作”；批量创建使用 Rust 返回的 `workItems.length` 作为实际数量，不使用前端预计数量。创建成功与列表刷新成功/失败三态沿用 T1-03 的分离策略。
+9. **失效选择：** T1-03 的“项目列表刷新后自动回退为未归属项目”逻辑已移除；T1-04 中失效项目选择保留在对话框中，标记为不可用，Submit 被禁用，必须由用户点击“移除”或调整选择后才能再次提交。
+10. **测试/验证脚本调整：** schema 3→4 导致 `VerifyCommon.ps1`、`inspect-release-ui.mjs`、`inspect-t1-02-ui.mjs` 的 schema/migration 期望更新；T1-02 诊断页 migrationRows 期望由 1–3 更新为 1–4。T1-03 历史证据 JSON、历史审计报告与 T1-03 分支未修改；T1-03 原 UI E2E 脚本因控件从单选扩展为多选不再作为可执行回归基线（未修改），T1-03 业务规则回归由 Rust 测试与 T1-04 E2E 场景覆盖。
+11. **最小窗口 E2E 时序：** 首次 E2E 运行时 WebView2 对 `SetWindowPos` 的布局传播存在时序差异，导致最小窗口检查读取到旧视口。修复仅位于测试脚本（`inspect-t1-04-min-window.mjs` 增加 `waitForViewportSettled` 确定性等待），未修改产品代码；修复后最小窗口 11/11 通过。
+12. **实际结果：** `cargo test --workspace` 149/149；Release E2E 主 96/96 + 最小窗口 11/11 + 故障回滚 13/13 + 持久化 15/15 + 数据库探针 57/57；三次真实关闭退出码 0/0/0。详见 [T1-04-REPORT.md](../../testing/reports/T1-04-REPORT.md)。

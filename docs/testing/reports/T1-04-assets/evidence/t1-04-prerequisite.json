@@ -1,0 +1,46 @@
+{
+  "task": "T1-04",
+  "generatedAt": "2026-11-24T00:27:23.158Z",
+  "outputDir": "<uat-root>",
+  "port": 9355,
+  "projects": {
+    "A": {
+      "id": "39e375d0-4ac0-4b94-8648-363dc08b126b",
+      "name": "T1-04 虚构未归档项目甲"
+    },
+    "B": {
+      "id": "8f2ff2db-2db9-45cc-bb11-d58bc19f9684",
+      "name": "T1-04 虚构未归档项目乙"
+    },
+    "C": {
+      "id": "da0d0152-3eba-4a20-a113-558221ab59b8",
+      "name": "T1-04 虚构未归档项目丙"
+    },
+    "D": {
+      "id": "10e6c792-c9eb-4ea2-9d88-c24516063cae",
+      "name": "T1-04 虚构将归档项目丁"
+    }
+  },
+  "titles": {
+    "batchTwo": "T1-04 虚构 两项目价格异常排查",
+    "batchThree": "T1-04 虚构 三项目进度同步",
+    "unassigned": "T1-04 虚构 未归属快速工作",
+    "single": "T1-04 虚构 单项目快速工作",
+    "duplicate": "T1-04 虚构 重复提交批次工作",
+    "archivedLink": "T1-04 虚构 归档项目历史关联工作",
+    "archiveRace": "T1-04 虚构 归档竞态不应创建",
+    "contractViolation": "T1-04 虚构 契约违规不应创建",
+    "refreshFailure": "T1-04 虚构 刷新失败批次工作",
+    "bypass": "T1-04 虚构 绕过 UI 的批量请求"
+  },
+  "pendingAfterMain": 12,
+  "groupsAfterMain": 4,
+  "membersAfterMain": 9,
+  "archivedLinkItemId": "10a79ff9-eca2-4f8d-8afd-b30d4f267db4",
+  "expectedGroupTitles": [
+    "T1-04 虚构 两项目价格异常排查",
+    "T1-04 虚构 三项目进度同步",
+    "T1-04 虚构 重复提交批次工作",
+    "T1-04 虚构 刷新失败批次工作"
+  ]
+}

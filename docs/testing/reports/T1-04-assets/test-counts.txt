@@ -1,0 +1,36 @@
+T1-04 test counts (real execution results, 2026-11-24)
+task=T1-04
+release_exe_size_bytes=10435072
+release_exe_sha256=2d997dea7c44ff323e902478063e01465a42e0544bfd0ff5b05359f38a3f7d79
+
+cargo_fmt_all_check_exit=0
+cargo_check_workspace_all_targets_exit=0
+cargo_test_workspace=149 passed / 0 failed
+cargo_test_new_t1_04=25 (work_item_copies 16 + creation_groups_migration 5 + tauri command DTO 3 + app_state context 1)
+npm_run_check_exit=0
+  svelte_check=0 errors / 0 warnings
+  work_item_bridge_node_tests=27 / 27
+  design_token_check=22 files / 0 violations
+  design_token_tests=49 / 49
+npm_run_build_exit=0 (167 modules)
+git_diff_check_exit=0
+
+release_e2e_orchestration_pass=true
+  main_ui_checks=96/96
+  min_window_checks=11/11 (viewport 844x632)
+  fault_injection_checks=13/13
+  persistence_checks=15/15
+  db_probe_checks=57/57
+  close_exit_codes=0/0/0
+  csp_violations=0
+  page_uncaught_exceptions=0
+  uat_dir=<uat-root>\t1-04-ui-20261124-082717
+
+db_probe_after_main=schema4 items12 groups4 members9 integrity=ok fkViolations=0 groupSizeHistogram={2:3,3:1}
+db_probe_after_fault=schema4 items12 groups4 members9 (no residue; atomic rollback)
+db_probe_after_restart=schema4 items14 groups5 members11
+
+inherited_regressions:
+  portable_106_checks=PASS 90 / FAIL 0 / WARN 1 / INFO 15, exit 0
+  fault_injection_73_checks=PASS 64 / FAIL 0 / INFO 9, exit 0
+  t1_02_ui_e2e=main 73/73 + min 12/12, pass

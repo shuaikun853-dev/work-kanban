@@ -183,3 +183,42 @@ git diff --check
 - T1-04 完成后的真实基线整合必须先等 PR #8 合并，再从更新后的 main 迁移 T1-04 自身提交；本阶段不创建错误包含整个 T1-03 diff 的 main PR。
 - TOCTOU 残余风险按 DEC-029 延期至 Issue #2，T1-04 不修复。
 - 普通 SQLite 未加密；本地工作数据可被拥有文件访问权限的人读取。
+
+---
+
+## 11. 开发执行结果（2026-11-24，开发与自测完成，等待独立审计）
+
+**状态：** 代码实现、自动化测试、Windows Release E2E、继承回归与文档同步完成；**等待独立代码审计**。开发代理不自行宣布审计或验收通过；T1-03 的独立审计/验收状态保持不变。
+
+**实际交付：**
+
+- **数据库：** migration `0004_work_item_creation_groups.sql`，schema 3 → 4；`work_item_creation_groups`、`work_item_creation_group_members`（真实外键、`work_item_id UNIQUE`、STRICT、创建组查询索引）；未修改 0001/0002/0003；失败 migration 回滚测试通过。
+- **Rust Core：** `WorkItemService::create_copies` 在同一个 `IMMEDIATE` 写事务内先验证全部项目，再写创建组、全部独立副本、全部成员关系并做事务内读回验证；新增 `work-item-copies-too-few`、`work-item-copies-duplicate-project` 稳定错误码；任意失败整批回滚。
+- **Tauri IPC：** `create_work_item_copies`（camelCase、`deny_unknown_fields`、`spawn_blocking`、复用 `WorkItemDto`/`CommandError`；响应 `{groupId, workItems}`）。
+- **Bridge：** 批量响应严格运行时契约（数量/项目一一对应/ID 唯一/pending/无缺失或额外字段）；Node 契约测试 27/27。
+- **UI：** 快速创建对话框支持多项目选择（0/1 沿用 T1-03 单条创建，2+ 调用批量接口）；显示已选数量与预计创建数量；创建中锁定输入与选择；失败保留标题与原始选择、失效选择需用户主动移除、不自动创建剩余项目；成功使用后端实际数量并从数据库刷新，刷新失败不重复创建。
+- **验证工具：** `verify-t1-04-ui.ps1` + 4 个 CDP 检查脚本 + 只读数据库探针 + 仅限 UAT 的 trigger 故障控制器；复用 T1-03 已验证 UAT 路径安全设施；未修改历史证据。
+
+**质量门禁（全部真实执行）：**
+
+- `cargo fmt --all -- --check` / `cargo check --workspace --all-targets`：退出码 0；
+- `cargo test --workspace`：**149 passed / 0 failed**（基线 124 + T1-04 新增 25）；
+- `npm run check`：svelte-check 0/0、Bridge 27/27、Design Token 22 文件 0 违规、49/49；
+- `npm run build`：退出码 0（167 modules）；`git diff --check`：退出码 0。
+
+**Windows Release E2E（独立 UAT 目录，虚构数据）：**
+
+- 主 UI/IPC **96/96**、最小窗口 **11/11**、真实 SQLite trigger 原子回滚 **13/13**、重启持久化 **15/15**、数据库只读探针 **57/57**；
+- 三次真实关闭退出码 **0/0/0**；CSP 违规 0；页面未捕获异常 0；
+- 数据库探针：主阶段 12 工作 / 4 创建组 / 9 成员；故障回滚后完全不变；重启并再次批量创建后 14 / 5 / 11；schema 4、完整性 ok、外键 0 违规；
+- Release EXE **10,435,072 字节**，SHA-256 `2d997dea7c44ff323e902478063e01465a42e0544bfd0ff5b05359f38a3f7d79`。
+
+**继承回归：**
+
+- 便携 **106 项（PASS 90 / FAIL 0 / WARN 1 既有 / INFO 15）**；异常注入 **73 项（PASS 64 / FAIL 0 / INFO 9）**；T1-02 UI E2E **73/73 + 12/12**；均退出码 0。
+- T1-03 业务规则：Rust 既有单条创建/归档拒绝/待安排测试全部保持通过；T1-04 E2E 覆盖未归属/单项目/归档历史关联回归。T1-03 原 UI E2E 脚本以单项目 `<select>` 为控件基线，不适用于多选控件，本轮未修改该历史脚本与证据。
+
+**实现提交：** `3031552e33e6cae2085a99910b73d769b6aa7a6b`（代码 + 测试 + 验证脚本；编码前设计提交 `e207ea9`）。
+**证据与报告：** `docs/testing/reports/T1-04-REPORT.md`；证据 `docs/testing/reports/T1-04-assets/`（14 张截图 + 9 个 JSON + test-counts）。
+
+**状态与停止条件：** 等待独立代码审计；PR #8 保持 Open，未在 PR #8 合并前创建 T1-04 main PR；未合并任何 PR、未修改 main、未开始 T1-05；不自行宣布审计/验收通过。

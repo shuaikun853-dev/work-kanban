@@ -1,0 +1,539 @@
+{
+  "generatedAt": "2026-11-24T00:27:23.155Z",
+  "task": "T1-04",
+  "method": "CDP against real Release WebView2: real UI batch creation, direct IPC bypass checks, transport-layer fault injection (no product code changes), screenshots, CSP/exception capture",
+  "port": 9355,
+  "outputDir": "<uat-root>",
+  "target": {
+    "id": "D1951CA9C8B5034D0336641527E23870",
+    "title": "工作总览 · WorkManager",
+    "url": "http://tauri.localhost/"
+  },
+  "checks": [
+    {
+      "name": "shell.titlebarAppName",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "shell.sidebarNavigationUnchanged",
+      "pass": true,
+      "detail": "工作总览 / 今日工作 / 未来 7 天 / 历史记录 / 报告 / 设置"
+    },
+    {
+      "name": "shell.noNewPrimaryNavigationForPending",
+      "pass": true,
+      "detail": "待安排不得成为一级导航"
+    },
+    {
+      "name": "shell.noHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[]}"
+    },
+    {
+      "name": "nav.todayClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "today.secondarySwitcherRendered",
+      "pass": true,
+      "detail": "{\"labels\":[\"今日工作\",\"待安排\"]}"
+    },
+    {
+      "name": "pending.entryClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "pending.emptyStateRendered",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":true,\"rows\":0,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "setup.twoProjectsCreated",
+      "pass": true,
+      "detail": "{\"a\":true,\"b\":true}"
+    },
+    {
+      "name": "dialog.openFromToolbar",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "dialog.noLegacySingleSelect",
+      "pass": true,
+      "detail": "原单项目 select 已替换为多项目选择"
+    },
+    {
+      "name": "dialog.multiSelectRendered",
+      "pass": true,
+      "detail": "{\"mode\":\"unassigned\",\"selectedCount\":0,\"expectedCount\":1,\"summaryText\":\"未选择项目，将创建 1 项未归属工作\",\"availableProjectIds\":[\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"checkedProjectIds\":[],\"unassignedChecked\":true,\"invalidSelectionCount\":0,\"controlsDisabled\":{\"title\":false,\"projectInputs\":false,\"save\":true}}"
+    },
+    {
+      "name": "dialog.initialSelectionSummary",
+      "pass": true,
+      "detail": "{\"mode\":\"unassigned\",\"selectedCount\":0,\"expectedCount\":1,\"summaryText\":\"未选择项目，将创建 1 项未归属工作\",\"availableProjectIds\":[\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"checkedProjectIds\":[],\"unassignedChecked\":true,\"invalidSelectionCount\":0,\"controlsDisabled\":{\"title\":false,\"projectInputs\":false,\"save\":true}}"
+    },
+    {
+      "name": "dialog.titleFilledForTwoProjects",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "dialog.selectProjectA",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "dialog.selectProjectB",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "dialog.twoProjectSelectionSummary",
+      "pass": true,
+      "detail": "{\"mode\":\"copies\",\"selectedCount\":2,\"expectedCount\":2,\"summaryText\":\"已选择 2 个项目，将创建 2 项独立工作\",\"availableProjectIds\":[\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"checkedProjectIds\":[\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"unassignedChecked\":false,\"invalidSelectionCount\":0,\"controlsDisabled\":{\"title\":false,\"projectInputs\":false,\"save\":false}}"
+    },
+    {
+      "name": "dialog.savedTwoProjects",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.twoProjectOutcomeShowsActualCount",
+      "pass": true,
+      "detail": "{\"kind\":\"success\",\"text\":\"已创建 2 项独立工作，待安排列表已从数据库更新。\"}"
+    },
+    {
+      "name": "create.twoProjectRows",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":2,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "create.twoProjectIndependentCopies",
+      "pass": true,
+      "detail": "[{\"id\":\"a10d9c43-99fe-40e8-b4bd-3e0987a703df\",\"projectId\":\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"projectName\":\"T1-04 虚构未归档项目乙\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 两项目价格异常排查\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:19.800Z\",\"updatedAt\":\"2026-11-24T00:27:19.800Z\"},{\"id\":\"4dcc397b-7c78-4c33-b686-792891bc8ca2\",\"projectId\":\"39e375d0-4ac0-4b94-8648-363dc08b126b\",\"projectName\":\"T1-04 虚构未归档项目甲\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 两项目价格异常排查\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:19.800Z\",\"updatedAt\":\"2026-11-24T00:27:19.800Z\"}]"
+    },
+    {
+      "name": "setup.thirdProjectCreated",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "dialog.openFromToolbar",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "dialog.titleFilledForThreeProjects",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "dialog.selectThreeProject",
+      "pass": true,
+      "detail": "39e375d0-4ac0-4b94-8648-363dc08b126b"
+    },
+    {
+      "name": "dialog.selectThreeProject",
+      "pass": true,
+      "detail": "8f2ff2db-2db9-45cc-bb11-d58bc19f9684"
+    },
+    {
+      "name": "dialog.selectThreeProject",
+      "pass": true,
+      "detail": "da0d0152-3eba-4a20-a113-558221ab59b8"
+    },
+    {
+      "name": "dialog.threeProjectSelectionSummary",
+      "pass": true,
+      "detail": "{\"mode\":\"copies\",\"selectedCount\":3,\"expectedCount\":3,\"summaryText\":\"已选择 3 个项目，将创建 3 项独立工作\",\"availableProjectIds\":[\"da0d0152-3eba-4a20-a113-558221ab59b8\",\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"checkedProjectIds\":[\"da0d0152-3eba-4a20-a113-558221ab59b8\",\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"unassignedChecked\":false,\"invalidSelectionCount\":0,\"controlsDisabled\":{\"title\":false,\"projectInputs\":false,\"save\":false}}"
+    },
+    {
+      "name": "dialog.savedThreeProjects",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.threeProjectOutcomeShowsActualCount",
+      "pass": true,
+      "detail": "{\"kind\":\"success\",\"text\":\"已创建 3 项独立工作，待安排列表已从数据库更新。\"}"
+    },
+    {
+      "name": "create.threeProjectIndependentCopies",
+      "pass": true,
+      "detail": "[{\"id\":\"eb588d0f-bb59-49ab-a711-9176b026d6f7\",\"projectId\":\"39e375d0-4ac0-4b94-8648-363dc08b126b\",\"projectName\":\"T1-04 虚构未归档项目甲\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 三项目进度同步\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:20.013Z\",\"updatedAt\":\"2026-11-24T00:27:20.013Z\"},{\"id\":\"adcff3cc-3831-40ff-af59-e4d844fc0fed\",\"projectId\":\"da0d0152-3eba-4a20-a113-558221ab59b8\",\"projectName\":\"T1-04 虚构未归档项目丙\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 三项目进度同步\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:20.013Z\",\"updatedAt\":\"2026-11-24T00:27:20.013Z\"},{\"id\":\"58015fd4-d924-414d-835f-6da7d0ebb72b\",\"projectId\":\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"projectName\":\"T1-04 虚构未归档项目乙\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 三项目进度同步\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:20.013Z\",\"updatedAt\":\"2026-11-24T00:27:20.013Z\"}]"
+    },
+    {
+      "name": "dialog.openFromToolbar",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "regression.unassignedTitleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "regression.unassignedMode",
+      "pass": true,
+      "detail": "{\"mode\":\"unassigned\",\"selectedCount\":0,\"expectedCount\":1,\"summaryText\":\"未选择项目，将创建 1 项未归属工作\",\"availableProjectIds\":[\"da0d0152-3eba-4a20-a113-558221ab59b8\",\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"checkedProjectIds\":[],\"unassignedChecked\":true,\"invalidSelectionCount\":0,\"controlsDisabled\":{\"title\":false,\"projectInputs\":false,\"save\":false}}"
+    },
+    {
+      "name": "regression.unassignedSaved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "regression.unassignedPersistedWithoutProject",
+      "pass": true,
+      "detail": "{\"id\":\"65721045-7f15-4739-a2ea-d6c41da4a72b\",\"projectId\":null,\"projectName\":null,\"projectIsArchived\":false,\"title\":\"T1-04 虚构 未归属快速工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:20.222Z\",\"updatedAt\":\"2026-11-24T00:27:20.222Z\"}"
+    },
+    {
+      "name": "dialog.openFromToolbar",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "regression.singleTitleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "regression.singleProjectSelected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "regression.singleMode",
+      "pass": true,
+      "detail": "{\"mode\":\"single\",\"selectedCount\":1,\"expectedCount\":1,\"summaryText\":\"已选择 1 个项目，将创建 1 项独立工作\",\"availableProjectIds\":[\"da0d0152-3eba-4a20-a113-558221ab59b8\",\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"checkedProjectIds\":[\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"unassignedChecked\":false,\"invalidSelectionCount\":0,\"controlsDisabled\":{\"title\":false,\"projectInputs\":false,\"save\":false}}"
+    },
+    {
+      "name": "regression.singleSaved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "regression.singlePersistedWithProject",
+      "pass": true,
+      "detail": "{\"id\":\"9f104e91-b491-4bbf-bfe2-d09673cdde2c\",\"projectId\":\"39e375d0-4ac0-4b94-8648-363dc08b126b\",\"projectName\":\"T1-04 虚构未归档项目甲\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 单项目快速工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:20.420Z\",\"updatedAt\":\"2026-11-24T00:27:20.420Z\"}"
+    },
+    {
+      "name": "dialog.openFromToolbar",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "doubleSubmit.titleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "doubleSubmit.delayInjected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "doubleSubmit.doubleClickDispatched",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "doubleSubmit.locksSelectionWhileSubmitting",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "doubleSubmit.createsSingleBatchOnly",
+      "pass": true,
+      "detail": "匹配副本数=2"
+    },
+    {
+      "name": "setup.archiveProjectCreated",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "setup.archivedLinkCreated",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "setup.pendingViewRefreshedAfterDirectIpcCreate",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":10,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "dialog.openFromToolbar",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "archiveRace.titleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "archiveRace.selectProjectA",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "archiveRace.selectProjectD",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "archiveRace.projectArchivedBehindDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "archiveRace.saveClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "archiveRace.wholeBatchRejectedWithProjectArchived",
+      "pass": true,
+      "detail": "{\"message\":\"所选项目已归档，不能再关联新工作。请选择其他项目或不选择项目。 错误码：project-archived\",\"code\":\"错误码：project-archived\",\"dialogStillOpen\":true}"
+    },
+    {
+      "name": "archiveRace.keepsOriginalSelectionAndMarksInvalid",
+      "pass": true,
+      "detail": "{\"mode\":\"copies\",\"selectedCount\":2,\"expectedCount\":2,\"summaryText\":\"已选择 2 个项目，将创建 2 项独立工作\",\"availableProjectIds\":[\"da0d0152-3eba-4a20-a113-558221ab59b8\",\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"checkedProjectIds\":[\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"unassignedChecked\":false,\"invalidSelectionCount\":1,\"controlsDisabled\":{\"title\":false,\"projectInputs\":false,\"save\":true}}"
+    },
+    {
+      "name": "archiveRace.removeInvalidSelection",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "archiveRace.invalidRemovedOnlyAfterUserAction",
+      "pass": true,
+      "detail": "{\"mode\":\"single\",\"selectedCount\":1,\"expectedCount\":1,\"summaryText\":\"已选择 1 个项目，将创建 1 项独立工作\",\"availableProjectIds\":[\"da0d0152-3eba-4a20-a113-558221ab59b8\",\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"checkedProjectIds\":[\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"unassignedChecked\":false,\"invalidSelectionCount\":0,\"controlsDisabled\":{\"title\":false,\"projectInputs\":false,\"save\":false}}"
+    },
+    {
+      "name": "dialog.cancel",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "archiveRace.noPartialCopiesCreated",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":10,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "archivedProject.historyLinkStillListedWithBadge",
+      "pass": true,
+      "detail": "{\"id\":\"10a79ff9-eca2-4f8d-8afd-b30d4f267db4\",\"title\":\"T1-04 虚构 归档项目历史关联工作\",\"meta\":\"T1-04 虚构将归档项目丁 项目已归档\",\"hasArchivedBadge\":true}"
+    },
+    {
+      "name": "ipc.bypassArchivedProjectRejectedWithWholeBatch",
+      "pass": true,
+      "detail": "{\"code\":\"project-archived\",\"message\":\"所选项目已归档，不能再关联新工作。请选择其他项目或不选择项目。\"}"
+    },
+    {
+      "name": "ipc.bypassMissingProjectRejected",
+      "pass": true,
+      "detail": "{\"code\":\"project-not-found\",\"message\":\"所选项目不存在或已被删除。请刷新项目列表后重试。\"}"
+    },
+    {
+      "name": "ipc.bypassDuplicateProjectsRejected",
+      "pass": true,
+      "detail": "{\"code\":\"work-item-copies-duplicate-project\",\"message\":\"所选项目存在重复，请重新选择项目后提交。\"}"
+    },
+    {
+      "name": "ipc.bypassTooFewProjectsRejected",
+      "pass": true,
+      "detail": "{\"code\":\"work-item-copies-too-few\",\"message\":\"批量创建至少需要两个不同的项目。\"}"
+    },
+    {
+      "name": "ipc.bypassTooFewProjectsRejected",
+      "pass": true,
+      "detail": "{\"code\":\"work-item-copies-too-few\",\"message\":\"批量创建至少需要两个不同的项目。\"}"
+    },
+    {
+      "name": "ipc.bypassEmptyTitleRejected",
+      "pass": true,
+      "detail": "{\"code\":\"work-item-title-empty\",\"message\":\"工作标题不能为空，请填写工作标题。\"}"
+    },
+    {
+      "name": "ipc.bypassUnknownFieldRejected",
+      "pass": true,
+      "detail": "invalid args `input` for command `create_work_item_copies`: unknown field `extraField`, expected `title` or `projectIds`"
+    },
+    {
+      "name": "ipc.bypassSnakeCaseProjectIdsRejected",
+      "pass": true,
+      "detail": "invalid args `input` for command `create_work_item_copies`: unknown field `project_ids`, expected `title` or `projectIds`"
+    },
+    {
+      "name": "ipc.noArbitrarySqlCommand",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ipc.rejectedRequestsCreatedNoRows",
+      "pass": true,
+      "detail": "10"
+    },
+    {
+      "name": "dialog.openFromToolbar",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "contractViolation.titleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "contractViolation.faultInjected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "contractViolation.saveClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "contractViolation.uiRejectsMalformedPayload",
+      "pass": true,
+      "detail": "{\"message\":\"工作事项 IPC 返回值不符合契约：批量创建工作结果.groupId 应为 规范 UUID 字符串，实际为 string。请检查前后端版本是否一致。 错误码：ipc-contract-violation\",\"code\":\"错误码：ipc-contract-violation\",\"dialogStillOpen\":true,\"titleValue\":\"T1-04 虚构 契约违规不应创建\"}"
+    },
+    {
+      "name": "contractViolation.selectionRetained",
+      "pass": true,
+      "detail": "{\"mode\":\"copies\",\"selectedCount\":2,\"expectedCount\":2,\"summaryText\":\"已选择 2 个项目，将创建 2 项独立工作\",\"availableProjectIds\":[\"da0d0152-3eba-4a20-a113-558221ab59b8\",\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"checkedProjectIds\":[\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"39e375d0-4ac0-4b94-8648-363dc08b126b\"],\"unassignedChecked\":false,\"invalidSelectionCount\":0,\"controlsDisabled\":{\"title\":false,\"projectInputs\":false,\"save\":false}}"
+    },
+    {
+      "name": "dialog.cancel",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "contractViolation.noRowsCreated",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":10,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "dialog.openFromToolbar",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "refreshFailure.titleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "refreshFailure.faultInjected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "refreshFailure.saveClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "refreshFailure.warningShowsActualCountAndRefreshFailure",
+      "pass": true,
+      "detail": "{\"kind\":\"warning\",\"text\":\"已创建 2 项工作，但待安排列表刷新失败；请使用“重新加载”确认最新状态。\"}"
+    },
+    {
+      "name": "refreshFailure.noDuplicateCreateOnRefreshFailure",
+      "pass": true,
+      "detail": "{\"ok\":true,\"value\":[{\"id\":\"fac15ee5-baeb-4672-a51c-5660736dbd07\",\"projectId\":\"39e375d0-4ac0-4b94-8648-363dc08b126b\",\"projectName\":\"T1-04 虚构未归档项目甲\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 刷新失败批次工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:22.775Z\",\"updatedAt\":\"2026-11-24T00:27:22.775Z\"},{\"id\":\"9b55a93b-5777-4ec3-833b-58b821109f16\",\"projectId\":\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"projectName\":\"T1-04 虚构未归档项目乙\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 刷新失败批次工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:22.775Z\",\"updatedAt\":\"2026-11-24T00:27:22.775Z\"},{\"id\":\"10a79ff9-eca2-4f8d-8afd-b30d4f267db4\",\"projectId\":\"10e6c792-c9eb-4ea2-9d88-c24516063cae\",\"projectName\":\"T1-04 虚构将归档项目丁\",\"projectIsArchived\":true,\"title\":\"T1-04 虚构 归档项目历史关联工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:22.208Z\",\"updatedAt\":\"2026-11-24T00:27:22.208Z\"},{\"id\":\"9e70ff6a-8a11-4cee-9d5b-db5e1dd9ab77\",\"projectId\":\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"projectName\":\"T1-04 虚构未归档项目乙\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 重复提交批次工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:22.077Z\",\"updatedAt\":\"2026-11-24T00:27:22.077Z\"},{\"id\":\"59948c64-0b34-4fdd-aaf8-5edecc3c895b\",\"projectId\":\"39e375d0-4ac0-4b94-8648-363dc08b126b\",\"projectName\":\"T1-04 虚构未归档项目甲\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 重复提交批次工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:22.077Z\",\"updatedAt\":\"2026-11-24T00:27:22.077Z\"},{\"id\":\"9f104e91-b491-4bbf-bfe2-d09673cdde2c\",\"projectId\":\"39e375d0-4ac0-4b94-8648-363dc08b126b\",\"projectName\":\"T1-04 虚构未归档项目甲\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 单项目快速工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:20.420Z\",\"updatedAt\":\"2026-11-24T00:27:20.420Z\"},{\"id\":\"65721045-7f15-4739-a2ea-d6c41da4a72b\",\"projectId\":null,\"projectName\":null,\"projectIsArchived\":false,\"title\":\"T1-04 虚构 未归属快速工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:20.222Z\",\"updatedAt\":\"2026-11-24T00:27:20.222Z\"},{\"id\":\"eb588d0f-bb59-49ab-a711-9176b026d6f7\",\"projectId\":\"39e375d0-4ac0-4b94-8648-363dc08b126b\",\"projectName\":\"T1-04 虚构未归档项目甲\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 三项目进度同步\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:20.013Z\",\"updatedAt\":\"2026-11-24T00:27:20.013Z\"},{\"id\":\"adcff3cc-3831-40ff-af59-e4d844fc0fed\",\"projectId\":\"da0d0152-3eba-4a20-a113-558221ab59b8\",\"projectName\":\"T1-04 虚构未归档项目丙\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 三项目进度同步\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:20.013Z\",\"updatedAt\":\"2026-11-24T00:27:20.013Z\"},{\"id\":\"58015fd4-d924-414d-835f-6da7d0ebb72b\",\"projectId\":\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"projectName\":\"T1-04 虚构未归档项目乙\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 三项目进度同步\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:20.013Z\",\"updatedAt\":\"2026-11-24T00:27:20.013Z\"},{\"id\":\"a10d9c43-99fe-40e8-b4bd-3e0987a703df\",\"projectId\":\"8f2ff2db-2db9-45cc-bb11-d58bc19f9684\",\"projectName\":\"T1-04 虚构未归档项目乙\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 两项目价格异常排查\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:19.800Z\",\"updatedAt\":\"2026-11-24T00:27:19.800Z\"},{\"id\":\"4dcc397b-7c78-4c33-b686-792891bc8ca2\",\"projectId\":\"39e375d0-4ac0-4b94-8648-363dc08b126b\",\"projectName\":\"T1-04 虚构未归档项目甲\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 两项目价格异常排查\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T00:27:19.800Z\",\"updatedAt\":\"2026-11-24T00:27:19.800Z\"}]}"
+    },
+    {
+      "name": "refreshFailure.retryClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "refreshFailure.retryRecoversListWithoutDuplicate",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":12,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "security.cspViolationsZero",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "security.pageExceptionsZero",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "final.pendingCount12",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":12,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "final.pendingListAllPendingAndExpectedTitles",
+      "pass": true,
+      "detail": "12"
+    },
+    {
+      "name": "final.normalWindowNoHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[]}"
+    },
+    {
+      "name": "final.noUnexpectedBatchResidueTitles",
+      "pass": true,
+      "detail": "失败批次标题不得出现在待安排列表"
+    }
+  ],
+  "failed": [],
+  "checkCount": 96,
+  "pageExceptionCount": 0,
+  "pageErrors": [],
+  "cspViolations": null,
+  "fixtures": {
+    "prefix": "T1-04 虚构",
+    "titles": {
+      "batchTwo": "T1-04 虚构 两项目价格异常排查",
+      "batchThree": "T1-04 虚构 三项目进度同步",
+      "unassigned": "T1-04 虚构 未归属快速工作",
+      "single": "T1-04 虚构 单项目快速工作",
+      "duplicate": "T1-04 虚构 重复提交批次工作",
+      "archivedLink": "T1-04 虚构 归档项目历史关联工作",
+      "archiveRace": "T1-04 虚构 归档竞态不应创建",
+      "contractViolation": "T1-04 虚构 契约违规不应创建",
+      "refreshFailure": "T1-04 虚构 刷新失败批次工作",
+      "bypass": "T1-04 虚构 绕过 UI 的批量请求"
+    }
+  },
+  "projects": {
+    "A": {
+      "id": "39e375d0-4ac0-4b94-8648-363dc08b126b",
+      "name": "T1-04 虚构未归档项目甲"
+    },
+    "B": {
+      "id": "8f2ff2db-2db9-45cc-bb11-d58bc19f9684",
+      "name": "T1-04 虚构未归档项目乙"
+    },
+    "C": {
+      "id": "da0d0152-3eba-4a20-a113-558221ab59b8",
+      "name": "T1-04 虚构未归档项目丙"
+    },
+    "D": {
+      "id": "10e6c792-c9eb-4ea2-9d88-c24516063cae",
+      "name": "T1-04 虚构将归档项目丁"
+    }
+  },
+  "archivedLinkItemId": "10a79ff9-eca2-4f8d-8afd-b30d4f267db4",
+  "backup": {
+    "pendingAfterMain": 12,
+    "groupsAfterMain": 4,
+    "membersAfterMain": 9
+  },
+  "pass": true
+}

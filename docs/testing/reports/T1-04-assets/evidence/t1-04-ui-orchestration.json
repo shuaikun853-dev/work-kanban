@@ -1,0 +1,360 @@
+{
+    "task":  "T1-04",
+    "generatedAt":  "2026-11-24T00:27:32.8383210Z",
+    "exePath":  "<repo>\\target\\release\\workmanager.exe",
+    "exeSha256":  "2d997dea7c44ff323e902478063e01465a42e0544bfd0ff5b05359f38a3f7d79",
+    "exeSizeBytes":  10435072,
+    "outputDir":  "<uat-root>",
+    "appDir":  "<uat-root>\\app",
+    "databasePath":  "<uat-root>\\app\\data\\database\\work.db",
+    "remoteDebugPort":  9355,
+    "mainUiCheckExitCode":  0,
+    "mainUiCheckCount":  96,
+    "mainUiFailedCheckCount":  0,
+    "minWindowCheckExit":  0,
+    "minWindowCheckCount":  11,
+    "minWindowFailedCheckCount":  0,
+    "minWindowResizeOk":  true,
+    "firstCloseExitCode":  0,
+    "faultCheckExitCode":  0,
+    "faultCheckCount":  13,
+    "faultFailedCheckCount":  0,
+    "faultCloseExitCode":  0,
+    "persistenceCheckExitCode":  0,
+    "persistenceCheckCount":  15,
+    "persistenceFailedCheckCount":  0,
+    "persistenceCloseExitCode":  0,
+    "dbCheckCount":  57,
+    "dbFailedCheckCount":  0,
+    "dbChecks":  [
+                     {
+                         "name":  "dbProbe.afterMain.readable",
+                         "pass":  true,
+                         "detail":  "probe JSON readable"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.pathPortableUnderUat",
+                         "pass":  true,
+                         "detail":  "<uat-root>\\app\\data\\database\\work.db"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.schemaVersion4",
+                         "pass":  true,
+                         "detail":  "user_version=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.integrityOk",
+                         "pass":  true,
+                         "detail":  "ok"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.journalModeWal",
+                         "pass":  true,
+                         "detail":  "wal"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.migrations1To4",
+                         "pass":  true,
+                         "detail":  "1,2,3,4"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.foreignKeysClean",
+                         "pass":  true,
+                         "detail":  "violations=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.creationGroupTablesPresent",
+                         "pass":  true,
+                         "detail":  "projects,schema_migrations,settings,work_item_creation_group_members,work_item_creation_groups,work_items"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.allRowsPending",
+                         "pass":  true,
+                         "detail":  "total=12 pending=12"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.noOrphanMembers",
+                         "pass":  true,
+                         "detail":  "orphan=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.noGroupsWithoutMembers",
+                         "pass":  true,
+                         "detail":  "empty_groups=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.noWorkItemInMultipleGroups",
+                         "pass":  true,
+                         "detail":  "multi_group=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.workItems12",
+                         "pass":  true,
+                         "detail":  "work_items=12"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.pending12",
+                         "pass":  true,
+                         "detail":  "pending=12"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.unassigned1",
+                         "pass":  true,
+                         "detail":  "null_project=1"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.archivedLink1",
+                         "pass":  true,
+                         "detail":  "linked_archived=1"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.linkedActive10",
+                         "pass":  true,
+                         "detail":  "linked_active=10"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.projects4Archived1",
+                         "pass":  true,
+                         "detail":  "projects=4 archived=1"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.creationGroups4",
+                         "pass":  true,
+                         "detail":  "groups=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.members9",
+                         "pass":  true,
+                         "detail":  "members=9"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.groupSizeHistogram",
+                         "pass":  true,
+                         "detail":  "{\"2\":3,\"3\":1}"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.expectedGroupTitles",
+                         "pass":  true,
+                         "detail":  "groups=T1-04 虚构 刷新失败批次工作 | T1-04 虚构 重复提交批次工作 | T1-04 虚构 三项目进度同步 | T1-04 虚构 两项目价格异常排查"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.readable",
+                         "pass":  true,
+                         "detail":  "probe JSON readable"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.pathPortableUnderUat",
+                         "pass":  true,
+                         "detail":  "<uat-root>\\app\\data\\database\\work.db"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.schemaVersion4",
+                         "pass":  true,
+                         "detail":  "user_version=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.integrityOk",
+                         "pass":  true,
+                         "detail":  "ok"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.journalModeWal",
+                         "pass":  true,
+                         "detail":  "wal"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.migrations1To4",
+                         "pass":  true,
+                         "detail":  "1,2,3,4"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.foreignKeysClean",
+                         "pass":  true,
+                         "detail":  "violations=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.creationGroupTablesPresent",
+                         "pass":  true,
+                         "detail":  "projects,schema_migrations,settings,work_item_creation_group_members,work_item_creation_groups,work_items"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.allRowsPending",
+                         "pass":  true,
+                         "detail":  "total=12 pending=12"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noOrphanMembers",
+                         "pass":  true,
+                         "detail":  "orphan=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noGroupsWithoutMembers",
+                         "pass":  true,
+                         "detail":  "empty_groups=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noWorkItemInMultipleGroups",
+                         "pass":  true,
+                         "detail":  "multi_group=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.workItemsStill12",
+                         "pass":  true,
+                         "detail":  "work_items=12"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.creationGroupsStill4",
+                         "pass":  true,
+                         "detail":  "groups=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.membersStill9",
+                         "pass":  true,
+                         "detail":  "members=9"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noFaultBatchResidue",
+                         "pass":  true,
+                         "detail":  "titles=T1-04 虚构 刷新失败批次工作 | T1-04 虚构 刷新失败批次工作 | T1-04 虚构 归档项目历史关联工作 | T1-04 虚构 重复提交批次工作 | T1-04 虚构 重复提交批次工作 | T1-04 虚构 单项目快速工作 | T1-04 虚构 未归属快速工作 | T1-04 虚构 三项目进度同步 | T1-04 虚构 三项目进度同步 | T1-04 虚构 三项目进度同步 | T1-04 虚构 两项目价格异常排查 | T1-04 虚构 两项目价格异常排查"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.readable",
+                         "pass":  true,
+                         "detail":  "probe JSON readable"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.pathPortableUnderUat",
+                         "pass":  true,
+                         "detail":  "<uat-root>\\app\\data\\database\\work.db"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.schemaVersion4",
+                         "pass":  true,
+                         "detail":  "user_version=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.integrityOk",
+                         "pass":  true,
+                         "detail":  "ok"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.journalModeWal",
+                         "pass":  true,
+                         "detail":  "wal"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.migrations1To4",
+                         "pass":  true,
+                         "detail":  "1,2,3,4"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.foreignKeysClean",
+                         "pass":  true,
+                         "detail":  "violations=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.creationGroupTablesPresent",
+                         "pass":  true,
+                         "detail":  "projects,schema_migrations,settings,work_item_creation_group_members,work_item_creation_groups,work_items"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.allRowsPending",
+                         "pass":  true,
+                         "detail":  "total=14 pending=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noOrphanMembers",
+                         "pass":  true,
+                         "detail":  "orphan=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noGroupsWithoutMembers",
+                         "pass":  true,
+                         "detail":  "empty_groups=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noWorkItemInMultipleGroups",
+                         "pass":  true,
+                         "detail":  "multi_group=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.workItems14",
+                         "pass":  true,
+                         "detail":  "work_items=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.pending14",
+                         "pass":  true,
+                         "detail":  "pending=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.creationGroups5",
+                         "pass":  true,
+                         "detail":  "groups=5"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.members11",
+                         "pass":  true,
+                         "detail":  "members=11"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.groupSizeHistogram",
+                         "pass":  true,
+                         "detail":  "{\"2\":4,\"3\":1}"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.newBatchPersisted",
+                         "pass":  true,
+                         "detail":  "titles=T1-04 虚构 重启后新批次工作 | T1-04 虚构 重启后新批次工作 | T1-04 虚构 刷新失败批次工作 | T1-04 虚构 刷新失败批次工作 | T1-04 虚构 归档项目历史关联工作 | T1-04 虚构 重复提交批次工作 | T1-04 虚构 重复提交批次工作 | T1-04 虚构 单项目快速工作 | T1-04 虚构 未归属快速工作 | T1-04 虚构 三项目进度同步 | T1-04 虚构 三项目进度同步 | T1-04 虚构 三项目进度同步 | T1-04 虚构 两项目价格异常排查 | T1-04 虚构 两项目价格异常排查"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noArchivedLinkLost",
+                         "pass":  true,
+                         "detail":  "linked_archived=1"
+                     }
+                 ],
+    "dbProbeAfterMain":  "<uat-root>\\t1-04-db-after-main.json",
+    "dbProbeAfterFault":  "<uat-root>\\t1-04-db-after-fault.json",
+    "dbProbeAfterRestart":  "<uat-root>\\t1-04-db-after-restart.json",
+    "evidenceFiles":  [
+                          "batch-rollback-error.png",
+                          "create-dialog-min.png",
+                          "create-dialog-multi-projects.png",
+                          "create-error-contract-violation-batch.png",
+                          "create-error-project-archived-batch.png",
+                          "pending-after-main-checks.png",
+                          "pending-after-restart.png",
+                          "pending-archived-project.png",
+                          "pending-empty.png",
+                          "pending-min.png",
+                          "pending-refresh-recovered.png",
+                          "pending-three-project-copies.png",
+                          "pending-two-project-copies.png",
+                          "pending-unassigned-regression.png",
+                          "t1-04-db-after-fault.json",
+                          "t1-04-db-after-main.json",
+                          "t1-04-db-after-restart.json",
+                          "t1-04-fault-evidence.json",
+                          "t1-04-min-window-evidence.json",
+                          "t1-04-persistence-evidence.json",
+                          "t1-04-prerequisite.json",
+                          "t1-04-ui-evidence.json"
+                      ],
+    "screenshots":  [
+                        "batch-rollback-error.png",
+                        "create-dialog-min.png",
+                        "create-dialog-multi-projects.png",
+                        "create-error-contract-violation-batch.png",
+                        "create-error-project-archived-batch.png",
+                        "pending-after-main-checks.png",
+                        "pending-after-restart.png",
+                        "pending-archived-project.png",
+                        "pending-empty.png",
+                        "pending-min.png",
+                        "pending-refresh-recovered.png",
+                        "pending-three-project-copies.png",
+                        "pending-two-project-copies.png",
+                        "pending-unassigned-regression.png"
+                    ],
+    "pass":  true
+}
