@@ -362,7 +362,7 @@ T1-04 新增 Rust 测试：`work_item_copies.rs` **16 项**、`creation_groups_m
 - 修复前 HEAD：`775496591275be833c688397f323d1990367e4d3`（与复审基线一致）。
 - 分支：`task/T1-04-multi-project-copies`；T1-03 堆叠基线 `e8205cae22e98afce6480f5a5a0695543a61dee3`；main `018e851e8daf5835391a7b61caf881bc57c2ad42` 未修改；PR #8 Open、未合并。
 - 本轮仅修复四项复审问题，**未重新开发 T1-04**：未改 Rust 批量创建业务逻辑、IMMEDIATE 整批原子事务、创建组/成员设计、服务端幂等事务逻辑、已通过的并发同步测试、Migration 业务实现与 Release UI 交互；未新增数据库字段或 migration；未改变 DEC-034 整批原子事务语义。
-- 本轮修复提交：见最终交付报告与 Git 日志（未 rebase / reset / squash / 强制推送；未改写历史提交）。
+- 本轮修复提交：`aefa0f6b80fbc0184be74b48dd8bd465c8e19965`（代码 + 测试 + 验证工具 + 证据 + 技术/任务/报告文档；未 rebase / reset / squash / 强制推送；未改写历史提交）；本报告 SHA 同步为该提交后的文档同步提交，见 Git 日志与最终交付报告。
 
 ### 11.2 四项问题逐项结果
 
