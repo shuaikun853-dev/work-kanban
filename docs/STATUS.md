@@ -549,6 +549,7 @@
 **修复范围：** 仅处理第六轮独立审计确认的三项残余问题（R6-01 标题 Unicode 空白规范化、R6-02 Migration 清理悬空 Junction 防护、R6-03 注释与任务文档状态）；未重新开发 T1-04、未改变 DEC-034 整批原子事务语义/requestId 幂等设计/创建组 ID 来源、未新增数据库字段或 migration、未修改 T1-03 历史实现/证据。
 **分支与基线：** `task/T1-04-multi-project-copies`；修复前 HEAD `de8f6221d66d0b4240f93a8a4737f8d85b4b1e84`；修复前基线 `775496591275be833c688397f323d1990367e4d3`；T1-03 堆叠基线 `e8205cae22e98afce6480f5a5a0695543a61dee3`；远程 main `018e851e8daf5835391a7b61caf881bc57c2ad42` 未修改；PR #8 Open、未合并；未创建 T1-04 main PR。
 **报告与证据：** [T1-04-REPORT.md](testing/reports/T1-04-REPORT.md) 第 12 节；[T1-04-assets/](testing/reports/T1-04-assets/README.md)（`evidence/round6-remediation/`，不覆盖 `round6/`）；设计：[T1-04-Implementation-Design.md](development/tasks/T1-04-Implementation-Design.md) 第 3.2.1 / 12.3 节。
+**修复提交：** `ada85906c033a98b2e942bd5ff37e09ec119e723`（证据同步提交见 Git 日志；未改写历史提交）。
 
 ### 三项问题逐项结果
 

@@ -1,7 +1,7 @@
 git.exe : warning: in the working copy of 'crates/workmanager-core/src/work_items/model.rs', LF will be replaced by CRL
 F the next time Git touches it
 所在位置 行:1 字符: 244
-+ ... und6-remediation'; & git.exe -C "D:\工作事项看板" diff --check 2>&1 | Tee-O ...
++ ... und6-remediation'; & git.exe -C "<repo-root>" diff --check 2>&1 | Tee-O ...
 +                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError

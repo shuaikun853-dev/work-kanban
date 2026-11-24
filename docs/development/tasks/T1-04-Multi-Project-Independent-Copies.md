@@ -235,6 +235,6 @@ git diff --check
 - **R6-02 Migration 清理悬空 Junction 防护：** 原清理入口先用 `Test-Path` 判断目录是否存在；悬空 Junction 在部分环境可能被误判为不存在并直接标记 `alreadyAbsent`。新增 `scripts/verify/T1-04MigrationCleanup.ps1`，清理前用原生句柄识别普通目录 / Junction / Symbolic Link / 其他 reparse point / 无法确认身份；悬空 Junction 返回 `danglingJunction` 并 fail-closed，不递归删除；清理完成后再次用原生句柄确认入口消失。`verify-t1-04-migration-failure.ps1` 改为调用该模块并记录 entryKind / targetExists / reparseTag。真实 Windows 故障注入测试 8 PASS / 0 FAIL / 1 SKIP（当前权限无法创建真实 Symbolic Link，显式 SKIP）。环境限制：Windows 10 19045 的 `Test-Path` 对本次真实悬空 Junction 返回 `True`，因此“`Test-Path` 误报 false 后直接 `alreadyAbsent`”这一具体分支未能在本机复现；测试仍记录真实 `Test-Path` 结果，并验证原生句柄识别与 fail-closed，未使用模拟对象冒充真实 Junction。
 - **R6-03 文档与过期注释：** 修正 `workItemValidation.ts` 中“Rust Core 生成创建组 ID”的过期注释，明确创建组 ID 来源是客户端 `requestId` 经 Rust 校验后直接复用、工作事项 ID 由 Rust Core 生成；同步 T1-04 设计文档的 Unicode `White_Space` 契约；任务状态更新为“第六轮独立审计后定向补正完成，等待独立审计”。历史轮次记录保留，不删除、不改写。
 
-本轮未改变 DEC-034 整批原子事务语义、requestId 幂等设计、创建组 ID 来源、数据库 schema/migration、T1-03 历史实现与证据、main、PR #8 目标分支或合并状态；未开始 T1-05。证据独立保存于 `docs/testing/reports/T1-04-assets/evidence/round6-remediation/`，不覆盖 round6 原始证据。**本轮仍不构成独立审计或用户验收。**
+本轮未改变 DEC-034 整批原子事务语义、requestId 幂等设计、创建组 ID 来源、数据库 schema/migration、T1-03 历史实现与证据、main、PR #8 目标分支或合并状态；未开始 T1-05。证据独立保存于 `docs/testing/reports/T1-04-assets/evidence/round6-remediation/`，不覆盖 round6 原始证据。本轮修复提交：`ada85906c033a98b2e942bd5ff37e09ec119e723`（证据同步提交见 Git 日志）。**本轮仍不构成独立审计或用户验收。**
 
 **状态与停止条件：** 等待独立代码审计；PR #8 保持 Open，未在 PR #8 合并前创建 T1-04 main PR；未合并任何 PR、未修改 main、未开始 T1-05；不自行宣布审计/验收通过。

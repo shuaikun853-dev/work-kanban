@@ -67,6 +67,8 @@
 | `migration-failure-output.txt` | 真实 Release migration 失败回滚原始输出 |
 | `migration-failure-evidence.json` | 真实 Release migration 失败回滚证据 JSON |
 | `evidence-summary.json` | 本目录证据汇总（测试计数、EXE 哈希、Git 状态、遗留风险） |
+| `git-diff.patch` / `git-diff-stat.txt` / `git-log.txt` | 修复提交 `ada8590` 的完整 diff、统计与提交信息；diff 证据仅做行尾空白规范化以满足仓库 `git diff --check`，语义内容不变 |
+| `t1-04-ui-orchestration.json` | Release E2E 编排汇总（107/11/13/15/62、关闭退出码 0/0/0） |
 
 所有路径类证据均经过既有脱敏；测试根显示为 `<test-root>`，正式目录显示为
 `<formal-root>`。正式目录 `<formal-root>` 未访问、未写入。

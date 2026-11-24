@@ -1,0 +1,20 @@
+﻿ada85906c033a98b2e942bd5ff37e09ec119e723
+de8f6221d66d0b4240f93a8a4737f8d85b4b1e84
+2026-11-24T18:59:04+08:00
+rsk
+fix(T1-04): unify title whitespace and harden migration cleanup
+R6-01: Rust and TypeScript now use the same Unicode White_Space title normalization; preserve U+FEFF and internal whitespace, add real Rust/Bridge cross-contract coverage and requestId retry assertions.
+
+R6-02: migration cleanup identifies dangling junctions and other reparse points through native handles, fails closed instead of reporting alreadyAbsent, and re-verifies the entry and UAT root after cleanup. Add real Windows fault injection and Canary checks.
+
+R6-03: correct the stale creation-group ID comment and synchronize task, design, status and report documentation without rewriting historical audit records.
+
+---
+de8f6221d66d0b4240f93a8a4737f8d85b4b1e84
+52ea8582132a74e4f2f30ddef5278f7763eeda92
+2026-11-24T14:37:15+08:00
+rsk
+docs(T1-04): add round-6 git history evidence
+Add round-6 commit list and docs-sync diff stat to evidence; clarify git-diff.patch scope. No code/product change.
+
+---

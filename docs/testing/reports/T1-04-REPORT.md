@@ -449,6 +449,7 @@ Release EXE（第六轮重建，含 Bridge 变更）：**10,458,112 字节**，S
 - 分支：`task/T1-04-multi-project-copies`；T1-03 堆叠基线 `e8205cae22e98afce6480f5a5a0695543a61dee3`；远程 main `018e851e8daf5835391a7b61caf881bc57c2ad42` 未修改；PR #8 Open、未合并；未创建 T1-04 main PR。
 - 仅修复 R6-01～R6-03：未改 Rust 批量创建业务事务/幂等语义、创建组 ID 来源、数据库 schema/migration、T1-03 历史实现/证据；未新增第三方依赖；未 rebase/reset/squash/force-push。
 - 证据独立保存于 `T1-04-assets/evidence/round6-remediation/`，不覆盖 `round6/` 原始证据。
+- 本轮修复提交：`ada85906c033a98b2e942bd5ff37e09ec119e723`（代码 + 测试 + 文档 + 证据；证据同步提交见 Git 日志）。
 
 ### 12.2 三项问题逐项结果
 

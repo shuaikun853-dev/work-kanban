@@ -312,6 +312,7 @@
 **第六轮修复提交：** `aefa0f6b80fbc0184be74b48dd8bd465c8e19965`（实现 + 测试 + 验证工具 + 证据 + 技术/任务文档；未改写历史提交）。
 **第六轮修复基线：** 修复前 HEAD `775496591275be833c688397f323d1990367e4d3`；仅处理独立复审 R2-01～R2-04 四项问题，未重新开发 T1-04、未改变 DEC-034 整批原子事务语义、未新增数据库字段或 migration。
 **第六轮独立审计后补正：** 修复前 HEAD `de8f6221d66d0b4240f93a8a4737f8d85b4b1e84`；仅处理 R6-01～R6-03 三项残余问题；未重新开发 T1-04、未改变 requestId 幂等设计/创建组 ID 来源/DEC-034 语义、未新增数据库字段或 migration。
+**R6 修复提交：** `ada85906c033a98b2e942bd5ff37e09ec119e723`（代码 + 测试 + 文档 + 证据；证据同步提交见 Git 日志）。
 **Pull Request：** 暂不创建指向 main 的 T1-04 PR（PR #8 未合并，直接创建会把 T1-03 变更重复带入）；只推送独立任务分支。
 **测试报告：** [T1-04-REPORT.md](../testing/reports/T1-04-REPORT.md)；证据：[T1-04-assets/](../testing/reports/T1-04-assets/README.md)；预编码设计：[T1-04-Implementation-Design.md](tasks/T1-04-Implementation-Design.md)。
 

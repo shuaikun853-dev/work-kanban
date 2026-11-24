@@ -1,0 +1,189 @@
+{
+  "task": "T1-04",
+  "round": "round6-remediation",
+  "scope": "R6-01 title Unicode White_Space normalization; R6-02 migration cleanup dangling Junction guard; R6-03 comments/documentation status",
+  "generatedAt": "2026-11-24T19:02:00+08:00",
+  "branch": "task/T1-04-multi-project-copies",
+  "baseline": {
+    "headBeforeFix": "de8f6221d66d0b4240f93a8a4737f8d85b4b1e84",
+    "codeBaseline": "775496591275be833c688397f323d1990367e4d3",
+    "t1_03_stacked_baseline": "e8205cae22e98afce6480f5a5a0695543a61dee3",
+    "remoteMain": "018e851e8daf5835391a7b61caf881bc57c2ad42",
+    "mainModifiedByThisTask": false
+  },
+  "remediationCommit": "ada85906c033a98b2e942bd5ff37e09ec119e723",
+  "pullRequest": {
+    "number": 8,
+    "state": "OPEN",
+    "merged": false,
+    "baseRefName": "main",
+    "headRefName": "task/T1-03-quick-create-pending",
+    "headRefOid": "e8205cae22e98afce6480f5a5a0695543a61dee3",
+    "mergeStateStatus": "CLEAN"
+  },
+  "tests": {
+    "rustWorkspace": {
+      "passed": 162,
+      "failed": 0,
+      "ignored": 1,
+      "exitCode": 0,
+      "note": "ignored test is the Rust cross-contract executor invoked by Node with --ignored"
+    },
+    "bridgeNode": {
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "red": "42 passed / 4 failed on old JavaScript trim implementation"
+    },
+    "titleCrossContract": {
+      "passed": 1,
+      "failed": 0,
+      "scenarios": 10,
+      "exitCode": 0,
+      "baselineRedExitCode": 1
+    },
+    "svelteCheck": {
+      "errors": 0,
+      "warnings": 0,
+      "exitCode": 0
+    },
+    "designTokens": {
+      "checkerViolations": 0,
+      "filesScanned": 22,
+      "testsPassed": 49,
+      "testsFailed": 0
+    },
+    "pathSafety": {
+      "checks": 58,
+      "failed": 0,
+      "skipped": 1,
+      "exitCode": 0,
+      "skipReason": "file symbolic link requires SeCreateSymbolicLinkPrivilege"
+    },
+    "migrationPath": {
+      "checks": 31,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    "migrationCleanupFaultInjection": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 1,
+      "exitCode": 0,
+      "skipReason": "real Symbolic Link creation denied by operating system privilege"
+    },
+    "releaseUiE2E": {
+      "mainUiIpc": 107,
+      "minWindow": 11,
+      "faultRollback": 13,
+      "persistence": 15,
+      "databaseProbe": 62,
+      "failed": 0,
+      "closeExitCodes": [0, 0, 0],
+      "cspViolations": 0,
+      "pageExceptions": 0,
+      "exitCode": 0
+    },
+    "releaseMigrationFailureRollback": {
+      "dialogFound": true,
+      "releaseExitCode": 1,
+      "userVersion": 3,
+      "version4Rows": 0,
+      "newTables": 0,
+      "integrityCheck": "ok",
+      "rollback": "PASS",
+      "cleanup": "PASS",
+      "evidence": "PASS",
+      "exitCode": 0
+    },
+    "gates": {
+      "cargoFmt": 0,
+      "cargoCheck": 0,
+      "cargoTest": 0,
+      "npmCheck": 0,
+      "npmBuild": 0,
+      "gitDiffCheck": 0
+    }
+  },
+  "releaseExe": {
+    "path": "target/release/workmanager.exe",
+    "sizeBytes": 10458112,
+    "sha256": "4487b3e134d479eb4c71671f561c3008a5b97f72bf7728cf6d08a8ad9d62e7d1",
+    "buildCommand": "npm run tauri build -- --no-bundle",
+    "buildExitCode": 0
+  },
+  "cleanupFaultInjection": {
+    "danglingJunction": {
+      "testPath": true,
+      "nativeEntryExists": true,
+      "nativeEntryKind": "junction",
+      "targetExists": false,
+      "cleanupStopCode": "danglingJunction",
+      "safe": false,
+      "performed": false
+    },
+    "liveJunction": {
+      "cleanupStopCode": "entryIsJunction",
+      "safe": false,
+      "performed": false
+    },
+    "canaryBefore": "f3a8992f0d0befc72a961ba0b4111cb2d94b5c0fa2d303984f46ad5266ca491f",
+    "canaryAfter": "f3a8992f0d0befc72a961ba0b4111cb2d94b5c0fa2d303984f46ad5266ca491f",
+    "canaryUnchanged": true,
+    "formalRootTouched": false
+  },
+  "environmentLimitations": [
+    "Windows 10 19045 Test-Path returned true for the real dangling Junction used in this run; the specific false-to-alreadyAbsent branch was not reproduced on this machine. Native-handle identification and fail-closed behavior were verified with the real Junction; no mock was substituted.",
+    "Real Symbolic Link creation was denied by OS privilege and is explicitly recorded as SKIP, not PASS.",
+    "Other reparse-point tag classification was verified by tag mapping only; no real other-reparse-point filesystem injection was claimed."
+  ],
+  "residualRisks": [
+    "DEC-029 / Issue #2 TOCTOU concurrent path replacement remains deferred and unresolved.",
+    "T1-03 P2-01 remains open pending GitHub Support server-side cleanup.",
+    "T1-04 independent audit and user acceptance have not been performed."
+  ],
+  "artifacts": {
+    "redGreen": [
+      "r6-01-bridge-red.txt",
+      "r6-01-bridge-green.txt",
+      "r6-01-cross-contract-red-baseline.txt",
+      "r6-01-cross-contract-green.txt",
+      "r6-01-rust-baseline-red.txt",
+      "r6-01-rust-green.txt",
+      "r6-02-cleanup-red.txt",
+      "r6-02-cleanup-green.txt"
+    ],
+    "release": [
+      "release-build-final.txt",
+      "release-exe.sha256",
+      "release-e2e-output.txt",
+      "t1-04-ui-orchestration.json",
+      "release-e2e-evidence/",
+      "migration-failure-output.txt",
+      "migration-failure-evidence.json"
+    ],
+    "path": [
+      "path-safety-evidence.json",
+      "migration-path-evidence.json",
+      "r6-02-path-safety.txt",
+      "r6-02-migration-path.txt",
+      "r6-02-canary-comparison.txt"
+    ],
+    "git": [
+      "git-baseline.txt",
+      "git-diff.patch",
+      "git-diff-stat.txt",
+      "git-log.txt",
+      "git-diff-check.txt"
+    ],
+    "gates": [
+      "gate-cargo-fmt.txt",
+      "gate-cargo-check.txt",
+      "gate-cargo-test.txt",
+      "gate-npm-check.txt",
+      "gate-npm-build.txt"
+    ]
+  }
+}

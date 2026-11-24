@@ -1,0 +1,76 @@
+commit ada85906c033a98b2e942bd5ff37e09ec119e723
+Author:     rsk <350889214@qq.com>
+AuthorDate: Tue Nov 24 18:59:04 2026 +0800
+Commit:     rsk <350889214@qq.com>
+CommitDate: Tue Nov 24 18:59:04 2026 +0800
+
+    fix(T1-04): unify title whitespace and harden migration cleanup
+
+    R6-01: Rust and TypeScript now use the same Unicode White_Space title normalization; preserve U+FEFF and internal whitespace, add real Rust/Bridge cross-contract coverage and requestId retry assertions.
+
+    R6-02: migration cleanup identifies dangling junctions and other reparse points through native handles, fails closed instead of reporting alreadyAbsent, and re-verifies the entry and UAT root after cleanup. Add real Windows fault injection and Canary checks.
+
+    R6-03: correct the stale creation-group ID comment and synchronize task, design, status and report documentation without rewriting historical audit records.
+
+ crates/workmanager-core/src/work_items/model.rs    |  86 ++-
+ .../tests/title_normalization_cross_contract.rs    | 143 +++++
+ docs/STATUS.md                                     |  40 +-
+ docs/development/DEVELOPMENT_PLAN.md               |  36 +-
+ .../tasks/T1-04-Implementation-Design.md           |  37 +-
+ .../T1-04-Multi-Project-Independent-Copies.md      |  16 +-
+ docs/testing/reports/T1-04-REPORT.md               |  95 ++-
+ docs/testing/reports/T1-04-assets/README.md        |  17 +
+ .../evidence/round6-remediation/README.md          |  72 +++
+ .../evidence/round6-remediation/environment.txt    |  28 +
+ .../round6-remediation/gate-cargo-check.txt        |  10 +
+ .../evidence/round6-remediation/gate-cargo-fmt.txt |  49 ++
+ .../round6-remediation/gate-cargo-test.txt         | 337 ++++++++++
+ .../evidence/round6-remediation/gate-npm-build.txt |  15 +
+ .../evidence/round6-remediation/gate-npm-check.txt | 654 +++++++++++++++++++
+ .../evidence/round6-remediation/git-baseline.txt   |  41 ++
+ .../evidence/round6-remediation/git-diff-check.txt |  39 ++
+ .../migration-failure-evidence.json                |  88 +++
+ .../migration-failure-output.txt                   |  23 +
+ .../migration-path-evidence.json                   | 363 +++++++++++
+ .../round6-remediation/path-safety-evidence.json   | 690 +++++++++++++++++++++
+ .../round6-remediation/r6-01-bridge-green.txt      | 299 +++++++++
+ .../round6-remediation/r6-01-bridge-red.txt        | 351 +++++++++++
+ .../r6-01-cross-contract-green.txt                 |  27 +
+ .../r6-01-cross-contract-red-baseline.txt          |  32 +
+ .../round6-remediation/r6-01-rust-baseline-red.txt |  25 +
+ .../round6-remediation/r6-01-rust-green.txt        |  24 +
+ .../round6-remediation/r6-02-canary-comparison.txt |  29 +
+ .../round6-remediation/r6-02-cleanup-green.txt     |  18 +
+ .../round6-remediation/r6-02-cleanup-red.txt       |  16 +
+ .../round6-remediation/r6-02-migration-path.txt    |  33 +
+ .../round6-remediation/r6-02-path-safety.txt       |  62 ++
+ .../round6-remediation/release-build-final.txt     |  35 ++
+ .../evidence/round6-remediation/release-build.txt  |  35 ++
+ .../release-e2e-evidence/t1-04-db-after-fault.json |  36 ++
+ .../release-e2e-evidence/t1-04-db-after-main.json  |  36 ++
+ .../t1-04-db-after-restart.json                    |  36 ++
+ .../release-e2e-evidence/t1-04-fault-evidence.json |  81 +++
+ .../t1-04-min-window-evidence.json                 |  93 +++
+ .../t1-04-persistence-evidence.json                |  93 +++
+ .../release-e2e-evidence/t1-04-prerequisite.json   |  48 ++
+ .../release-e2e-evidence/t1-04-ui-evidence.json    | 601 ++++++++++++++++++
+ .../round6-remediation/release-e2e-output.txt      | 669 ++++++++++++++++++++
+ .../evidence/round6-remediation/release-exe.sha256 |   9 +
+ .../release-pending-after-main-checks.png          | Bin 0 -> 55482 bytes
+ .../round6-remediation/t1-04-ui-orchestration.json | 393 ++++++++++++
+ package.json                                       |   3 +-
+ scripts/quality/work-item-bridge.test.mjs          | 147 ++++-
+ .../work-item-title-cross-contract.test.mjs        | 206 ++++++
+ scripts/verify/README.md                           |  11 +-
+ scripts/verify/T1-04MigrationCleanup.ps1           | 178 ++++++
+ scripts/verify/T1-04UatPath.ps1                    |  63 ++
+ scripts/verify/test-t1-04-migration-cleanup.ps1    | 375 +++++++++++
+ scripts/verify/test-t1-04-migration-path.py        |  11 +-
+ scripts/verify/verify-t1-04-migration-failure.ps1  |  85 +--
+ src/lib/bridge/workItemValidation.ts               |  58 +-
+ src/lib/bridge/workItems.ts                        |   8 +-
+ src/lib/contracts/workItemTitle.ts                 |  67 ++
+ src/lib/contracts/workItems.ts                     |  11 +-
+ .../work-items/PendingWorkItemsView.svelte         |   4 +-
+ .../work-items/QuickCreateWorkItemDialog.svelte    |  10 +-
+ 61 files changed, 7071 insertions(+), 126 deletions(-)
