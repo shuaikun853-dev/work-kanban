@@ -1,0 +1,28 @@
+T1-04 第六轮独立审计后定向补正（R6-01 / R6-02 / R6-03）
+证据采集环境
+================================================================
+
+采集时间：2026-11-24T18:06+08:00（Asia/Shanghai）
+仓库：shuaikun853-dev/work-kanban
+工作目录：<repo-root>
+分支：task/T1-04-multi-project-copies
+修复前 HEAD：de8f6221d66d0b4240f93a8a4737f8d85b4b1e84
+修复前基线：775496591275be833c688397f323d1990367e4d3
+origin/main：018e851e8daf5835391a7b61caf881bc57c2ad42
+PR #8：OPEN，base=main，head=task/T1-03-quick-create-pending，
+       headRefOid=e8205cae22e98afce6480f5a5a0695543a61dee3
+T1-03 PR head 是 T1-04 HEAD 的祖先：是
+工作区：clean
+
+OS：Microsoft Windows NT 10.0.19045.0（Windows 10 x64）
+PowerShell：5.1.19041.6456（Desktop；未安装 pwsh）
+cargo：1.100.0 (3acc79c0c 2026-11-05)
+rustc：1.100.0 (0ef1bc386 2026-11-09)
+Node.js：v22.20.0
+npm：10.9.3
+Python：3.14.5
+Git：<git>\cmd\git.exe
+gh：2.98.0，已登录 shuaikun853-dev
+
+测试根：<test-root>（trust anchor 验证后写入）
+正式目录：<formal-root>（本任务不访问、不写入）

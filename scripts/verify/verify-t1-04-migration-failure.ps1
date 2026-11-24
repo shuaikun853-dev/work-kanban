@@ -35,6 +35,7 @@ $ErrorActionPreference = 'Stop'
 $script:ScriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $script:ScriptDirectory 'VerifyCommon.ps1')
 . (Join-Path $script:ScriptDirectory 'T1-04UatPath.ps1')
+. (Join-Path $script:ScriptDirectory 'T1-04MigrationCleanup.ps1')
 
 $script:TestRootLiteral = $script:T104UatTestRoot
 $script:FormalRootLiteral = $script:T104UatFormalRoot
@@ -76,6 +77,9 @@ $script:Result = [ordered]@{
         stopCode  = ''
         stopReason = ''
         steps     = @()
+        entryKind = ''
+        entryTargetExists = $null
+        entryReparseTag = ''
         uatRootIdentityUnchanged = $false
     }
     failure                   = ''
@@ -146,66 +150,35 @@ function Write-T104MigrationEvidence {
 }
 
 function Invoke-T104FailClosedMigrationCleanup {
-    if ([string]::IsNullOrWhiteSpace($script:UatDir) -or -not (Test-Path -LiteralPath $script:UatDir)) {
-        $script:Result.cleanup.performed = $false
-        $script:Result.cleanup.safe = $true
-        $script:Result.cleanup.stopCode = 'alreadyAbsent'
+    # 清理决策、原生入口身份识别（含悬空 Junction）与 fail-closed 逻辑集中在
+    # T1-04MigrationCleanup.ps1，由独立真实故障注入测试覆盖；本函数只做结果映射。
+    $cleanupResult = Invoke-T104FailClosedMigrationCleanupCore `
+        -UatDir $script:UatDir `
+        -UatRoot $script:OutputFull `
+        -TestRoot $script:T104UatTestRoot `
+        -UatDirIdentity $script:UatDirIdentity `
+        -UatRootIdentity $script:UatRootIdentity
+
+    $script:Result.cleanup.performed = [bool]$cleanupResult.performed
+    $script:Result.cleanup.safe = [bool]$cleanupResult.safe
+    $script:Result.cleanup.stopCode = [string]$cleanupResult.stopCode
+    $script:Result.cleanup.stopReason = (Format-T104EvidenceText ([string]$cleanupResult.stopReason))
+    $script:Result.cleanup.steps = @($cleanupResult.steps)
+    $script:Result.cleanup.entryKind = [string]$cleanupResult.entryKind
+    $script:Result.cleanup.entryTargetExists = $cleanupResult.entryTargetExists
+    $script:Result.cleanup.entryReparseTag = [string]$cleanupResult.entryReparseTag
+    $script:Result.cleanup.uatRootIdentityUnchanged = [bool]$cleanupResult.uatRootIdentityUnchanged
+
+    if ([bool]$cleanupResult.safe -ne $true) {
+        Write-Host ('MIGRATION_FAILURE_CLEANUP=FAIL ' + [string]$cleanupResult.stopCode + ' ' + [string]$cleanupResult.stopReason)
+        return $false
+    }
+    if ([string]$cleanupResult.stopCode -eq 'alreadyAbsent') {
         Write-Host 'MIGRATION_FAILURE_CLEANUP=PASS alreadyAbsent'
         return $true
     }
-    if ($null -eq $script:UatDirIdentity -or $null -eq $script:UatRootIdentity) {
-        $script:Result.cleanup.performed = $false
-        $script:Result.cleanup.safe = $false
-        $script:Result.cleanup.stopCode = 'missingIdentityRecord'
-        $script:Result.cleanup.stopReason = '缺少创建时记录的目录身份，拒绝删除。'
-        Write-Host 'MIGRATION_FAILURE_CLEANUP=FAIL missingIdentityRecord'
-        return $false
-    }
-    try {
-        # 清理前重新验证 UAT 根目录身份（卷序列号 + 文件 ID + 真实最终路径）。
-        $currentRoot = Assert-T104UatDirectoryPath -Path $script:OutputFull -Label 'UAT 根目录'
-        if (($currentRoot.fileIdHex -ne $script:UatRootIdentity.fileIdHex) -or
-            ($currentRoot.volumeSerialNumber -ne $script:UatRootIdentity.volumeSerialNumber) -or
-            (-not (Test-T103FinalPathEquals ([string]$currentRoot.finalPath) ([string]$script:UatRootIdentity.finalPath)))) {
-            throw '清理前 UAT 根目录身份发生变化，拒绝删除。'
-        }
-        $script:Result.cleanup.uatRootIdentityUnchanged = $true
-        # 复用 T1-03 fail-closed 安全清理：复验迁移目录身份 → 扫描重解析点 →
-        # 复验身份 → 逐条目校验安全递归删除。身份不符/异常时不执行递归删除。
-        $cleanupResult = Invoke-T103FailClosedSandboxCleanup `
-            -SandboxPath $script:UatDir `
-            -TestRoot $script:T104UatTestRoot `
-            -TrustRecord $script:UatDirIdentity `
-            -TrackedLinks @()
-        $script:Result.cleanup.performed = [bool]$cleanupResult.recursiveDeletePerformed
-        $script:Result.cleanup.safe = [bool]$cleanupResult.safe
-        $script:Result.cleanup.stopCode = [string]$cleanupResult.stopCode
-        $script:Result.cleanup.stopReason = (Format-T104EvidenceText ([string]$cleanupResult.stopReason))
-        $script:Result.cleanup.steps = @($cleanupResult.steps)
-        $uatStillExists = Test-Path -LiteralPath $script:UatDir
-        if ([bool]$cleanupResult.safe -ne $true -or $uatStillExists) {
-            Write-Host ('MIGRATION_FAILURE_CLEANUP=FAIL ' + [string]$cleanupResult.stopCode + ' ' + [string]$cleanupResult.stopReason)
-            return $false
-        }
-        # 清理后复验 UAT 根目录身份未变化（fail-closed 清理不得触碰根目录本身）。
-        $afterRoot = Assert-T104UatDirectoryPath -Path $script:OutputFull -Label 'UAT 根目录'
-        if (($afterRoot.fileIdHex -ne $script:UatRootIdentity.fileIdHex) -or
-            ($afterRoot.volumeSerialNumber -ne $script:UatRootIdentity.volumeSerialNumber)) {
-            $script:Result.cleanup.safe = $false
-            $script:Result.cleanup.stopCode = 'uatRootIdentityChangedAfterCleanup'
-            Write-Host 'MIGRATION_FAILURE_CLEANUP=FAIL uatRootIdentityChangedAfterCleanup'
-            return $false
-        }
-        Write-Host 'MIGRATION_FAILURE_CLEANUP=PASS'
-        return $true
-    }
-    catch {
-        $script:Result.cleanup.safe = $false
-        $script:Result.cleanup.stopCode = 'unexpectedCleanupGuardError'
-        $script:Result.cleanup.stopReason = (Format-T104EvidenceText $_.Exception.Message)
-        Write-Host ('MIGRATION_FAILURE_CLEANUP=FAIL: ' + $_.Exception.Message)
-        return $false
-    }
+    Write-Host 'MIGRATION_FAILURE_CLEANUP=PASS'
+    return $true
 }
 
 # ---------------------------------------------------------------------------

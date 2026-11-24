@@ -1,0 +1,16 @@
+R6-02_TRUST_ANCHOR=PASS testRoot=<test-root>/20261124-181434-988-27824
+R6-02_TEST_PATH_RESULT setup=normal result=True
+T1-04_MIGRATION_CLEANUP_TEST=FAIL R6-02 normal-cleanup :: entryKind 期望 directory，实际
+R6-02_TEST_PATH_RESULT setup=alreadyAbsent result=False
+T1-04_MIGRATION_CLEANUP_TEST=FAIL R6-02 already-absent :: entryKind 期望 absent，实际
+R6-02_TEST_PATH_RESULT setup=danglingJunction result=True
+T1-04_MIGRATION_CLEANUP_TEST=FAIL R6-02 dangling-junction :: entryKind 期望 junction，实际
+R6-02_TEST_PATH_RESULT setup=liveJunction result=True
+T1-04_MIGRATION_CLEANUP_TEST=FAIL R6-02 live-junction :: entryKind 期望 junction，实际
+R6-02_TEST_PATH_RESULT setup=file result=True
+T1-04_MIGRATION_CLEANUP_TEST=FAIL R6-02 file-entry :: entryKind 期望 file，实际
+R6-02_TEST_PATH_RESULT setup=missingIdentity result=True
+T1-04_MIGRATION_CLEANUP_TEST=FAIL R6-02 missing-identity :: entryKind 期望 directory，实际
+T1-04_MIGRATION_CLEANUP_TEST=PASS R6-02 全局 Canary :: sha256=f3a8992f0d0befc72a961ba0b4111cb2d94b5c0fa2d303984f46ad5266ca491f
+T1-04_MIGRATION_CLEANUP_TEST_RESULT={"task":"T1-04","scope":"R6-02 migration cleanup native reparse-point fail-closed","generatedAt":"2026-11-24T10:14:36.7262204Z","testRoot":"\u003ctest-root\u003e/20261124-181434-988-27824","trustAnchorVerified":true,"pass":1,"fail":6,"skip":0,"canaryBefore":"f3a8992f0d0befc72a961ba0b4111cb2d94b5c0fa2d303984f46ad5266ca491f","canaryAfter":"f3a8992f0d0befc72a961ba0b4111cb2d94b5c0fa2d303984f46ad5266ca491f","canaryUnchanged":true,"formalRootTouched":false,"cleanupError":"","scenarios":[{"name":"R6-02 normal-cleanup","status":"FAIL","detail":"entryKind 期望 directory，实际 ","data":null},{"name":"R6-02 already-absent","status":"FAIL","detail":"entryKind 期望 absent，实际 ","data":null},{"name":"R6-02 dangling-junction","status":"FAIL","detail":"entryKind 期望 junction，实际 ","data":null},{"name":"R6-02 live-junction","status":"FAIL","detail":"entryKind 期望 junction，实际 ","data":null},{"name":"R6-02 file-entry","status":"FAIL","detail":"entryKind 期望 file，实际 ","data":null},{"name":"R6-02 missing-identity","status":"FAIL","detail":"entryKind 期望 directory，实际 ","data":null},{"name":"R6-02 全局 Canary","status":"PASS","detail":"sha256=f3a8992f0d0befc72a961ba0b4111cb2d94b5c0fa2d303984f46ad5266ca491f","data":null}]}
+EXIT_CODE=1

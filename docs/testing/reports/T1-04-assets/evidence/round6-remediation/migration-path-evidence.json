@@ -1,0 +1,363 @@
+{
+  "task": "T1-04",
+  "round": "round6",
+  "scope": "T104-01 migration fixture / Release migration verification native path guards",
+  "generatedAt": "2026-11-24T10:53:28Z",
+  "testRoot": "<test-root>",
+  "formalRoot": {
+    "path": "<formal-root>",
+    "existedBefore": false,
+    "existedAfter": false,
+    "identityEvidenceAvailable": true,
+    "identityUnchanged": true,
+    "limitation": "只读目录身份快照；不构成正式目录内容未被外部进程修改的绝对证明，也不消除 TOCTOU（DEC-029 / Issue #2）"
+  },
+  "checks": [
+    {
+      "name": "trustRoot.defaultRootVerified",
+      "pass": true,
+      "detail": "componentCount=2"
+    },
+    {
+      "name": "evidence.targetPrepared",
+      "pass": true,
+      "detail": "evidencePath=<test-root>\\t1-04-path-evidence-31900-20261124-185139\\evidence\\t1-04-path-evidence.json"
+    },
+    {
+      "name": "fixture.normalSetup",
+      "pass": true,
+      "detail": "exit=0 databaseCreated=True"
+    },
+    {
+      "name": "fixture.normalProbe",
+      "pass": true,
+      "detail": "exit=0 report={\"user_version\": 3, \"projects\": 1, \"work_items\": 1, \"schema_migrations\": 3, \"version4_rows\": 0, \"group_table\": 0, \"member_table\": 0, \"integrity_check\": \"ok\"}"
+    },
+    {
+      "name": "fixture.probeReadOnlyConnection",
+      "pass": true,
+      "detail": "connectCalls=1 modeRo=True"
+    },
+    {
+      "name": "fixture.setupExistingTargetRejected",
+      "pass": true,
+      "detail": "数据库创建目标已存在，拒绝复用/覆盖旧数据库：<test-root>\\t1-04-path-test-migration-existing-target-31900-1795517517589\\app\\data\\database\\work.db。请使用新的 UAT 目录。"
+    },
+    {
+      "name": "fixture.setupExistingTargetNotOverwritten",
+      "pass": true,
+      "detail": "existingTargetUnchanged=True"
+    },
+    {
+      "name": "fixture.setupParentJunctionRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-migration-parent-junction-31900-1795517524082\\app\\data\\database。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "fixture.setupParentJunctionNoWrite",
+      "pass": true,
+      "detail": "connectCalled=False canaryUnchanged=True"
+    },
+    {
+      "name": "fixture.setupLeafReparseRejected",
+      "pass": true,
+      "detail": "数据库创建目标是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point，tag=0xA0000003）：<test-root>\\t1-04-path-test-migration-leaf-junction-31900-1795517536602\\app\\data\\database\\work.db。已按 fail-closed 拒绝。"
+    },
+    {
+      "name": "fixture.setupLeafReparseNoWrite",
+      "pass": true,
+      "detail": "connectCalled=False canaryUnchanged=True"
+    },
+    {
+      "name": "fixture.setupGuardFailureRejected",
+      "pass": true,
+      "detail": "路径守卫脚本不存在：missing-migration-guard-for-test.ps1。已按 fail-closed 停止。"
+    },
+    {
+      "name": "fixture.setupGuardFailureNoCreate",
+      "pass": true,
+      "detail": "connectCalled=False databaseCreated=False"
+    },
+    {
+      "name": "fixture.probeGuardFailureRejected",
+      "pass": true,
+      "detail": "路径守卫脚本不存在：missing-migration-guard-for-test.ps1。已按 fail-closed 停止。"
+    },
+    {
+      "name": "fixture.probeGuardFailureNoConnect",
+      "pass": true,
+      "detail": "connectCalled=False"
+    },
+    {
+      "name": "fixture.probeParentJunctionRejected",
+      "pass": true,
+      "detail": "输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\\t1-04-path-test-migration-probe-parent-junction-31900-1795517555857\\app\\data\\database。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。"
+    },
+    {
+      "name": "fixture.probeSafetyFailureNoConnect",
+      "pass": true,
+      "detail": "connectCalled=False"
+    },
+    {
+      "name": "migrationScript.nativeGuardsPresent",
+      "pass": true,
+      "detail": "trust-anchor/planned-database/planned-evidence/database guards present"
+    },
+    {
+      "name": "migrationScript.failClosedCleanupReused",
+      "pass": true,
+      "detail": "fail-closed cleanup reused via T1-04MigrationCleanup.ps1; forced recursive cleanup removed"
+    },
+    {
+      "name": "migrationScript.realMigrationRollbackTestPreserved",
+      "pass": true,
+      "detail": "real Release migration rollback assertions preserved"
+    },
+    {
+      "name": "migrationScript.outputAncestorJunctionRejected",
+      "pass": true,
+      "detail": "exit=2 createdUnderJunction=False canaryUnchanged=True"
+    },
+    {
+      "name": "migrationScript.outsideTestRootRejected",
+      "pass": true,
+      "detail": "exit=2"
+    },
+    {
+      "name": "migrationScript.formalRootOutputRejected",
+      "pass": true,
+      "detail": "exit=2"
+    },
+    {
+      "name": "cleanup.identityChangedRejected",
+      "pass": true,
+      "detail": "identityChanged=True rejected=True retained=True"
+    },
+    {
+      "name": "canary.allTargetsUnchanged",
+      "pass": true,
+      "detail": "targets=migration-parent,migration-leaf,migration-probe-parent,migration-output; unchanged=True"
+    },
+    {
+      "name": "cleanup.allSandboxesRemovedSafely",
+      "pass": true,
+      "detail": "cases=13 allSafe=True allRemoved=True"
+    },
+    {
+      "name": "cleanup.failClosedMechanismUsed",
+      "pass": true,
+      "detail": "stepsObserved=39"
+    },
+    {
+      "name": "evidence.requiredChecksPresent",
+      "pass": true,
+      "detail": "missing=none"
+    },
+    {
+      "name": "formalRoot.identityUnchanged",
+      "pass": true,
+      "detail": "existedBefore=False existedAfter=False"
+    }
+  ],
+  "failed": [],
+  "skips": [],
+  "cleanup": [
+    {
+      "label": "migration-cleanup-identity",
+      "path": "<test-root>\\t1-04-path-test-migration-cleanup-identity-31900-1795517585902",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "migration-formal-output",
+      "path": "<test-root>\\t1-04-path-test-migration-formal-output-31900-1795517581677",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-migration-output",
+      "path": "<test-root>\\t1-04-path-test-canary-migration-output-31900-1795517573804",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "migration-output-junction",
+      "path": "<test-root>\\t1-04-path-test-migration-output-junction-31900-1795517570450",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-migration-probe-parent",
+      "path": "<test-root>\\t1-04-path-test-canary-migration-probe-parent-31900-1795517561384",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "migration-probe-parent-junction",
+      "path": "<test-root>\\t1-04-path-test-migration-probe-parent-junction-31900-1795517555857",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "migration-guard-failure",
+      "path": "<test-root>\\t1-04-path-test-migration-guard-failure-31900-1795517550192",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-migration-leaf",
+      "path": "<test-root>\\t1-04-path-test-canary-migration-leaf-31900-1795517542342",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "migration-leaf-junction",
+      "path": "<test-root>\\t1-04-path-test-migration-leaf-junction-31900-1795517536602",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "canary-migration-parent",
+      "path": "<test-root>\\t1-04-path-test-canary-migration-parent-31900-1795517527341",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "migration-parent-junction",
+      "path": "<test-root>\\t1-04-path-test-migration-parent-junction-31900-1795517524082",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "migration-existing-target",
+      "path": "<test-root>\\t1-04-path-test-migration-existing-target-31900-1795517517589",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    },
+    {
+      "label": "migration-normal",
+      "path": "<test-root>\\t1-04-path-test-migration-normal-31900-1795517504187",
+      "removed": true,
+      "safe": true,
+      "stopCode": "",
+      "stopReason": "",
+      "trackedLinkCount": 0,
+      "steps": [
+        "sandbox.identityVerified",
+        "tree.noUnexpectedReparsePoint",
+        "sandbox.identityReVerified"
+      ],
+      "error": ""
+    }
+  ],
+  "pass": true,
+  "residualRisk": "TOCTOU concurrent replacement remains deferred by DEC-029 / Issue #2"
+}

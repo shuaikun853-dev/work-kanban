@@ -154,3 +154,20 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-t1-04-
 | `pending-after-restart.png` | 重启持久化 |
 
 > 证据边界：上述为开发代理执行结果，不构成独立审计或用户验收。T1-03 历史证据、审计状态、PR #8、P2-01 与 DEC-029 / Issue #2 风险均未改变。
+
+---
+
+## 第六轮独立审计后定向补正证据（2026-11-24，R6-01～R6-03）
+
+本轮证据保存在 `evidence/round6-remediation/`，**不覆盖** `evidence/round6/` 或更早证据。所有 UAT 数据均为虚构；正式运行目录 `D:\WorkManager` 未访问、未修改、未写入。
+
+- **R6-01：** Bridge **48/48**（原 35 项全部保留 + 13 项 Unicode `White_Space`）；真实 Rust SQLite 保存/读回 → Bridge 交叉契约 **1/1**（10 场景）；Rust 契约测试 9/9；Red 为旧 `.trim()` 下 42 pass / 4 fail；基线 worktree 交叉 Red 退出码 1。
+- **R6-02：** 真实 Windows 故障注入 **8 PASS / 0 FAIL / 1 SKIP**；悬空 Junction 返回 `danglingJunction`、`safe=false`、`performed=false`；Canary SHA-256 前后一致；Symbolic Link 无权限显式 SKIP；路径专项 **58 项 / 0 FAIL / 1 SKIP**；Migration 路径专项 **31 项 / 0 FAIL**。
+- **R6-03：** 注释、任务状态、设计契约与 STATUS/PLAN/报告同步；历史轮次记录保留。
+- **质量门禁：** Rust **162 passed / 0 failed / 1 ignored**；`npm run check` 0/0 + Bridge 48 + 交叉 1 + Token 49；`npm run build` 168 modules。
+- **环境限制：** Windows 10 19045 的 `Test-Path` 对本次真实悬空 Junction 返回 `True`，未复现“false → alreadyAbsent”的具体分支；未使用模拟对象冒充真实 Junction。
+- **Release E2E / Migration 回滚 / EXE 哈希：** 见 `T1-04-REPORT.md` 第 12.5 节与本目录 `release-exe.sha256`。
+
+详细逐文件说明见 [`evidence/round6-remediation/README.md`](evidence/round6-remediation/README.md)。
+
+> 证据边界：上述为开发代理执行结果，不构成独立审计或用户验收。T1-03 历史证据、审计状态、PR #8、P2-01 与 DEC-029 / Issue #2 风险均未改变。

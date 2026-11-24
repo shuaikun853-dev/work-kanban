@@ -120,6 +120,69 @@ function Assert-T104UatDirectoryPath {
     }
 }
 
+# 把 Windows 重解析点 tag 映射为可审计的入口类型；未识别 tag 一律归为
+# otherReparsePoint，调用方必须 fail-closed，不得猜测目标类型。
+function Get-T104UatReparseKind {
+    # PowerShell 5.1 会把 0xA0000003 解析为有符号 Int32；这里用 Int64 十进制值
+    # （Junction = 0xA0000003 = 2684354563，Symbolic Link = 0xA000000C = 2684354572）。
+    param([Parameter(Mandatory = $true)][long]$Tag)
+    if ($Tag -eq [long]2684354563) {
+        return 'junction'
+    }
+    if ($Tag -eq [long]2684354572) {
+        return 'symbolicLink'
+    }
+    return 'otherReparsePoint'
+}
+
+# 用原生句柄识别清理入口的真实身份，不依赖 Test-Path：
+# - absent：原生句柄确认不存在；
+# - directory / file：普通目录或普通文件；
+# - junction / symbolicLink / otherReparsePoint：重解析点类型（tag 可审计）；
+# - targetExists：跟随重解析点后目标是否存在；悬空 Junction 为 false。
+# 本函数只读，不删除、不跟随递归。
+function Get-T104UatEntryState {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [string]$Label = 'UAT 路径'
+    )
+    $normalized = Get-T103UatNormalizedPath $Path
+    $linkInfo = Get-T103NativePathInfo -Path $normalized -OpenReparsePoint $true
+    $state = [ordered]@{
+        path         = $normalized
+        exists       = [bool]$linkInfo.Exists
+        kind         = 'absent'
+        reparseTag   = [long]0
+        targetExists = $null
+        targetError  = ''
+        isDirectory  = $false
+    }
+    if (-not $linkInfo.Exists) {
+        return [pscustomobject]$state
+    }
+
+    $state.isDirectory = [bool]$linkInfo.IsDirectory
+    if ($linkInfo.IsReparsePoint) {
+        $state.reparseTag = [long]$linkInfo.ReparseTag
+        $state.kind = Get-T104UatReparseKind -Tag $state.reparseTag
+        try {
+            $targetInfo = Get-T103NativePathInfo -Path $normalized -OpenReparsePoint $false
+            $state.targetExists = [bool]$targetInfo.Exists
+        }
+        catch {
+            $state.targetExists = $null
+            $state.targetError = ('无法确认{0}的重解析点目标：{1}' -f $Label, $_.Exception.Message)
+        }
+    }
+    elseif ($linkInfo.IsDirectory) {
+        $state.kind = 'directory'
+    }
+    else {
+        $state.kind = 'file'
+    }
+    return [pscustomobject]$state
+}
+
 function Assert-T104UatRegularFile {
     param(
         [Parameter(Mandatory = $true)][string]$Path,

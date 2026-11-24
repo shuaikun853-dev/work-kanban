@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ProjectDto } from '../../contracts/projects';
+  import { normalizeWorkItemTitle } from '../../contracts/workItemTitle';
   import Button from '../../ui/components/Button.svelte';
 
   interface CreateFailure {
@@ -40,7 +41,8 @@
   let knownProjectNames = $state<Record<string, string>>({});
   let touched = $state(false);
 
-  const trimmedTitle = $derived(title.trim());
+  /** 使用与 Rust Core 相同的 Unicode White_Space 规则，不能使用 JS `trim()`。 */
+  const normalizedTitle = $derived(normalizeWorkItemTitle(title));
   const availableProjectIds = $derived(new Set(projects.map((project) => project.id)));
   /** 项目列表成功刷新后仍不在可选列表中的已选项目：保留展示，禁止自动移除。 */
   const invalidProjectIds = $derived(
@@ -67,12 +69,12 @@
         : `已选择 ${selectedProjectIds.length} 个项目，将创建 ${selectedProjectIds.length} 项独立工作`
   );
   const canSubmit = $derived(
-    trimmedTitle.length > 0 &&
+    normalizedTitle.length > 0 &&
       !submitting &&
       !projectsLoading &&
       !hasInvalidSelection
   );
-  const showEmptyHint = $derived(touched && trimmedTitle.length === 0 && !submitting);
+  const showEmptyHint = $derived(touched && normalizedTitle.length === 0 && !submitting);
 
   $effect(() => {
     const dialog = dialogElement;
@@ -135,7 +137,7 @@
     if (!canSubmit) {
       return;
     }
-    onSubmit(trimmedTitle, [...selectedProjectIds]);
+    onSubmit(normalizedTitle, [...selectedProjectIds]);
   }
 
   function requestCancel(): void {

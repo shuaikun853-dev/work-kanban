@@ -16,13 +16,14 @@
  * - 批量创建必须传入完整请求上下文：`requestId` 必须是规范小写连字符 UUID，
  *   响应 `groupId` 必须与 `requestId` 逐字相等（Rust 直接复用请求标识作为创建组主键，
  *   合法但不同的 UUID 也拒绝）；
- * - 请求 `title` 去除首尾空白后必须非空，响应每个副本 `title` 必须等于该 trim 结果
- *   （Rust `normalize_title` 只 trim，不改变大小写、不折叠内部空白）；
+ * - 请求 `title` 去除首尾 Unicode `White_Space` 后必须非空，响应每个副本 `title`
+ *   必须等于同一规范化结果（不改变大小写、不折叠内部空白、不删除 U+FEFF）；
  * - 批量创建响应必须恰好包含 `{groupId, workItems}`，数量与请求项目数一致、
  *   每个请求项目恰好一个副本、工作事项 ID 不重复、全部 pending；
  * - 校验失败抛出稳定错误码 `ipc-contract-violation` 的 `WorkItemIpcError`。
  */
 
+import { normalizeWorkItemTitle } from '../contracts/workItemTitle.ts';
 import type {
   CreatedWorkItemCopiesDto,
   PendingWorkItemDto,
@@ -78,12 +79,12 @@ const CANONICAL_REQUEST_ID_PATTERN =
  * 批量创建请求上下文：Bridge 必须把调用方传入的三个值全部交给响应校验。
  *
  * 三个值缺一不可 —— 真实 Rust Core 直接复用 `requestId` 作为创建组主键、
- * 只对 `title` 做首尾 `trim`，因此它们本身就是响应契约的一部分。
+ * 只删除 `title` 首尾 Unicode `White_Space`，因此它们本身就是响应契约的一部分。
  */
 export interface CreatedCopiesRequestContext {
   /** 调用方生成的规范小写连字符 UUID（Rust 解析后直接作为创建组主键）。 */
   readonly requestId: string;
-  /** 请求标题原文；Rust 只做首尾 trim，响应 title 必须等于其 trim 结果。 */
+  /** 请求标题原文；Rust 只删除首尾 Unicode `White_Space`，响应 title 必须等于该结果。 */
   readonly title: string;
   /** 请求的项目 ID 列表（至少两个、互不相同）。 */
   readonly projectIds: readonly string[];
@@ -115,7 +116,7 @@ function parseWorkItemAt(raw: unknown, path: string): WorkItemDto {
   return {
     id: expectNonEmptyString(record.id, `${path}.id`),
     projectId: expectNullableNonEmptyString(record.projectId, `${path}.projectId`),
-    title: expectNonEmptyString(record.title, `${path}.title`),
+    title: expectNonEmptyTitle(record.title, `${path}.title`),
     lifecycleStatus,
     importance: expectNullableScore(record.importance, `${path}.importance`),
     urgency: expectNullableScore(record.urgency, `${path}.urgency`),
@@ -169,7 +170,7 @@ function parsePendingWorkItemAt(raw: unknown, path: string): PendingWorkItemDto 
     projectId,
     projectName,
     projectIsArchived,
-    title: expectNonEmptyString(record.title, `${path}.title`),
+    title: expectNonEmptyTitle(record.title, `${path}.title`),
     lifecycleStatus,
     createdAt: expectString(record.createdAt, `${path}.createdAt`),
     updatedAt: expectString(record.updatedAt, `${path}.updatedAt`)
@@ -182,14 +183,15 @@ function parsePendingWorkItemAt(raw: unknown, path: string): PendingWorkItemDto 
  * 必须传入完整请求上下文（`requestId` / `title` / `projectIds`），因为 Rust 的语义是：
  * - `requestId` 由客户端生成且必须为规范小写连字符 UUID，服务端直接复用为创建组主键，
  *   因此 `groupId` 必须与它逐字相等（合法但不同的 UUID 也拒绝）；
- * - 标题只做首尾 trim，因此每个副本 `title` 必须等于 `request.title.trim()`
- *   （大小写、内部空白都不允许变化）；
+ * - 标题只删除首尾 Unicode `White_Space`，因此每个副本 `title` 必须等于
+ *   `normalizeWorkItemTitle(request.title)`（大小写、内部空白、U+FEFF 都不允许变化）；
  * - 响应项目集合必须与请求项目集合一一对应。
  *
  * 除严格字段校验外，还必须验证整批语义：
  * 1. `request.requestId` 必须是规范小写连字符 UUID（Rust 拒绝大小写等非规范形式）；
  * 2. `response.groupId` 必须与 `request.requestId` 完全相等（合法但不同的 UUID 也拒绝）；
- * 3. 每个副本 `title` 必须等于 `request.title.trim()`（空标题/非字符串请求直接拒绝）；
+ * 3. 每个副本 `title` 必须等于 `normalizeWorkItemTitle(request.title)`（空标题/
+ *    非字符串请求直接拒绝）；
  * 4. 响应数量必须等于请求项目数（不允许部分成功后返回较短数组）；
  * 5. 每个请求项目恰好出现一次（不重复、不缺失、不能被替换成其他项目）；
  * 6. 每个副本工作事项 ID 唯一；
@@ -240,11 +242,11 @@ export function parseCreatedWorkItemCopies(
   const seenWorkItemIds = new Set<string>();
   workItems.forEach((item, index) => {
     const path = `批量创建工作结果.workItems[${index}]`;
-    // Rust `normalize_title` 只做首尾 trim：大小写与内部空白必须原样保留。
+    // Rust `normalize_title` 只删除首尾 Unicode White_Space：其余字符必须原样保留。
     if (item.title !== expectedTitle) {
       throw contractViolation(
         `${path}.title`,
-        '与请求 title 去除首尾空白后的字符串完全一致（不改变大小写或内部空白）',
+        '与请求 title 去除首尾 Unicode White_Space 后的字符串完全一致（不改变大小写、内部空白或 U+FEFF）',
         item.title
       );
     }
@@ -298,17 +300,18 @@ function expectCanonicalRequestId(value: unknown): string {
 }
 
 /**
- * 校验请求 `title` 并返回 Rust `normalize_title` 的结果（仅去除首尾空白）。
+ * 校验请求 `title` 并返回 Rust `normalize_title` 的结果。
  *
- * 不改变大小写、不折叠内部空白；响应 `title` 必须与该结果完全相等。
+ * 使用与 Rust 相同的 Unicode `White_Space` 集合，仅删除首尾字符；不改变大小写、
+ * 不折叠内部空白、不删除 U+FEFF。响应 `title` 必须与该结果完全相等。
  */
 function expectRequestTitle(value: unknown): string {
   const text = expectString(value, '请求 title');
-  const trimmed = text.trim();
-  if (trimmed.length === 0) {
-    throw contractViolation('请求 title', '去除首尾空白后非空的字符串', value);
+  const normalized = normalizeWorkItemTitle(text);
+  if (normalized.length === 0) {
+    throw contractViolation('请求 title', '去除首尾 Unicode White_Space 后非空的字符串', value);
   }
-  return trimmed;
+  return normalized;
 }
 
 /**
@@ -377,7 +380,26 @@ function expectNonEmptyString(value: unknown, path: string): string {
   return text;
 }
 
-/** 规范 UUID 字符串（Rust Core 生成的创建组 / 工作事项稳定 ID）。 */
+/**
+ * 校验标题字段非空，使用与 Rust 相同的 Unicode `White_Space` 规范化规则。
+ *
+ * 不能使用 JavaScript `String.trim()`：它会把合法的 U+FEFF 标题误判为空。
+ * 返回值保持原样，不在这里改写标题；批量创建会再逐字比较规范化结果。
+ */
+function expectNonEmptyTitle(value: unknown, path: string): string {
+  const text = expectString(value, path);
+  if (normalizeWorkItemTitle(text).length === 0) {
+    throw contractViolation(path, '去除首尾 Unicode White_Space 后非空字符串', value);
+  }
+  return text;
+}
+
+/**
+ * 规范 UUID 字符串。
+ *
+ * 批量创建组 ID 是客户端生成的 `requestId`，Rust Core 校验后直接复用；
+ * 工作事项 ID 由 Rust Core 生成，二者来源不同，不得描述为同一生成方。
+ */
 function expectCanonicalUuid(value: unknown, path: string): string {
   const text = expectNonEmptyString(value, path);
   if (!UUID_PATTERN.test(text)) {

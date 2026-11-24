@@ -1,0 +1,88 @@
+{
+    "task":  "T1-04",
+    "round":  "round6",
+    "scope":  "T104-04 Release migration failure rollback + native path guards",
+    "generatedAt":  "2026-11-24T10:46:21.7605939Z",
+    "status":  "pass",
+    "releaseExeSha256":  "4487b3e134d479eb4c71671f561c3008a5b97f72bf7728cf6d08a8ad9d62e7d1",
+    "releaseExeSizeBytes":  10458112,
+    "trustAnchorVerified":  true,
+    "uatRoot":  "\u003cuat-root\u003e",
+    "evidencePath":  "\u003cevidence-path\u003e",
+    "guards":  {
+                   "uatRootTarget":  {
+                                         "pass":  true,
+                                         "detail":  "planned=true targetExists=false"
+                                     },
+                   "uatRootCreated":  {
+                                          "pass":  true,
+                                          "detail":  "uatRootIdentityVerified=true"
+                                      },
+                   "databaseTarget":  {
+                                          "pass":  true,
+                                          "detail":  "databaseTargetPlanned=true"
+                                      },
+                   "evidenceDirectoryTarget":  {
+                                                   "pass":  true,
+                                                   "detail":  "planned=True"
+                                               },
+                   "databaseDirectoryCreated":  {
+                                                    "pass":  true,
+                                                    "detail":  "databaseDirectoryIdentityVerified=true"
+                                                },
+                   "evidenceDirectoryCreated":  {
+                                                    "pass":  true,
+                                                    "detail":  "evidenceDirectoryIdentityVerified=true"
+                                                },
+                   "releaseExeCopied":  {
+                                            "pass":  true,
+                                            "detail":  "pathIdentityReVerifiedBeforeRelease=true"
+                                        },
+                   "evidenceFileTarget":  {
+                                              "pass":  true,
+                                              "detail":  "evidenceFileBoundaryVerified=true"
+                                          },
+                   "fixtureSetup":  {
+                                        "pass":  true,
+                                        "detail":  "schema3FixtureCreated=true"
+                                    },
+                   "databaseAndEvidenceAfterFixture":  {
+                                                           "pass":  true,
+                                                           "detail":  "databaseFileIdentityVerified=true evidenceDirectoryIdentityVerified=true"
+                                                       }
+               },
+    "migrationFailure":  {
+                             "dialogFound":  true,
+                             "dialogTitle":  "WorkManager 启动失败",
+                             "releaseExitCode":  1,
+                             "probeExitCode":  0,
+                             "rollbackPass":  true,
+                             "invariants":  {
+                                                "user_version":  3,
+                                                "projects":  1,
+                                                "work_items":  1,
+                                                "schema_migrations":  3,
+                                                "version4_rows":  0,
+                                                "group_table":  0,
+                                                "member_table":  0,
+                                                "integrity_check":  "ok"
+                                            }
+                         },
+    "cleanup":  {
+                    "performed":  true,
+                    "safe":  true,
+                    "stopCode":  "",
+                    "stopReason":  "",
+                    "steps":  [
+                                  "sandbox.identityVerified",
+                                  "tree.noUnexpectedReparsePoint",
+                                  "sandbox.identityReVerified"
+                              ],
+                    "entryKind":  "directory",
+                    "entryTargetExists":  null,
+                    "entryReparseTag":  "",
+                    "uatRootIdentityUnchanged":  true
+                },
+    "failure":  "",
+    "residualRisk":  "TOCTOU concurrent replacement remains deferred by DEC-029 / Issue #2"
+}

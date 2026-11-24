@@ -1,0 +1,93 @@
+{
+  "generatedAt": "2026-11-24T10:46:10.670Z",
+  "task": "T1-04",
+  "phase": "restart-persistence",
+  "method": "Restart same UAT portable directory; verify persisted pending list + archived-project history; create a new batch after restart; real titlebar close button",
+  "port": 9357,
+  "outputDir": "<test-root>\\t1-04-ui-r6-20261124-1846",
+  "prerequisitePath": "<test-root>\\t1-04-ui-r6-20261124-1846\\t1-04-prerequisite.json",
+  "rowsBefore": 14,
+  "rowsAfter": 16,
+  "newBatchTitle": "T1-04 虚构 重启后新批次工作",
+  "checks": [
+    {
+      "name": "persistence.navigateToday",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "persistence.pendingEntryClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "persistence.fourteenRowsPersistedAsPending",
+      "pass": true,
+      "detail": "14"
+    },
+    {
+      "name": "persistence.expectedTitlesPersisted",
+      "pass": true,
+      "detail": "[\"T1-04 虚构 两项目价格异常排查\",\"T1-04 虚构 三项目进度同步\",\"T1-04 虚构 未归属快速工作\",\"T1-04 虚构 单项目快速工作\",\"T1-04 虚构 重复提交批次工作\",\"T1-04 虚构 双击保护批次工作\",\"T1-04 虚构 归档项目历史关联工作\",\"T1-04 虚构 刷新失败批次工作\"]"
+    },
+    {
+      "name": "persistence.archivedProjectHistoryLinkPreserved",
+      "pass": true,
+      "detail": "{\"id\":\"3d610d21-ca9d-4241-af1c-2ecd4c663481\",\"projectId\":\"2aa23c2f-2b5e-449d-8fe9-65f8e35fc300\",\"projectName\":\"T1-04 虚构将归档项目丁\",\"projectIsArchived\":true,\"title\":\"T1-04 虚构 归档项目历史关联工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T10:45:45.018Z\",\"updatedAt\":\"2026-11-24T10:45:45.018Z\"}"
+    },
+    {
+      "name": "persistence.openCreateDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "persistence.selectorOnlyUnarchivedProjects",
+      "pass": true,
+      "detail": "[\"d07b3c96-2d53-42c4-9cc5-3747a410d398\",\"2394b8fd-fe97-47b4-951e-d44af5c3367f\",\"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e\"]"
+    },
+    {
+      "name": "persistence.titleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "persistence.selectProjectA",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "persistence.selectProjectB",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "persistence.batchSelectionSummary",
+      "pass": true,
+      "detail": "{\"mode\":\"copies\",\"selectedCount\":2,\"expectedCount\":2,\"availableProjectIds\":[\"d07b3c96-2d53-42c4-9cc5-3747a410d398\",\"2394b8fd-fe97-47b4-951e-d44af5c3367f\",\"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e\"]}"
+    },
+    {
+      "name": "persistence.saveClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "persistence.newBatchOutcomeActualCount",
+      "pass": true,
+      "detail": "{\"kind\":\"success\",\"text\":\"已创建 2 项独立工作，待安排列表已从数据库更新。\"}"
+    },
+    {
+      "name": "persistence.newBatchPersistedAfterRestart",
+      "pass": true,
+      "detail": "[{\"id\":\"bd5b447a-570b-4aa7-a647-017271a5bc8e\",\"projectId\":\"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e\",\"projectName\":\"T1-04 虚构未归档项目甲\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 重启后新批次工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T10:46:10.485Z\",\"updatedAt\":\"2026-11-24T10:46:10.485Z\"},{\"id\":\"6d541c3e-fa9d-4fbb-bfa0-bb24b8e1d8f4\",\"projectId\":\"2394b8fd-fe97-47b4-951e-d44af5c3367f\",\"projectName\":\"T1-04 虚构未归档项目乙\",\"projectIsArchived\":false,\"title\":\"T1-04 虚构 重启后新批次工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-24T10:46:10.485Z\",\"updatedAt\":\"2026-11-24T10:46:10.485Z\"}]"
+    },
+    {
+      "name": "persistence.closeButtonClicked",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "failed": [],
+  "checkCount": 15,
+  "closeClicked": true,
+  "pass": true
+}

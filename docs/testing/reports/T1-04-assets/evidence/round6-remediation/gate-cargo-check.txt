@@ -1,0 +1,10 @@
+cargo.exe :     Checking workmanager-core v0.1.0 (<repo-root>\crates\workmanager-core)
+所在位置 行:1 字符: 363
++ ... ASTEXITCODE; & cargo.exe check --workspace --all-targets 2>&1 | Tee-O ...
++                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Checking wo...rkmanager-core):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+    Checking workmanager v0.1.0 (<repo-root>\src-tauri)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.72s
+EXIT_CODE=0

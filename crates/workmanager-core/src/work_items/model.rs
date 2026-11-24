@@ -85,17 +85,97 @@ pub struct PendingWorkItem {
 /// - 不限制长度，不改变内部空白；
 /// - 标题不是业务唯一键，不做去重。
 pub(crate) fn normalize_title(raw_title: &str) -> Result<String, WorkItemError> {
-    let trimmed = raw_title.trim();
-    if trimmed.is_empty() {
+    // `str::trim` 使用 `char::is_whitespace`（Unicode White_Space），与
+    // `src/lib/contracts/workItemTitle.ts` 的显式字符集合一致；不删除 U+FEFF。
+    let normalized = raw_title.trim();
+    if normalized.is_empty() {
         return Err(WorkItemError::EmptyTitle);
     }
-    Ok(trimmed.to_string())
+    Ok(normalized.to_string())
 }
 
 #[cfg(test)]
 mod tests {
     use super::normalize_title;
     use crate::work_items::WorkItemError;
+
+    /// Unicode `White_Space` 属性对应的 25 个字符；Rust 与 TypeScript 必须完全一致。
+    const UNICODE_WHITE_SPACE: [char; 25] = [
+        '\u{0009}', '\u{000A}', '\u{000B}', '\u{000C}', '\u{000D}', '\u{0020}', '\u{0085}',
+        '\u{00A0}', '\u{1680}', '\u{2000}', '\u{2001}', '\u{2002}', '\u{2003}', '\u{2004}',
+        '\u{2005}', '\u{2006}', '\u{2007}', '\u{2008}', '\u{2009}', '\u{200A}', '\u{2028}',
+        '\u{2029}', '\u{202F}', '\u{205F}', '\u{3000}',
+    ];
+
+    #[test]
+    fn title_whitespace_contract_matches_unicode_white_space_exactly() {
+        // 全量标量校验：Rust `char::is_whitespace()` 必须恰好等于契约字符集合。
+        // 该断言把“Rust 采用 Unicode White_Space”从隐含实现细节变成可审计契约。
+        for code_point in 0..=0x10FFFF {
+            let Some(character) = char::from_u32(code_point) else {
+                continue;
+            };
+            assert_eq!(
+                character.is_whitespace(),
+                UNICODE_WHITE_SPACE.contains(&character),
+                "字符 U+{code_point:04X} 的 White_Space 判定与契约集合不一致"
+            );
+        }
+        // U+FEFF（ZERO WIDTH NO-BREAK SPACE）不是 Unicode White_Space，必须保留。
+        assert!(!'\u{FEFF}'.is_whitespace());
+    }
+
+    #[test]
+    fn normalizes_each_unicode_white_space_at_both_ends() {
+        for whitespace in UNICODE_WHITE_SPACE {
+            let raw = format!("{whitespace}整理中核商品数据{whitespace}");
+            assert_eq!(
+                normalize_title(&raw).expect("首尾 Unicode White_Space 应被删除"),
+                "整理中核商品数据",
+                "U+{:04X} 必须从两端删除",
+                whitespace as u32
+            );
+            assert_eq!(
+                normalize_title(&whitespace.to_string())
+                    .expect_err("纯空白标题必须拒绝")
+                    .code(),
+                "work-item-title-empty",
+                "U+{:04X} 单独成标题时必须拒绝",
+                whitespace as u32
+            );
+        }
+    }
+
+    #[test]
+    fn preserves_leading_and_trailing_zero_width_no_break_space() {
+        let raw = "\u{FEFF}整理中核商品数据\u{FEFF}";
+        assert_eq!(
+            normalize_title(raw).expect("U+FEFF 不是 White_Space，标题非空"),
+            raw
+        );
+        assert_eq!(
+            normalize_title("\u{FEFF}").expect("U+FEFF 单独成标题时非空"),
+            "\u{FEFF}"
+        );
+    }
+
+    #[test]
+    fn preserves_internal_whitespace_and_does_not_case_fold_or_normalize_unicode() {
+        assert_eq!(
+            normalize_title("\t\u{0085}\u{3000}Review  中核\t商品数据\u{3000}\u{0085}\n")
+                .expect("混合空白规范化"),
+            "Review  中核\t商品数据"
+        );
+        assert_eq!(
+            normalize_title("\u{3000}e\u{0301} 与 中核\u{3000}").expect("不做 NFC/NFKC"),
+            "e\u{0301} 与 中核"
+        );
+        // 对照：规范化不会把 combining sequence 折叠成预组合字符。
+        assert_ne!(
+            normalize_title("\u{3000}e\u{0301}\u{3000}").expect("不做 NFC/NFKC"),
+            "\u{00E9}"
+        );
+    }
 
     #[test]
     fn normalizes_surrounding_whitespace_only() {

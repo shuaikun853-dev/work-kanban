@@ -1,6 +1,6 @@
 # T1-04：多项目独立副本创建
 
-**任务状态：** 待审计（第五轮 T104-01～T104-06 定向修复完成；未独立审计、未用户验收）
+**任务状态：** 待审计（第六轮独立审计后定向补正 R6-01～R6-03 完成；未独立审计、未用户验收）
 **启动日期：** 2026-11-24  
 **所属阶段：** 阶段 1：基础架构与工作事项  
 **前置任务：** T1-01、T1-02 已验收并合并；**T1-03 尚未完成独立审计（PR #8 Open）**  
@@ -148,7 +148,7 @@
 - 请求 camelCase + `deny_unknown_fields`；请求必须包含客户端生成的规范 UUID `requestId`；响应 `{groupId, workItems}` 字段精确，`groupId` 必须等于请求 `requestId`；
 - 复用 `WorkItemDto`（10 字段）与 `CommandError` 稳定错误码；
 - `spawn_blocking`，命令层不实现业务规则；
-- Bridge 严格运行时契约（含 `groupId === requestId`、每个副本标题等于请求标题 trim 结果、数量、项目对应关系、ID 唯一、pending、未知字段拒绝）；
+- Bridge 严格运行时契约（含 `groupId === requestId`、每个副本标题等于请求标题按 Unicode `White_Space` 规范化后的结果、数量、项目对应关系、ID 唯一、pending、未知字段拒绝；R6-01）；
 - UI 覆盖 0 / 1 / 2+ 项目语义、选择计数、提交锁、失败保留选择、归档竞态整批失败、成功后实际数量提示与权威刷新、刷新失败不重复创建。
 
 ### 8.3 Windows Release / 回归
@@ -197,7 +197,7 @@ git diff --check
 - **数据库：** migration `0004_work_item_creation_groups.sql`，schema 3 → 4；`work_item_creation_groups`、`work_item_creation_group_members`（真实外键、`work_item_id UNIQUE`、STRICT、创建组查询索引）；未修改 0001/0002/0003；失败 migration 回滚测试通过。
 - **Rust Core：** `WorkItemService::create_copies` 在同一个 `IMMEDIATE` 写事务内先按客户端规范 UUID `requestId` 查找既有批次，再验证全部项目，然后写创建组（主键直接复用 `requestId`）、全部独立副本（ID 由 Rust Core 生成）、全部成员关系并做事务内读回验证；新增 `work-item-copies-too-few`、`work-item-copies-duplicate-project`、`work-item-create-request-id-invalid`、`work-item-create-request-conflict` 稳定错误码；任意失败整批回滚；不新增数据库字段或 migration。
 - **Tauri IPC：** `create_work_item_copies`（camelCase、`deny_unknown_fields`、必填 `requestId`、`spawn_blocking`、复用 `WorkItemDto`/`CommandError`；响应 `{groupId, workItems}`，`groupId` 为服务端校验后复用的请求标识）。
-- **Bridge：** 批量响应严格运行时契约（`groupId === requestId`、副本标题等于请求标题 trim 结果、数量/项目一一对应/ID 唯一/pending/无缺失或额外字段）；Node 契约测试 27 → **35/35**。
+- **Bridge：** 批量响应严格运行时契约（`groupId === requestId`、副本标题等于请求标题规范化结果、数量/项目一一对应/ID 唯一/pending/无缺失或额外字段）；Node 契约测试 27 → **35/35**（R6-01 后扩展为 **48/48**，标题规则改为 Unicode `White_Space`）。
 - **UI：** 快速创建对话框支持多项目选择（0/1 沿用 T1-03 单条创建，2+ 调用批量接口）；显示已选数量与预计创建数量；创建中锁定输入与选择；失败保留标题与原始选择、失效选择需用户主动移除、不自动创建剩余项目；成功使用后端实际数量并从数据库刷新，刷新失败不重复创建。
 - **验证工具：** `verify-t1-04-ui.ps1` + 4 个 CDP 检查脚本 + 只读数据库探针 + 仅限 UAT 的 trigger 故障控制器；复用 T1-03 已验证 UAT 路径安全设施；未修改历史证据。
 
@@ -226,5 +226,15 @@ git diff --check
 **第五轮定向修复（2026-11-24）：** 第二轮独立审计 T104-01～T104-06 已修复：原生 UAT 路径守卫与真实 Junction 测试、真实 IPC 响应异常后的 requestId 幂等重试、TDD Red/Green 证据、真实 0004 migration 索引冲突回滚、CSP 实际采集、STATUS/PLAN 状态统一。测试先行提交 `b4f641a`、实现提交 `e6b3f22`；最新质量门禁 `cargo test --workspace` **158 passed / 0 failed**、Release E2E 主 **107/107** + 最小窗口 **11/11** + 回滚 **13/13** + 持久化 **15/15** + 探针 **62/62**、继承回归全部通过；Release EXE 10,457,600 字节、SHA-256 `0bbe1dc4…4166`。详见 `docs/testing/reports/T1-04-REPORT.md` 第 10 节与 `T1-04-assets/evidence/round5/`。本轮仍不构成独立审计或用户验收。
 
 **第六轮定向修复（2026-11-24）：** 第五轮修复后的独立复审提出的四项问题已修复：R2-01 路径安全测试自身信任锚与 fail-closed 清理（测试根 / UAT 根 / 数据库目录 / 证据目录创建前后原生守卫、Junction 重定向场景覆盖、清理复用 T1-03 fail-closed 机制、`formalRootTouched` 硬编码替换为只读身份快照证据）、R2-02 Migration 验证工具原生守卫（PowerShell / Python 双侧在创建 / 复制 / 启动 / 连接前守卫；清理 fail-closed 且保留证据目录）、R2-03 Bridge 业务契约（`groupId === requestId`、副本标题 trim 校验，Node 契约测试 27 → 35）、R2-04 文档 / Rust 注释 / TypeScript 契约对创建组 ID 来源统一为“客户端 requestId 直接复用为创建组主键，工作副本 ID 由 Rust Core 生成，不新增 schema 字段或 migration”。未改变 DEC-034 整批原子事务语义、未重新开发 T1-04、未合并 PR；本轮仍不构成独立审计或用户验收。详见 `docs/testing/reports/T1-04-REPORT.md` 第 11 节与 `T1-04-assets/evidence/round6/`。
+
+**第六轮独立审计后定向补正（R6-01～R6-03，2026-11-24）：**
+
+第六轮独立审计确认此前主要路径安全问题已解决，但提出三项残余问题；本轮仅做最小范围补正：
+
+- **R6-01 标题 Unicode 空白规范化不一致：** Rust `str::trim()`（Unicode `White_Space`）与 JavaScript `String.trim()` 对 U+0085 / U+FEFF 处理不同，可能导致服务端已提交、Bridge 却拒绝合法响应并被 UI 误报为创建失败。新增 `src/lib/contracts/workItemTitle.ts`，显式固定 25 个 Unicode `White_Space` 字符；Rust 增加逐标量全量契约测试证明 `char::is_whitespace()` 与该集合一致。快速创建对话框、页面 requestId 绑定、Bridge 请求/响应校验全部改用同一规范化函数；内部空白、大小写与 U+FEFF 原样保留，不做 NFC/NFKC。新增 Node 用例 48/48（原 35 项全部保留 + 13 项 R6-01），并新增真实 Rust SQLite 保存/读回 → Bridge 解析的交叉契约测试（10 个标题场景，含同一 requestId 重试和副本数量断言）。
+- **R6-02 Migration 清理悬空 Junction 防护：** 原清理入口先用 `Test-Path` 判断目录是否存在；悬空 Junction 在部分环境可能被误判为不存在并直接标记 `alreadyAbsent`。新增 `scripts/verify/T1-04MigrationCleanup.ps1`，清理前用原生句柄识别普通目录 / Junction / Symbolic Link / 其他 reparse point / 无法确认身份；悬空 Junction 返回 `danglingJunction` 并 fail-closed，不递归删除；清理完成后再次用原生句柄确认入口消失。`verify-t1-04-migration-failure.ps1` 改为调用该模块并记录 entryKind / targetExists / reparseTag。真实 Windows 故障注入测试 8 PASS / 0 FAIL / 1 SKIP（当前权限无法创建真实 Symbolic Link，显式 SKIP）。环境限制：Windows 10 19045 的 `Test-Path` 对本次真实悬空 Junction 返回 `True`，因此“`Test-Path` 误报 false 后直接 `alreadyAbsent`”这一具体分支未能在本机复现；测试仍记录真实 `Test-Path` 结果，并验证原生句柄识别与 fail-closed，未使用模拟对象冒充真实 Junction。
+- **R6-03 文档与过期注释：** 修正 `workItemValidation.ts` 中“Rust Core 生成创建组 ID”的过期注释，明确创建组 ID 来源是客户端 `requestId` 经 Rust 校验后直接复用、工作事项 ID 由 Rust Core 生成；同步 T1-04 设计文档的 Unicode `White_Space` 契约；任务状态更新为“第六轮独立审计后定向补正完成，等待独立审计”。历史轮次记录保留，不删除、不改写。
+
+本轮未改变 DEC-034 整批原子事务语义、requestId 幂等设计、创建组 ID 来源、数据库 schema/migration、T1-03 历史实现与证据、main、PR #8 目标分支或合并状态；未开始 T1-05。证据独立保存于 `docs/testing/reports/T1-04-assets/evidence/round6-remediation/`，不覆盖 round6 原始证据。**本轮仍不构成独立审计或用户验收。**
 
 **状态与停止条件：** 等待独立代码审计；PR #8 保持 Open，未在 PR #8 合并前创建 T1-04 main PR；未合并任何 PR、未修改 main、未开始 T1-05；不自行宣布审计/验收通过。

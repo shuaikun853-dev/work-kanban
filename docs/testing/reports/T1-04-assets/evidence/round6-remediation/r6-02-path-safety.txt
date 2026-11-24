@@ -1,0 +1,62 @@
+PASS trustRoot.defaultRootVerified
+PASS trustRoot.identityRecorded — componentCount=2
+T1_04_PATH_TRUST_ANCHOR=PASS components=2 volumeIdentity=verified finalPath=verified
+PASS formalRoot.guardRejectsFormalPath — UAT 待创建目录不在专用测试根目录内（不能是测试根目录本身，也不能位于正式应用目录）：<formal-root>。已按 fail-closed 拒绝。
+PASS evidence.targetPrepared — evidencePath=<test-root>\t1-04-path-evidence-9592-20261124-185349\evidence\t1-04-path-evidence.json
+PASS normal.uatRootTargetAccepted — planned=True targetExists=False
+PASS normal.uatRootTargetNotCreatedByValidation — created=False
+PASS normal.uatRootCreatedAndVerified — identityDigest=<test-root>\t1-04-path-test-normal-9592-1795517634725
+PASS normal.databaseTargetAccepted — targetExists=False
+PASS normal.databasePathAccepted — databaseIdentityVerified=True
+PASS normal.evidenceDirTargetAccepted — targetExists=False
+PASS normal.evidenceDirectoryAccepted — evidenceDirectoryIdentityVerified=True
+PASS normal.evidenceFilePathAccepted — targetExists=False
+PASS normal.evidenceFileWritten — writtenFileIdentityVerified=True
+PASS trustRoot.syntheticRealRootAccepted — syntheticTrustAnchorIdentityVerified=True
+PASS junction.testRootRedirectedRejected — 专用测试根目录信任锚验证失败，已按 fail-closed 停止（未执行任何写操作）：专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-trust-anchor-9592-1795517651884\fake-root。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS junction.testRootRedirectedNoCreateRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-trust-anchor-9592-1795517651884\fake-root。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS junction.testRootRedirectedNoWriteSideEffect — createdUnderJunction=False canaryUnchanged=True
+PASS junction.testRootAncestorRejected — 专用测试根目录信任锚验证失败，已按 fail-closed 停止（未执行任何写操作）：专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-trust-anchor-9592-1795517651884\junction-ancestor。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS junction.testRootAncestorNoCreateRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-trust-anchor-9592-1795517651884\junction-ancestor。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS junction.testRootAncestorNoWriteSideEffect — canaryUnchanged=True
+PASS junction.databaseAncestorRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-junction-db-ancestor-9592-1795517678912\app。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS junction.databaseLeafReparseRejected — 数据库创建目标是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point，tag=0xA0000003）：<test-root>\t1-04-path-test-junction-db-leaf-9592-1795517690186\app\data\database\work.db。已按 fail-closed 拒绝。
+PASS junction.databaseLeafExistingReparseRejected — UAT 数据库文件本身是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point，tag=0xA0000003）：<test-root>\t1-04-path-test-junction-db-leaf-9592-1795517690186\app\data\database\work.db。已按 fail-closed 拒绝。
+SKIP symlink.databaseFileRejected — file symlink unavailable (mklink exit=1; SeCreateSymbolicLinkPrivilege/developer mode required)
+PASS junction.evidenceDirectoryRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-junction-evidence-9592-1795517710706\evidence。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS junction.evidenceFileRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-junction-evidence-9592-1795517710706\evidence。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS junction.evidenceJunctionNoExternalWrite — externalFileExists=False
+PASS junction.uatRootReplacedRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-uat-root-replaced-9592-1795517730591。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS junction.uatRootGuardRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-uat-root-replaced-9592-1795517730591。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS cleanup.reparsePointRejected — rejected=True retained=True message=sandboxIdentityChanged: 清理前无法确认测试沙箱身份：测试沙箱是重解析点（tag=0xA0000003），无法确认其真实目录身份：<test-root>\t1-04-path-test-uat-root-replaced-9592-1795517730591。已按 fail-closed 停止。
+PASS junction.uatRootReplacedCanaryUnchanged — canaryUnchanged=True
+PASS junction.databaseDirectoryReplacedRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-database-dir-replaced-9592-1795517745545\app\data\database。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS junction.databaseDirectoryReplacedCanaryUnchanged — canaryUnchanged=True
+PASS junction.evidenceDirReplacedRejected — 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<test-root>\t1-04-path-test-evidence-dir-replaced-9592-1795517762991\evidence。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS junction.evidenceDirReplacedCanaryUnchanged — canaryUnchanged=True
+PASS cleanup.identityChangedRejected — rejected=True retained=True message=sandboxIdentityChanged: 清理前无法确认测试沙箱身份：目录身份与预期不一致（差异：fileId）：<test-root>\t1-04-path-test-cleanup-identity-change-9592-1795517794922。已按 fail-closed 停止。
+PASS cleanup.identityChangedDetected — fileIdChanged=True
+PASS cleanup.guardFailureRefusedDelete — refused=True retained=True
+PASS guard.failureNoCreate — rejected=True created=False
+PASS guard.failureNoSqliteConnect — exit=3 connectCalled=False
+PASS guard.failureNoProbeConnect — exit=3 connectCalled=False
+PASS guard.failureNoProbeWrite — probeWritten=False
+PASS guard.noDatabaseConnectOnAncestorJunction — exit=3 connectCalled=False
+PASS guard.noDatabaseConnectOnEvidenceJunction — exit=3 connectCalled=False
+PASS guard.noExternalWriteOnEvidenceJunction — externalFileExists=False
+PASS evidence.writePathStructureEnforced — acceptedInvalid=0 rejectedInvalid=5
+PASS evidence.writeRejectsSubdirectoryFile — 证据文件必须是证据目录的直接子文件，不允许写入子目录或任意路径：<test-root>\t1-04-path-test-normal-9592-1795517634725\evidence\sub\x.json。已按 fail-closed 拒绝。
+PASS evidence.writeRejectsNonJsonFile — 证据文件扩展名必须为 .json：<test-root>\t1-04-path-test-normal-9592-1795517634725\evidence\evidence.txt。已按 fail-closed 拒绝。
+PASS evidence.writeRejectsOutsideUat — outsideUatCreated=False
+PASS canary.allTargetsUnchanged — targets=test-root-redirect,test-root-ancestor,db-ancestor,db-leaf,external-evidence,uat-root-replaced-target,database-dir-target,evidence-dir-target,tracked-link-target,no-connect-target,no-connect-ancestor-target; unchanged=True
+PASS cleanup.allSandboxesRemovedSafely — cases=25 allSafe=True allRemoved=True
+PASS cleanup.failClosedMechanismUsed — stepsObserved=75
+PASS cleanup.trackedLinkRemovedSafely — trackedLinkEntry=1
+PASS cleanup.noResidueUnderTestRoot — residueCount=0
+PASS formalRoot.identityUnchanged — existedBefore=False existedAfter=False unchanged=True
+PASS evidence.round5ChecksPreserved — missing=none
+PASS evidence.round6NewChecksPresent — missing=none
+PASS evidence.writeSucceeded — evidencePath=<test-root>\t1-04-path-evidence-9592-20261124-185349\evidence\t1-04-path-evidence.json
+PASS evidence.machineIdentifiersRedacted — rawMachineValuesPresent=False
+{"checks": 58, "failed": 0, "skips": 1, "cleanupCases": 25, "evidenceWritten": true}
+EXIT_CODE=0

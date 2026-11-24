@@ -17,6 +17,8 @@
 > **第五轮更新（2026-11-24）：** 第二轮独立审计 T104-01～T104-06 已完成定向修复；最新测试先行提交 `b4f641a`、实现提交 `e6b3f22`。最新质量门禁、真实 IPC 幂等重试、Junction 专项、CSP 实际采集与 Release E2E 结果见[第 10 节](#10-第五轮定向修复2026-11-24t104-01t104-06)；第 1–9 节保留上一轮历史记录，不覆盖、不改写。
 >
 > **第六轮更新（2026-11-24）：** 第五轮修复后的独立复审提出的 R2-01～R2-04 四项问题已完成定向修复（路径安全测试自身信任锚与 fail-closed 清理、Migration 验证工具原生守卫、Bridge 业务契约校验、文档/注释/契约的创建组 ID 来源统一）；新增测试与证据见[第 11 节](#11-第六轮定向修复2026-11-24r2-01r2-04)。第 1–10 节保留历史记录；其中涉及批量创建组 ID 来源、Bridge 解析接口的历史描述已按当前真实实现同步更正，不改变历史测试结论。
+>
+> **第六轮独立审计后定向补正（2026-11-24）：** 针对独立审计残余问题 R6-01（Rust/JavaScript 标题 Unicode 空白规范化不一致）、R6-02（Migration 清理悬空 Junction 存在性判断不安全）、R6-03（Bridge 注释与任务文档状态过期）完成小范围补正；新增测试与证据见第 12 节。历史轮次记录保留，不覆盖 `round6/` 原始证据。
 
 ---
 
@@ -109,7 +111,7 @@
   - `groupId` 为规范 UUID 且必须等于 `request.requestId`（合法但不同的 UUID 拒绝）；
   - 请求项目列表 ≥ 2、非空、不重复；
   - `workItems` 数量与请求项目数一致；
-  - 每项通过既有 `parseWorkItem`（10 字段、无缺失/额外字段、`pending`）；每个副本标题等于 `request.title.trim()`（不改变大小写/内部空白）；
+  - 每项通过既有 `parseWorkItem`（10 字段、无缺失/额外字段、`pending`）；每个副本标题等于请求标题按 Unicode `White_Space` 规范化的结果（R6-01 前为 `.trim()`；不改变大小写/内部空白）；
   - 每个请求项目恰好出现一次（不重复/不缺失/不替换）、工作事项 ID 唯一；
   - 任一项违反 → `ipc-contract-violation`。
 - `bridge/workItems.ts`：新增 `createWorkItemCopies(requestId, title, projectIds)`；调用响应解析时传入完整请求上下文；失败载荷统一转 `WorkItemIpcError`。
@@ -370,7 +372,7 @@ T1-04 新增 Rust 测试：`work_item_copies.rs` **16 项**、`creation_groups_m
 |---|---|---|---|---|---|
 | R2-01 | 路径安全测试自身信任锚与 fail-closed 清理缺陷 | `scripts/verify/test-t1-04-path.py`（重写）、`T1-04UatPath.ps1`、`guard-t1-04-path.ps1`、`guard-t1-04-cleanup.ps1`（新增）、`t1_04_path_guard.py`、`t1_04_path_test_support.py`（新增）、`scripts/verify/README.md` | 创建任何测试目录前调用 `test-root` 原生守卫验证测试根目录信任锚（自身 + 全部已存在祖先 + 重解析点 + 卷身份 + 文件 ID + 真实最终路径）；测试根 / UAT 根 / 数据库目录 / 证据目录创建前后经 `uat-root-target` / `uat-root` 复验；新增真实 Junction 重定向测试根/祖先、UAT 根替换、数据库目录替换、证据目录替换场景（使用测试根内隔离合成信任锚，不替换真实共享测试根）；清理复用 T1-03 `Invoke-T103FailClosedSandboxCleanup`（`guard-t1-04-cleanup.ps1`），身份变化/重解析点/守卫失败时拒绝删除且不得 `ignore_errors`；证据输出固定 `<UAT根>\evidence\<file>.json`，写入前后守卫；删除硬编码 `formalRootTouched:false`，改为正式目录只读身份快照（前后比对）+ 守卫拒绝正式路径证据，无法读取时显式标记证据不足 | `test-t1-04-path.py`：**58 项 / 0 FAIL / 1 SKIP**（文件符号链接权限不足，显式记录，不计 PASS），退出码 0；`path-safety-output.txt`、`path-safety-evidence.json`；Red 原始输出 `path-safety-red.txt` | 已修复 |
 | R2-02 | Migration 验证工具绕过原生路径守卫 | `scripts/verify/verify-t1-04-migration-failure.ps1`（重写）、`t1-04-migration-fixture.py`、`test-t1-04-migration-path.py`（新增）、`T1-04UatPath.ps1`、`guard-t1-04-path.ps1`、`t1_04_path_guard.py` | PowerShell 移除 `GetFullPath().StartsWith` 字符串判断：信任锚 → 规划期 UAT 根/数据库目标/证据目录守卫 → 创建后身份复验 → 复制 EXE 与启动 Release 前复验；清理只删除 `migration-failure-uat` 子目录并复用 fail-closed 身份复验（证据目录保留用于证据写入）；Python Fixture `setup()` 在创建文件前执行 `database-target` 守卫、独占创建、创建后执行 `database` 守卫、写入后再次复验身份，通过后才 `sqlite3.connect()`；`probe()` 在只读连接前执行 `database` 守卫，失败不降级、不尝试其他路径 | `test-t1-04-migration-path.py`：**31 项 / 0 FAIL**，退出码 0；`migration-failure-output.txt`、`migration-failure-evidence.json`（真实 Release 回滚：对话框 found、Release 退出码 1、user_version=3、无 version 4/新表、历史数据不变、integrity ok、原生守卫全部 PASS、fail-closed 清理 PASS、证据写入 PASS，脚本退出码 0）；真实 `verify-t1-04-migration-failure.ps1` 退出码 0 | 已修复 |
-| R2-03 | Bridge 对批量创建响应业务契约校验不足 | `src/lib/bridge/workItemValidation.ts`、`bridge/workItems.ts`、`scripts/quality/work-item-bridge.test.mjs` | `parseCreatedWorkItemCopies(raw, request)` 接收完整请求上下文 `{requestId,title,projectIds}`：新增 `requestId` 规范小写连字符 UUID 校验、`groupId === requestId`（合法但不同 UUID 拒绝）、每个副本 `title === request.title.trim()`（不改变大小写/内部空白）；保留原有严格字段/数量/项目一一对应/ID 唯一/pending/未知字段拒绝；Bridge 传入完整上下文；不新增依赖 | Node 契约测试原 27 项全部保留并扩展为 **35 项**：Red **24 pass / 11 fail**（缺失检查）→ Green **35/35 PASS**，`bridge-red.txt` / `bridge-green.txt`；`svelte-check` 0 errors / 0 warnings | 已修复 |
+| R2-03 | Bridge 对批量创建响应业务契约校验不足 | `src/lib/bridge/workItemValidation.ts`、`bridge/workItems.ts`、`scripts/quality/work-item-bridge.test.mjs` | `parseCreatedWorkItemCopies(raw, request)` 接收完整请求上下文 `{requestId,title,projectIds}`：新增 `requestId` 规范小写连字符 UUID 校验、`groupId === requestId`（合法但不同 UUID 拒绝）、每个副本标题等于请求标题规范化结果（R2-03 时为 `.trim()`；R6-01 起改为 Unicode `White_Space`，不改变大小写/内部空白）；保留原有严格字段/数量/项目一一对应/ID 唯一/pending/未知字段拒绝；Bridge 传入完整上下文；不新增依赖 | Node 契约测试原 27 项全部保留并扩展为 **35 项**：Red **24 pass / 11 fail**（缺失检查）→ Green **35/35 PASS**，`bridge-red.txt` / `bridge-green.txt`；`svelte-check` 0 errors / 0 warnings | 已修复 |
 | R2-04 | 技术设计、Rust 注释、TypeScript 契约对创建组 ID 来源描述不一致 | `docs/architecture/TECHNICAL_DESIGN.md`、`crates/workmanager-core/src/work_items/model.rs`、`service.rs`、`src/lib/contracts/workItems.ts`、`bridge/workItemValidation.ts`、`docs/development/tasks/T1-04-Implementation-Design.md`、`T1-04-Multi-Project-Independent-Copies.md`、本报告 | 统一描述：客户端生成规范 UUID `requestId`；Rust Core 在 `IMMEDIATE` 写事务内校验并直接复用为 `work_item_creation_groups.id`；相同 requestId 相同标题+项目列表返回既有批次、不同业务参数返回 `work-item-create-request-conflict`、不同 requestId 可创建新批次；工作事项副本 ID 由 Rust Core 生成；不新增数据库字段或 migration；未改变 DEC-034 语义 | 文档/注释一致性复核通过；Rust 测试与 Bridge 契约测试回归通过（`cargo test --workspace` 全绿、Bridge 35/35） | 已修复 |
 
 ### 11.3 TDD 与 Red/Green 证据
@@ -433,3 +435,92 @@ Release EXE（第六轮重建，含 Bridge 变更）：**10,458,112 字节**，S
 ### 11.9 最终状态
 
 **T1-04 第六轮定向修复完成，开发与自测结果待独立代码审计。**
+
+---
+
+## 12. 第六轮独立审计后定向补正（2026-11-24，R6-01～R6-03）
+
+> 本节记录第六轮独立审计确认三项残余问题后的开发代理定向补正与自测结果；**不构成独立审计或用户验收通过**。T1-03 状态、P2-01、PR #8 与 DEC-029 / Issue #2 风险均未改变。
+
+### 12.1 Git 基线与修复范围
+
+- 修复前 HEAD：`de8f6221d66d0b4240f93a8a4737f8d85b4b1e84`（远程分支一致，工作区 clean）。
+- 修复前基线：`775496591275be833c688397f323d1990367e4d3`。
+- 分支：`task/T1-04-multi-project-copies`；T1-03 堆叠基线 `e8205cae22e98afce6480f5a5a0695543a61dee3`；远程 main `018e851e8daf5835391a7b61caf881bc57c2ad42` 未修改；PR #8 Open、未合并；未创建 T1-04 main PR。
+- 仅修复 R6-01～R6-03：未改 Rust 批量创建业务事务/幂等语义、创建组 ID 来源、数据库 schema/migration、T1-03 历史实现/证据；未新增第三方依赖；未 rebase/reset/squash/force-push。
+- 证据独立保存于 `T1-04-assets/evidence/round6-remediation/`，不覆盖 `round6/` 原始证据。
+
+### 12.2 三项问题逐项结果
+
+| 编号 | 原问题 | 修改文件 | 修复内容 | 测试证据 | 结果 |
+|---|---|---|---|---|---|
+| R6-01 | Rust `str::trim()` 与 JavaScript `String.trim()` 对 Unicode 空白处理不一致（U+0085 / U+FEFF），Bridge 可能拒绝 Rust 已成功提交并返回的合法响应 | `src/lib/contracts/workItemTitle.ts`（新增）、`workItemValidation.ts`、`bridge/workItems.ts`、`contracts/workItems.ts`、`QuickCreateWorkItemDialog.svelte`、`PendingWorkItemsView.svelte`、Rust `model.rs`、`work-item-bridge.test.mjs`、`work-item-title-cross-contract.test.mjs`（新增）、`title_normalization_cross_contract.rs`（新增） | 显式固定 Unicode `White_Space` 25 字符集合；Rust 用逐标量全量断言证明 `char::is_whitespace()` 与集合一致；TS 新增 `normalizeWorkItemTitle` 并用于对话框、requestId 幂等绑定、Bridge 请求/响应；只删首尾、保留内部空白/大小写/U+FEFF，不做 NFC/NFKC；真实 Rust SQLite 保存/读回结果交 Bridge 解析，验证同 requestId 重试返回原批次、无重复副本 | Bridge **48/48 PASS**（原 35 项全部保留 + 13 项 R6-01）；Red 在旧实现上 **42 pass / 4 fail**；Rust 9/9；交叉契约 10 场景 **1/1 PASS**；基线 worktree 交叉 Red 退出码 1 | 已修复 |
+| R6-02 | Migration 清理用 `Test-Path` 判断目录存在；悬空 Junction 可能被误判为不存在并标记 `alreadyAbsent`，未做原生身份验证 | `scripts/verify/T1-04MigrationCleanup.ps1`（新增）、`T1-04UatPath.ps1`、`verify-t1-04-migration-failure.ps1`、`test-t1-04-migration-cleanup.ps1`（新增）、`test-t1-04-migration-path.py` | 清理入口先由原生命名句柄识别 absent / 普通目录 / 文件 / Junction / Symbolic Link / 其他 reparse point；悬空 Junction 返回 `danglingJunction` 并 fail-closed；`Test-Path` 只做交叉检查；清理后再次原生确认入口消失并复验 UAT 根身份；不删除 UAT 根/evidence | 真实 Windows 故障注入 **8 PASS / 0 FAIL / 1 SKIP**；外部 Canary 前后 SHA-256 一致；路径专项 **58 项 / 0 FAIL / 1 SKIP**；Migration 路径专项 **31 项 / 0 FAIL**；真实 Release migration 回滚见 12.5 | 已修复 |
+| R6-03 | Bridge 注释仍称创建组 ID 由 Rust Core 生成；T1-04 任务文档顶部仍是第五轮状态；缺少统一标题规范化契约 | `workItemValidation.ts`、`T1-04-Implementation-Design.md`、`T1-04-Multi-Project-Independent-Copies.md`、`docs/STATUS.md`、`DEVELOPMENT_PLAN.md`、本报告、`scripts/verify/README.md` | 注释改为“客户端 requestId 经 Rust 校验后直接复用为创建组主键；工作事项 ID 由 Rust Core 生成”；任务状态改为第六轮独立审计后补正完成、等待独立审计；设计文档新增 3.2.1 Unicode `White_Space` 契约（字符集合、内部空白、大小写、NFC/NFKC、交叉契约）；历史轮次记录保留 | 文档/代码一致性复核；svelte-check 0 errors / 0 warnings；`git diff --check` 退出码 0 | 已修复 |
+
+### 12.3 TDD 与 Red/Green 证据
+
+- **R6-01 Bridge：** 先扩展 `work-item-bridge.test.mjs` 并在旧 `.trim()` 实现上执行，得到 **35 项原有通过 + 4 项 R6-01 失败**（U+0085、U+FEFF、混合空白、FEFF-only），退出码 1；实现后用同一命令得到 **48/48 PASS**，退出码 0。原始输出：`r6-01-bridge-red.txt` / `r6-01-bridge-green.txt`。
+- **R6-01 Rust：** 新增 25 字符全量集合断言与 U+0085/U+FEFF/内部空白/大小写/NFC 测试；修复前 9/9 通过（Rust 规范本身是权威），证明 Red 位于 JS 侧而不是伪造 Rust 失败。原始输出：`r6-01-rust-baseline-red.txt` / `r6-01-rust-green.txt`。
+- **R6-01 真实交叉契约：** 在 `de8f622` 基线 worktree 中执行 Node → Rust SQLite → Bridge 链路，Bridge 拒绝合法服务端标题，退出码 1（`r6-01-cross-contract-red-baseline.txt`）；补正后 10 个场景全部通过，退出码 0（`r6-01-cross-contract-green.txt`）。
+- **R6-02：** 先写真实故障注入测试并在旧清理逻辑上执行，6 个场景因原生入口类型 / stopCode 尚未实现而失败（仅全局 Canary 通过，退出码 1，`r6-02-cleanup-red.txt`）；补正后 **8 PASS / 0 FAIL / 1 SKIP**（`r6-02-cleanup-green.txt`）。
+- 未故意破坏生产代码制造 Red；未删除/放宽既有测试；未把 SKIP 伪报为 PASS；验证脚本退出码与产品行为分开记录。
+
+### 12.4 完整质量门禁（全部真实执行）
+
+| 命令 | 退出码 | 结果 |
+|---|---|---|
+| `cargo fmt --all -- --check` | 0 | PASS |
+| `cargo check --workspace --all-targets` | 0 | PASS |
+| `cargo test --workspace --no-fail-fast` | 0 | **162 passed / 0 failed / 1 ignored**（ignored 为交叉契约 Rust 执行器，由 Node 以 `--ignored` 启动并通过） |
+| `npm run check` | 0 | svelte-check 0 errors / 0 warnings；Bridge **48/48**；交叉契约 **1/1**（10 场景）；Design Token 22 文件 0 违规、**49/49** |
+| `npm run build` | 0 | 168 modules |
+| `git diff --check` | 0 | PASS（仅 CRLF 提示，无空白错误） |
+| `test-t1-04-path.py` | 0 | **58 项 / 0 FAIL / 1 SKIP**（证据 JSON 为写前 56 项快照；最后 2 项写后复核见原始输出） |
+| `test-t1-04-migration-path.py` | 0 | **31 项 / 0 FAIL**（证据 JSON 为写前 29 项快照；最后 2 项写后复核见原始输出） |
+| `test-t1-04-migration-cleanup.ps1` | 0 | **8 PASS / 0 FAIL / 1 SKIP** |
+| `verify-t1-04-migration-failure.ps1` | 0 | 真实 Release 回滚 PASS；见 12.5 |
+
+原始输出：`T1-04-assets/evidence/round6-remediation/gate-*.txt`、`r6-*.txt`。
+
+### 12.5 Windows Release E2E 与真实 Migration 回滚
+
+Release EXE（最终重建，全部代码修改后）：**10,458,112 字节**，SHA-256
+`4487b3e134d479eb4c71671f561c3008a5b97f72bf7728cf6d08a8ad9d62e7d1`，
+构建命令 `npm run tauri build -- --no-bundle`，退出码 0（4m 08s）。
+
+**T1-04 Release UI/IPC E2E（独立 UAT，虚构数据，端口 9355）：**
+
+- 主 UI/IPC **107/107**；最小窗口 **11/11**（真实关闭按钮）；真实 SQLite trigger 原子回滚 **13/13**；重启持久化 **15/15**；数据库只读探针 **62/62**；
+- 三次真实关闭退出码 **0/0/0**；CSP 违规 0；页面未捕获异常 0；
+- 探针：主阶段 14 工作 / 5 创建组 / 11 成员；故障回滚后完全一致（14 / 5 / 11，无残留）；重启并再次批量创建后 16 工作 / 6 创建组 / 13 成员；schema 4、完整性 ok、外键 0 违规、无孤儿成员、无多组副本；
+- 真实 IPC 响应异常后同 requestId 重试仍为 1 个创建组 / 2 个副本；
+- 结果：`T1_04_RELEASE_UI_E2E=PASS`，退出码 0；原始输出 `release-e2e-output.txt`，编排 `t1-04-ui-orchestration.json`，截图 `release-pending-after-main-checks.png`，机器可读 JSON 见 `release-e2e-evidence/`。
+
+**真实 Release migration 失败回滚：**
+
+- 真实 schema 3 + 真实 0004 同名冲突索引启动 Release EXE；
+- 原生“WorkManager 启动失败”对话框 found=true，Release 退出码 1；
+- 回滚后 `user_version=3`、无 version 4、无两张新表、历史项目/工作事项各 1 条不变、`integrity_check=ok`；
+- `MIGRATION_FAILURE_ROLLBACK=PASS`、`MIGRATION_FAILURE_CLEANUP=PASS`、`MIGRATION_FAILURE_EVIDENCE=PASS`，脚本退出码 0；
+- 原始输出 `migration-failure-output.txt`，证据 JSON `migration-failure-evidence.json`。
+
+### 12.6 安全证据与剩余风险
+
+- **正式运行目录 `D:\WorkManager`：未访问、未修改、未写入。** R6-02 测试只创建 `D:\WorkManager-test-data` 下的唯一测试根；未调用正式目录身份快照。
+- **测试根信任锚：** R6-02 测试在任何写入前调用 `Assert-T104UatTrustedRoot`；测试根、UAT 根、Junction 目标、Canary 均在测试根内。
+- **悬空 Junction：** 原生入口识别为 Junction、`targetExists=false`，清理返回 `danglingJunction`、`safe=false`、`performed=false`；未删除入口或外部目录；清理后原生复检保留现场。
+- **Canary：** R6-02 测试、路径专项、Migration 专项的外部 Canary 前后 SHA-256 均一致；R6-02 汇总哈希见 `r6-02-cleanup-green.txt` 与 `r6-02-canary-comparison.txt`。
+- **环境限制：** Windows 10 19045 的 `Test-Path` 对本次真实悬空 Junction 返回 `True`，未复现“`Test-Path` 为 false 后直接 `alreadyAbsent`”的具体分支；测试如实记录，并验证原生识别/fail-closed，未用模拟对象冒充真实 Junction。Symbolic Link 因无 `SeCreateSymbolicLinkPrivilege` 显式 SKIP；其他 reparse point 只验证 tag 映射，未宣称真实注入。
+- **未解决风险：** DEC-029 / Issue #2 TOCTOU 并发路径替换窗口仍存在；本轮只修复静态悬空 Junction 存在性判断，不宣称消除并发替换。P2-01 仍等待 GitHub Support；普通 SQLite 未加密。
+
+### 12.7 遗留问题
+
+- **本轮已修复：** R6-01、R6-02、R6-03。
+- **本轮未修复（不在授权范围）：** DEC-029 / Issue #2 TOCTOU；P2-01（GitHub Support 服务端清理）；T1-05 及后续任务。
+- **本轮未验证：** 独立代码审计、用户验收。
+- **需要后续独立审计确认：** Unicode `White_Space` 集合与 Rust 行为一致性、真实交叉契约测试充分性、悬空 Junction fail-closed 与 Canary 证据、文档状态与最终代码一致性。
+
+### 12.8 最终状态
+
+**T1-04 第六轮独立审计后 R6-01～R6-03 补正完成，开发与自测结果待独立代码审计。**

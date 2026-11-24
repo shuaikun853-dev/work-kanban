@@ -1,0 +1,49 @@
+Diff in \\?\<repo-root>\crates\workmanager-core\tests\title_normalization_cross_contract.rs:68:
+     let mut expected_work_items = 0_i64;
+     for (case_id, raw_title) in cases {
+         let request_id = uuid::Uuid::new_v4().to_string();
+[31m-        let first = WorkItemService::create_copies(
+[0m[31m-            &mut database,
+[0m[31m-            &request_id,
+[0m[31m-            &raw_title,
+[0m[31m-            &project_ids,
+[0m[31m-        )
+[0m[31m-        .expect("Rust Core 必须接受该标题并完成原子创建");
+[0m[32m+        let first =
+[0m[32m+            WorkItemService::create_copies(&mut database, &request_id, &raw_title, &project_ids)
+[0m[32m+                .expect("Rust Core 必须接受该标题并完成原子创建");
+[0m         assert_eq!(first.group_id, request_id, "创建组 ID 必须复用 requestId");
+         assert_eq!(first.work_items.len(), 2, "两个项目必须各一个副本");
+
+Diff in \\?\<repo-root>\crates\workmanager-core\tests\title_normalization_cross_contract.rs:90:
+             .collect();
+
+         // 同一 requestId 重试：必须返回同一创建组、同一工作事项 ID 与同一标题。
+[31m-        let retry = WorkItemService::create_copies(
+[0m[31m-            &mut database,
+[0m[31m-            &request_id,
+[0m[31m-            &raw_title,
+[0m[31m-            &project_ids,
+[0m[31m-        )
+[0m[31m-        .expect("同一 requestId 重试必须返回既有批次");
+[0m[32m+        let retry =
+[0m[32m+            WorkItemService::create_copies(&mut database, &request_id, &raw_title, &project_ids)
+[0m[32m+                .expect("同一 requestId 重试必须返回既有批次");
+[0m         assert_eq!(retry.group_id, first.group_id, "重试 groupId 必须一致");
+         assert_eq!(
+             retry
+Diff in \\?\<repo-root>\crates\workmanager-core\tests\title_normalization_cross_contract.rs:132:
+         println!("CROSS_CONTRACT_CASE\t{case_id}");
+         println!("CROSS_CONTRACT_GROUP\t{}", first.group_id);
+         for work_item in &first.work_items {
+[31m-            let project_id = work_item.project_id.as_deref().expect("批量副本必须关联项目");
+[0m[32m+            let project_id = work_item
+[0m[32m+                .project_id
+[0m[32m+                .as_deref()
+[0m[32m+                .expect("批量副本必须关联项目");
+[0m             println!(
+                 "CROSS_CONTRACT_ITEM\t{}\t{}\t{}\t{}\t{}",
+                 project_id,
+EXIT_CODE=1
+EXIT_CODE=0
+EXIT_CODE=0

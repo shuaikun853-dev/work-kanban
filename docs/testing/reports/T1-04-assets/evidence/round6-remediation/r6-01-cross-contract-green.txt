@@ -1,0 +1,27 @@
+TAP version 13
+# CROSS_CONTRACT_BRIDGE=PASS case=u0085-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=ufeff-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=u3000-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=tab-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=crlf-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=ascii-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=internal-spaces
+# CROSS_CONTRACT_BRIDGE=PASS case=internal-tab
+# CROSS_CONTRACT_BRIDGE=PASS case=mixed-unicode
+# CROSS_CONTRACT_BRIDGE=PASS case=ufeff-only
+# Subtest: R6-01 Rust Core 真实保存/返回标题与 Bridge 规范化完全一致
+ok 1 - R6-01 Rust Core 真实保存/返回标题与 Bridge 规范化完全一致
+  ---
+  duration_ms: 5605.5096
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5828.1242
+EXIT_CODE=0

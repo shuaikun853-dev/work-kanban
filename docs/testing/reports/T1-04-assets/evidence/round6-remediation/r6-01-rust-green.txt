@@ -1,0 +1,24 @@
+cargo.exe :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.90s
+所在位置 行:1 字符: 265
++ ... green.txt'; & cargo.exe test -p workmanager-core --lib work_items::mo ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.90s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+     Running unittests src\lib.rs (target\debug\build\workmanager-core/6107d6b29e31d147\out\workmanager_core-6107d6b29e
+31d147.exe)
+
+running 9 tests
+test work_items::model::tests::identical_titles_are_not_deduplicated_by_model ... ok
+test work_items::model::tests::normalizes_each_unicode_white_space_at_both_ends ... ok
+test work_items::model::tests::preserves_internal_whitespace_and_does_not_case_fold_or_normalize_unicode ... ok
+test work_items::model::tests::keeps_long_titles_without_limit ... ok
+test work_items::model::tests::normalizes_surrounding_whitespace_only ... ok
+test work_items::model::tests::rejects_empty_and_whitespace_only_titles ... ok
+test work_items::model::tests::preserves_leading_and_trailing_zero_width_no_break_space ... ok
+test work_items::model::tests::title_error_does_not_echo_user_input ... ok
+test work_items::model::tests::title_whitespace_contract_matches_unicode_white_space_exactly ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.47s
+
+EXIT_CODE=0

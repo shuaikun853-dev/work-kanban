@@ -9,9 +9,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json && npm run test:work-item-bridge && npm run check:design-tokens && npm run test:design-tokens",
+    "check": "svelte-check --tsconfig ./tsconfig.json && npm run test:work-item-bridge && npm run test:title-cross-contract && npm run check:design-tokens && npm run test:design-tokens",
     "check:design-tokens": "node scripts/quality/check-design-tokens.mjs",
     "test:design-tokens": "node --test scripts/quality/design-tokens.test.mjs",
+    "test:title-cross-contract": "node --test scripts/quality/work-item-title-cross-contract.test.mjs",
     "test:work-item-bridge": "node --test scripts/quality/work-item-bridge.test.mjs",
     "tauri": "tauri"
   },

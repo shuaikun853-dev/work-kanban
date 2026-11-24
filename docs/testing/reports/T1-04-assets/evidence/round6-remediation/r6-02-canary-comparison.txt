@@ -1,0 +1,29 @@
+T1-04 R6-02 Canary comparison
+================================================================
+
+R6-02 migration cleanup fault injection:
+  canary before: f3a8992f0d0befc72a961ba0b4111cb2d94b5c0fa2d303984f46ad5266ca491f
+  canary after : f3a8992f0d0befc72a961ba0b4111cb2d94b5c0fa2d303984f46ad5266ca491f
+  unchanged    : true
+  formalRootTouched: false
+  test root    : <test-root>/20261124-184133-708-11192
+  result       : 8 PASS / 0 FAIL / 1 SKIP (real Symbolic Link creation denied by OS privilege)
+
+T1-04 path safety suite (test-t1-04-path.py):
+  canary.allTargetsUnchanged = True
+  targets = test-root-redirect,test-root-ancestor,db-ancestor,db-leaf,
+            external-evidence,uat-root-replaced-target,database-dir-target,
+            evidence-dir-target,tracked-link-target,no-connect-target,
+            no-connect-ancestor-target
+  formalRoot.identityUnchanged = True (existedBefore=False, existedAfter=False)
+  result = 58 checks / 0 failed / 1 skip
+
+T1-04 migration path suite (test-t1-04-migration-path.py):
+  canary.allTargetsUnchanged = True
+  targets = migration-parent,migration-leaf,migration-probe-parent,migration-output
+  formalRoot.identityUnchanged = True (existedBefore=False, existedAfter=False)
+  result = 31 checks / 0 failed / 0 skip
+
+Note: <formal-root> does not exist on this machine. No test opened, modified,
+or wrote to the formal directory. All fault injection stayed under the verified
+<test-root> trust anchor.

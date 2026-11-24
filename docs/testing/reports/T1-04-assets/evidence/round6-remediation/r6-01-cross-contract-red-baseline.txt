@@ -1,0 +1,32 @@
+TAP version 13
+# Subtest: R6-01 Rust Core 真实保存/返回标题与 Bridge 规范化完全一致
+not ok 1 - R6-01 Rust Core 真实保存/返回标题与 Bridge 规范化完全一致
+  ---
+  duration_ms: 8109.9805
+  type: 'test'
+  location: '<test-root>\\r6-01-title-red-baseline-20261124-181714\\scripts\\quality\\work-item-title-cross-contract.test.mjs:158:1'
+  failureType: 'testCodeFailure'
+  error: '工作事项 IPC 返回值不符合契约：批量创建工作结果.workItems[0].title 应为 与请求 title 去除首尾空白后的字符串完全一致（不改变大小写或内部空白），实际为 string。请检查前后端版本是否一致。'
+  code: 'ipc-contract-violation'
+  name: 'WorkItemIpcError'
+  stack: |-
+    contractViolation (file:///<test-root>/r6-01-title-red-baseline-20261124-181714/src/lib/bridge/workItemValidation.ts:430:10)
+    file:///<test-root>/r6-01-title-red-baseline-20261124-181714/src/lib/bridge/workItemValidation.ts:245:13
+    Array.forEach (<anonymous>)
+    parseCreatedWorkItemCopies (file:///<test-root>/r6-01-title-red-baseline-20261124-181714/src/lib/bridge/workItemValidation.ts:241:13)
+    TestContext.<anonymous> (file:///<test-root>/r6-01-title-red-baseline-20261124-181714/scripts/quality/work-item-title-cross-contract.test.mjs:193:20)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8468.1031
+EXIT_CODE=1

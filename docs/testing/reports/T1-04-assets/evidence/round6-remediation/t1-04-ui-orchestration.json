@@ -1,0 +1,393 @@
+{
+    "task":  "T1-04",
+    "generatedAt":  "2026-11-24T10:46:16.4878558Z",
+    "exePath":  "<repo-root>\\target\\release\\workmanager.exe",
+    "exeSha256":  "4487b3e134d479eb4c71671f561c3008a5b97f72bf7728cf6d08a8ad9d62e7d1",
+    "exeSizeBytes":  10458112,
+    "outputDir":  "<test-root>\\t1-04-ui-r6-20261124-1846",
+    "appDir":  "<test-root>\\t1-04-ui-r6-20261124-1846\\app",
+    "databasePath":  "<test-root>\\t1-04-ui-r6-20261124-1846\\app\\data\\database\\work.db",
+    "remoteDebugPort":  9355,
+    "mainUiCheckExitCode":  0,
+    "mainUiCheckCount":  107,
+    "mainUiFailedCheckCount":  0,
+    "minWindowCheckExit":  0,
+    "minWindowCheckCount":  11,
+    "minWindowFailedCheckCount":  0,
+    "minWindowResizeOk":  true,
+    "firstCloseExitCode":  0,
+    "faultCheckExitCode":  0,
+    "faultCheckCount":  13,
+    "faultFailedCheckCount":  0,
+    "faultCloseExitCode":  0,
+    "persistenceCheckExitCode":  0,
+    "persistenceCheckCount":  15,
+    "persistenceFailedCheckCount":  0,
+    "persistenceCloseExitCode":  0,
+    "dbCheckCount":  62,
+    "dbFailedCheckCount":  0,
+    "dbChecks":  [
+                     {
+                         "name":  "dbProbe.afterMain.readable",
+                         "pass":  true,
+                         "detail":  "probe JSON readable"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.probeStatusOk",
+                         "pass":  true,
+                         "detail":  "status=ok scope=uat"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.schemaVersion4",
+                         "pass":  true,
+                         "detail":  "schema_version=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.integrityOk",
+                         "pass":  true,
+                         "detail":  "ok"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.journalModeWal",
+                         "pass":  true,
+                         "detail":  "wal"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.foreignKeysEnabled",
+                         "pass":  true,
+                         "detail":  "foreign_keys=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.requiredTablesPresent",
+                         "pass":  true,
+                         "detail":  "required_tables_present=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.migrations1To4",
+                         "pass":  true,
+                         "detail":  "1,2,3,4"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.foreignKeyViolationsZero",
+                         "pass":  true,
+                         "detail":  "violations=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.allRowsPending",
+                         "pass":  true,
+                         "detail":  "total=14 pending=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.noOrphanMembers",
+                         "pass":  true,
+                         "detail":  "orphan=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.noGroupsWithoutMembers",
+                         "pass":  true,
+                         "detail":  "empty_groups=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.noWorkItemInMultipleGroups",
+                         "pass":  true,
+                         "detail":  "multi_group=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.allBatchItemsPending",
+                         "pass":  true,
+                         "detail":  "not_pending=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.workItems14",
+                         "pass":  true,
+                         "detail":  "work_items=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.pending14",
+                         "pass":  true,
+                         "detail":  "pending=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.unassigned1",
+                         "pass":  true,
+                         "detail":  "null_project=1"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.archivedLink1",
+                         "pass":  true,
+                         "detail":  "linked_archived=1"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.linkedActive12",
+                         "pass":  true,
+                         "detail":  "linked_active=12"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.projects4Archived1",
+                         "pass":  true,
+                         "detail":  "projects=4 archived=1"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.creationGroups5",
+                         "pass":  true,
+                         "detail":  "groups=5"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.members11",
+                         "pass":  true,
+                         "detail":  "members=11"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.groupSizeHistogram",
+                         "pass":  true,
+                         "detail":  "{\"2\":4,\"3\":1}"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.readable",
+                         "pass":  true,
+                         "detail":  "probe JSON readable"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.probeStatusOk",
+                         "pass":  true,
+                         "detail":  "status=ok scope=uat"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.schemaVersion4",
+                         "pass":  true,
+                         "detail":  "schema_version=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.integrityOk",
+                         "pass":  true,
+                         "detail":  "ok"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.journalModeWal",
+                         "pass":  true,
+                         "detail":  "wal"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.foreignKeysEnabled",
+                         "pass":  true,
+                         "detail":  "foreign_keys=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.requiredTablesPresent",
+                         "pass":  true,
+                         "detail":  "required_tables_present=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.migrations1To4",
+                         "pass":  true,
+                         "detail":  "1,2,3,4"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.foreignKeyViolationsZero",
+                         "pass":  true,
+                         "detail":  "violations=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.allRowsPending",
+                         "pass":  true,
+                         "detail":  "total=14 pending=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noOrphanMembers",
+                         "pass":  true,
+                         "detail":  "orphan=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noGroupsWithoutMembers",
+                         "pass":  true,
+                         "detail":  "empty_groups=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noWorkItemInMultipleGroups",
+                         "pass":  true,
+                         "detail":  "multi_group=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.allBatchItemsPending",
+                         "pass":  true,
+                         "detail":  "not_pending=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.workItemsStill14",
+                         "pass":  true,
+                         "detail":  "work_items=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.creationGroupsStill5",
+                         "pass":  true,
+                         "detail":  "groups=5"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.membersStill11",
+                         "pass":  true,
+                         "detail":  "members=11"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noFaultBatchResidue",
+                         "pass":  true,
+                         "detail":  "work_items=14 groups=5 members=11"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.readable",
+                         "pass":  true,
+                         "detail":  "probe JSON readable"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.probeStatusOk",
+                         "pass":  true,
+                         "detail":  "status=ok scope=uat"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.schemaVersion4",
+                         "pass":  true,
+                         "detail":  "schema_version=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.integrityOk",
+                         "pass":  true,
+                         "detail":  "ok"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.journalModeWal",
+                         "pass":  true,
+                         "detail":  "wal"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.foreignKeysEnabled",
+                         "pass":  true,
+                         "detail":  "foreign_keys=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.requiredTablesPresent",
+                         "pass":  true,
+                         "detail":  "required_tables_present=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.migrations1To4",
+                         "pass":  true,
+                         "detail":  "1,2,3,4"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.foreignKeyViolationsZero",
+                         "pass":  true,
+                         "detail":  "violations=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.allRowsPending",
+                         "pass":  true,
+                         "detail":  "total=16 pending=16"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noOrphanMembers",
+                         "pass":  true,
+                         "detail":  "orphan=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noGroupsWithoutMembers",
+                         "pass":  true,
+                         "detail":  "empty_groups=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noWorkItemInMultipleGroups",
+                         "pass":  true,
+                         "detail":  "multi_group=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.allBatchItemsPending",
+                         "pass":  true,
+                         "detail":  "not_pending=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.workItems16",
+                         "pass":  true,
+                         "detail":  "work_items=16"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.pending16",
+                         "pass":  true,
+                         "detail":  "pending=16"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.creationGroups6",
+                         "pass":  true,
+                         "detail":  "groups=6"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.members13",
+                         "pass":  true,
+                         "detail":  "members=13"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.groupSizeHistogram",
+                         "pass":  true,
+                         "detail":  "{\"2\":5,\"3\":1}"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.newBatchPersisted",
+                         "pass":  true,
+                         "detail":  "work_items=16 groups=6 members=13"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noArchivedLinkLost",
+                         "pass":  true,
+                         "detail":  "linked_archived=1"
+                     }
+                 ],
+    "evidenceDir":  "<test-root>\\t1-04-ui-r6-20261124-1846\\evidence",
+    "pathGuard":  {
+                      "trustAnchorVerified":  true,
+                      "databasePathAndAncestorsVerified":  true,
+                      "databaseFileReparsePointRejected":  true,
+                      "evidenceDirectoryBoundaryVerified":  true,
+                      "evidenceFileBoundaryVerified":  true,
+                      "volumeIdentityVerified":  true,
+                      "staticReparsePointsRejected":  true,
+                      "concurrentReplacementRisk":  "DEC-029 / Issue #2 remains deferred and unresolved"
+                  },
+    "dbProbeAfterMain":  "<test-root>\\t1-04-ui-r6-20261124-1846\\evidence\\t1-04-db-after-main.json",
+    "dbProbeAfterFault":  "<test-root>\\t1-04-ui-r6-20261124-1846\\evidence\\t1-04-db-after-fault.json",
+    "dbProbeAfterRestart":  "<test-root>\\t1-04-ui-r6-20261124-1846\\evidence\\t1-04-db-after-restart.json",
+    "evidenceFiles":  [
+                          "batch-rollback-error.png",
+                          "create-dialog-min.png",
+                          "create-dialog-multi-projects.png",
+                          "create-error-contract-violation-batch.png",
+                          "create-error-project-archived-batch.png",
+                          "pending-after-main-checks.png",
+                          "pending-after-restart.png",
+                          "pending-archived-project.png",
+                          "pending-empty.png",
+                          "pending-min.png",
+                          "pending-refresh-recovered.png",
+                          "pending-three-project-copies.png",
+                          "pending-two-project-copies.png",
+                          "pending-unassigned-regression.png",
+                          "t1-04-fault-evidence.json",
+                          "t1-04-min-window-evidence.json",
+                          "t1-04-persistence-evidence.json",
+                          "t1-04-prerequisite.json",
+                          "t1-04-ui-evidence.json"
+                      ],
+    "screenshots":  [
+                        "batch-rollback-error.png",
+                        "create-dialog-min.png",
+                        "create-dialog-multi-projects.png",
+                        "create-error-contract-violation-batch.png",
+                        "create-error-project-archived-batch.png",
+                        "pending-after-main-checks.png",
+                        "pending-after-restart.png",
+                        "pending-archived-project.png",
+                        "pending-empty.png",
+                        "pending-min.png",
+                        "pending-refresh-recovered.png",
+                        "pending-three-project-copies.png",
+                        "pending-two-project-copies.png",
+                        "pending-unassigned-regression.png"
+                    ],
+    "pass":  true
+}

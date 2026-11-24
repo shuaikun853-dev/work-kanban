@@ -53,6 +53,7 @@ from t1_04_path_guard import PathGuardError  # noqa: E402
 import t1_04_path_test_support as support  # noqa: E402
 
 MIGRATION_SCRIPT = SCRIPT_DIR / "verify-t1-04-migration-failure.ps1"
+CLEANUP_MODULE = SCRIPT_DIR / "T1-04MigrationCleanup.ps1"
 FIXTURE_SCRIPT = SCRIPT_DIR / "t1-04-migration-fixture.py"
 RELEASE_EXE = REPO_ROOT / "target" / "release" / "workmanager.exe"
 
@@ -361,6 +362,7 @@ def invoke_migration_script(output_dir: str) -> subprocess.CompletedProcess:
 
 def run_migration_script_checks(registry: support.PathCaseRegistry) -> None:
     script_text = MIGRATION_SCRIPT.read_text(encoding="utf-8-sig")
+    cleanup_text = CLEANUP_MODULE.read_text(encoding="utf-8-sig")
     check(
         "migrationScript.nativeGuardsPresent",
         all(
@@ -376,9 +378,12 @@ def run_migration_script_checks(registry: support.PathCaseRegistry) -> None:
     )
     check(
         "migrationScript.failClosedCleanupReused",
-        "Invoke-T103FailClosedSandboxCleanup" in script_text
-        and "Remove-Item -LiteralPath $uat -Recurse -Force" not in script_text,
-        "fail-closed cleanup reused; forced recursive cleanup removed",
+        "T1-04MigrationCleanup.ps1" in script_text
+        and "Invoke-T104FailClosedMigrationCleanupCore" in script_text
+        and "Invoke-T103FailClosedSandboxCleanup" in cleanup_text
+        and "Remove-Item -LiteralPath $uat -Recurse -Force" not in script_text
+        and "Remove-Item -LiteralPath $uat -Recurse -Force" not in cleanup_text,
+        "fail-closed cleanup reused via T1-04MigrationCleanup.ps1; forced recursive cleanup removed",
     )
     check(
         "migrationScript.realMigrationRollbackTestPreserved",

@@ -5,7 +5,7 @@
 **堆叠基线：** `e8205cae22e98afce6480f5a5a0695543a61dee3`（T1-03 分支 HEAD，PR #8 Open）  
 **main 基线：** `018e851e8daf5835391a7b61caf881bc57c2ad42`（未包含 T1-03/T1-04）  
 **编写时间：** 2026-11-24  
-**状态：** 编码前设计（第五轮 T104-01～T104-06、第六轮 R2-01～R2-04 修复后已按实际实现补充说明，见第 12 节）。实现必须严格按本与权威文档执行；若实现与设计不一致，必须在测试报告或本文件补充说明原因。
+**状态：** 编码前设计（第五轮 T104-01～T104-06、第六轮 R2-01～R2-04、第六轮独立审计后 R6-01～R6-03 补正后已按实际实现补充说明，见第 12 节）。实现必须严格按本与权威文档执行；若实现与设计不一致，必须在测试报告或本文件补充说明原因。
 
 本设计依据（按优先级）：
 
@@ -94,7 +94,7 @@ pub struct CreatedWorkItemCopies {
 
 执行顺序：
 
-1. 标题 trim 与非空校验（`normalize_title`，空 → `work-item-title-empty`）；
+1. 标题按 Unicode `White_Space` 规范化并做非空校验（`normalize_title`，空 → `work-item-title-empty`；规则见 3.2.1）；
 2. 客户端 `request_id` 必须是规范小写连字符 UUID（`Uuid::parse_str` 后 `hyphenated()` 与原文逐字相等），否则 `work-item-create-request-id-invalid`；该标识直接作为创建组主键，不新增 schema 字段；
 3. 项目数量校验：`project_ids.len() >= 2`，否则 `work-item-copies-too-few`；
 4. 项目 ID 去重校验：出现重复 → `work-item-copies-duplicate-project`（不得静默去重）；
@@ -117,6 +117,28 @@ pub struct CreatedWorkItemCopies {
 7. 失败路径由 `write_transaction` 显式回滚；不允许部分成功、静默跳过或补偿删除。
 
 读回查询使用事务连接（`Transaction` 可解引用为 `Connection`），复用现有 `repository::find`。
+
+#### 3.2.1 标题 Unicode White_Space 规范化契约（R6-01）
+
+权威规则如下，Rust Core 与 TypeScript 必须逐字一致：
+
+- 只删除标题**首尾**属于 Unicode `White_Space` 属性的字符；内部空白原样保留。
+- 字符集合固定为 25 个：U+0009～U+000D、U+0020、U+0085、U+00A0、U+1680、
+  U+2000～U+200A、U+2028～U+2029、U+202F、U+205F、U+3000。
+- U+FEFF 不属于 `White_Space`，两端一致保留；不得用 JavaScript `String.trim()`
+  代替该规则（`trim()` 会删除 U+FEFF、却不会删除 U+0085）。
+- 不改变大小写，不进行 NFC / NFKC 或其他 Unicode 规范化转换；不限制标题长度，
+  不做标题去重。
+- Rust 侧 `normalize_title` 使用 `char::is_whitespace()`（Unicode `White_Space`）；
+  增加逐 Unicode 标量全量断言，证明其与上述 25 字符集合完全一致。
+- TypeScript 侧权威实现为 `src/lib/contracts/workItemTitle.ts` 的
+  `normalizeWorkItemTitle`；快速创建对话框、页面 requestId 幂等绑定、Bridge
+  请求/响应校验必须全部使用该函数。
+- 数据契约：`前端输入 → TypeScript normalizeWorkItemTitle → Rust normalize_title
+  → SQLite 保存/读回 → Bridge 逐字比较`。Bridge 每个副本标题必须等于同一规范化
+  结果；规范化失败不得被误报为服务端创建失败。
+- 验证必须包含真实 Rust / Bridge 交叉契约测试（真实 SQLite 保存/读回，而非两个
+  独立纯函数各自断言），并覆盖同一 requestId 重试返回原批次、无重复副本。
 
 ### 3.3 仓储新增
 
@@ -257,7 +279,7 @@ export async function createWorkItemCopies(
 1. 响应是严格对象，恰好 `groupId`、`workItems` 两个字段（缺字段/未知字段拒绝）；
 2. `request.requestId` 必须是规范小写连字符 UUID（Rust 拒绝大写/非规范形式）；
 3. `groupId` 必须是规范 UUID，且必须与 `request.requestId` 逐字相等（合法但不同的 UUID 也拒绝）；
-4. `request.title` 必须是字符串且去除首尾空白后非空；每个副本 `title` 必须等于该 trim 结果（不改变大小写、不折叠内部空白）；
+4. `request.title` 必须是字符串且按 Unicode `White_Space` 规范化后非空；每个副本 `title` 必须等于该规范化结果（不改变大小写、不折叠内部空白、不删除 U+FEFF）；
 5. `requestedProjectIds` 为非空字符串数组、至少 2 个且无重复（请求本身不合法 → 契约违规，不进行部分解析）；
 6. `workItems` 是数组，长度等于请求项目数；
 7. 每个元素通过现有 `parseWorkItem` 严格校验（10 字段、无缺失/额外字段、状态 `pending`）；
@@ -483,7 +505,7 @@ git diff --check
 4. **时间戳：** 一次批量创建的全部副本与创建组共享同一 UTC RFC3339 毫秒时间戳；待安排排序仍为 `created_at DESC, id DESC`，因此同批次内以稳定 ID 次级排序，顺序稳定。
 5. **创建组读回验证：** 提交前在事务内读回创建组（`source_title`/`created_at`）、每个工作副本（逐字段相等）与全部成员关系（数量、group、work_item→project 映射）；成员集合与请求副本集合双向比对，防止多余/缺失成员。读回不一致统一返回 `work-item-persistence-verification-failed`。
 6. **故障注入：** Rust 测试使用真实 SQLite `TRIGGER`（第二条副本插入失败、第二条成员关系失败、事务内读回篡改）制造真实数据库错误，不在生产代码增加故障开关。Release E2E 通过 `control-t1-04-fault.py` 仅在 D 盘独立 UAT 数据库安装 `BEFORE INSERT` trigger，验证整批回滚、无残留；未在正式数据目录执行，未修改 Windows ACL。
-7. **Bridge 契约：** `parseCreatedWorkItemCopies(raw, request)` 必须获得完整请求上下文（`requestId`、`title`、`projectIds`）：除响应字段/数量/项目一一对应/ID 唯一/pending 外，还验证 `groupId === requestId`（合法但不同 UUID 拒绝）与每个副本 `title === request.title.trim()`；并校验调用方请求项目列表（≥2、非空、不重复）；若调用方传入非法请求列表，即使后端返回成功也按 `ipc-contract-violation` 拒绝，避免“请求与响应不一致被静默接受”。
+7. **Bridge 契约：** `parseCreatedWorkItemCopies(raw, request)` 必须获得完整请求上下文（`requestId`、`title`、`projectIds`）：除响应字段/数量/项目一一对应/ID 唯一/pending 外，还验证 `groupId === requestId`（合法但不同 UUID 拒绝）与每个副本 `title === normalizeWorkItemTitle(request.title)`（R6-01 起使用 Unicode `White_Space`；R2-03 时的 `.trim()` 已被取代）；并校验调用方请求项目列表（≥2、非空、不重复）；若调用方传入非法请求列表，即使后端返回成功也按 `ipc-contract-violation` 拒绝，避免“请求与响应不一致被静默接受”。
 8. **UI 成功提示：** 单条创建显示“已创建 1 项工作”；批量创建使用 Rust 返回的 `workItems.length` 作为实际数量，不使用前端预计数量。创建成功与列表刷新成功/失败三态沿用 T1-03 的分离策略。
 9. **失效选择：** T1-03 的“项目列表刷新后自动回退为未归属项目”逻辑已移除；T1-04 中失效项目选择保留在对话框中，标记为不可用，Submit 被禁用，必须由用户点击“移除”或调整选择后才能再次提交。
 10. **测试/验证脚本调整：** schema 3→4 导致 `VerifyCommon.ps1`、`inspect-release-ui.mjs`、`inspect-t1-02-ui.mjs` 的 schema/migration 期望更新；T1-02 诊断页 migrationRows 期望由 1–3 更新为 1–4。T1-03 历史证据 JSON、历史审计报告与 T1-03 分支未修改；T1-03 原 UI E2E 脚本因控件从单选扩展为多选不再作为可执行回归基线（未修改），T1-03 业务规则回归由 Rust 测试与 T1-04 E2E 场景覆盖。
@@ -503,3 +525,10 @@ git diff --check
 2. **R2-02 Migration 验证工具原生守卫：** `verify-t1-04-migration-failure.ps1` 不再使用 `GetFullPath().StartsWith` 字符串判断；UAT 根 / 数据库目录 / 数据库文件 / 证据目录在创建、复制 EXE、启动 Release 前通过 T1-04 原生守卫，清理只清理 `migration-failure-uat` 子目录且复用 fail-closed 身份复验（证据目录保留用于写入证据）；`t1-04-migration-fixture.py` setup 在 `sqlite3.connect()` 前执行 `database-target` 守卫、独占创建文件、创建后再执行 `database` 守卫，probe 在只读连接前执行 `database` 守卫且失败不降级。
 3. **R2-03 Bridge 严格业务契约：** `parseCreatedWorkItemCopies(raw, request)` 获得完整请求上下文，新增 `groupId === requestId`（合法但不同 UUID 拒绝）与每个副本 `title === request.title.trim()` 校验；Bridge `createWorkItemCopies` 传入完整上下文；Node Bridge 契约测试 27 → 35 项。
 4. **R2-04 文档与契约描述统一：** 技术设计 5.4.1、Rust model/service 注释、TypeScript contracts/bridge 注释、任务说明与报告统一为“客户端生成 `requestId`，Rust Core 校验并直接作为创建组主键；工作副本 ID 由 Rust Core 生成；不新增数据库字段或 migration”。未改变 DEC-034 整批原子事务语义；未新增 schema 字段或 migration。
+
+### 12.3 第六轮独立审计后定向补正记录（R6-01～R6-03，2026-11-24）
+
+1. **R6-01 标题规范化：** 新增 `src/lib/contracts/workItemTitle.ts`，显式固定 Unicode `White_Space` 的 25 个字符，提供 `normalizeWorkItemTitle`；`QuickCreateWorkItemDialog.svelte`、`PendingWorkItemsView.svelte`、`workItemValidation.ts` 全部改用该函数，不再使用标题 `.trim()`。`model.rs` 增加逐 Unicode 标量全量断言，证明 Rust `char::is_whitespace()` 与该字符集合完全一致；U+FEFF 保留、U+0085 删除、内部空白/大小写/NFC 不变。R2-03 历史记录中的 `title === request.title.trim()` 自本轮起由 `normalizeWorkItemTitle(request.title)` 取代。
+2. **R6-01 交叉契约测试：** 新增 `crates/workmanager-core/tests/title_normalization_cross_contract.rs`（真实 SQLite + `create_copies`，普通运行标记 ignored）与 `scripts/quality/work-item-title-cross-contract.test.mjs`（Node 传入原始标题、接收 Rust 实际返回、交给真实 Bridge 解析）；覆盖 10 个标题场景，并断言同一 requestId 重试返回原批次、每批仅 2 个副本/1 个创建组。
+3. **R6-02 Migration 清理：** 新增 `scripts/verify/T1-04MigrationCleanup.ps1` 与 `Get-T104UatEntryState` / `Get-T104UatReparseKind`（`T1-04UatPath.ps1`）；清理入口先用原生句柄识别 absent / directory / file / junction / symbolicLink / otherReparsePoint，悬空 Junction 返回 `danglingJunction` 并 fail-closed；`Test-Path` 只作为交叉检查，不能单独决定 `alreadyAbsent`；清理后再次原生确认入口消失。`verify-t1-04-migration-failure.ps1` 只映射该模块结果。真实故障注入测试 `test-t1-04-migration-cleanup.ps1` 覆盖普通清理、已不存在、悬空 Junction、存活 Junction、文件入口、缺失身份记录、符号链接 SKIP 与 tag 分类；Canary 前后一致，正式目录未访问。
+4. **R6-03 注释与状态：** 修正 `workItemValidation.ts` 中创建组 ID 来源注释；同步本文件 3.2.1、任务文档、STATUS、DEVELOPMENT_PLAN 与测试报告。历史轮次记录保留。

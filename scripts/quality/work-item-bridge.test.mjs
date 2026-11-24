@@ -7,8 +7,8 @@
  * - Rust `PendingWorkItem` 实际序列化 8 字段；
  * - 批量创建必须传入完整请求上下文：请求 requestId 必须是规范小写连字符 UUID，
  *   响应 groupId 必须与之逐字相等（Rust 直接复用请求标识作为创建组主键）；
- * - 请求 title 去除首尾空白后必须非空，响应每个副本 title 必须等于该 trim 结果
- *   （Rust `normalize_title` 只 trim，不改变大小写、不折叠内部空白）；
+ * - 请求 title 去除首尾 Unicode White_Space 后必须非空，响应每个副本 title 必须等于
+ *   同一规范化结果（不改变大小写、不折叠内部空白、不删除 U+FEFF）；
  * - 缺少必需字段、字段类型错误、非法 lifecycleStatus、未知字段一律拒绝；
  * - 拒绝时抛出稳定错误码 `ipc-contract-violation` 的 WorkItemIpcError。
  *
@@ -26,6 +26,10 @@ import {
   parsePendingWorkItemList,
   parseWorkItem
 } from '../../src/lib/bridge/workItemValidation.ts';
+import {
+  WORK_ITEM_TITLE_WHITESPACE_CODEPOINTS,
+  normalizeWorkItemTitle
+} from '../../src/lib/contracts/workItemTitle.ts';
 
 /** 与 Rust `WorkItem` serde(camelCase) 输出一致的 10 字段夹具（可空字段均为 null）。 */
 function rustSerializedWorkItem(overrides = {}) {
@@ -261,8 +265,8 @@ test('拒绝时错误信息包含字段路径且错误码稳定', () => {
 // 真实后端语义（crates/workmanager-core/src/work_items/service.rs）：
 // - 客户端 requestId 必须是规范小写连字符 UUID，Rust 解析后直接复用为创建组主键，
 //   因此响应 groupId 必须与请求 requestId 逐字相等，而不是“任意合法 UUID”即可；
-// - normalize_title 只做首尾 trim，因此响应 title 必须等于请求 title.trim()，
-//   大小写与内部空白都不允许变化。
+// - normalize_title 只删除首尾 Unicode White_Space，因此响应 title 必须等于同一
+//   规范化结果；大小写、内部空白与 U+FEFF 都不允许变化。
 // ---------------------------------------------------------------------------
 
 const PROJECT_A = '11111111-1111-4111-8111-111111111111';
@@ -280,7 +284,7 @@ const GROUP_ID = '44444444-4444-4444-8444-444444444444';
 
 /**
  * 请求标题：包含拉丁字母与中间空格，便于验证大小写和内部空白不会被静默折叠。
- * Rust `normalize_title` 只做首尾 trim，响应 title 必须等于其 trim 结果。
+ * Rust `normalize_title` 只删除首尾 Unicode White_Space，响应必须等于该规范化结果。
  */
 const REQUEST_TITLE = 'Review 中核商品价格异常排查';
 
@@ -345,7 +349,7 @@ test('合法批量创建响应（三项目、乱序返回）通过严格校验',
   );
 });
 
-test('请求上下文完整一致（requestId 用作 groupId、title 已 trim）时通过校验', () => {
+test('请求上下文完整一致（requestId 用作 groupId、title 已规范化）时通过校验', () => {
   const raw = rustSerializedCreatedCopies([PROJECT_A, PROJECT_B]);
   const parsed = parseCreatedWorkItemCopies(
     raw,
@@ -534,7 +538,7 @@ test('请求 title 类型错误或去除首尾空白后为空时被拒绝', () =
   }
 });
 
-test('请求 title 带首尾空白时，响应 title 等于 trim 结果即可通过校验', () => {
+test('请求 title 带首尾空白时，响应 title 等于 Unicode White_Space 规范化结果即可通过校验', () => {
   for (const title of [
     `  ${REQUEST_TITLE}  `,
     `\t${REQUEST_TITLE}\n`,
@@ -546,7 +550,7 @@ test('请求 title 带首尾空白时，响应 title 等于 trim 结果即可通
   }
 });
 
-test('批量创建响应工作副本 title 必须等于请求 title.trim()（大小写/内部空白不得变化）', () => {
+test('批量创建响应工作副本 title 必须等于请求 title 的规范化结果（大小写/内部空白不得变化）', () => {
   for (const title of [
     'review 中核商品价格异常排查', // 大小写不同
     'Review  中核商品价格异常排查', // 内部双空格
@@ -595,4 +599,131 @@ test('批量创建响应契约错误包含字段路径且错误码稳定', () =>
     assert.equal(error.code, 'ipc-contract-violation');
     assert.match(error.message, /批量创建工作结果\.workItems\[1\]\.projectId/);
   }
+});
+
+// ---------------------------------------------------------------------------
+// R6-01：Unicode White_Space 标题规范化契约
+//
+// Rust `normalize_title` 与 TypeScript Bridge 必须使用同一字符集合，只删除首尾
+// Unicode White_Space，保留 U+FEFF，不改变大小写或内部空白。JS `String.trim()`
+// 对 U+0085（不删除）与 U+FEFF（删除）的行为不同，不能作为契约依据。
+// ---------------------------------------------------------------------------
+
+/** 构造“Rust 已规范化并返回”的批量响应；响应标题按服务端结果填写。 */
+function rustSerializedCreatedCopiesWithTitle(responseTitle) {
+  return {
+    groupId: REQUEST_ID,
+    workItems: [PROJECT_A, PROJECT_B].map((projectId, index) =>
+      rustSerializedWorkItem({
+        id: `bbbbbbb${index}-bbbb-4bbb-8bbb-bbbbbbbbbbb${index}`,
+        projectId,
+        title: responseTitle
+      })
+    )
+  };
+}
+
+test('R6-01 权威 Unicode White_Space 字符集合为 25 个字符且不含 U+FEFF', () => {
+  assert.deepEqual(WORK_ITEM_TITLE_WHITESPACE_CODEPOINTS, [
+    0x0009, 0x000a, 0x000b, 0x000c, 0x000d, 0x0020, 0x0085, 0x00a0, 0x1680, 0x2000, 0x2001,
+    0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200a, 0x2028, 0x2029,
+    0x202f, 0x205f, 0x3000
+  ]);
+  assert.equal(WORK_ITEM_TITLE_WHITESPACE_CODEPOINTS.includes(0xfeff), false);
+});
+
+test('R6-01 每个 Unicode White_Space 字符均在两端被删除', () => {
+  for (const codePoint of WORK_ITEM_TITLE_WHITESPACE_CODEPOINTS) {
+    const whitespace = String.fromCodePoint(codePoint);
+    assert.equal(
+      normalizeWorkItemTitle(`${whitespace}标题${whitespace}`),
+      '标题',
+      `U+${codePoint.toString(16).toUpperCase().padStart(4, '0')} 必须从两端删除`
+    );
+    assert.equal(
+      normalizeWorkItemTitle(whitespace),
+      '',
+      `U+${codePoint.toString(16).toUpperCase().padStart(4, '0')} 单独成标题时必须为空`
+    );
+  }
+});
+
+const UNICODE_TITLE_CASES = [
+  {
+    name: 'U+0085 首尾空白',
+    requestTitle: '\u0085Review 中核商品价格异常排查\u0085',
+    normalizedTitle: 'Review 中核商品价格异常排查'
+  },
+  {
+    name: 'U+FEFF 首尾字符保留',
+    requestTitle: '\uFEFFReview 中核商品价格异常排查\uFEFF',
+    normalizedTitle: '\uFEFFReview 中核商品价格异常排查\uFEFF'
+  },
+  {
+    name: 'U+3000 首尾空白',
+    requestTitle: '\u3000Review 中核商品价格异常排查\u3000',
+    normalizedTitle: 'Review 中核商品价格异常排查'
+  },
+  {
+    name: 'TAB 首尾空白',
+    requestTitle: '\tReview 中核商品价格异常排查\t',
+    normalizedTitle: 'Review 中核商品价格异常排查'
+  },
+  {
+    name: 'CR/LF 首尾空白',
+    requestTitle: '\r\nReview 中核商品价格异常排查\n\r',
+    normalizedTitle: 'Review 中核商品价格异常排查'
+  },
+  {
+    name: '普通 ASCII 空格首尾空白',
+    requestTitle: '  Review 中核商品价格异常排查  ',
+    normalizedTitle: 'Review 中核商品价格异常排查'
+  },
+  {
+    name: '内部多个空格原样保留',
+    requestTitle: 'Review  中核  商品价格异常排查',
+    normalizedTitle: 'Review  中核  商品价格异常排查'
+  },
+  {
+    name: '内部 TAB 原样保留',
+    requestTitle: 'Review\t中核\t商品价格异常排查',
+    normalizedTitle: 'Review\t中核\t商品价格异常排查'
+  },
+  {
+    name: '混合 Unicode 空白两端完全一致',
+    requestTitle: '\t\u0085\u3000Review 中核商品价格异常排查\u3000\u0085\n',
+    normalizedTitle: 'Review 中核商品价格异常排查'
+  }
+];
+
+for (const titleCase of UNICODE_TITLE_CASES) {
+  test(`R6-01 标题规范化：${titleCase.name}`, () => {
+    const parsed = parseCreatedWorkItemCopies(
+      rustSerializedCreatedCopiesWithTitle(titleCase.normalizedTitle),
+      createdCopiesRequest({ title: titleCase.requestTitle })
+    );
+    assert.ok(
+      parsed.workItems.every((item) => item.title === titleCase.normalizedTitle),
+      `Rust 返回标题与 TypeScript 规范化结果必须完全一致：${JSON.stringify(titleCase.normalizedTitle)}`
+    );
+  });
+}
+
+test('R6-01 U+FEFF 单独作为标题时两端一致保留（不得按 JS trim 判空）', () => {
+  const title = '\uFEFF';
+  const parsed = parseCreatedWorkItemCopies(
+    rustSerializedCreatedCopiesWithTitle(title),
+    createdCopiesRequest({ title })
+  );
+  assert.ok(parsed.workItems.every((item) => item.title === title));
+});
+
+test('R6-01 混合空白规范化不改变大小写，也不做 Unicode NFC/NFKC 转换', () => {
+  const requestTitle = '\u3000e\u0301 与 中核\u3000';
+  const normalizedTitle = 'e\u0301 与 中核';
+  const parsed = parseCreatedWorkItemCopies(
+    rustSerializedCreatedCopiesWithTitle(normalizedTitle),
+    createdCopiesRequest({ title: requestTitle })
+  );
+  assert.ok(parsed.workItems.every((item) => item.title === normalizedTitle));
 });

@@ -1,0 +1,41 @@
+T1-04 round6-remediation Git baseline
+================================================================
+$ git status --short --branch
+## task/T1-04-multi-project-copies...origin/task/T1-04-multi-project-copies
+
+$ git rev-parse HEAD
+de8f6221d66d0b4240f93a8a4737f8d85b4b1e84
+
+$ git rev-parse origin/task/T1-04-multi-project-copies
+de8f6221d66d0b4240f93a8a4737f8d85b4b1e84
+
+$ git rev-list --left-right --count HEAD...origin/task/T1-04-multi-project-copies
+0       0
+
+$ git rev-parse origin/main
+018e851e8daf5835391a7b61caf881bc57c2ad42
+
+$ git rev-parse origin/task/T1-03-quick-create-pending
+e8205cae22e98afce6480f5a5a0695543a61dee3
+
+$ git merge-base --is-ancestor e8205ca HEAD
+exit 0（T1-03 PR head 是 T1-04 祖先）
+
+$ git log --oneline --decorate -8
+de8f622 (HEAD -> task/T1-04-multi-project-copies, origin/task/T1-04-multi-project-copies) docs(T1-04): add round-6 git history evidence
+52ea858 docs(T1-04): record round-6 fix commit and self-test status
+aefa0f6 fix(T1-04): round-6 path guards, migration guards, Bridge contract and docs consistency
+7754965 test(T1-04): add Release migration failure rollback evidence
+14b16b6 docs(T1-04): remove trailing whitespace from task status
+a36016a docs(T1-04): align task status with round-5 audit state
+07aa124 docs(T1-04): record round-5 audit fixes and verification evidence
+e6b3f22 fix(T1-04): harden UAT path guards and add idempotent batch creation
+
+$ gh pr view 8 --json number,state,baseRefName,headRefName,headRefOid,mergeStateStatus
+{"baseRefName":"main","headRefName":"task/T1-03-quick-create-pending","headRefOid":"e8205cae22e98afce6480f5a5a0695543a61dee3","mergeStateStatus":"CLEAN","number":8,"state":"OPEN"}
+
+说明：
+- 本地 main 指针为 5a55b8d（落后 origin/main 106 个提交），本任务不更新、不修改 main。
+- 远程 main 为 018e851，与任务文档记录的 main 基线一致；本任务不产生任何 main 提交。
+- 本地 T1-03 分支指针落后于远程，但 PR #8 HEAD 与 origin 分支一致，且为 T1-04 HEAD 祖先；
+  本任务不修改 T1-03 分支、历史或证据。

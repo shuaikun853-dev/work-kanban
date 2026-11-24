@@ -7,8 +7,8 @@
  * - 防御式解析 Tauri invoke 失败载荷，统一转换为 `WorkItemIpcError`；
  * - 对成功返回值做运行时契约校验（`workItemValidation.ts`），拒绝后端字段漂移；
  * - 批量创建响应校验必须带上完整请求上下文：`groupId` 必须等于请求 `requestId`
- *   （Rust 直接复用请求标识作为创建组主键），每个副本 `title` 必须等于请求
- *   `title.trim()`（Rust 只做首尾 trim，不改变大小写或内部空白）；
+ *   （Rust 直接复用请求标识作为创建组主键），每个副本 `title` 必须等于请求标题
+ *   按 Unicode `White_Space` 规范化后的结果（不改变大小写、内部空白或 U+FEFF）；
  * - 不缓存、不持久化工作事项业务状态（Rust Core 是唯一权威来源）。
  */
 
@@ -58,8 +58,8 @@ export async function createWorkItem(
  *   失败、Bridge 解析失败或用户重试时必须复用，成功确认后才可丢弃；Rust Core 直接把它
  *   作为创建组主键，因此响应 `groupId` 必须与本次 `requestId` 逐字相等；
  * - `projectIds` 必须包含 2 个及以上不同项目；少于 2 个或重复项目由 Rust Core 拒绝；
- * - 响应必须通过严格运行时契约校验（groupId == requestId、title == 请求 title.trim()、
- *   数量、项目一一对应、ID 唯一、全部 pending）；
+ * - 响应必须通过严格运行时契约校验（groupId == requestId、title == 请求标题的
+ *   Unicode `White_Space` 规范化结果、数量、项目一一对应、ID 唯一、全部 pending）；
  * - 任一项目不存在/已归档时后端整批失败，不会返回部分成功。
  */
 export async function createWorkItemCopies(

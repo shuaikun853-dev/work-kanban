@@ -1,0 +1,9 @@
+T1-04 round6-remediation final Release EXE
+================================================================
+Path: target\release\workmanager.exe
+SizeBytes: 10458112
+SHA256: 4487b3e134d479eb4c71671f561c3008a5b97f72bf7728cf6d08a8ad9d62e7d1
+BuiltAt: 2026-11-24T18:45:25+08:00
+BuildCommand: npm run tauri build -- --no-bundle
+BuildExitCode: 0
+SourceRustModifiedAt: 2026-11-24T18:37:05+08:00 (EXE newer than all Rust sources)

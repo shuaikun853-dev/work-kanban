@@ -1,0 +1,654 @@
+
+> workmanager@0.1.0 check
+> svelte-check --tsconfig ./tsconfig.json && npm run test:work-item-bridge && npm run test:title-cross-contract && npm run check:design-tokens && npm run test:design-tokens
+
+Loading svelte-check in workspace: <repo-root>
+Getting Svelte diagnostics...
+
+svelte-check found 0 errors and 0 warnings
+
+> workmanager@0.1.0 test:work-item-bridge
+> node --test scripts/quality/work-item-bridge.test.mjs
+
+TAP version 13
+# Subtest: 完整合法创建 DTO（10 字段，四个可空字段为 null）通过校验
+ok 1 - 完整合法创建 DTO（10 字段，四个可空字段为 null）通过校验
+  ---
+  duration_ms: 3.1348
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 的四个可空字段为 NULL 时语义正确保留
+ok 2 - 创建 DTO 的四个可空字段为 NULL 时语义正确保留
+  ---
+  duration_ms: 0.4075
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 的可空字段具有合法值时通过校验
+ok 3 - 创建 DTO 的可空字段具有合法值时通过校验
+  ---
+  duration_ms: 0.2809
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 缺少任一字段都被拒绝（10 字段逐一验证）
+ok 4 - 创建 DTO 缺少任一字段都被拒绝（10 字段逐一验证）
+  ---
+  duration_ms: 1.661
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 数字字段类型/范围错误被拒绝
+ok 5 - 创建 DTO 数字字段类型/范围错误被拒绝
+  ---
+  duration_ms: 0.6796
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 可空字段类型错误被拒绝
+ok 6 - 创建 DTO 可空字段类型错误被拒绝
+  ---
+  duration_ms: 0.4809
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 非法 lifecycleStatus 被拒绝
+ok 7 - 创建 DTO 非法 lifecycleStatus 被拒绝
+  ---
+  duration_ms: 0.2782
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 未知字段被严格拒绝（不静默忽略）
+ok 8 - 创建 DTO 未知字段被严格拒绝（不静默忽略）
+  ---
+  duration_ms: 0.2363
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 必需字符串字段为空或类型错误被拒绝
+ok 9 - 创建 DTO 必需字符串字段为空或类型错误被拒绝
+  ---
+  duration_ms: 0.5168
+  type: 'test'
+  ...
+# Subtest: 合法待安排列表 DTO 通过校验（未归属 + 已归档项目）
+ok 10 - 合法待安排列表 DTO 通过校验（未归属 + 已归档项目）
+  ---
+  duration_ms: 0.9027
+  type: 'test'
+  ...
+# Subtest: 空列表通过校验，非数组返回值被拒绝
+ok 11 - 空列表通过校验，非数组返回值被拒绝
+  ---
+  duration_ms: 0.3232
+  type: 'test'
+  ...
+# Subtest: 待安排列表 DTO 缺少任一字段都被拒绝（8 字段逐一验证）
+ok 12 - 待安排列表 DTO 缺少任一字段都被拒绝（8 字段逐一验证）
+  ---
+  duration_ms: 0.282
+  type: 'test'
+  ...
+# Subtest: 待安排列表 DTO 未知字段被严格拒绝
+ok 13 - 待安排列表 DTO 未知字段被严格拒绝
+  ---
+  duration_ms: 0.1309
+  type: 'test'
+  ...
+# Subtest: 待安排列表 DTO 字段类型错误被拒绝
+ok 14 - 待安排列表 DTO 字段类型错误被拒绝
+  ---
+  duration_ms: 0.3014
+  type: 'test'
+  ...
+# Subtest: 待安排列表 DTO 非 pending 状态被拒绝
+ok 15 - 待安排列表 DTO 非 pending 状态被拒绝
+  ---
+  duration_ms: 0.2053
+  type: 'test'
+  ...
+# Subtest: 待安排列表 DTO 项目字段语义不一致被拒绝
+ok 16 - 待安排列表 DTO 项目字段语义不一致被拒绝
+  ---
+  duration_ms: 0.325
+  type: 'test'
+  ...
+# Subtest: 拒绝时错误信息包含字段路径且错误码稳定
+ok 17 - 拒绝时错误信息包含字段路径且错误码稳定
+  ---
+  duration_ms: 0.1666
+  type: 'test'
+  ...
+# Subtest: 合法批量创建响应（两项目）通过严格校验
+ok 18 - 合法批量创建响应（两项目）通过严格校验
+  ---
+  duration_ms: 0.773
+  type: 'test'
+  ...
+# Subtest: 合法批量创建响应（三项目、乱序返回）通过严格校验
+ok 19 - 合法批量创建响应（三项目、乱序返回）通过严格校验
+  ---
+  duration_ms: 0.3784
+  type: 'test'
+  ...
+# Subtest: 请求上下文完整一致（requestId 用作 groupId、title 已规范化）时通过校验
+ok 20 - 请求上下文完整一致（requestId 用作 groupId、title 已规范化）时通过校验
+  ---
+  duration_ms: 0.2796
+  type: 'test'
+  ...
+# Subtest: 批量创建响应的 groupId 必须是规范 UUID
+ok 21 - 批量创建响应的 groupId 必须是规范 UUID
+  ---
+  duration_ms: 0.4086
+  type: 'test'
+  ...
+# Subtest: 批量创建响应 groupId 与请求 requestId 不一致时被拒绝（即使语法合法的不同 UUID）
+ok 22 - 批量创建响应 groupId 与请求 requestId 不一致时被拒绝（即使语法合法的不同 UUID）
+  ---
+  duration_ms: 0.5706
+  type: 'test'
+  ...
+# Subtest: 请求 requestId 不是规范小写连字符 UUID 时被拒绝
+ok 23 - 请求 requestId 不是规范小写连字符 UUID 时被拒绝
+  ---
+  duration_ms: 0.5039
+  type: 'test'
+  ...
+# Subtest: 批量创建响应缺少/多出顶层字段被拒绝
+ok 24 - 批量创建响应缺少/多出顶层字段被拒绝
+  ---
+  duration_ms: 0.2652
+  type: 'test'
+  ...
+# Subtest: 批量创建响应 workItems 非数组或数量与请求项目数不一致被拒绝
+ok 25 - 批量创建响应 workItems 非数组或数量与请求项目数不一致被拒绝
+  ---
+  duration_ms: 0.2116
+  type: 'test'
+  ...
+# Subtest: 批量创建响应的每个项目必须恰好一个副本
+ok 26 - 批量创建响应的每个项目必须恰好一个副本
+  ---
+  duration_ms: 0.394
+  type: 'test'
+  ...
+# Subtest: 批量创建响应中任一副本非 pending 被拒绝
+ok 27 - 批量创建响应中任一副本非 pending 被拒绝
+  ---
+  duration_ms: 0.2502
+  type: 'test'
+  ...
+# Subtest: 批量创建响应中任一副本缺字段/多字段被拒绝
+ok 28 - 批量创建响应中任一副本缺字段/多字段被拒绝
+  ---
+  duration_ms: 0.2067
+  type: 'test'
+  ...
+# Subtest: 调用方请求项目列表本身不合法时拒绝
+ok 29 - 调用方请求项目列表本身不合法时拒绝
+  ---
+  duration_ms: 0.2578
+  type: 'test'
+  ...
+# Subtest: 请求上下文不是对象或缺少上下文时被拒绝
+ok 30 - 请求上下文不是对象或缺少上下文时被拒绝
+  ---
+  duration_ms: 0.2241
+  type: 'test'
+  ...
+# Subtest: 请求 title 类型错误或去除首尾空白后为空时被拒绝
+ok 31 - 请求 title 类型错误或去除首尾空白后为空时被拒绝
+  ---
+  duration_ms: 0.2268
+  type: 'test'
+  ...
+# Subtest: 请求 title 带首尾空白时，响应 title 等于 Unicode White_Space 规范化结果即可通过校验
+ok 32 - 请求 title 带首尾空白时，响应 title 等于 Unicode White_Space 规范化结果即可通过校验
+  ---
+  duration_ms: 0.2986
+  type: 'test'
+  ...
+# Subtest: 批量创建响应工作副本 title 必须等于请求 title 的规范化结果（大小写/内部空白不得变化）
+ok 33 - 批量创建响应工作副本 title 必须等于请求 title 的规范化结果（大小写/内部空白不得变化）
+  ---
+  duration_ms: 0.2745
+  type: 'test'
+  ...
+# Subtest: 请求 title 与响应 title 仅大小写或内部空白不同时被拒绝
+ok 34 - 请求 title 与响应 title 仅大小写或内部空白不同时被拒绝
+  ---
+  duration_ms: 0.2152
+  type: 'test'
+  ...
+# Subtest: 批量创建响应契约错误包含字段路径且错误码稳定
+ok 35 - 批量创建响应契约错误包含字段路径且错误码稳定
+  ---
+  duration_ms: 0.1498
+  type: 'test'
+  ...
+# Subtest: R6-01 权威 Unicode White_Space 字符集合为 25 个字符且不含 U+FEFF
+ok 36 - R6-01 权威 Unicode White_Space 字符集合为 25 个字符且不含 U+FEFF
+  ---
+  duration_ms: 0.1388
+  type: 'test'
+  ...
+# Subtest: R6-01 每个 Unicode White_Space 字符均在两端被删除
+ok 37 - R6-01 每个 Unicode White_Space 字符均在两端被删除
+  ---
+  duration_ms: 0.2824
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：U+0085 首尾空白
+ok 38 - R6-01 标题规范化：U+0085 首尾空白
+  ---
+  duration_ms: 0.2606
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：U+FEFF 首尾字符保留
+ok 39 - R6-01 标题规范化：U+FEFF 首尾字符保留
+  ---
+  duration_ms: 0.1002
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：U+3000 首尾空白
+ok 40 - R6-01 标题规范化：U+3000 首尾空白
+  ---
+  duration_ms: 0.097
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：TAB 首尾空白
+ok 41 - R6-01 标题规范化：TAB 首尾空白
+  ---
+  duration_ms: 0.1373
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：CR/LF 首尾空白
+ok 42 - R6-01 标题规范化：CR/LF 首尾空白
+  ---
+  duration_ms: 0.1039
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：普通 ASCII 空格首尾空白
+ok 43 - R6-01 标题规范化：普通 ASCII 空格首尾空白
+  ---
+  duration_ms: 0.0908
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：内部多个空格原样保留
+ok 44 - R6-01 标题规范化：内部多个空格原样保留
+  ---
+  duration_ms: 0.0882
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：内部 TAB 原样保留
+ok 45 - R6-01 标题规范化：内部 TAB 原样保留
+  ---
+  duration_ms: 0.0922
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：混合 Unicode 空白两端完全一致
+ok 46 - R6-01 标题规范化：混合 Unicode 空白两端完全一致
+  ---
+  duration_ms: 0.2707
+  type: 'test'
+  ...
+# Subtest: R6-01 U+FEFF 单独作为标题时两端一致保留（不得按 JS trim 判空）
+ok 47 - R6-01 U+FEFF 单独作为标题时两端一致保留（不得按 JS trim 判空）
+  ---
+  duration_ms: 0.336
+  type: 'test'
+  ...
+# Subtest: R6-01 混合空白规范化不改变大小写，也不做 Unicode NFC/NFKC 转换
+ok 48 - R6-01 混合空白规范化不改变大小写，也不做 Unicode NFC/NFKC 转换
+  ---
+  duration_ms: 0.465
+  type: 'test'
+  ...
+1..48
+# tests 48
+# suites 0
+# pass 48
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 290.4231
+
+> workmanager@0.1.0 test:title-cross-contract
+> node --test scripts/quality/work-item-title-cross-contract.test.mjs
+
+TAP version 13
+# CROSS_CONTRACT_BRIDGE=PASS case=u0085-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=ufeff-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=u3000-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=tab-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=crlf-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=ascii-edges
+# CROSS_CONTRACT_BRIDGE=PASS case=internal-spaces
+# CROSS_CONTRACT_BRIDGE=PASS case=internal-tab
+# CROSS_CONTRACT_BRIDGE=PASS case=mixed-unicode
+# CROSS_CONTRACT_BRIDGE=PASS case=ufeff-only
+# Subtest: R6-01 Rust Core 真实保存/返回标题与 Bridge 规范化完全一致
+ok 1 - R6-01 Rust Core 真实保存/返回标题与 Bridge 规范化完全一致
+  ---
+  duration_ms: 5965.7863
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6136.6205
+
+> workmanager@0.1.0 check:design-tokens
+> node scripts/quality/check-design-tokens.mjs
+
+DESIGN_TOKEN_CHECK=PASS files=22 violations=0 tokenFile=src/lib/ui/tokens.css
+
+> workmanager@0.1.0 test:design-tokens
+> node --test scripts/quality/design-tokens.test.mjs
+
+TAP version 13
+# Subtest: 使用 Design Token 的组件与 CSS 通过检查
+ok 1 - 使用 Design Token 的组件与 CSS 通过检查
+  ---
+  duration_ms: 2353.3549
+  type: 'test'
+  ...
+# Subtest: Svelte <style> 块中的 HEX 原始颜色导致检查失败
+ok 2 - Svelte <style> 块中的 HEX 原始颜色导致检查失败
+  ---
+  duration_ms: 2335.4543
+  type: 'test'
+  ...
+# Subtest: 内联 style 属性中的 RGBA 原始颜色导致检查失败
+ok 3 - 内联 style 属性中的 RGBA 原始颜色导致检查失败
+  ---
+  duration_ms: 2324.0632
+  type: 'test'
+  ...
+# Subtest: Feature/UI CSS 文件中的 RGB/HSL 原始颜色不得被目录豁免
+ok 4 - Feature/UI CSS 文件中的 RGB/HSL 原始颜色不得被目录豁免
+  ---
+  duration_ms: 2473.6651
+  type: 'test'
+  ...
+# Subtest: 中央 Token 定义文件中的原始颜色不会被误报
+ok 5 - 中央 Token 定义文件中的原始颜色不会被误报
+  ---
+  duration_ms: 5367.4844
+  type: 'test'
+  ...
+# Subtest: 检查报告包含可复核的文件、行号、类型与原始值
+ok 6 - 检查报告包含可复核的文件、行号、类型与原始值
+  ---
+  duration_ms: 2713.6293
+  type: 'test'
+  ...
+# Subtest: --root 不存在 src/ 时检查以错误码 2 失败而不是静默通过
+ok 7 - --root 不存在 src/ 时检查以错误码 2 失败而不是静默通过
+  ---
+  duration_ms: 2496.6303
+  type: 'test'
+  ...
+# Subtest: 真实仓库当前代码通过 Design Token 静态检查
+ok 8 - 真实仓库当前代码通过 Design Token 静态检查
+  ---
+  duration_ms: 2458.9153
+  type: 'test'
+  ...
+# Subtest: style:color 静态硬编码 HEX 导致检查失败
+ok 9 - style:color 静态硬编码 HEX 导致检查失败
+  ---
+  duration_ms: 2357.028
+  type: 'test'
+  ...
+# Subtest: style:background-color 静态硬编码 HEX 导致检查失败
+ok 10 - style:background-color 静态硬编码 HEX 导致检查失败
+  ---
+  duration_ms: 2428.6317
+  type: 'test'
+  ...
+# Subtest: StyleDirective 自定义 CSS 属性的静态硬编码颜色导致检查失败
+ok 11 - StyleDirective 自定义 CSS 属性的静态硬编码颜色导致检查失败
+  ---
+  duration_ms: 2402.4137
+  type: 'test'
+  ...
+# Subtest: 动态 style:color={rawColor} 引用硬编码颜色常量导致检查失败
+ok 12 - 动态 style:color={rawColor} 引用硬编码颜色常量导致检查失败
+  ---
+  duration_ms: 2447.4289
+  type: 'test'
+  ...
+# Subtest: 动态 style:color={alias} 引用颜色常量别名链导致检查失败
+ok 13 - 动态 style:color={alias} 引用颜色常量别名链导致检查失败
+  ---
+  duration_ms: 2209.1137
+  type: 'test'
+  ...
+# Subtest: 动态 style:color 直接使用硬编码字面量导致检查失败
+ok 14 - 动态 style:color 直接使用硬编码字面量导致检查失败
+  ---
+  duration_ms: 2283.1887
+  type: 'test'
+  ...
+# Subtest: 动态内联 style 属性引用硬编码颜色常量导致检查失败
+ok 15 - 动态内联 style 属性引用硬编码颜色常量导致检查失败
+  ---
+  duration_ms: 2214.6259
+  type: 'test'
+  ...
+# Subtest: 动态 StyleDirective 违规报告包含文件、行号、类型、原始值与常量信息
+ok 16 - 动态 StyleDirective 违规报告包含文件、行号、类型、原始值与常量信息
+  ---
+  duration_ms: 2224.4365
+  type: 'test'
+  ...
+# Subtest: StyleDirective 使用 Design Token 静态值通过检查
+ok 17 - StyleDirective 使用 Design Token 静态值通过检查
+  ---
+  duration_ms: 2231.068
+  type: 'test'
+  ...
+# Subtest: 动态 style:color 引用 var(--color-text) 常量通过检查
+ok 18 - 动态 style:color 引用 var(--color-text) 常量通过检查
+  ---
+  duration_ms: 2261.486
+  type: 'test'
+  ...
+# Subtest: 常量别名链最终指向 Design Token 时通过检查
+ok 19 - 常量别名链最终指向 Design Token 时通过检查
+  ---
+  duration_ms: 2204.1796
+  type: 'test'
+  ...
+# Subtest: 与样式无关的普通字符串即使包含 HEX 也不误报
+ok 20 - 与样式无关的普通字符串即使包含 HEX 也不误报
+  ---
+  duration_ms: 2666.0227
+  type: 'test'
+  ...
+# Subtest: 同一文件中无关颜色字符串不影响合法 Token 动态样式通过
+ok 21 - 同一文件中无关颜色字符串不影响合法 Token 动态样式通过
+  ---
+  duration_ms: 2726.9149
+  type: 'test'
+  ...
+# Subtest: Svelte AST 解析失败时检查器明确报错且退出码为 2
+ok 22 - Svelte AST 解析失败时检查器明确报错且退出码为 2
+  ---
+  duration_ms: 3213.8377
+  type: 'test'
+  ...
+# Subtest: HTML 元素上的 STYLE 大写属性包含硬编码 HEX 导致检查失败
+ok 23 - HTML 元素上的 STYLE 大写属性包含硬编码 HEX 导致检查失败
+  ---
+  duration_ms: 2987.0667
+  type: 'test'
+  ...
+# Subtest: HTML 元素上的 Style 混合大小写属性包含硬编码 HEX 导致检查失败
+ok 24 - HTML 元素上的 Style 混合大小写属性包含硬编码 HEX 导致检查失败
+  ---
+  duration_ms: 2857.2222
+  type: 'test'
+  ...
+# Subtest: 大小写变体 style 属性使用合法 Design Token 通过检查
+ok 25 - 大小写变体 style 属性使用合法 Design Token 通过检查
+  ---
+  duration_ms: 2936.2663
+  type: 'test'
+  ...
+# Subtest: 普通 Svelte 组件自定义属性 Style/STYLE 不得误报
+ok 26 - 普通 Svelte 组件自定义属性 Style/STYLE 不得误报
+  ---
+  duration_ms: 3148.2475
+  type: 'test'
+  ...
+# Subtest: 大写 STYLE 的动态表达式保留原有常量检测能力
+ok 27 - 大写 STYLE 的动态表达式保留原有常量检测能力
+  ---
+  duration_ms: 3276.1873
+  type: 'test'
+  ...
+# Subtest: 三元表达式包含硬编码 HEX 分支导致检查失败
+ok 28 - 三元表达式包含硬编码 HEX 分支导致检查失败
+  ---
+  duration_ms: 3233.654
+  type: 'test'
+  ...
+# Subtest: 三元表达式两个结果分支均为硬编码颜色导致检查失败
+ok 29 - 三元表达式两个结果分支均为硬编码颜色导致检查失败
+  ---
+  duration_ms: 3476.5818
+  type: 'test'
+  ...
+# Subtest: 三元表达式结果分支引用硬编码 const 导致检查失败
+ok 30 - 三元表达式结果分支引用硬编码 const 导致检查失败
+  ---
+  duration_ms: 2743.7073
+  type: 'test'
+  ...
+# Subtest: 三元表达式结果分支引用 const 别名链导致检查失败
+ok 31 - 三元表达式结果分支引用 const 别名链导致检查失败
+  ---
+  duration_ms: 2807.8456
+  type: 'test'
+  ...
+# Subtest: 嵌套条件表达式结果分支包含硬编码颜色导致检查失败
+ok 32 - 嵌套条件表达式结果分支包含硬编码颜色导致检查失败
+  ---
+  duration_ms: 2833.1904
+  type: 'test'
+  ...
+# Subtest: 条件判断比较字符串包含 HEX 但结果分支全部为 Token 时通过检查
+ok 33 - 条件判断比较字符串包含 HEX 但结果分支全部为 Token 时通过检查
+  ---
+  duration_ms: 2850.9032
+  type: 'test'
+  ...
+# Subtest: 三元表达式两个结果分支都是合法 Token 时通过检查
+ok 34 - 三元表达式两个结果分支都是合法 Token 时通过检查
+  ---
+  duration_ms: 3633.6185
+  type: 'test'
+  ...
+# Subtest: 条件表达式与无关普通字符串共存时通过检查
+ok 35 - 条件表达式与无关普通字符串共存时通过检查
+  ---
+  duration_ms: 2945.5471
+  type: 'test'
+  ...
+# Subtest: 内联 style 属性中的三元表达式硬编码分支导致检查失败
+ok 36 - 内联 style 属性中的三元表达式硬编码分支导致检查失败
+  ---
+  duration_ms: 2896.6029
+  type: 'test'
+  ...
+# Subtest: 条件表达式分支中无法静态求值的表达式仍按未知处理
+ok 37 - 条件表达式分支中无法静态求值的表达式仍按未知处理
+  ---
+  duration_ms: 3166.7924
+  type: 'test'
+  ...
+# Subtest: HTML 原生元素小写 style 属性包含硬编码 HEX 导致检查失败
+ok 38 - HTML 原生元素小写 style 属性包含硬编码 HEX 导致检查失败
+  ---
+  duration_ms: 2851.6127
+  type: 'test'
+  ...
+# Subtest: Svelte 组件小写 style prop 包含 HEX 不得被识别为原生内联样式
+ok 39 - Svelte 组件小写 style prop 包含 HEX 不得被识别为原生内联样式
+  ---
+  duration_ms: 2781.5461
+  type: 'test'
+  ...
+# Subtest: 组件 style prop 与原生 div style 属性得到不同的检查结果
+ok 40 - 组件 style prop 与原生 div style 属性得到不同的检查结果
+  ---
+  duration_ms: 5698.6658
+  type: 'test'
+  ...
+# Subtest: Svelte 组件动态 style prop 引用硬编码颜色常量不得误报
+ok 41 - Svelte 组件动态 style prop 引用硬编码颜色常量不得误报
+  ---
+  duration_ms: 2971.071
+  type: 'test'
+  ...
+# Subtest: Svelte 组件 Style 混合大小写 prop 包含 HEX 不得误报
+ok 42 - Svelte 组件 Style 混合大小写 prop 包含 HEX 不得误报
+  ---
+  duration_ms: 2656.6317
+  type: 'test'
+  ...
+# Subtest: Svelte 组件 STYLE 大写 prop 包含 HEX 不得误报
+ok 43 - Svelte 组件 STYLE 大写 prop 包含 HEX 不得误报
+  ---
+  duration_ms: 2661.4813
+  type: 'test'
+  ...
+# Subtest: Svelte 组件合法普通自定义属性不得误报
+ok 44 - Svelte 组件合法普通自定义属性不得误报
+  ---
+  duration_ms: 2512.8421
+  type: 'test'
+  ...
+# Subtest: svelte:element 上的原生 style 属性仍会被检查
+ok 45 - svelte:element 上的原生 style 属性仍会被检查
+  ---
+  duration_ms: 2393.766
+  type: 'test'
+  ...
+# Subtest: svelte:component 上的 style prop 不得被识别为原生内联样式
+ok 46 - svelte:component 上的 style prop 不得被识别为原生内联样式
+  ---
+  duration_ms: 2471.8856
+  type: 'test'
+  ...
+# Subtest: 组件 style prop 与原生 style 属性同文件时只报告原生元素
+ok 47 - 组件 style prop 与原生 style 属性同文件时只报告原生元素
+  ---
+  duration_ms: 2398.3172
+  type: 'test'
+  ...
+# Subtest: 原生元素 style 属性名大小写变体全部检查且不重复报告
+ok 48 - 原生元素 style 属性名大小写变体全部检查且不重复报告
+  ---
+  duration_ms: 2481.5954
+  type: 'test'
+  ...
+# Subtest: slot 与 title 原生元素的内联 style 检查能力不退化
+ok 49 - slot 与 title 原生元素的内联 style 检查能力不退化
+  ---
+  duration_ms: 2561.4142
+  type: 'test'
+  ...
+1..49
+# tests 49
+# suites 0
+# pass 49
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 137123.4715
+EXIT_CODE=0

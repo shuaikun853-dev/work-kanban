@@ -1,0 +1,669 @@
+F1 test-root trust anchor verified: components=2 volumeIdentity=verified finalPath=verified
+P3 safety re-check passed (after creating UAT root): components=5 volumeIdentityMatch=True finalPathInsideRoot=True
+P3 safety re-check passed (after creating app dir): components=6 volumeIdentityMatch=True finalPathInsideRoot=True
+P3 safety re-check passed (after copying EXE (before app start)): components=6 volumeIdentityMatch=True finalPathInsideRoot=True
+T1-04 UI verification: exe=<repo-root>\target\release\workmanager.exe sha256=4487b3e134d479eb4c71671f561c3008a5b97f72bf7728cf6d08a8ad9d62e7d1 size=10458112 output=<test-root>\t1-04-ui-r6-20261124-1846 port=9355
+--- Running T1-04 main UI/IPC checks ---
+PASS shell.titlebarAppName
+PASS shell.sidebarNavigationUnchanged — 工作总览 / 今日工作 / 未来 7 天 / 历史记录 / 报告 / 设置
+PASS shell.noNewPrimaryNavigationForPending — 待安排不得成为一级导航
+PASS shell.noHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[]}
+PASS nav.todayClicked
+PASS today.secondarySwitcherRendered — {"labels":["今日工作","待安排"]}
+PASS pending.entryClicked
+PASS pending.emptyStateRendered — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":true,"rows":0,"error":false,"errorText":null}
+PASS setup.twoProjectsCreated — {"a":true,"b":true}
+PASS dialog.openFromToolbar
+PASS dialog.noLegacySingleSelect — 原单项目 select 已替换为多项目选择
+PASS dialog.multiSelectRendered — {"mode":"unassigned","selectedCount":0,"expectedCount":1,"summaryText":"未选择项目，将创建 1 项未归属工作","availableProjectIds":["2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"checkedProjectIds":[],"unassignedChecked":true,"invalidSelectionCount":0,"controlsDisabled":{"title":false,"projectInputs":false,"save":true}}
+PASS dialog.initialSelectionSummary — {"mode":"unassigned","selectedCount":0,"expectedCount":1,"summaryText":"未选择项目，将创建 1 项未归属工作","availableProjectIds":["2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"checkedProjectIds":[],"unassignedChecked":true,"invalidSelectionCount":0,"controlsDisabled":{"title":false,"projectInputs":false,"save":true}}
+PASS dialog.titleFilledForTwoProjects
+PASS dialog.selectProjectA
+PASS dialog.selectProjectB
+PASS dialog.twoProjectSelectionSummary — {"mode":"copies","selectedCount":2,"expectedCount":2,"summaryText":"已选择 2 个项目，将创建 2 项独立工作","availableProjectIds":["2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"checkedProjectIds":["2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"unassignedChecked":false,"invalidSelectionCount":0,"controlsDisabled":{"title":false,"projectInputs":false,"save":false}}
+PASS dialog.savedTwoProjects
+PASS create.twoProjectOutcomeShowsActualCount — {"kind":"success","text":"已创建 2 项独立工作，待安排列表已从数据库更新。"}
+PASS create.twoProjectRows — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":2,"error":false,"errorText":null}
+PASS create.twoProjectIndependentCopies — [{"id":"be2bd761-ccb0-48d5-b3ba-c4673c5148db","projectId":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectName":"T1-04 虚构未归档项目甲","projectIsArchived":false,"title":"T1-04 虚构 两项目价格异常排查","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.329Z","updatedAt":"2026-11-24T10:45:42.329Z"},{"id":"b923260c-176d-4298-b0ad-543f94e4ea7e","projectId":"2394b8fd-fe97-47b4-951e-d44af5c3367f","projectName":"T1-04 虚构未归档项目乙","projectIsArchived":false,"title":"T1-04 虚构 两项目价格异常排查","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.329Z","updatedAt":"2026-11-24T10:45:42.329Z"}]
+PASS setup.thirdProjectCreated
+PASS dialog.openFromToolbar
+PASS dialog.titleFilledForThreeProjects
+PASS dialog.selectThreeProject — f9f6fbcc-3d93-4da7-9683-fafc2d2d940e
+PASS dialog.selectThreeProject — 2394b8fd-fe97-47b4-951e-d44af5c3367f
+PASS dialog.selectThreeProject — d07b3c96-2d53-42c4-9cc5-3747a410d398
+PASS dialog.threeProjectSelectionSummary — {"mode":"copies","selectedCount":3,"expectedCount":3,"summaryText":"已选择 3 个项目，将创建 3 项独立工作","availableProjectIds":["d07b3c96-2d53-42c4-9cc5-3747a410d398","2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"checkedProjectIds":["d07b3c96-2d53-42c4-9cc5-3747a410d398","2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"unassignedChecked":false,"invalidSelectionCount":0,"controlsDisabled":{"title":false,"projectInputs":false,"save":false}}
+PASS dialog.savedThreeProjects
+PASS create.threeProjectOutcomeShowsActualCount — {"kind":"success","text":"已创建 3 项独立工作，待安排列表已从数据库更新。"}
+PASS create.threeProjectIndependentCopies — [{"id":"dc4a1fd4-c484-4ee7-8d30-ba824747c3ed","projectId":"2394b8fd-fe97-47b4-951e-d44af5c3367f","projectName":"T1-04 虚构未归档项目乙","projectIsArchived":false,"title":"T1-04 虚构 三项目进度同步","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.552Z","updatedAt":"2026-11-24T10:45:42.552Z"},{"id":"73ef7b02-557e-4d19-bfb0-ea2712fe5b8c","projectId":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectName":"T1-04 虚构未归档项目甲","projectIsArchived":false,"title":"T1-04 虚构 三项目进度同步","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.552Z","updatedAt":"2026-11-24T10:45:42.552Z"},{"id":"1313a00f-f3fd-4a0f-8b84-2dfa0530483e","projectId":"d07b3c96-2d53-42c4-9cc5-3747a410d398","projectName":"T1-04 虚构未归档项目丙","projectIsArchived":false,"title":"T1-04 虚构 三项目进度同步","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.552Z","updatedAt":"2026-11-24T10:45:42.552Z"}]
+PASS dialog.openFromToolbar
+PASS regression.unassignedTitleFilled
+PASS regression.unassignedMode — {"mode":"unassigned","selectedCount":0,"expectedCount":1,"summaryText":"未选择项目，将创建 1 项未归属工作","availableProjectIds":["d07b3c96-2d53-42c4-9cc5-3747a410d398","2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"checkedProjectIds":[],"unassignedChecked":true,"invalidSelectionCount":0,"controlsDisabled":{"title":false,"projectInputs":false,"save":false}}
+PASS regression.unassignedSaved
+PASS regression.unassignedPersistedWithoutProject — {"id":"05d1e2a9-d8ce-4869-8742-9e9ef16579cd","projectId":null,"projectName":null,"projectIsArchived":false,"title":"T1-04 虚构 未归属快速工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.772Z","updatedAt":"2026-11-24T10:45:42.772Z"}
+PASS dialog.openFromToolbar
+PASS regression.singleTitleFilled
+PASS regression.singleProjectSelected
+PASS regression.singleMode — {"mode":"single","selectedCount":1,"expectedCount":1,"summaryText":"已选择 1 个项目，将创建 1 项独立工作","availableProjectIds":["d07b3c96-2d53-42c4-9cc5-3747a410d398","2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"checkedProjectIds":["f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"unassignedChecked":false,"invalidSelectionCount":0,"controlsDisabled":{"title":false,"projectInputs":false,"save":false}}
+PASS regression.singleSaved
+PASS regression.singlePersistedWithProject — {"id":"e8d36352-0027-4b7e-addc-863cece0a783","projectId":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectName":"T1-04 虚构未归档项目甲","projectIsArchived":false,"title":"T1-04 虚构 单项目快速工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.974Z","updatedAt":"2026-11-24T10:45:42.974Z"}
+PASS dialog.openFromToolbar
+PASS idempotency.titleFilled
+PASS idempotency.responseLossInjected
+PASS idempotency.firstSaveClicked
+PASS idempotency.uiTreatsResultAsUncertainAndKeepsInput — {"dialogOpen":true,"message":"工作事项 IPC 返回值不符合契约：批量创建工作结果.groupId 应为 规范 UUID 字符串，实际为 string。请检查前后端版本是否一致。 错误码：ipc-contract-violation","code":"错误码：ipc-contract-violation","titleValue":"T1-04 虚构 重复提交批次工作","selectedCount":2}
+PASS idempotency.firstRequestCommittedExactlyOneBatch — [{"id":"fa1e8686-6f34-4ee0-86c5-17ddaaf33cd5","projectId":"2394b8fd-fe97-47b4-951e-d44af5c3367f","projectName":"T1-04 虚构未归档项目乙","projectIsArchived":false,"title":"T1-04 虚构 重复提交批次工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:43.153Z","updatedAt":"2026-11-24T10:45:43.153Z"},{"id":"ad96a051-edb5-4027-959e-a353686342dc","projectId":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectName":"T1-04 虚构未归档项目甲","projectIsArchived":false,"title":"T1-04 虚构 重复提交批次工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:43.153Z","updatedAt":"2026-11-24T10:45:43.153Z"}]
+PASS idempotency.firstRequestCarriesRequestId — {"firstRequestId":"da912344-abe7-44aa-85b1-c242c967fd41","bodyCount":1}
+PASS idempotency.retryRecordingInstalled
+PASS idempotency.retrySaveClicked
+PASS idempotency.retryReusesSameRequestId — {"firstRequestId":"da912344-abe7-44aa-85b1-c242c967fd41","retryRequestId":"da912344-abe7-44aa-85b1-c242c967fd41"}
+PASS idempotency.retryDoesNotCreateSecondBatch — {"count":2,"before":["ad96a051-edb5-4027-959e-a353686342dc","fa1e8686-6f34-4ee0-86c5-17ddaaf33cd5"],"after":["ad96a051-edb5-4027-959e-a353686342dc","fa1e8686-6f34-4ee0-86c5-17ddaaf33cd5"]}
+PASS dialog.openFromToolbar
+PASS doubleSubmit.titleFilled
+PASS doubleSubmit.delayInjected
+PASS doubleSubmit.doubleClickDispatched
+PASS doubleSubmit.locksSelectionWhileSubmitting
+PASS doubleSubmit.createsSingleBatchOnly — 匹配副本数=2
+PASS setup.archiveProjectCreated
+PASS setup.archivedLinkCreated
+PASS setup.pendingViewRefreshedAfterDirectIpcCreate — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":12,"error":false,"errorText":null}
+PASS dialog.openFromToolbar
+PASS archiveRace.titleFilled
+PASS archiveRace.selectProjectA
+PASS archiveRace.selectProjectD
+PASS archiveRace.projectArchivedBehindDialog
+PASS archiveRace.saveClicked
+PASS archiveRace.wholeBatchRejectedWithProjectArchived — {"message":"所选项目已归档，不能再关联新工作。请选择其他项目或不选择项目。 错误码：project-archived","code":"错误码：project-archived","dialogStillOpen":true}
+PASS archiveRace.keepsOriginalSelectionAndMarksInvalid — {"mode":"copies","selectedCount":2,"expectedCount":2,"summaryText":"已选择 2 个项目，将创建 2 项独立工作","availableProjectIds":["d07b3c96-2d53-42c4-9cc5-3747a410d398","2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"checkedProjectIds":["f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"unassignedChecked":false,"invalidSelectionCount":1,"controlsDisabled":{"title":false,"projectInputs":false,"save":true}}
+PASS archiveRace.removeInvalidSelection
+PASS archiveRace.invalidRemovedOnlyAfterUserAction — {"mode":"single","selectedCount":1,"expectedCount":1,"summaryText":"已选择 1 个项目，将创建 1 项独立工作","availableProjectIds":["d07b3c96-2d53-42c4-9cc5-3747a410d398","2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"checkedProjectIds":["f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"unassignedChecked":false,"invalidSelectionCount":0,"controlsDisabled":{"title":false,"projectInputs":false,"save":false}}
+PASS dialog.cancel
+PASS archiveRace.noPartialCopiesCreated — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":12,"error":false,"errorText":null}
+PASS archivedProject.historyLinkStillListedWithBadge — {"id":"3d610d21-ca9d-4241-af1c-2ecd4c663481","title":"T1-04 虚构 归档项目历史关联工作","meta":"T1-04 虚构将归档项目丁 项目已归档","hasArchivedBadge":true}
+PASS ipc.bypassArchivedProjectRejectedWithWholeBatch — {"code":"project-archived","message":"所选项目已归档，不能再关联新工作。请选择其他项目或不选择项目。"}
+PASS ipc.bypassMissingProjectRejected — {"code":"project-not-found","message":"所选项目不存在或已被删除。请刷新项目列表后重试。"}
+PASS ipc.bypassDuplicateProjectsRejected — {"code":"work-item-copies-duplicate-project","message":"所选项目存在重复，请重新选择项目后提交。"}
+PASS ipc.bypassTooFewProjectsRejected — {"code":"work-item-copies-too-few","message":"批量创建至少需要两个不同的项目。"}
+PASS ipc.bypassTooFewProjectsRejected — {"code":"work-item-copies-too-few","message":"批量创建至少需要两个不同的项目。"}
+PASS ipc.bypassEmptyTitleRejected — {"code":"work-item-title-empty","message":"工作标题不能为空，请填写工作标题。"}
+PASS ipc.bypassUnknownFieldRejected — invalid args `input` for command `create_work_item_copies`: unknown field `extraField`, expected one of `requestId`, `title`, `projectIds`
+PASS ipc.bypassSnakeCaseProjectIdsRejected — invalid args `input` for command `create_work_item_copies`: unknown field `project_ids`, expected one of `requestId`, `title`, `projectIds`
+PASS ipc.noArbitrarySqlCommand
+PASS ipc.rejectedRequestsCreatedNoRows — 12
+PASS dialog.openFromToolbar
+PASS contractViolation.titleFilled
+PASS contractViolation.faultInjected
+PASS contractViolation.saveClicked
+PASS contractViolation.uiRejectsMalformedPayload — {"message":"工作事项 IPC 返回值不符合契约：批量创建工作结果.groupId 应为 规范 UUID 字符串，实际为 string。请检查前后端版本是否一致。 错误码：ipc-contract-violation","code":"错误码：ipc-contract-violation","dialogStillOpen":true,"titleValue":"T1-04 虚构 契约违规不应创建"}
+PASS contractViolation.selectionRetained — {"mode":"copies","selectedCount":2,"expectedCount":2,"summaryText":"已选择 2 个项目，将创建 2 项独立工作","availableProjectIds":["d07b3c96-2d53-42c4-9cc5-3747a410d398","2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"checkedProjectIds":["2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"],"unassignedChecked":false,"invalidSelectionCount":0,"controlsDisabled":{"title":false,"projectInputs":false,"save":false}}
+PASS dialog.cancel
+PASS contractViolation.noRowsCreated — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":12,"error":false,"errorText":null}
+PASS dialog.openFromToolbar
+PASS refreshFailure.titleFilled
+PASS refreshFailure.faultInjected
+PASS refreshFailure.saveClicked
+PASS refreshFailure.warningShowsActualCountAndRefreshFailure — {"kind":"warning","text":"已创建 2 项工作，但待安排列表刷新失败；请使用“重新加载”确认最新状态。"}
+PASS refreshFailure.noDuplicateCreateOnRefreshFailure — {"ok":true,"value":[{"id":"b7497eea-4dc7-4a3e-8439-53e52b8f29ab","projectId":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectName":"T1-04 虚构未归档项目甲","projectIsArchived":false,"title":"T1-04 虚构 刷新失败批次工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:45.719Z","updatedAt":"2026-11-24T10:45:45.719Z"},{"id":"0e286be6-1c30-47c6-8a3f-69b1eda58a8d","projectId":"2394b8fd-fe97-47b4-951e-d44af5c3367f","projectName":"T1-04 虚构未归档项目乙","projectIsArchived":false,"title":"T1-04 虚构 刷新失败批次工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:45.719Z","updatedAt":"2026-11-24T10:45:45.719Z"},{"id":"3d610d21-ca9d-4241-af1c-2ecd4c663481","projectId":"2aa23c2f-2b5e-449d-8fe9-65f8e35fc300","projectName":"T1-04 虚构将归档项目丁","projectIsArchived":true,"title":"T1-04 虚构 归档项目历史关联工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:45.018Z","updatedAt":"2026-11-24T10:45:45.018Z"},{"id":"f6a677eb-ed52-4a08-95db-58be39d55a06","projectId":"2394b8fd-fe97-47b4-951e-d44af5c3367f","projectName":"T1-04 虚构未归档项目乙","projectIsArchived":false,"title":"T1-04 虚构 双击保护批次工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:44.985Z","updatedAt":"2026-11-24T10:45:44.985Z"},{"id":"3b5879b2-c023-4380-a8f9-3fabfd0da036","projectId":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectName":"T1-04 虚构未归档项目甲","projectIsArchived":false,"title":"T1-04 虚构 双击保护批次工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:44.985Z","updatedAt":"2026-11-24T10:45:44.985Z"},{"id":"fa1e8686-6f34-4ee0-86c5-17ddaaf33cd5","projectId":"2394b8fd-fe97-47b4-951e-d44af5c3367f","projectName":"T1-04 虚构未归档项目乙","projectIsArchived":false,"title":"T1-04 虚构 重复提交批次工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:43.153Z","updatedAt":"2026-11-24T10:45:43.153Z"},{"id":"ad96a051-edb5-4027-959e-a353686342dc","projectId":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectName":"T1-04 虚构未归档项目甲","projectIsArchived":false,"title":"T1-04 虚构 重复提交批次工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:43.153Z","updatedAt":"2026-11-24T10:45:43.153Z"},{"id":"e8d36352-0027-4b7e-addc-863cece0a783","projectId":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectName":"T1-04 虚构未归档项目甲","projectIsArchived":false,"title":"T1-04 虚构 单项目快速工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.974Z","updatedAt":"2026-11-24T10:45:42.974Z"},{"id":"05d1e2a9-d8ce-4869-8742-9e9ef16579cd","projectId":null,"projectName":null,"projectIsArchived":false,"title":"T1-04 虚构 未归属快速工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.772Z","updatedAt":"2026-11-24T10:45:42.772Z"},{"id":"dc4a1fd4-c484-4ee7-8d30-ba824747c3ed","projectId":"2394b8fd-fe97-47b4-951e-d44af5c3367f","projectName":"T1-04 虚构未归档项目乙","projectIsArchived":false,"title":"T1-04 虚构 三项目进度同步","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.552Z","updatedAt":"2026-11-24T10:45:42.552Z"},{"id":"73ef7b02-557e-4d19-bfb0-ea2712fe5b8c","projectId":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectName":"T1-04 虚构未归档项目甲","projectIsArchived":false,"title":"T1-04 虚构 三项目进度同步","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.552Z","updatedAt":"2026-11-24T10:45:42.552Z"},{"id":"1313a00f-f3fd-4a0f-8b84-2dfa0530483e","projectId":"d07b3c96-2d53-42c4-9cc5-3747a410d398","projectName":"T1-04 虚构未归档项目丙","projectIsArchived":false,"title":"T1-04 虚构 三项目进度同步","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.552Z","updatedAt":"2026-11-24T10:45:42.552Z"},{"id":"be2bd761-ccb0-48d5-b3ba-c4673c5148db","projectId":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectName":"T1-04 虚构未归档项目甲","projectIsArchived":false,"title":"T1-04 虚构 两项目价格异常排查","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.329Z","updatedAt":"2026-11-24T10:45:42.329Z"},{"id":"b923260c-176d-4298-b0ad-543f94e4ea7e","projectId":"2394b8fd-fe97-47b4-951e-d44af5c3367f","projectName":"T1-04 虚构未归档项目乙","projectIsArchived":false,"title":"T1-04 虚构 两项目价格异常排查","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:42.329Z","updatedAt":"2026-11-24T10:45:42.329Z"}]}
+PASS refreshFailure.retryClicked
+PASS refreshFailure.retryRecoversListWithoutDuplicate — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":14,"error":false,"errorText":null}
+PASS security.cspViolationsZero — []
+PASS security.pageExceptionsZero — []
+PASS final.pendingCount14 — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":14,"error":false,"errorText":null}
+PASS final.pendingListAllPendingAndExpectedTitles — 14
+PASS final.normalWindowNoHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[]}
+PASS final.noUnexpectedBatchResidueTitles — 失败批次标题不得出现在待安排列表
+{
+  "total": 107,
+  "failed": [],
+  "evidencePath": "<test-root>\\t1-04-ui-r6-20261124-1846\\t1-04-ui-evidence.json",
+  "prerequisitePath": "<test-root>\\t1-04-ui-r6-20261124-1846\\t1-04-prerequisite.json"
+}
+--- Resizing to minimum supported window 860x640 ---
+first app pid=31024 hwnd=7673250 exited=False
+min window resize verified: 860x640
+window rect after resize: 40,40,900,680
+--- Running minimum window / close button checks ---
+PASS minWindow.sizeNear860x640 — {"innerWidth":844,"innerHeight":632,"outerWidth":844,"outerHeight":632}
+PASS minWindow.navigateToday
+PASS minWindow.pendingEntryVisible
+PASS minWindow.pendingNoHorizontalOverflow — {"innerWidth":844,"innerHeight":632,"docScrollWidth":844,"clientWidth":844,"bodyScrollWidth":844,"overflow":false,"offenders":[]}
+PASS minWindow.pendingRowsVisible — {"rowCount":14,"archivedBadgeCount":1,"createButtonVisible":true,"firstRowRight":812}
+PASS minWindow.createButtonClickable
+PASS minWindow.openCreateDialog
+PASS minWindow.dialogFullyVisible — {"top":80,"left":182,"right":662,"bottom":552,"innerWidth":844,"innerHeight":632,"fullyVisible":true,"projectOptionCount":3,"titleInputVisible":true,"projectOptionsVisible":true,"selectionSummaryVisible":true,"saveVisible":true,"cancelVisible":true}
+PASS minWindow.multiProjectControlsVisible — {"top":80,"left":182,"right":662,"bottom":552,"innerWidth":844,"innerHeight":632,"fullyVisible":true,"projectOptionCount":3,"titleInputVisible":true,"projectOptionsVisible":true,"selectionSummaryVisible":true,"saveVisible":true,"cancelVisible":true}
+PASS minWindow.cancelDialog
+PASS minWindow.closeButtonClicked
+{
+  "total": 11,
+  "failed": [],
+  "pass": true,
+  "evidencePath": "<test-root>\\t1-04-ui-r6-20261124-1846\\t1-04-min-window-evidence.json"
+}
+T104-01 database path guard passed (after main app close (before evidence dir)): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 evidence directory guard passed (after creating UAT evidence dir): directChildOfUatRoot=true finalPath=verified
+T104-01 database path guard passed (before database probe after-main): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 evidence path guard passed (before database probe after-main): directChildOfEvidence=true finalPath=verified
+T104-01 database path guard passed (after database probe after-main): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+PASS dbProbe.afterMain.readable — probe JSON readable
+PASS dbProbe.afterMain.probeStatusOk — status=ok scope=uat
+PASS dbProbe.afterMain.schemaVersion4 — schema_version=4
+PASS dbProbe.afterMain.integrityOk — ok
+PASS dbProbe.afterMain.journalModeWal — wal
+PASS dbProbe.afterMain.foreignKeysEnabled — foreign_keys=True
+PASS dbProbe.afterMain.requiredTablesPresent — required_tables_present=True
+PASS dbProbe.afterMain.migrations1To4 — 1,2,3,4
+PASS dbProbe.afterMain.foreignKeyViolationsZero — violations=0
+PASS dbProbe.afterMain.allRowsPending — total=14 pending=14
+PASS dbProbe.afterMain.noOrphanMembers — orphan=0
+PASS dbProbe.afterMain.noGroupsWithoutMembers — empty_groups=0
+PASS dbProbe.afterMain.noWorkItemInMultipleGroups — multi_group=0
+PASS dbProbe.afterMain.allBatchItemsPending — not_pending=0
+PASS dbProbe.afterMain.workItems14 — work_items=14
+PASS dbProbe.afterMain.pending14 — pending=14
+PASS dbProbe.afterMain.unassigned1 — null_project=1
+PASS dbProbe.afterMain.archivedLink1 — linked_archived=1
+PASS dbProbe.afterMain.linkedActive12 — linked_active=12
+PASS dbProbe.afterMain.projects4Archived1 — projects=4 archived=1
+PASS dbProbe.afterMain.creationGroups5 — groups=5
+PASS dbProbe.afterMain.members11 — members=11
+PASS dbProbe.afterMain.groupSizeHistogram — {"2":4,"3":1}
+T104-01 database path guard passed (before fault install): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+--- Installing atomic-rollback fault trigger for project C (d07b3c96-2d53-42c4-9cc5-3747a410d398) ---
+T104-01 database path guard passed (before fault control install): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 database path guard passed (after fault control install): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 database path guard passed (after fault install before app start): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 database identity re-check passed (after fault install): finalPath/fileId/volume unchanged
+P3 safety re-check passed (before fault-phase app start (application copy)): components=6 volumeIdentityMatch=True finalPathInsideRoot=True
+T104-01 database path guard passed (before fault-phase app start (database write)): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+PASS fault.navigateToday
+PASS fault.pendingEntryClicked
+PASS fault.prerequisiteProjectsPresent — {"projectA":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectC":"d07b3c96-2d53-42c4-9cc5-3747a410d398"}
+PASS fault.openCreateDialog
+PASS fault.titleFilled
+PASS fault.selectProjectA
+PASS fault.selectProjectC
+PASS fault.saveDispatched
+PASS fault.databaseErrorShownAndDialogKept — {"message":"SQLite 操作失败（创建工作事项）：T1-04 injected second-copy insert failure。 错误码：database-sqlite-error","code":"错误码：database-sqlite-error","dialogStillOpen":true,"titlePreserved":true}
+PASS fault.selectionRetainedAfterRollback — {"mode":"copies","selectedCount":2,"availableProjectIds":["d07b3c96-2d53-42c4-9cc5-3747a410d398","2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"]}
+PASS fault.noPartialCopiesInDatabaseOrUi — {"matching":0,"total":14}
+PASS fault.cancelDialog
+PASS fault.closeButtonClicked
+{
+  "total": 13,
+  "failed": [],
+  "pass": true,
+  "evidencePath": "<test-root>\\t1-04-ui-r6-20261124-1846\\t1-04-fault-evidence.json"
+}
+T104-01 database path guard passed (after fault app close before trigger removal): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 database identity re-check passed (after fault app close): finalPath/fileId/volume unchanged
+T104-01 database path guard passed (before fault control remove): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 database path guard passed (after fault control remove): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 database path guard passed (after fault trigger removal before probe): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 database identity re-check passed (after fault trigger removal): finalPath/fileId/volume unchanged
+T104-01 database path guard passed (before database probe after-fault): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 evidence path guard passed (before database probe after-fault): directChildOfEvidence=true finalPath=verified
+T104-01 database path guard passed (after database probe after-fault): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+PASS dbProbe.afterFault.readable — probe JSON readable
+PASS dbProbe.afterFault.probeStatusOk — status=ok scope=uat
+PASS dbProbe.afterFault.schemaVersion4 — schema_version=4
+PASS dbProbe.afterFault.integrityOk — ok
+PASS dbProbe.afterFault.journalModeWal — wal
+PASS dbProbe.afterFault.foreignKeysEnabled — foreign_keys=True
+PASS dbProbe.afterFault.requiredTablesPresent — required_tables_present=True
+PASS dbProbe.afterFault.migrations1To4 — 1,2,3,4
+PASS dbProbe.afterFault.foreignKeyViolationsZero — violations=0
+PASS dbProbe.afterFault.allRowsPending — total=14 pending=14
+PASS dbProbe.afterFault.noOrphanMembers — orphan=0
+PASS dbProbe.afterFault.noGroupsWithoutMembers — empty_groups=0
+PASS dbProbe.afterFault.noWorkItemInMultipleGroups — multi_group=0
+PASS dbProbe.afterFault.allBatchItemsPending — not_pending=0
+PASS dbProbe.afterFault.workItemsStill14 — work_items=14
+PASS dbProbe.afterFault.creationGroupsStill5 — groups=5
+PASS dbProbe.afterFault.membersStill11 — members=11
+PASS dbProbe.afterFault.noFaultBatchResidue — work_items=14 groups=5 members=11
+--- Restarting Release (port 9357) for persistence checks ---
+P3 safety re-check passed (before persistence-phase app start (application copy)): components=6 volumeIdentityMatch=True finalPathInsideRoot=True
+T104-01 database path guard passed (before persistence-phase app start (database write)): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+PASS persistence.navigateToday
+PASS persistence.pendingEntryClicked
+PASS persistence.fourteenRowsPersistedAsPending — 14
+PASS persistence.expectedTitlesPersisted — ["T1-04 虚构 两项目价格异常排查","T1-04 虚构 三项目进度同步","T1-04 虚构 未归属快速工作","T1-04 虚构 单项目快速工作","T1-04 虚构 重复提交批次工作","T1-04 虚构 双击保护批次工作","T1-04 虚构 归档项目历史关联工作","T1-04 虚构 刷新失败批次工作"]
+PASS persistence.archivedProjectHistoryLinkPreserved — {"id":"3d610d21-ca9d-4241-af1c-2ecd4c663481","projectId":"2aa23c2f-2b5e-449d-8fe9-65f8e35fc300","projectName":"T1-04 虚构将归档项目丁","projectIsArchived":true,"title":"T1-04 虚构 归档项目历史关联工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:45:45.018Z","updatedAt":"2026-11-24T10:45:45.018Z"}
+PASS persistence.openCreateDialog
+PASS persistence.selectorOnlyUnarchivedProjects — ["d07b3c96-2d53-42c4-9cc5-3747a410d398","2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"]
+PASS persistence.titleFilled
+PASS persistence.selectProjectA
+PASS persistence.selectProjectB
+PASS persistence.batchSelectionSummary — {"mode":"copies","selectedCount":2,"expectedCount":2,"availableProjectIds":["d07b3c96-2d53-42c4-9cc5-3747a410d398","2394b8fd-fe97-47b4-951e-d44af5c3367f","f9f6fbcc-3d93-4da7-9683-fafc2d2d940e"]}
+PASS persistence.saveClicked
+PASS persistence.newBatchOutcomeActualCount — {"kind":"success","text":"已创建 2 项独立工作，待安排列表已从数据库更新。"}
+PASS persistence.newBatchPersistedAfterRestart — [{"id":"bd5b447a-570b-4aa7-a647-017271a5bc8e","projectId":"f9f6fbcc-3d93-4da7-9683-fafc2d2d940e","projectName":"T1-04 虚构未归档项目甲","projectIsArchived":false,"title":"T1-04 虚构 重启后新批次工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:46:10.485Z","updatedAt":"2026-11-24T10:46:10.485Z"},{"id":"6d541c3e-fa9d-4fbb-bfa0-bb24b8e1d8f4","projectId":"2394b8fd-fe97-47b4-951e-d44af5c3367f","projectName":"T1-04 虚构未归档项目乙","projectIsArchived":false,"title":"T1-04 虚构 重启后新批次工作","lifecycleStatus":"pending","createdAt":"2026-11-24T10:46:10.485Z","updatedAt":"2026-11-24T10:46:10.485Z"}]
+PASS persistence.closeButtonClicked
+{
+  "total": 15,
+  "failed": [],
+  "pass": true,
+  "evidencePath": "<test-root>\\t1-04-ui-r6-20261124-1846\\t1-04-persistence-evidence.json"
+}
+T104-01 database path guard passed (after persistence app close before probe): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 database identity re-check passed (after persistence app close): finalPath/fileId/volume unchanged
+T104-01 database path guard passed (before database probe after-restart): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+T104-01 evidence path guard passed (before database probe after-restart): directChildOfEvidence=true finalPath=verified
+T104-01 database path guard passed (after database probe after-restart): parent=True finalPath=verified volumeIdentity=verified reparsePoints=rejected
+PASS dbProbe.afterRestart.readable — probe JSON readable
+PASS dbProbe.afterRestart.probeStatusOk — status=ok scope=uat
+PASS dbProbe.afterRestart.schemaVersion4 — schema_version=4
+PASS dbProbe.afterRestart.integrityOk — ok
+PASS dbProbe.afterRestart.journalModeWal — wal
+PASS dbProbe.afterRestart.foreignKeysEnabled — foreign_keys=True
+PASS dbProbe.afterRestart.requiredTablesPresent — required_tables_present=True
+PASS dbProbe.afterRestart.migrations1To4 — 1,2,3,4
+PASS dbProbe.afterRestart.foreignKeyViolationsZero — violations=0
+PASS dbProbe.afterRestart.allRowsPending — total=16 pending=16
+PASS dbProbe.afterRestart.noOrphanMembers — orphan=0
+PASS dbProbe.afterRestart.noGroupsWithoutMembers — empty_groups=0
+PASS dbProbe.afterRestart.noWorkItemInMultipleGroups — multi_group=0
+PASS dbProbe.afterRestart.allBatchItemsPending — not_pending=0
+PASS dbProbe.afterRestart.workItems16 — work_items=16
+PASS dbProbe.afterRestart.pending16 — pending=16
+PASS dbProbe.afterRestart.creationGroups6 — groups=6
+PASS dbProbe.afterRestart.members13 — members=13
+PASS dbProbe.afterRestart.groupSizeHistogram — {"2":5,"3":1}
+PASS dbProbe.afterRestart.newBatchPersisted — work_items=16 groups=6 members=13
+PASS dbProbe.afterRestart.noArchivedLinkLost — linked_archived=1
+T1-04 evidence summary: <test-root>\t1-04-ui-r6-20261124-1846\t1-04-ui-orchestration.json
+{
+    "task":  "T1-04",
+    "generatedAt":  "2026-11-24T10:46:16.4878558Z",
+    "exePath":  "<repo-root>\\target\\release\\workmanager.exe",
+    "exeSha256":  "4487b3e134d479eb4c71671f561c3008a5b97f72bf7728cf6d08a8ad9d62e7d1",
+    "exeSizeBytes":  10458112,
+    "outputDir":  "<test-root>\\t1-04-ui-r6-20261124-1846",
+    "appDir":  "<test-root>\\t1-04-ui-r6-20261124-1846\\app",
+    "databasePath":  "<test-root>\\t1-04-ui-r6-20261124-1846\\app\\data\\database\\work.db",
+    "remoteDebugPort":  9355,
+    "mainUiCheckExitCode":  0,
+    "mainUiCheckCount":  107,
+    "mainUiFailedCheckCount":  0,
+    "minWindowCheckExit":  0,
+    "minWindowCheckCount":  11,
+    "minWindowFailedCheckCount":  0,
+    "minWindowResizeOk":  true,
+    "firstCloseExitCode":  0,
+    "faultCheckExitCode":  0,
+    "faultCheckCount":  13,
+    "faultFailedCheckCount":  0,
+    "faultCloseExitCode":  0,
+    "persistenceCheckExitCode":  0,
+    "persistenceCheckCount":  15,
+    "persistenceFailedCheckCount":  0,
+    "persistenceCloseExitCode":  0,
+    "dbCheckCount":  62,
+    "dbFailedCheckCount":  0,
+    "dbChecks":  [
+                     {
+                         "name":  "dbProbe.afterMain.readable",
+                         "pass":  true,
+                         "detail":  "probe JSON readable"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.probeStatusOk",
+                         "pass":  true,
+                         "detail":  "status=ok scope=uat"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.schemaVersion4",
+                         "pass":  true,
+                         "detail":  "schema_version=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.integrityOk",
+                         "pass":  true,
+                         "detail":  "ok"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.journalModeWal",
+                         "pass":  true,
+                         "detail":  "wal"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.foreignKeysEnabled",
+                         "pass":  true,
+                         "detail":  "foreign_keys=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.requiredTablesPresent",
+                         "pass":  true,
+                         "detail":  "required_tables_present=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.migrations1To4",
+                         "pass":  true,
+                         "detail":  "1,2,3,4"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.foreignKeyViolationsZero",
+                         "pass":  true,
+                         "detail":  "violations=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.allRowsPending",
+                         "pass":  true,
+                         "detail":  "total=14 pending=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.noOrphanMembers",
+                         "pass":  true,
+                         "detail":  "orphan=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.noGroupsWithoutMembers",
+                         "pass":  true,
+                         "detail":  "empty_groups=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.noWorkItemInMultipleGroups",
+                         "pass":  true,
+                         "detail":  "multi_group=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.allBatchItemsPending",
+                         "pass":  true,
+                         "detail":  "not_pending=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.workItems14",
+                         "pass":  true,
+                         "detail":  "work_items=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.pending14",
+                         "pass":  true,
+                         "detail":  "pending=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.unassigned1",
+                         "pass":  true,
+                         "detail":  "null_project=1"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.archivedLink1",
+                         "pass":  true,
+                         "detail":  "linked_archived=1"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.linkedActive12",
+                         "pass":  true,
+                         "detail":  "linked_active=12"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.projects4Archived1",
+                         "pass":  true,
+                         "detail":  "projects=4 archived=1"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.creationGroups5",
+                         "pass":  true,
+                         "detail":  "groups=5"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.members11",
+                         "pass":  true,
+                         "detail":  "members=11"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.groupSizeHistogram",
+                         "pass":  true,
+                         "detail":  "{\"2\":4,\"3\":1}"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.readable",
+                         "pass":  true,
+                         "detail":  "probe JSON readable"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.probeStatusOk",
+                         "pass":  true,
+                         "detail":  "status=ok scope=uat"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.schemaVersion4",
+                         "pass":  true,
+                         "detail":  "schema_version=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.integrityOk",
+                         "pass":  true,
+                         "detail":  "ok"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.journalModeWal",
+                         "pass":  true,
+                         "detail":  "wal"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.foreignKeysEnabled",
+                         "pass":  true,
+                         "detail":  "foreign_keys=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.requiredTablesPresent",
+                         "pass":  true,
+                         "detail":  "required_tables_present=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.migrations1To4",
+                         "pass":  true,
+                         "detail":  "1,2,3,4"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.foreignKeyViolationsZero",
+                         "pass":  true,
+                         "detail":  "violations=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.allRowsPending",
+                         "pass":  true,
+                         "detail":  "total=14 pending=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noOrphanMembers",
+                         "pass":  true,
+                         "detail":  "orphan=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noGroupsWithoutMembers",
+                         "pass":  true,
+                         "detail":  "empty_groups=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noWorkItemInMultipleGroups",
+                         "pass":  true,
+                         "detail":  "multi_group=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.allBatchItemsPending",
+                         "pass":  true,
+                         "detail":  "not_pending=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.workItemsStill14",
+                         "pass":  true,
+                         "detail":  "work_items=14"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.creationGroupsStill5",
+                         "pass":  true,
+                         "detail":  "groups=5"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.membersStill11",
+                         "pass":  true,
+                         "detail":  "members=11"
+                     },
+                     {
+                         "name":  "dbProbe.afterFault.noFaultBatchResidue",
+                         "pass":  true,
+                         "detail":  "work_items=14 groups=5 members=11"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.readable",
+                         "pass":  true,
+                         "detail":  "probe JSON readable"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.probeStatusOk",
+                         "pass":  true,
+                         "detail":  "status=ok scope=uat"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.schemaVersion4",
+                         "pass":  true,
+                         "detail":  "schema_version=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.integrityOk",
+                         "pass":  true,
+                         "detail":  "ok"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.journalModeWal",
+                         "pass":  true,
+                         "detail":  "wal"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.foreignKeysEnabled",
+                         "pass":  true,
+                         "detail":  "foreign_keys=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.requiredTablesPresent",
+                         "pass":  true,
+                         "detail":  "required_tables_present=True"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.migrations1To4",
+                         "pass":  true,
+                         "detail":  "1,2,3,4"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.foreignKeyViolationsZero",
+                         "pass":  true,
+                         "detail":  "violations=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.allRowsPending",
+                         "pass":  true,
+                         "detail":  "total=16 pending=16"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noOrphanMembers",
+                         "pass":  true,
+                         "detail":  "orphan=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noGroupsWithoutMembers",
+                         "pass":  true,
+                         "detail":  "empty_groups=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noWorkItemInMultipleGroups",
+                         "pass":  true,
+                         "detail":  "multi_group=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.allBatchItemsPending",
+                         "pass":  true,
+                         "detail":  "not_pending=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.workItems16",
+                         "pass":  true,
+                         "detail":  "work_items=16"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.pending16",
+                         "pass":  true,
+                         "detail":  "pending=16"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.creationGroups6",
+                         "pass":  true,
+                         "detail":  "groups=6"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.members13",
+                         "pass":  true,
+                         "detail":  "members=13"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.groupSizeHistogram",
+                         "pass":  true,
+                         "detail":  "{\"2\":5,\"3\":1}"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.newBatchPersisted",
+                         "pass":  true,
+                         "detail":  "work_items=16 groups=6 members=13"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noArchivedLinkLost",
+                         "pass":  true,
+                         "detail":  "linked_archived=1"
+                     }
+                 ],
+    "evidenceDir":  "<test-root>\\t1-04-ui-r6-20261124-1846\\evidence",
+    "pathGuard":  {
+                      "trustAnchorVerified":  true,
+                      "databasePathAndAncestorsVerified":  true,
+                      "databaseFileReparsePointRejected":  true,
+                      "evidenceDirectoryBoundaryVerified":  true,
+                      "evidenceFileBoundaryVerified":  true,
+                      "volumeIdentityVerified":  true,
+                      "staticReparsePointsRejected":  true,
+                      "concurrentReplacementRisk":  "DEC-029 / Issue #2 remains deferred and unresolved"
+                  },
+    "dbProbeAfterMain":  "<test-root>\\t1-04-ui-r6-20261124-1846\\evidence\\t1-04-db-after-main.json",
+    "dbProbeAfterFault":  "<test-root>\\t1-04-ui-r6-20261124-1846\\evidence\\t1-04-db-after-fault.json",
+    "dbProbeAfterRestart":  "<test-root>\\t1-04-ui-r6-20261124-1846\\evidence\\t1-04-db-after-restart.json",
+    "evidenceFiles":  [
+                          "batch-rollback-error.png",
+                          "create-dialog-min.png",
+                          "create-dialog-multi-projects.png",
+                          "create-error-contract-violation-batch.png",
+                          "create-error-project-archived-batch.png",
+                          "pending-after-main-checks.png",
+                          "pending-after-restart.png",
+                          "pending-archived-project.png",
+                          "pending-empty.png",
+                          "pending-min.png",
+                          "pending-refresh-recovered.png",
+                          "pending-three-project-copies.png",
+                          "pending-two-project-copies.png",
+                          "pending-unassigned-regression.png",
+                          "t1-04-fault-evidence.json",
+                          "t1-04-min-window-evidence.json",
+                          "t1-04-persistence-evidence.json",
+                          "t1-04-prerequisite.json",
+                          "t1-04-ui-evidence.json"
+                      ],
+    "screenshots":  [
+                        "batch-rollback-error.png",
+                        "create-dialog-min.png",
+                        "create-dialog-multi-projects.png",
+                        "create-error-contract-violation-batch.png",
+                        "create-error-project-archived-batch.png",
+                        "pending-after-main-checks.png",
+                        "pending-after-restart.png",
+                        "pending-archived-project.png",
+                        "pending-empty.png",
+                        "pending-min.png",
+                        "pending-refresh-recovered.png",
+                        "pending-three-project-copies.png",
+                        "pending-two-project-copies.png",
+                        "pending-unassigned-regression.png"
+                    ],
+    "pass":  true
+}
+T1_04_RELEASE_UI_E2E=PASS
+EXIT_CODE=0

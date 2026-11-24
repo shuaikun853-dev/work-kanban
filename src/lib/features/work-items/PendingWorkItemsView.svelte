@@ -9,6 +9,7 @@
     listPendingWorkItems
   } from '../../bridge/workItems';
   import type { ProjectDto } from '../../contracts/projects';
+  import { normalizeWorkItemTitle } from '../../contracts/workItemTitle';
   import type { PendingWorkItemDto } from '../../contracts/workItems';
   import Button from '../../ui/components/Button.svelte';
   import EmptyState from '../../ui/components/EmptyState.svelte';
@@ -91,7 +92,8 @@
    * 防止不同创建操作意外共享同一请求标识。
    */
   function resolveBatchRequestId(title: string, projectIds: readonly string[]): string {
-    const normalizedTitle = title.trim();
+    // 与 Rust / Bridge 使用同一 Unicode White_Space 规则，确保同一逻辑请求的幂等绑定稳定。
+    const normalizedTitle = normalizeWorkItemTitle(title);
     if (
       pendingBatchRequest !== null &&
       pendingBatchRequest.title === normalizedTitle &&

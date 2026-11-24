@@ -1,0 +1,351 @@
+TAP version 13
+# Subtest: 完整合法创建 DTO（10 字段，四个可空字段为 null）通过校验
+ok 1 - 完整合法创建 DTO（10 字段，四个可空字段为 null）通过校验
+  ---
+  duration_ms: 11.3278
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 的四个可空字段为 NULL 时语义正确保留
+ok 2 - 创建 DTO 的四个可空字段为 NULL 时语义正确保留
+  ---
+  duration_ms: 0.6889
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 的可空字段具有合法值时通过校验
+ok 3 - 创建 DTO 的可空字段具有合法值时通过校验
+  ---
+  duration_ms: 0.602
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 缺少任一字段都被拒绝（10 字段逐一验证）
+ok 4 - 创建 DTO 缺少任一字段都被拒绝（10 字段逐一验证）
+  ---
+  duration_ms: 3.2487
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 数字字段类型/范围错误被拒绝
+ok 5 - 创建 DTO 数字字段类型/范围错误被拒绝
+  ---
+  duration_ms: 1.1485
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 可空字段类型错误被拒绝
+ok 6 - 创建 DTO 可空字段类型错误被拒绝
+  ---
+  duration_ms: 0.7766
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 非法 lifecycleStatus 被拒绝
+ok 7 - 创建 DTO 非法 lifecycleStatus 被拒绝
+  ---
+  duration_ms: 0.8287
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 未知字段被严格拒绝（不静默忽略）
+ok 8 - 创建 DTO 未知字段被严格拒绝（不静默忽略）
+  ---
+  duration_ms: 0.581
+  type: 'test'
+  ...
+# Subtest: 创建 DTO 必需字符串字段为空或类型错误被拒绝
+ok 9 - 创建 DTO 必需字符串字段为空或类型错误被拒绝
+  ---
+  duration_ms: 1.6316
+  type: 'test'
+  ...
+# Subtest: 合法待安排列表 DTO 通过校验（未归属 + 已归档项目）
+ok 10 - 合法待安排列表 DTO 通过校验（未归属 + 已归档项目）
+  ---
+  duration_ms: 1.218
+  type: 'test'
+  ...
+# Subtest: 空列表通过校验，非数组返回值被拒绝
+ok 11 - 空列表通过校验，非数组返回值被拒绝
+  ---
+  duration_ms: 0.4188
+  type: 'test'
+  ...
+# Subtest: 待安排列表 DTO 缺少任一字段都被拒绝（8 字段逐一验证）
+ok 12 - 待安排列表 DTO 缺少任一字段都被拒绝（8 字段逐一验证）
+  ---
+  duration_ms: 0.6697
+  type: 'test'
+  ...
+# Subtest: 待安排列表 DTO 未知字段被严格拒绝
+ok 13 - 待安排列表 DTO 未知字段被严格拒绝
+  ---
+  duration_ms: 0.4408
+  type: 'test'
+  ...
+# Subtest: 待安排列表 DTO 字段类型错误被拒绝
+ok 14 - 待安排列表 DTO 字段类型错误被拒绝
+  ---
+  duration_ms: 0.6847
+  type: 'test'
+  ...
+# Subtest: 待安排列表 DTO 非 pending 状态被拒绝
+ok 15 - 待安排列表 DTO 非 pending 状态被拒绝
+  ---
+  duration_ms: 1.0524
+  type: 'test'
+  ...
+# Subtest: 待安排列表 DTO 项目字段语义不一致被拒绝
+ok 16 - 待安排列表 DTO 项目字段语义不一致被拒绝
+  ---
+  duration_ms: 0.5901
+  type: 'test'
+  ...
+# Subtest: 拒绝时错误信息包含字段路径且错误码稳定
+ok 17 - 拒绝时错误信息包含字段路径且错误码稳定
+  ---
+  duration_ms: 0.3459
+  type: 'test'
+  ...
+# Subtest: 合法批量创建响应（两项目）通过严格校验
+ok 18 - 合法批量创建响应（两项目）通过严格校验
+  ---
+  duration_ms: 2.0417
+  type: 'test'
+  ...
+# Subtest: 合法批量创建响应（三项目、乱序返回）通过严格校验
+ok 19 - 合法批量创建响应（三项目、乱序返回）通过严格校验
+  ---
+  duration_ms: 0.7902
+  type: 'test'
+  ...
+# Subtest: 请求上下文完整一致（requestId 用作 groupId、title 已 trim）时通过校验
+ok 20 - 请求上下文完整一致（requestId 用作 groupId、title 已 trim）时通过校验
+  ---
+  duration_ms: 0.9578
+  type: 'test'
+  ...
+# Subtest: 批量创建响应的 groupId 必须是规范 UUID
+ok 21 - 批量创建响应的 groupId 必须是规范 UUID
+  ---
+  duration_ms: 1.3137
+  type: 'test'
+  ...
+# Subtest: 批量创建响应 groupId 与请求 requestId 不一致时被拒绝（即使语法合法的不同 UUID）
+ok 22 - 批量创建响应 groupId 与请求 requestId 不一致时被拒绝（即使语法合法的不同 UUID）
+  ---
+  duration_ms: 1.1478
+  type: 'test'
+  ...
+# Subtest: 请求 requestId 不是规范小写连字符 UUID 时被拒绝
+ok 23 - 请求 requestId 不是规范小写连字符 UUID 时被拒绝
+  ---
+  duration_ms: 1.3341
+  type: 'test'
+  ...
+# Subtest: 批量创建响应缺少/多出顶层字段被拒绝
+ok 24 - 批量创建响应缺少/多出顶层字段被拒绝
+  ---
+  duration_ms: 0.7169
+  type: 'test'
+  ...
+# Subtest: 批量创建响应 workItems 非数组或数量与请求项目数不一致被拒绝
+ok 25 - 批量创建响应 workItems 非数组或数量与请求项目数不一致被拒绝
+  ---
+  duration_ms: 0.6595
+  type: 'test'
+  ...
+# Subtest: 批量创建响应的每个项目必须恰好一个副本
+ok 26 - 批量创建响应的每个项目必须恰好一个副本
+  ---
+  duration_ms: 1.1614
+  type: 'test'
+  ...
+# Subtest: 批量创建响应中任一副本非 pending 被拒绝
+ok 27 - 批量创建响应中任一副本非 pending 被拒绝
+  ---
+  duration_ms: 0.5547
+  type: 'test'
+  ...
+# Subtest: 批量创建响应中任一副本缺字段/多字段被拒绝
+ok 28 - 批量创建响应中任一副本缺字段/多字段被拒绝
+  ---
+  duration_ms: 0.4693
+  type: 'test'
+  ...
+# Subtest: 调用方请求项目列表本身不合法时拒绝
+ok 29 - 调用方请求项目列表本身不合法时拒绝
+  ---
+  duration_ms: 0.5422
+  type: 'test'
+  ...
+# Subtest: 请求上下文不是对象或缺少上下文时被拒绝
+ok 30 - 请求上下文不是对象或缺少上下文时被拒绝
+  ---
+  duration_ms: 0.6771
+  type: 'test'
+  ...
+# Subtest: 请求 title 类型错误或去除首尾空白后为空时被拒绝
+ok 31 - 请求 title 类型错误或去除首尾空白后为空时被拒绝
+  ---
+  duration_ms: 0.6985
+  type: 'test'
+  ...
+# Subtest: 请求 title 带首尾空白时，响应 title 等于 trim 结果即可通过校验
+ok 32 - 请求 title 带首尾空白时，响应 title 等于 trim 结果即可通过校验
+  ---
+  duration_ms: 0.857
+  type: 'test'
+  ...
+# Subtest: 批量创建响应工作副本 title 必须等于请求 title.trim()（大小写/内部空白不得变化）
+ok 33 - 批量创建响应工作副本 title 必须等于请求 title.trim()（大小写/内部空白不得变化）
+  ---
+  duration_ms: 1.285
+  type: 'test'
+  ...
+# Subtest: 请求 title 与响应 title 仅大小写或内部空白不同时被拒绝
+ok 34 - 请求 title 与响应 title 仅大小写或内部空白不同时被拒绝
+  ---
+  duration_ms: 1.8838
+  type: 'test'
+  ...
+# Subtest: 批量创建响应契约错误包含字段路径且错误码稳定
+ok 35 - 批量创建响应契约错误包含字段路径且错误码稳定
+  ---
+  duration_ms: 0.703
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：U+0085 首尾空白
+not ok 36 - R6-01 标题规范化：U+0085 首尾空白
+  ---
+  duration_ms: 3.9868
+  type: 'test'
+  location: '<repo-root>\\scripts\\quality\\work-item-bridge.test.mjs:671:3'
+  failureType: 'testCodeFailure'
+  error: '工作事项 IPC 返回值不符合契约：批量创建工作结果.workItems[0].title 应为 与请求 title 去除首尾空白后的字符串完全一致（不改变大小写或内部空白），实际为 string。请检查前后端版本是否一致。'
+  code: 'ipc-contract-violation'
+  name: 'WorkItemIpcError'
+  stack: |-
+    contractViolation (<repo-root>/src/lib/bridge/workItemValidation.ts:430:10)
+    <repo-root>/src/lib/bridge/workItemValidation.ts:245:13
+    Array.forEach (<anonymous>)
+    parseCreatedWorkItemCopies (<repo-root>/src/lib/bridge/workItemValidation.ts:241:13)
+    TestContext.<anonymous> (<repo-root>/scripts/quality/work-item-bridge.test.mjs:672:20)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+  ...
+# Subtest: R6-01 标题规范化：U+FEFF 首尾字符保留
+not ok 37 - R6-01 标题规范化：U+FEFF 首尾字符保留
+  ---
+  duration_ms: 0.6088
+  type: 'test'
+  location: '<repo-root>\\scripts\\quality\\work-item-bridge.test.mjs:671:3'
+  failureType: 'testCodeFailure'
+  error: '工作事项 IPC 返回值不符合契约：批量创建工作结果.workItems[0].title 应为 与请求 title 去除首尾空白后的字符串完全一致（不改变大小写或内部空白），实际为 string。请检查前后端版本是否一致。'
+  code: 'ipc-contract-violation'
+  name: 'WorkItemIpcError'
+  stack: |-
+    contractViolation (<repo-root>/src/lib/bridge/workItemValidation.ts:430:10)
+    <repo-root>/src/lib/bridge/workItemValidation.ts:245:13
+    Array.forEach (<anonymous>)
+    parseCreatedWorkItemCopies (<repo-root>/src/lib/bridge/workItemValidation.ts:241:13)
+    TestContext.<anonymous> (<repo-root>/scripts/quality/work-item-bridge.test.mjs:672:20)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+  ...
+# Subtest: R6-01 标题规范化：U+3000 首尾空白
+ok 38 - R6-01 标题规范化：U+3000 首尾空白
+  ---
+  duration_ms: 1.0647
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：TAB 首尾空白
+ok 39 - R6-01 标题规范化：TAB 首尾空白
+  ---
+  duration_ms: 0.4969
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：CR/LF 首尾空白
+ok 40 - R6-01 标题规范化：CR/LF 首尾空白
+  ---
+  duration_ms: 0.4889
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：普通 ASCII 空格首尾空白
+ok 41 - R6-01 标题规范化：普通 ASCII 空格首尾空白
+  ---
+  duration_ms: 0.3161
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：内部多个空格原样保留
+ok 42 - R6-01 标题规范化：内部多个空格原样保留
+  ---
+  duration_ms: 0.2437
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：内部 TAB 原样保留
+ok 43 - R6-01 标题规范化：内部 TAB 原样保留
+  ---
+  duration_ms: 0.2501
+  type: 'test'
+  ...
+# Subtest: R6-01 标题规范化：混合 Unicode 空白两端完全一致
+not ok 44 - R6-01 标题规范化：混合 Unicode 空白两端完全一致
+  ---
+  duration_ms: 0.2536
+  type: 'test'
+  location: '<repo-root>\\scripts\\quality\\work-item-bridge.test.mjs:671:3'
+  failureType: 'testCodeFailure'
+  error: '工作事项 IPC 返回值不符合契约：批量创建工作结果.workItems[0].title 应为 与请求 title 去除首尾空白后的字符串完全一致（不改变大小写或内部空白），实际为 string。请检查前后端版本是否一致。'
+  code: 'ipc-contract-violation'
+  name: 'WorkItemIpcError'
+  stack: |-
+    contractViolation (<repo-root>/src/lib/bridge/workItemValidation.ts:430:10)
+    <repo-root>/src/lib/bridge/workItemValidation.ts:245:13
+    Array.forEach (<anonymous>)
+    parseCreatedWorkItemCopies (<repo-root>/src/lib/bridge/workItemValidation.ts:241:13)
+    TestContext.<anonymous> (<repo-root>/scripts/quality/work-item-bridge.test.mjs:672:20)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+  ...
+# Subtest: R6-01 U+FEFF 单独作为标题时两端一致保留（不得按 JS trim 判空）
+not ok 45 - R6-01 U+FEFF 单独作为标题时两端一致保留（不得按 JS trim 判空）
+  ---
+  duration_ms: 0.362
+  type: 'test'
+  location: '<repo-root>\\scripts\\quality\\work-item-bridge.test.mjs:683:1'
+  failureType: 'testCodeFailure'
+  error: '工作事项 IPC 返回值不符合契约：请求 title 应为 去除首尾空白后非空的字符串，实际为 string。请检查前后端版本是否一致。'
+  code: 'ipc-contract-violation'
+  name: 'WorkItemIpcError'
+  stack: |-
+    contractViolation (<repo-root>/src/lib/bridge/workItemValidation.ts:430:10)
+    expectRequestTitle (<repo-root>/src/lib/bridge/workItemValidation.ts:309:11)
+    parseCreatedWorkItemCopies (<repo-root>/src/lib/bridge/workItemValidation.ts:212:25)
+    TestContext.<anonymous> (<repo-root>/scripts/quality/work-item-bridge.test.mjs:685:18)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R6-01 混合空白规范化不改变大小写，也不做 Unicode NFC/NFKC 转换
+ok 46 - R6-01 混合空白规范化不改变大小写，也不做 Unicode NFC/NFKC 转换
+  ---
+  duration_ms: 0.466
+  type: 'test'
+  ...
+1..46
+# tests 46
+# suites 0
+# pass 42
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 565.483
+EXIT_CODE=1

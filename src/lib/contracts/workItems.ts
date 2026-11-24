@@ -17,8 +17,9 @@
  * - 批量创建响应数量必须与请求项目数一致，且每个项目恰好一个副本；
  * - 批量创建 `groupId` 必须与本次请求的 `requestId` 逐字相等（Rust Core 校验后直接
  *   复用请求标识作为创建组主键，合法但不同的 UUID 也是契约错误）；
- * - 批量创建每个副本 `title` 必须等于请求 `title.trim()`（Rust 只做首尾 trim，
- *   不改变大小写或内部空白）。
+ * - 批量创建每个副本 `title` 必须等于请求标题按 Unicode `White_Space` 规范化后的
+ *   结果（Rust / TypeScript 使用同一字符集合；不改变大小写、内部空白或 U+FEFF；
+ *   不进行 NFC/NFKC）。规范化实现见 `contracts/workItemTitle.ts`。
  *
  * 身份来源（创建组与工作事项不同，不得混淆）：
  * - 工作事项 ID 由 Rust Core 生成，前端禁止自行生成工作事项业务 ID；
@@ -92,7 +93,9 @@ export interface CreateWorkItemInput {
  *   相同 `requestId` + 相同标题 + 相同项目列表返回既有批次；相同 `requestId` 不同业务
  *   参数返回稳定冲突；不同 `requestId` 可创建新的独立批次；不新增 schema 字段或 migration；
  * - `projectIds` 必须包含 2 个及以上不同项目；少于 2 个或重复项目由 Rust Core 拒绝；
- * - 项目顺序即返回 `workItems` 的顺序；前端不得自行去重后提交。
+ * - 项目顺序即返回 `workItems` 的顺序；前端不得自行去重后提交；
+ * - `title` 由前端先按 `normalizeWorkItemTitle`（Unicode `White_Space`）规范化再提交，
+ *   Rust Core 使用同一字符集合再次规范化并保存。
  */
 export interface CreateWorkItemCopiesInput {
   readonly requestId: string;
@@ -107,7 +110,7 @@ export interface CreateWorkItemCopiesInput {
  *   为 `work_item_creation_groups.id`，不是 Rust Core 新生成的 UUID；Bridge 必须验证
  *   `groupId === requestId`；
  * - `workItems`：每个请求项目恰好一个独立工作副本，全部为 `pending`；副本 ID 由 Rust
- *   Core 生成，标题等于请求标题去除首尾空白后的字符串；
+ *   Core 生成，标题等于请求标题去除首尾 Unicode `White_Space` 后的字符串；
  * - 整批原子提交（DEC-034）：成功响应保证全部副本与成员关系已提交，不存在部分成功。
  */
 export interface CreatedWorkItemCopiesDto {
