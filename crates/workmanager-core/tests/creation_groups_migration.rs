@@ -78,6 +78,52 @@ fn read_scalar_i64(connection: &Connection, sql: &str) -> i64 {
         .expect("标量查询")
 }
 
+/// 从真实 0004 migration SQL 中提取第一个 CREATE INDEX 的索引名称。
+///
+/// 测试不得硬编码索引名：索引名称必须来自即将由真实 migration 引擎执行的 SQL，
+/// 否则修改 migration 后测试可能悄悄失去冲突覆盖。
+fn first_create_index_name(sql: &str) -> String {
+    let marker = "CREATE INDEX";
+    let start = sql
+        .find(marker)
+        .unwrap_or_else(|| panic!("真实 0004 migration 必须包含 CREATE INDEX：{sql}"))
+        + marker.len();
+    let name = sql[start..]
+        .trim_start()
+        .split(|character: char| character.is_whitespace() || character == ';')
+        .next()
+        .unwrap_or_else(|| panic!("CREATE INDEX 后必须存在索引名称：{sql}"))
+        .trim_matches('"')
+        .to_string();
+    assert!(!name.is_empty(), "真实 0004 migration 索引名称不得为空");
+    name
+}
+
+/// schema 3 历史数据与 migration 记录快照（逐行字符串比较，避免只比较行数）。
+fn snapshot_schema_three_rows(connection: &Connection) -> Vec<String> {
+    let mut snapshot = Vec::new();
+    for sql in [
+        "SELECT id || '|' || name || '|' || is_archived || '|' || created_at || '|' || updated_at \
+         FROM projects ORDER BY id",
+        "SELECT id || '|' || COALESCE(project_id, '<null>') || '|' || title || '|' || \
+                lifecycle_status || '|' || COALESCE(importance, '<null>') || '|' || \
+                COALESCE(urgency, '<null>') || '|' || COALESCE(due_date, '<null>') || '|' || \
+                COALESCE(description, '<null>') || '|' || created_at || '|' || updated_at \
+         FROM work_items ORDER BY id",
+        "SELECT version || '|' || name || '|' || applied_at \
+         FROM schema_migrations ORDER BY version",
+    ] {
+        let mut statement = connection.prepare(sql).expect("准备 schema 3 快照查询");
+        let rows = statement
+            .query_map([], |row| row.get::<_, String>(0))
+            .expect("执行 schema 3 快照查询")
+            .collect::<Result<Vec<_>, _>>()
+            .expect("收集 schema 3 快照");
+        snapshot.extend(rows);
+    }
+    snapshot
+}
+
 #[test]
 fn upgrades_real_schema_three_database_and_preserves_existing_rows() {
     let dir = TestDir::new("creation-groups-migration-upgrade");
@@ -285,6 +331,162 @@ fn injected_creation_groups_migration_failure_rolls_back_and_keeps_schema_three(
         database.connection(),
         "work_item_creation_groups"
     ));
+}
+
+#[test]
+fn real_0004_migration_failure_rolls_back_all_changes() {
+    let dir = TestDir::new("creation-groups-migration-real-0004-failure");
+    let paths = dir.release_paths();
+    prepare_schema_three_database(&paths);
+
+    let mut connection = Connection::open(paths.database_file()).expect("打开 schema 3 数据库");
+    let real_migration = MIGRATIONS[3];
+    assert_eq!(real_migration.version, 4);
+    let conflicting_index_name = first_create_index_name(real_migration.sql);
+
+    // 预先创建与真实 0004 索引同名的冲突索引。真实 0004 会先成功创建两张新表，
+    // 然后在 CREATE INDEX 处因名称冲突失败；整个 migration 事务必须回滚。
+    connection
+        .execute(
+            &format!("CREATE INDEX \"{conflicting_index_name}\" ON projects(name)"),
+            [],
+        )
+        .expect("创建与真实 0004 同名的冲突索引");
+    let before = snapshot_schema_three_rows(&connection);
+
+    let error = apply_migrations(
+        &mut connection,
+        paths.database_file(),
+        MIGRATIONS,
+        LATEST_SCHEMA_VERSION,
+    )
+    .expect_err("真实 0004 migration 必须因索引名称冲突而失败");
+    match error {
+        DatabaseError::MigrationFailed { version, name, .. } => {
+            assert_eq!(version, 4);
+            assert_eq!(name, "0004_work_item_creation_groups");
+        }
+        other => panic!("期望 migration-failed，实际：{other:?}"),
+    }
+
+    assert_eq!(
+        read_schema_version(&connection, paths.database_file()).expect("schema version"),
+        3,
+        "失败 migration 的 user_version 不得前进"
+    );
+    assert!(
+        !table_exists(&connection, "work_item_creation_groups"),
+        "真实 0004 在索引失败前创建的第一个新表必须随事务回滚"
+    );
+    assert!(
+        !table_exists(&connection, "work_item_creation_group_members"),
+        "真实 0004 在索引失败前创建的第二个新表必须随事务回滚"
+    );
+    assert_eq!(
+        read_scalar_i64(
+            &connection,
+            "SELECT COUNT(*) FROM schema_migrations WHERE version = 4"
+        ),
+        0,
+        "失败 migration 不得写入 version 4 记录"
+    );
+    assert_eq!(
+        read_scalar_i64(&connection, "SELECT COUNT(*) FROM schema_migrations"),
+        3,
+        "既有 migration 记录不得增加或丢失"
+    );
+    assert_eq!(
+        snapshot_schema_three_rows(&connection),
+        before,
+        "失败 migration 必须保持历史项目、工作事项与 migration 记录逐行不变"
+    );
+    assert_eq!(
+        read_scalar_i64(&connection, "SELECT COUNT(*) FROM projects"),
+        2,
+        "失败 migration 不得丢失历史项目"
+    );
+    assert_eq!(
+        read_scalar_i64(&connection, "SELECT COUNT(*) FROM work_items"),
+        2,
+        "失败 migration 不得丢失历史工作事项"
+    );
+
+    // 删除测试冲突索引后，真实 migration 引擎必须能够正常升级至 schema 4。
+    connection
+        .execute(&format!("DROP INDEX \"{conflicting_index_name}\""), [])
+        .expect("删除测试冲突索引");
+
+    let outcome = apply_migrations(
+        &mut connection,
+        paths.database_file(),
+        MIGRATIONS,
+        LATEST_SCHEMA_VERSION,
+    )
+    .expect("移除冲突索引后真实 0004 migration 必须成功");
+    assert_eq!(outcome.previous_version, 3);
+    assert_eq!(outcome.current_version, 4);
+    assert_eq!(outcome.applied_versions, vec![4]);
+    assert_eq!(
+        read_schema_version(&connection, paths.database_file()).expect("升级后 schema version"),
+        4
+    );
+    assert!(table_exists(&connection, "work_item_creation_groups"));
+    assert!(table_exists(
+        &connection,
+        "work_item_creation_group_members"
+    ));
+    assert_eq!(
+        read_scalar_i64(
+            &connection,
+            &format!(
+                "SELECT COUNT(*) FROM sqlite_master \
+                 WHERE type = 'index' AND name = '{conflicting_index_name}'"
+            )
+        ),
+        1,
+        "冲突索引删除后，真实 0004 必须重新创建同名索引"
+    );
+    assert_eq!(
+        read_scalar_i64(&connection, "SELECT COUNT(*) FROM schema_migrations"),
+        4
+    );
+    assert_eq!(
+        read_scalar_i64(&connection, "SELECT COUNT(*) FROM projects"),
+        2
+    );
+    assert_eq!(
+        read_scalar_i64(&connection, "SELECT COUNT(*) FROM work_items"),
+        2
+    );
+    assert_eq!(
+        read_scalar_i64(
+            &connection,
+            "SELECT COUNT(*) FROM work_items WHERE lifecycle_status = 'in_progress'"
+        ),
+        1,
+        "历史工作事项状态不得被 migration 改写"
+    );
+    assert_eq!(
+        read_scalar_i64(
+            &connection,
+            "SELECT COUNT(*) FROM projects WHERE is_archived = 1"
+        ),
+        1,
+        "历史项目归档状态不得被 migration 改写"
+    );
+    assert_eq!(
+        read_scalar_i64(
+            &connection,
+            "SELECT COUNT(*) FROM pragma_integrity_check WHERE integrity_check != 'ok'"
+        ),
+        0,
+        "升级后 integrity_check 必须为 ok"
+    );
+    assert_eq!(
+        read_scalar_i64(&connection, "SELECT COUNT(*) FROM pragma_foreign_key_check"),
+        0,
+        "升级后不得存在外键违规"
+    );
 }
 
 #[test]

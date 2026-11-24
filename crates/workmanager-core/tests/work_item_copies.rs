@@ -11,12 +11,15 @@
 
 mod support;
 
+use std::sync::{Mutex, mpsc};
 use std::time::Duration;
 
+use rusqlite::functions::FunctionFlags;
 use rusqlite::params;
 use support::TestDir;
 use workmanager_core::{
-    Database, Project, ProjectService, WORK_ITEM_STATUS_PENDING, WorkItemService,
+    CreatedWorkItemCopies, Database, Project, ProjectService, WORK_ITEM_STATUS_PENDING,
+    WorkItemError, WorkItemService,
 };
 
 fn setup(label: &str) -> (TestDir, Database) {
@@ -28,6 +31,23 @@ fn setup(label: &str) -> (TestDir, Database) {
 
 fn create_project(database: &mut Database, name: &str) -> Project {
     ProjectService::create(database, name).expect("创建虚构项目")
+}
+
+/// 为每个独立逻辑创建操作生成新的请求标识。
+///
+/// 真实的 T1-04 批量接口要求客户端预先生成并复用请求标识；普通行为测试
+/// 每次调用都代表一个新的逻辑操作，因此使用新的 UUID。
+fn new_request_id() -> String {
+    uuid::Uuid::new_v4().to_string()
+}
+
+/// 现有成功/失败行为测试的便捷入口：每次调用生成新的请求标识。
+fn create_copies(
+    database: &mut Database,
+    title: &str,
+    project_ids: &[String],
+) -> Result<CreatedWorkItemCopies, WorkItemError> {
+    WorkItemService::create_copies(database, &new_request_id(), title, project_ids)
 }
 
 fn scalar_i64(database: &Database, sql: &str) -> i64 {
@@ -159,7 +179,7 @@ fn creates_independent_pending_copies_for_each_project() {
     let project_a = create_project(&mut database, "虚构项目甲");
     let project_b = create_project(&mut database, "虚构项目乙");
 
-    let created = WorkItemService::create_copies(
+    let created = create_copies(
         &mut database,
         "  中核商品价格异常排查  ",
         &[project_a.id.clone(), project_b.id.clone()],
@@ -248,8 +268,8 @@ fn creates_three_independent_copies_for_three_projects() {
         .collect();
     let ids: Vec<String> = projects.iter().map(|project| project.id.clone()).collect();
 
-    let created = WorkItemService::create_copies(&mut database, "三个项目各一份工作", &ids)
-        .expect("三个项目批量创建成功");
+    let created =
+        create_copies(&mut database, "三个项目各一份工作", &ids).expect("三个项目批量创建成功");
 
     assert_eq!(created.work_items.len(), 3);
     assert_eq!(count_work_items(&database), 3);
@@ -293,10 +313,8 @@ fn same_title_can_be_batched_again_as_new_independent_group() {
     let project_b = create_project(&mut database, "虚构重复标题项目乙");
     let ids = vec![project_a.id.clone(), project_b.id.clone()];
 
-    let first = WorkItemService::create_copies(&mut database, "相同标题的独立批次", &ids)
-        .expect("第一次批量创建");
-    let second = WorkItemService::create_copies(&mut database, "相同标题的独立批次", &ids)
-        .expect("第二次批量创建");
+    let first = create_copies(&mut database, "相同标题的独立批次", &ids).expect("第一次批量创建");
+    let second = create_copies(&mut database, "相同标题的独立批次", &ids).expect("第二次批量创建");
 
     assert_ne!(
         first.group_id, second.group_id,
@@ -321,6 +339,262 @@ fn same_title_can_be_batched_again_as_new_independent_group() {
 }
 
 // ---------------------------------------------------------------------------
+// T104-02：客户端请求标识幂等性（真实 SQLite 事务）
+// ---------------------------------------------------------------------------
+
+#[test]
+fn same_request_id_returns_same_batch_without_writing_again() {
+    let (_dir, mut database) = setup("copies-idempotent-retry");
+    let project_a = create_project(&mut database, "虚构幂等项目甲");
+    let project_b = create_project(&mut database, "虚构幂等项目乙");
+    let ids = vec![project_a.id.clone(), project_b.id.clone()];
+    let request_id = new_request_id();
+
+    let first = WorkItemService::create_copies(&mut database, &request_id, "幂等批次工作", &ids)
+        .expect("第一次批量创建");
+    assert_eq!(
+        first.group_id, request_id,
+        "创建组主键必须就是客户端请求标识"
+    );
+    let before_retry = snapshot_rows(&database);
+
+    let retry = WorkItemService::create_copies(&mut database, &request_id, "幂等批次工作", &ids)
+        .expect("相同请求标识重试必须返回既有结果");
+    assert_eq!(retry, first, "重试必须返回同一批次、同一组工作副本");
+    assert_eq!(
+        snapshot_rows(&database),
+        before_retry,
+        "幂等重试不得写入任何新行或修改既有行"
+    );
+    assert_eq!(count_work_items(&database), 2);
+    assert_eq!(count_groups(&database), 1);
+    assert_eq!(count_members(&database), 2);
+}
+
+#[test]
+fn same_request_id_with_different_title_is_rejected_stably() {
+    let (_dir, mut database) = setup("copies-idempotent-title-conflict");
+    let project_a = create_project(&mut database, "虚构标题冲突项目甲");
+    let project_b = create_project(&mut database, "虚构标题冲突项目乙");
+    let ids = vec![project_a.id.clone(), project_b.id.clone()];
+    let request_id = new_request_id();
+
+    let first = WorkItemService::create_copies(&mut database, &request_id, "原始批次标题", &ids)
+        .expect("第一次批量创建");
+    let before_retry = snapshot_rows(&database);
+
+    let error =
+        WorkItemService::create_copies(&mut database, &request_id, "被修改的批次标题", &ids)
+            .expect_err("相同请求标识对应不同标题必须拒绝");
+    assert_eq!(error.code(), "work-item-create-request-conflict");
+    assert!(
+        !error.to_string().contains("原始批次标题")
+            && !error.to_string().contains("被修改的批次标题"),
+        "冲突错误消息不得包含工作标题"
+    );
+    assert_eq!(
+        snapshot_rows(&database),
+        before_retry,
+        "冲突不得修改既有批次"
+    );
+    assert_eq!(
+        read_group(&database, &first.group_id).unwrap().0,
+        "原始批次标题"
+    );
+    assert_eq!(count_groups(&database), 1);
+    assert_eq!(count_members(&database), 2);
+}
+
+#[test]
+fn same_request_id_with_different_project_list_is_rejected_stably() {
+    let (_dir, mut database) = setup("copies-idempotent-project-conflict");
+    let project_a = create_project(&mut database, "虚构项目冲突甲");
+    let project_b = create_project(&mut database, "虚构项目冲突乙");
+    let project_c = create_project(&mut database, "虚构项目冲突丙");
+    let request_id = new_request_id();
+    let first_ids = vec![project_a.id.clone(), project_b.id.clone()];
+
+    WorkItemService::create_copies(&mut database, &request_id, "项目列表绑定批次", &first_ids)
+        .expect("第一次批量创建");
+    let before_retry = snapshot_rows(&database);
+
+    for different_ids in [
+        vec![project_b.id.clone(), project_c.id.clone()],
+        vec![
+            project_a.id.clone(),
+            project_b.id.clone(),
+            project_c.id.clone(),
+        ],
+    ] {
+        let error = WorkItemService::create_copies(
+            &mut database,
+            &request_id,
+            "项目列表绑定批次",
+            &different_ids,
+        )
+        .expect_err("相同请求标识对应不同项目列表必须拒绝");
+        assert_eq!(
+            error.code(),
+            "work-item-create-request-conflict",
+            "项目列表冲突必须返回稳定错误码"
+        );
+    }
+    assert_eq!(
+        snapshot_rows(&database),
+        before_retry,
+        "冲突不得修改既有批次"
+    );
+    assert_eq!(count_work_items(&database), 2);
+    assert_eq!(count_groups(&database), 1);
+    assert_eq!(count_members(&database), 2);
+}
+
+#[test]
+fn idempotent_retry_after_project_archive_returns_existing_batch() {
+    let (_dir, mut database) = setup("copies-idempotent-archived-retry");
+    let project_a = create_project(&mut database, "虚构幂等归档项目甲");
+    let project_b = create_project(&mut database, "虚构幂等归档项目乙");
+    let ids = vec![project_a.id.clone(), project_b.id.clone()];
+    let request_id = new_request_id();
+
+    let first =
+        WorkItemService::create_copies(&mut database, &request_id, "归档后的幂等重试", &ids)
+            .expect("第一次批量创建");
+    ProjectService::archive(&mut database, &project_a.id).expect("归档项目甲");
+    ProjectService::archive(&mut database, &project_b.id).expect("归档项目乙");
+    let before_retry = snapshot_rows(&database);
+
+    let retry =
+        WorkItemService::create_copies(&mut database, &request_id, "归档后的幂等重试", &ids)
+            .expect("已提交请求的重试必须在项目归档后仍返回既有结果");
+    assert_eq!(
+        retry, first,
+        "幂等重试不得因项目后来归档而返回 project-archived"
+    );
+    assert_eq!(
+        snapshot_rows(&database),
+        before_retry,
+        "归档后的幂等重试不得新增或修改任何行"
+    );
+    assert_eq!(count_groups(&database), 1);
+    assert_eq!(count_members(&database), 2);
+}
+
+#[test]
+fn concurrent_same_request_id_creates_only_one_batch() {
+    let (dir, mut creator) = setup("copies-idempotent-concurrent");
+    let mut retry_connection = Database::initialize(&dir.release_paths()).expect("第二数据库连接");
+    let project_a = create_project(&mut creator, "虚构并发幂等项目甲");
+    let project_b = create_project(&mut creator, "虚构并发幂等项目乙");
+    let ids = vec![project_a.id.clone(), project_b.id.clone()];
+    let request_id = new_request_id();
+    let barrier = std::sync::Barrier::new(2);
+
+    let (first, second) = std::thread::scope(|scope| {
+        let creator_ref: &mut Database = &mut creator;
+        let retry_ref: &mut Database = &mut retry_connection;
+        let barrier_ref = &barrier;
+        let request_id_ref = &request_id;
+        let ids_ref = &ids;
+        let first_handle = scope.spawn(move || {
+            barrier_ref.wait();
+            WorkItemService::create_copies(creator_ref, request_id_ref, "并发幂等批次", ids_ref)
+        });
+        let second_handle = scope.spawn(move || {
+            barrier_ref.wait();
+            WorkItemService::create_copies(retry_ref, request_id_ref, "并发幂等批次", ids_ref)
+        });
+        (
+            first_handle.join().expect("等待第一个幂等请求"),
+            second_handle.join().expect("等待第二个幂等请求"),
+        )
+    });
+
+    let first = first.expect("第一个并发请求必须成功或返回既有批次");
+    let second = second.expect("第二个并发请求必须返回同一批次的既有结果");
+    assert_eq!(first.group_id, request_id);
+    assert_eq!(second.group_id, request_id);
+    assert_eq!(
+        first.work_items, second.work_items,
+        "两次响应必须是同一批次"
+    );
+    assert_eq!(count_work_items(&creator), 2, "并发请求只能创建两个副本");
+    assert_eq!(count_groups(&creator), 1, "并发请求只能创建一个批次");
+    assert_eq!(count_members(&creator), 2, "并发请求只能创建两条成员关系");
+    assert_eq!(
+        scalar_i64(
+            &creator,
+            &format!(
+                "SELECT COUNT(*) FROM work_item_creation_group_members WHERE group_id = '{}'",
+                request_id
+            ),
+        ),
+        2
+    );
+}
+
+#[test]
+fn different_request_ids_allow_same_title_as_new_independent_batches() {
+    let (_dir, mut database) = setup("copies-idempotent-different-requests");
+    let project_a = create_project(&mut database, "虚构不同请求项目甲");
+    let project_b = create_project(&mut database, "虚构不同请求项目乙");
+    let ids = vec![project_a.id.clone(), project_b.id.clone()];
+
+    let first = WorkItemService::create_copies(
+        &mut database,
+        &new_request_id(),
+        "允许重复标题的新批次",
+        &ids,
+    )
+    .expect("第一个请求标识");
+    let second = WorkItemService::create_copies(
+        &mut database,
+        &new_request_id(),
+        "允许重复标题的新批次",
+        &ids,
+    )
+    .expect("不同请求标识必须允许创建新批次");
+
+    assert_ne!(first.group_id, second.group_id);
+    assert_ne!(first.work_items[0].id, second.work_items[0].id);
+    assert_eq!(count_work_items(&database), 4);
+    assert_eq!(count_groups(&database), 2);
+    assert_eq!(count_members(&database), 4);
+}
+
+#[test]
+fn rejects_non_canonical_request_id_without_writing_any_rows() {
+    let (_dir, mut database) = setup("copies-idempotent-invalid-request-id");
+    let project_a = create_project(&mut database, "虚构非法请求项目甲");
+    let project_b = create_project(&mut database, "虚构非法请求项目乙");
+    let ids = vec![project_a.id.clone(), project_b.id.clone()];
+
+    for invalid_request_id in [
+        "",
+        "not-a-uuid",
+        "11111111-1111-4111-8111-11111111111",
+        "11111111-1111-4111-8111-1111111111111",
+        "urn:uuid:11111111-1111-4111-8111-111111111111",
+        "11111111-1111-4111-8111-11111111111A",
+    ] {
+        let error = WorkItemService::create_copies(
+            &mut database,
+            invalid_request_id,
+            "非法请求标识不得创建",
+            &ids,
+        )
+        .expect_err("非规范 UUID 请求标识必须拒绝");
+        assert_eq!(error.code(), "work-item-create-request-id-invalid");
+        assert!(
+            !error.to_string().contains(invalid_request_id),
+            "错误消息不得回显请求标识"
+        );
+    }
+    assert_eq!(count_work_items(&database), 0);
+    assert_empty_batch_tables(&database, "非法请求标识");
+}
+
+// ---------------------------------------------------------------------------
 // 7–9：输入校验
 // ---------------------------------------------------------------------------
 
@@ -332,8 +606,7 @@ fn rejects_empty_title_without_writing_any_batch_rows() {
     let ids = vec![project_a.id.clone(), project_b.id.clone()];
 
     for raw in ["", "   ", "\t", "\n", " \u{3000} "] {
-        let error =
-            WorkItemService::create_copies(&mut database, raw, &ids).expect_err("空标题必须拒绝");
+        let error = create_copies(&mut database, raw, &ids).expect_err("空标题必须拒绝");
         assert_eq!(error.code(), "work-item-title-empty");
         assert!(!error.to_string().contains("虚构空标题项目甲"));
         assert!(!error.to_string().contains("SELECT"));
@@ -348,9 +621,8 @@ fn rejects_batch_with_fewer_than_two_projects() {
     let project = create_project(&mut database, "虚构单项目");
 
     for project_ids in [Vec::new(), vec![project.id.clone()]] {
-        let error =
-            WorkItemService::create_copies(&mut database, "不足两个项目的工作", &project_ids)
-                .expect_err("少于两个项目必须拒绝批量创建");
+        let error = create_copies(&mut database, "不足两个项目的工作", &project_ids)
+            .expect_err("少于两个项目必须拒绝批量创建");
         assert_eq!(error.code(), "work-item-copies-too-few");
         assert!(!error.to_string().contains("虚构单项目"));
     }
@@ -372,7 +644,7 @@ fn rejects_duplicate_project_ids_without_silently_deduplicating() {
             project_a.id.clone(),
         ],
     ] {
-        let error = WorkItemService::create_copies(&mut database, "重复项目不应创建", &project_ids)
+        let error = create_copies(&mut database, "重复项目不应创建", &project_ids)
             .expect_err("重复项目必须拒绝");
         assert_eq!(error.code(), "work-item-copies-duplicate-project");
     }
@@ -389,7 +661,7 @@ fn missing_project_rolls_back_entire_batch() {
     let (_dir, mut database) = setup("copies-missing-project");
     let project_a = create_project(&mut database, "虚构有效项目甲");
 
-    let error = WorkItemService::create_copies(
+    let error = create_copies(
         &mut database,
         "中核商品批量创建不应成功",
         &[
@@ -413,7 +685,7 @@ fn archived_project_rolls_back_entire_batch() {
     let project_b = create_project(&mut database, "虚构已归档项目乙");
     ProjectService::archive(&mut database, &project_b.id).expect("归档项目乙");
 
-    let error = WorkItemService::create_copies(
+    let error = create_copies(
         &mut database,
         "中核商品批量创建不应成功",
         &[project_a.id.clone(), project_b.id.clone()],
@@ -429,7 +701,7 @@ fn only_first_project_validated_would_have_passed_but_second_fails_batch() {
     let (_dir, mut database) = setup("copies-second-project-invalid");
     let project_a = create_project(&mut database, "虚构首个有效项目");
 
-    let error = WorkItemService::create_copies(
+    let error = create_copies(
         &mut database,
         "中核商品只校验首个项目就会错误成功",
         &[
@@ -462,7 +734,7 @@ fn work_item_insert_failure_on_second_copy_rolls_back_everything() {
         ),
     );
 
-    let error = WorkItemService::create_copies(
+    let error = create_copies(
         &mut database,
         "中核商品价格异常排查",
         &[project_a.id.clone(), project_b.id.clone()],
@@ -502,6 +774,59 @@ fn work_item_insert_failure_on_second_copy_rolls_back_everything() {
 }
 
 #[test]
+fn creation_group_insert_failure_rolls_back_everything() {
+    let (_dir, mut database) = setup("copies-fault-group-insert");
+    let project_a = create_project(&mut database, "虚构创建组故障项目甲");
+    let project_b = create_project(&mut database, "虚构创建组故障项目乙");
+    let existing =
+        WorkItemService::create(&mut database, "创建组故障前历史工作", None).expect("创建历史工作");
+    let before = snapshot_rows(&database);
+
+    // 真实 SQLite TRIGGER：在创建组 INSERT 前注入失败。该写入是整批事务的第一步，
+    // 用于证明即使故障发生在创建组阶段，也不会留下组、成员或工作副本。
+    install_trigger(
+        &database,
+        "CREATE TRIGGER t1_04_fail_group_insert \
+         BEFORE INSERT ON work_item_creation_groups \
+         BEGIN SELECT RAISE(ABORT, 'T1-04 injected creation-group insert failure'); END;",
+    );
+
+    let error = create_copies(
+        &mut database,
+        "中核商品价格异常排查",
+        &[project_a.id.clone(), project_b.id.clone()],
+    )
+    .expect_err("创建组插入失败必须导致整批回滚");
+    assert_eq!(
+        error.code(),
+        "database-sqlite-error",
+        "真实 SQLite 写入失败应透传数据库结构化错误码：{error}"
+    );
+    assert!(
+        !error.to_string().contains("中核商品"),
+        "错误消息不得包含工作标题"
+    );
+    assert!(
+        !error.to_string().contains("虚构创建组故障项目"),
+        "错误消息不得包含项目名称"
+    );
+
+    assert_no_batch_residue(&database, 1, "创建组插入失败");
+    assert_eq!(snapshot_rows(&database), before, "失败事务不得改变历史数据");
+    assert_eq!(
+        scalar_i64(
+            &database,
+            &format!(
+                "SELECT COUNT(*) FROM work_items WHERE id = '{}'",
+                existing.id
+            )
+        ),
+        1,
+        "失败前已有工作必须保留"
+    );
+}
+
+#[test]
 fn member_relation_insert_failure_rolls_back_everything() {
     let (_dir, mut database) = setup("copies-fault-second-member");
     let project_a = create_project(&mut database, "虚构成员故障项目甲");
@@ -517,7 +842,7 @@ fn member_relation_insert_failure_rolls_back_everything() {
          BEGIN SELECT RAISE(ABORT, 'T1-04 injected second-member insert failure'); END;",
     );
 
-    let error = WorkItemService::create_copies(
+    let error = create_copies(
         &mut database,
         "中核商品价格异常排查",
         &[project_a.id.clone(), project_b.id.clone()],
@@ -547,7 +872,7 @@ fn read_back_verification_failure_rolls_back_everything() {
                WHERE id = NEW.work_item_id; END;",
     );
 
-    let error = WorkItemService::create_copies(
+    let error = create_copies(
         &mut database,
         "中核商品价格异常排查",
         &[project_a.id.clone(), project_b.id.clone()],
@@ -569,7 +894,7 @@ fn failed_batch_keeps_previous_successful_batches_unchanged() {
     let project_c = create_project(&mut database, "虚构历史批次项目丙");
     let project_d = create_project(&mut database, "虚构历史批次项目丁");
 
-    let earlier = WorkItemService::create_copies(
+    let earlier = create_copies(
         &mut database,
         "更早成功的批次",
         &[project_a.id.clone(), project_b.id.clone()],
@@ -588,7 +913,7 @@ fn failed_batch_keeps_previous_successful_batches_unchanged() {
             project_d.id
         ),
     );
-    let error = WorkItemService::create_copies(
+    let error = create_copies(
         &mut database,
         "不应写入的后续批次",
         &[project_c.id.clone(), project_d.id.clone()],
@@ -626,35 +951,29 @@ fn batch_create_waits_for_in_flight_archive_then_fails_entirely() {
     let project_a_id = project_a.id.clone();
     let project_b_id = project_b.id.clone();
 
-    // 归档事务先开始并持有 IMMEDIATE 写锁，提交前保持打开。
-    archiver
-        .connection_mut()
-        .execute_batch("BEGIN IMMEDIATE;")
-        .expect("开启归档事务");
-    archiver
-        .connection_mut()
-        .execute(
-            "UPDATE projects SET is_archived = 1, updated_at = '2026-11-24T00:00:00.000Z' \
-             WHERE id = ?1",
-            params![project_b_id],
-        )
-        .expect("事务内归档项目乙");
+    // 场景一：归档事务先完整提交；批量创建随后开始，必须观察到已归档并整批失败。
+    // 使用 channel 明确建立“归档提交完成 → 批量创建开始”的 happens-before 顺序，
+    // 不使用 sleep 或重复运行碰运气。
+    let (archive_committed_tx, archive_committed_rx) = mpsc::channel();
+    std::thread::scope(|scope| {
+        let archiver_ref: &mut Database = &mut archiver;
+        let project_b_id = project_b_id.as_str();
+        scope.spawn(move || {
+            let result = ProjectService::archive(archiver_ref, project_b_id);
+            archive_committed_tx
+                .send(result.is_ok())
+                .expect("发送归档提交结果");
+        });
+    });
+    assert!(
+        archive_committed_rx
+            .recv_timeout(Duration::from_secs(10))
+            .expect("归档必须在超时前完成"),
+        "归档事务必须成功提交"
+    );
 
     let batch_ids = vec![project_a_id.clone(), project_b_id.clone()];
-    let create_handle = std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_millis(150));
-        WorkItemService::create_copies(&mut creator, "并发批量创建的工作", &batch_ids)
-    });
-
-    std::thread::sleep(Duration::from_millis(500));
-    archiver
-        .connection_mut()
-        .execute_batch("COMMIT;")
-        .expect("提交归档事务");
-
-    let error = create_handle
-        .join()
-        .expect("等待批量创建线程")
+    let error = create_copies(&mut creator, "并发批量创建的工作", &batch_ids)
         .expect_err("归档事务提交后批量创建必须被拒绝");
     assert_eq!(error.code(), "project-archived");
     assert_eq!(count_work_items(&archiver), 0, "不得产生部分工作副本");
@@ -665,106 +984,107 @@ fn batch_create_waits_for_in_flight_archive_then_fails_entirely() {
 fn concurrent_archive_and_batch_create_never_produces_partial_batch() {
     let (dir, mut creator) = setup("copies-concurrent-race");
     let mut archiver = Database::initialize(&dir.release_paths()).expect("归档连接");
+    let project_a = create_project(&mut creator, "虚构并发批次甲");
+    let project_b = create_project(&mut creator, "虚构并发批次乙");
+    let project_a_id = project_a.id.clone();
+    let project_b_id = project_b.id.clone();
+    let batch_ids = vec![project_a_id.clone(), project_b_id.clone()];
 
-    for index in 0..3 {
-        let project_a = create_project(&mut archiver, &format!("虚构并发批次甲{index}"));
-        let project_b = create_project(&mut archiver, &format!("虚构并发批次乙{index}"));
-        let project_a_id = project_a.id.clone();
-        let project_b_id = project_b.id.clone();
-        let title = format!("虚构并发批量工作{index}");
-        let barrier = std::sync::Barrier::new(2);
+    // 场景二：批量创建先取得真实 IMMEDIATE 写事务。
+    //
+    // 通过测试连接专用的 SQLite 标量函数 + BEFORE INSERT trigger，在创建组 INSERT
+    // 处暂停批量创建事务；此时它已经持有写锁。测试再启动归档线程，随后释放批量创建。
+    // 这提供确定的“批量创建先取得写事务 → 完整提交 → 归档继续”顺序，不依赖 sleep。
+    // SQLite UDF 只注册在测试连接上，不进入生产代码，也不是生产故障开关。
+    let (batch_locked_tx, batch_locked_rx) = mpsc::channel();
+    let (release_batch_tx, release_batch_rx) = mpsc::channel();
+    let release_batch_rx = Mutex::new(release_batch_rx);
+    creator
+        .connection()
+        .create_scalar_function(
+            "wm_t104_pause_batch_insert",
+            0,
+            FunctionFlags::SQLITE_UTF8 | FunctionFlags::SQLITE_DETERMINISTIC,
+            move |_| {
+                batch_locked_tx.send(()).map_err(|_| {
+                    rusqlite::Error::UserFunctionError("测试同步信号接收端已关闭".into())
+                })?;
+                release_batch_rx
+                    .lock()
+                    .expect("测试同步锁")
+                    .recv_timeout(Duration::from_secs(15))
+                    .map_err(|_| {
+                        rusqlite::Error::UserFunctionError("等待释放批量创建事务超时".into())
+                    })?;
+                Ok(1_i64)
+            },
+        )
+        .expect("注册测试同步 SQLite 函数");
+    creator
+        .connection()
+        .execute_batch(
+            "CREATE TRIGGER t1_04_pause_batch_group_insert \
+             BEFORE INSERT ON work_item_creation_groups \
+             BEGIN SELECT wm_t104_pause_batch_insert(); END;",
+        )
+        .expect("安装测试同步 trigger");
 
-        let (create_result, archive_result) = std::thread::scope(|scope| {
-            let creator_ref: &mut Database = &mut creator;
-            let archiver_ref: &mut Database = &mut archiver;
-            let create_handle = {
-                let barrier = &barrier;
-                let project_a_id = &project_a_id;
-                let project_b_id = &project_b_id;
-                let title = &title;
-                scope.spawn(move || {
-                    barrier.wait();
-                    WorkItemService::create_copies(
-                        creator_ref,
-                        title,
-                        &[project_a_id.clone(), project_b_id.clone()],
-                    )
-                })
-            };
-            let archive_handle = {
-                let barrier = &barrier;
-                let project_b_id = &project_b_id;
-                scope.spawn(move || {
-                    barrier.wait();
-                    ProjectService::archive(archiver_ref, project_b_id)
-                })
-            };
-            (
-                create_handle.join().expect("等待批量创建线程"),
-                archive_handle.join().expect("等待归档线程"),
-            )
-        });
+    let title = "虚构并发创建先提交";
+    let create_handle = std::thread::spawn(move || create_copies(&mut creator, title, &batch_ids));
+    batch_locked_rx
+        .recv_timeout(Duration::from_secs(15))
+        .expect("批量创建必须在超时前进入创建组写入并持有写事务");
 
-        archive_result.expect("归档必须成功");
-        match create_result {
-            Ok(created) => {
-                // 批量创建先提交：两个副本必须同时存在且都属于未归档项目。
-                assert_eq!(created.work_items.len(), 2);
-                let group_size = scalar_i64(
-                    &creator,
-                    &format!(
-                        "SELECT COUNT(*) FROM work_item_creation_group_members WHERE group_id = '{}'",
-                        created.group_id
-                    ),
-                );
-                assert_eq!(group_size, 2, "成功批次必须有且只有两条成员关系");
-                for item in &created.work_items {
-                    assert!(
-                        item.project_id.as_deref() == Some(project_a_id.as_str())
-                            || item.project_id.as_deref() == Some(project_b_id.as_str()),
-                        "成功批次的副本必须关联请求项目"
-                    );
-                }
-            }
-            Err(error) => {
-                // 归档先提交：整批失败，不得留下部分副本/组/成员。
-                assert_eq!(error.code(), "project-archived");
-                let residue = scalar_i64(
-                    &creator,
-                    &format!(
-                        "SELECT COUNT(*) FROM work_items WHERE project_id IN ('{}','{}')",
-                        project_a_id, project_b_id
-                    ),
-                );
-                assert_eq!(residue, 0, "失败批次不得留下任何副本");
-            }
-        }
+    let (archive_started_tx, archive_started_rx) = mpsc::channel();
+    let archive_project_id = project_b_id.clone();
+    let archive_handle = std::thread::spawn(move || {
+        archive_started_tx.send(()).expect("发送归档线程已启动信号");
+        ProjectService::archive(&mut archiver, &archive_project_id)
+    });
+    archive_started_rx
+        .recv_timeout(Duration::from_secs(10))
+        .expect("归档线程必须在超时前启动");
 
-        // 归档已提交后，新批量创建必须整批失败。
-        let after_archive = WorkItemService::create_copies(
-            &mut creator,
-            "归档后批量创建",
-            &[project_a_id.clone(), project_b_id.clone()],
-        );
-        assert_eq!(
-            after_archive.expect_err("归档后创建必须失败").code(),
-            "project-archived"
+    // 批量创建仍暂停在事务内，此时归档调用已发起；释放后批量创建必须完整提交，
+    // 归档随后才能取得写事务并成功。
+    release_batch_tx.send(()).expect("释放批量创建事务");
+
+    let created = create_handle
+        .join()
+        .expect("等待批量创建线程")
+        .expect("批量创建先取得写事务时必须完整提交");
+    let archived = archive_handle
+        .join()
+        .expect("等待归档线程")
+        .expect("批量创建提交后归档必须成功");
+    assert!(archived.is_archived);
+    assert_eq!(created.work_items.len(), 2);
+
+    let check = Database::initialize(&dir.release_paths()).expect("复核数据库");
+    assert_eq!(count_work_items(&check), 2, "批量创建必须完整提交两个副本");
+    assert_eq!(count_groups(&check), 1);
+    assert_eq!(count_members(&check), 2);
+    for item in &created.work_items {
+        assert!(
+            item.project_id.as_deref() == Some(project_a_id.as_str())
+                || item.project_id.as_deref() == Some(project_b_id.as_str()),
+            "成功批次的副本必须关联请求项目"
         );
     }
-
-    // 全局不变量：不存在“创建时间晚于项目归档时间”的副本关联。
-    let violates = scalar_i64(
-        &creator,
-        "SELECT COUNT(*) FROM work_items w \
-         JOIN projects p ON p.id = w.project_id \
-         WHERE w.created_at > p.updated_at",
-    );
-    assert_eq!(violates, 0, "不得出现归档后新增的副本关联");
-
-    // 每个成员关系必须唯一、每个工作副本最多一个创建组。
     assert_eq!(
         scalar_i64(
-            &creator,
+            &check,
+            &format!(
+                "SELECT is_archived FROM projects WHERE id = '{}'",
+                project_b_id
+            )
+        ),
+        1,
+        "批量创建提交后归档必须实际生效"
+    );
+    assert_eq!(
+        scalar_i64(
+            &check,
             "SELECT COUNT(*) FROM (SELECT work_item_id FROM work_item_creation_group_members \
              GROUP BY work_item_id HAVING COUNT(*) > 1)",
         ),
@@ -773,7 +1093,7 @@ fn concurrent_archive_and_batch_create_never_produces_partial_batch() {
     );
     assert_eq!(
         scalar_i64(
-            &creator,
+            &check,
             "SELECT COUNT(*) FROM work_item_creation_group_members m \
              LEFT JOIN work_item_creation_groups g ON g.id = m.group_id \
              LEFT JOIN work_items w ON w.id = m.work_item_id \
@@ -782,6 +1102,7 @@ fn concurrent_archive_and_batch_create_never_produces_partial_batch() {
         0,
         "不得存在孤儿成员关系"
     );
+    check.check_foreign_keys().expect("并发测试后外键检查");
 }
 
 #[test]
@@ -796,10 +1117,10 @@ fn batch_rows_and_members_persist_across_restart() {
         projects[3].id.clone(),
         projects[4].id.clone(),
     ];
-    let two = WorkItemService::create_copies(&mut database, "重启后保留的两项目批次", &pair_ids)
-        .expect("两项目批次");
-    let three = WorkItemService::create_copies(&mut database, "重启后保留的三项目批次", &trio_ids)
-        .expect("三项目批次");
+    let two =
+        create_copies(&mut database, "重启后保留的两项目批次", &pair_ids).expect("两项目批次");
+    let three =
+        create_copies(&mut database, "重启后保留的三项目批次", &trio_ids).expect("三项目批次");
     let expected_group_ids = vec![two.group_id.clone(), three.group_id.clone()];
     let expected_item_ids: Vec<String> = two
         .work_items
