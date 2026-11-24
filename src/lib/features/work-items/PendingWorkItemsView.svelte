@@ -21,12 +21,20 @@
   }
 
   /**
-   * 创建成功与列表刷新结果分开记录，避免把“创建成功”误报成“列表已刷新成功”：
-   * - success：创建成功且随后从后端重新读取待安排列表成功；
-   * - warning：创建成功但列表刷新失败（不得再次创建同一工作，只允许重试读取）。
+   * 一次逻辑批量创建操作的请求标识绑定。
    *
-   * T1-04：批量创建时必须显示后端返回的实际创建数量（而不是前端预计数量）。
+   * 请求标识与“规范化标题 + 项目顺序”绑定：
+   * - IPC / Bridge 返回不确定结果时保留；
+   * - 相同内容重试复用原标识（服务端据此返回原批次，不重复创建）；
+   * - 标题或项目选择变化时生成新标识；
+   * - 只有服务端成功响应通过 Bridge 校验后才清理。
    */
+  interface PendingBatchRequest {
+    readonly requestId: string;
+    readonly title: string;
+    readonly projectIds: readonly string[];
+  }
+
   type CreateOutcome = {
     readonly kind: 'success' | 'warning';
     readonly text: string;
@@ -43,6 +51,8 @@
   let creating = $state(false);
   let createError = $state<ViewFailure | null>(null);
   let createOutcome = $state<CreateOutcome | null>(null);
+  /** 尚未确认成功的批量创建请求标识；与标题、项目顺序绑定。 */
+  let pendingBatchRequest = $state<PendingBatchRequest | null>(null);
 
   /** 创建对话框的项目选项：只包含未归档项目；安全边界在 Rust Core 事务内，不依赖前端过滤。 */
   let projectOptions = $state<ProjectDto[]>([]);
@@ -52,6 +62,51 @@
   const countLabel = $derived(
     pendingWorkItems === null ? '正在读取' : `共 ${pendingWorkItems.length} 项`
   );
+
+  function sameProjectIds(left: readonly string[], right: readonly string[]): boolean {
+    return left.length === right.length && left.every((id, index) => id === right[index]);
+  }
+
+  /** 生成规范 UUID v4；优先使用 WebView2 的 crypto.randomUUID，缺失时用安全随机字节。 */
+  function newRequestId(): string {
+    const cryptoApi = globalThis.crypto;
+    if (cryptoApi === undefined) {
+      throw new Error('当前运行环境不支持安全随机 UUID，无法安全提交批量创建请求。');
+    }
+    if (typeof cryptoApi.randomUUID === 'function') {
+      return cryptoApi.randomUUID();
+    }
+    const bytes = new Uint8Array(16);
+    cryptoApi.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  }
+
+  /**
+   * 返回一次批量创建操作的稳定请求标识。
+   *
+   * 只有标题与项目顺序完全一致的重试才复用原标识；任何内容变化都会生成新标识，
+   * 防止不同创建操作意外共享同一请求标识。
+   */
+  function resolveBatchRequestId(title: string, projectIds: readonly string[]): string {
+    const normalizedTitle = title.trim();
+    if (
+      pendingBatchRequest !== null &&
+      pendingBatchRequest.title === normalizedTitle &&
+      sameProjectIds(pendingBatchRequest.projectIds, projectIds)
+    ) {
+      return pendingBatchRequest.requestId;
+    }
+    const requestId = newRequestId();
+    pendingBatchRequest = {
+      requestId,
+      title: normalizedTitle,
+      projectIds: [...projectIds]
+    };
+    return requestId;
+  }
 
   function toFailure(cause: unknown): ViewFailure {
     if (cause instanceof WorkItemIpcError) {
@@ -133,6 +188,10 @@
    * - 1 个项目：T1-03 单项目创建工作，调用单条接口；
    * - 2 个及以上项目：调用批量接口，整批原子创建独立副本（DEC-034）。
    *
+   * T104-02：批量创建必须先取得/复用与“标题 + 项目顺序”绑定的请求标识。
+   * IPC 失败、Bridge 解析失败或结果不确定时保留该标识；只有服务端成功响应
+   * 通过 Bridge 校验后才清理。相同内容重试由服务端识别为同一批次，不重复创建。
+   *
    * 失败时保留对话框中的标题与全部原始选择（对话框组件自身状态），
    * 刷新项目列表让失效项目明确标出，但绝不自动移除后创建剩余项目。
    */
@@ -147,7 +206,10 @@
     try {
       let createdCount = 1;
       if (projectIds.length >= 2) {
-        const created = await createWorkItemCopies(title, projectIds);
+        const requestId = resolveBatchRequestId(title, projectIds);
+        const created = await createWorkItemCopies(requestId, title, projectIds);
+        // 服务端已确认该请求标识对应一个已提交批次；从此刻起不得再复用它的新建语义。
+        pendingBatchRequest = null;
         // 使用后端权威数量，而不是前端预计数量。
         createdCount = created.workItems.length;
       } else {

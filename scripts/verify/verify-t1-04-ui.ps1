@@ -40,7 +40,7 @@ $ErrorActionPreference = 'Stop'
 $script:Failed = $false
 $script:DbChecks = New-Object System.Collections.ArrayList
 
-. (Join-Path $PSScriptRoot 'T1-03UatPath.ps1')
+. (Join-Path $PSScriptRoot 'T1-04UatPath.ps1')
 
 function Assert-UatOutputDirStillSafe([string]$Directory, [string]$Stage) {
     try {
@@ -51,6 +51,55 @@ function Assert-UatOutputDirStillSafe([string]$Directory, [string]$Stage) {
         Write-Host ("PRECONDITION_FAILED: native path re-check failed ({0}): {1}" -f $Stage, $_.Exception.Message)
         exit 2
     }
+}
+
+function Assert-UatDatabasePathStillSafe([string]$Stage) {
+    try {
+        $record = Assert-T104UatDatabaseFile -Path $databasePath
+        Write-Host ("T104-01 database path guard passed ({0}): parent={1} finalPath=verified volumeIdentity=verified reparsePoints=rejected" -f $Stage, [bool]$record.parent.path)
+        return $record
+    }
+    catch {
+        Write-Host ("PRECONDITION_FAILED: database native path guard failed ({0}): {1}" -f $Stage, $_.Exception.Message)
+        exit 2
+    }
+}
+
+function Assert-UatEvidenceFileStillSafe([string]$Path, [string]$Stage) {
+    try {
+        [void](Assert-T104UatEvidenceFile -DatabasePath $databasePath -EvidenceDirectory $script:EvidenceDir -Path $Path)
+        Write-Host ("T104-01 evidence path guard passed ({0}): directChildOfEvidence=true finalPath=verified" -f $Stage)
+    }
+    catch {
+        Write-Host ("PRECONDITION_FAILED: evidence native path guard failed ({0}): {1}" -f $Stage, $_.Exception.Message)
+        exit 2
+    }
+}
+
+function Assert-UatEvidenceDirStillSafe([string]$Stage) {
+    try {
+        $record = Assert-T104UatEvidenceDirectory -DatabasePath $databasePath -EvidenceDirectory $script:EvidenceDir
+        Write-Host ("T104-01 evidence directory guard passed ({0}): directChildOfUatRoot=true finalPath=verified" -f $Stage)
+        return $record
+    }
+    catch {
+        Write-Host ("PRECONDITION_FAILED: evidence directory native path guard failed ({0}): {1}" -f $Stage, $_.Exception.Message)
+        exit 2
+    }
+}
+
+function Assert-SameDatabaseIdentity($Before, $After, [string]$Stage) {
+    if ($null -eq $Before -or $null -eq $After) {
+        Write-Host ("PRECONDITION_FAILED: missing database identity record ({0})" -f $Stage)
+        exit 2
+    }
+    if ([string]$Before.database.finalPath -ne [string]$After.database.finalPath -or
+        [string]$Before.database.fileIdHex -ne [string]$After.database.fileIdHex -or
+        [string]$Before.database.volumeSerialNumber -ne [string]$After.database.volumeSerialNumber) {
+        Write-Host ("PRECONDITION_FAILED: database path identity changed ({0})" -f $Stage)
+        exit 2
+    }
+    Write-Host ("T104-01 database identity re-check passed ({0}): finalPath/fileId/volume unchanged" -f $Stage)
 }
 
 function Resolve-RepoRoot {
@@ -111,14 +160,24 @@ public static class Win32Window {
     public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
     [DllImport("user32.dll", SetLastError=true)]
     public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+    [DllImport("user32.dll", SetLastError=true)]
+    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("user32.dll", SetLastError=true)]
+    public static extern bool SetForegroundWindow(IntPtr hWnd);
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
 }
 "@
     }
     $SWP_NOZORDER = 0x0004
+    $SWP_SHOWWINDOW = 0x0040
+    $SW_RESTORE = 9
+    # WebView2 在窗口被遮挡/后台时可能延迟布局传播；先恢复并激活真实窗口，
+    # 再调整尺寸，避免最小窗口检查读到旧视口（不是跳过检查）。
+    [void][Win32Window]::ShowWindow($Hwnd, $SW_RESTORE)
+    [void][Win32Window]::SetForegroundWindow($Hwnd)
     for ($attempt = 0; $attempt -lt 5; $attempt++) {
-        $ok = [Win32Window]::SetWindowPos($Hwnd, [IntPtr]::Zero, 40, 40, $Width, $Height, $SWP_NOZORDER)
+        $ok = [Win32Window]::SetWindowPos($Hwnd, [IntPtr]::Zero, 40, 40, $Width, $Height, ($SWP_NOZORDER -bor $SWP_SHOWWINDOW))
         Start-Sleep -Milliseconds 300
         if ($ok) {
             $rect = New-Object Win32Window+RECT
@@ -150,43 +209,52 @@ function Close-ReleaseApp([System.Diagnostics.Process]$Process) {
 }
 
 function Invoke-DbProbe([string]$PythonPath, [string]$ProbeScript, [string]$DatabasePath, [string]$Stage, [string]$OutputDir) {
-    $probePath = Join-Path $OutputDir ('t1-04-db-' + $Stage + '.json')
-    if (Test-Path $probePath) {
-        Remove-Item -Path $probePath -Force
+    $probePath = Join-Path $script:EvidenceDir ('t1-04-db-' + $Stage + '.json')
+    [void](Assert-UatDatabasePathStillSafe -Stage ('before database probe ' + $Stage))
+    Assert-UatEvidenceFileStillSafe -Path $probePath -Stage ('before database probe ' + $Stage)
+    if (Test-Path -LiteralPath $probePath) {
+        Remove-Item -LiteralPath $probePath -Force
     }
-    & $PythonPath -X utf8 $ProbeScript $DatabasePath $Stage $probePath | Out-Null
+    & $PythonPath -X utf8 $ProbeScript $DatabasePath $Stage $probePath --evidence-dir $script:EvidenceDir | Out-Null
     $exitCode = $LASTEXITCODE
+    [void](Assert-UatDatabasePathStillSafe -Stage ('after database probe ' + $Stage))
     $probe = $null
-    if (Test-Path $probePath -PathType Leaf) {
-        try { $probe = Get-Content -Path $probePath -Raw -Encoding UTF8 | ConvertFrom-Json } catch { $probe = $null }
+    if (Test-Path -LiteralPath $probePath -PathType Leaf) {
+        try { $probe = Get-Content -LiteralPath $probePath -Raw -Encoding UTF8 | ConvertFrom-Json } catch { $probe = $null }
     }
     return [pscustomobject]@{ ExitCode = $exitCode; Probe = $probe; Path = $probePath }
 }
 
 function Invoke-FaultControl([string]$PythonPath, [string]$ControlScript, [string]$Action, [string]$DatabasePath, [string]$ProjectId) {
+    [void](Assert-UatDatabasePathStillSafe -Stage ('before fault control ' + $Action))
     if ([string]::IsNullOrWhiteSpace($ProjectId)) {
         & $PythonPath -X utf8 $ControlScript $Action $DatabasePath | Out-Null
     }
     else {
         & $PythonPath -X utf8 $ControlScript $Action $DatabasePath $ProjectId | Out-Null
     }
-    return $LASTEXITCODE
+    $exitCode = $LASTEXITCODE
+    [void](Assert-UatDatabasePathStillSafe -Stage ('after fault control ' + $Action))
+    return $exitCode
 }
 
 function Add-ProbeCommonChecks([string]$Prefix, $Probe) {
     Add-DbCheck -Name ($Prefix + '.readable') -Pass ($null -ne $Probe) -Detail 'probe JSON readable'
     if ($null -eq $Probe) { return }
-    Add-DbCheck -Name ($Prefix + '.pathPortableUnderUat') -Pass ([string]$Probe.database_path -like ($outputFull + '*')) -Detail ([string]$Probe.database_path)
-    Add-DbCheck -Name ($Prefix + '.schemaVersion4') -Pass ([int]$Probe.user_version -eq 4) -Detail ('user_version=' + [string]$Probe.user_version)
+    Add-DbCheck -Name ($Prefix + '.probeStatusOk') -Pass ([string]$Probe.status -eq 'ok' -and [string]$Probe.scope -eq 'uat') -Detail ('status=' + [string]$Probe.status + ' scope=' + [string]$Probe.scope)
+    Add-DbCheck -Name ($Prefix + '.schemaVersion4') -Pass ([int]$Probe.schema_version -eq 4) -Detail ('schema_version=' + [string]$Probe.schema_version)
     Add-DbCheck -Name ($Prefix + '.integrityOk') -Pass ([string]$Probe.integrity_check -eq 'ok') -Detail ([string]$Probe.integrity_check)
     Add-DbCheck -Name ($Prefix + '.journalModeWal') -Pass ([string]$Probe.journal_mode -eq 'wal') -Detail ([string]$Probe.journal_mode)
-    Add-DbCheck -Name ($Prefix + '.migrations1To4') -Pass (@($Probe.schema_migrations).Count -eq 4 -and [int]$Probe.schema_migrations[0].version -eq 1 -and [int]$Probe.schema_migrations[1].version -eq 2 -and [int]$Probe.schema_migrations[2].version -eq 3 -and [int]$Probe.schema_migrations[3].version -eq 4) -Detail (($Probe.schema_migrations | ForEach-Object { $_.version }) -join ',')
-    Add-DbCheck -Name ($Prefix + '.foreignKeysClean') -Pass ([int]$Probe.foreign_key_violations -eq 0) -Detail ('violations=' + [string]$Probe.foreign_key_violations)
-    Add-DbCheck -Name ($Prefix + '.creationGroupTablesPresent') -Pass ((@($Probe.tables) -contains 'work_item_creation_groups') -and (@($Probe.tables) -contains 'work_item_creation_group_members')) -Detail (($Probe.tables) -join ',')
+    Add-DbCheck -Name ($Prefix + '.foreignKeysEnabled') -Pass ([bool]$Probe.foreign_keys -eq $true) -Detail ('foreign_keys=' + [string]$Probe.foreign_keys)
+    Add-DbCheck -Name ($Prefix + '.requiredTablesPresent') -Pass ([bool]$Probe.required_tables_present -eq $true) -Detail ('required_tables_present=' + [string]$Probe.required_tables_present)
+    $migrationVersions = @($Probe.migration_versions)
+    Add-DbCheck -Name ($Prefix + '.migrations1To4') -Pass ($migrationVersions.Count -eq 4 -and [int]$migrationVersions[0] -eq 1 -and [int]$migrationVersions[1] -eq 2 -and [int]$migrationVersions[2] -eq 3 -and [int]$migrationVersions[3] -eq 4) -Detail ($migrationVersions -join ',')
+    Add-DbCheck -Name ($Prefix + '.foreignKeyViolationsZero') -Pass ([int]$Probe.foreign_key_violations -eq 0) -Detail ('violations=' + [string]$Probe.foreign_key_violations)
     Add-DbCheck -Name ($Prefix + '.allRowsPending') -Pass ([int]$Probe.work_items_pending -eq [int]$Probe.work_items_total -and [int]$Probe.work_items_other_status -eq 0) -Detail ('total=' + [string]$Probe.work_items_total + ' pending=' + [string]$Probe.work_items_pending)
     Add-DbCheck -Name ($Prefix + '.noOrphanMembers') -Pass ([int]$Probe.orphan_creation_group_members -eq 0) -Detail ('orphan=' + [string]$Probe.orphan_creation_group_members)
     Add-DbCheck -Name ($Prefix + '.noGroupsWithoutMembers') -Pass ([int]$Probe.creation_groups_without_members -eq 0) -Detail ('empty_groups=' + [string]$Probe.creation_groups_without_members)
     Add-DbCheck -Name ($Prefix + '.noWorkItemInMultipleGroups') -Pass ([int]$Probe.work_items_with_multiple_groups -eq 0) -Detail ('multi_group=' + [string]$Probe.work_items_with_multiple_groups)
+    Add-DbCheck -Name ($Prefix + '.allBatchItemsPending') -Pass ([int]$Probe.batch_items_not_pending -eq 0) -Detail ('not_pending=' + [string]$Probe.batch_items_not_pending)
 }
 
 $repoRoot = Resolve-RepoRoot
@@ -219,7 +287,9 @@ if ($null -eq $pythonCommand) {
 }
 $probeScript = Join-Path $repoRoot 'scripts\verify\probe-t1-04-db.py'
 $controlScript = Join-Path $repoRoot 'scripts\verify\control-t1-04-fault.py'
-foreach ($required in @($probeScript, $controlScript)) {
+$guardScript = Join-Path $repoRoot 'scripts\verify\guard-t1-04-path.ps1'
+$guardModule = Join-Path $repoRoot 'scripts\verify\t1_04_path_guard.py'
+foreach ($required in @($probeScript, $controlScript, $guardScript, $guardModule)) {
     if (-not (Test-Path $required -PathType Leaf)) {
         Write-Host "PRECONDITION_FAILED: verification script missing: $required"
         exit 2
@@ -250,6 +320,7 @@ Copy-Item -Path $ExePath -Destination $appExe -Force
 Assert-UatOutputDirStillSafe -Directory $appDir -Stage 'after copying EXE (before app start)'
 $databasePath = Join-Path $appDir 'data\database\work.db'
 $prerequisitePath = Join-Path $outputFull 't1-04-prerequisite.json'
+$script:EvidenceDir = Join-Path $outputFull 'evidence'
 
 Write-Host "T1-04 UI verification: exe=$ExePath sha256=$exeSha256 size=$($exeInfo.Length) output=$outputFull port=$Port"
 
@@ -313,29 +384,24 @@ if ($firstExitCode -ne 0) {
 }
 
 # 主阶段数据库只读探针：12 条工作副本 / 4 个创建组 / 9 条成员关系。
+# T104-01：先验证实际数据库文件及其全部祖先，再创建证据目录并验证其身份。
+$dbIdentityAfterMain = Assert-UatDatabasePathStillSafe -Stage 'after main app close (before evidence dir)'
+New-Item -ItemType Directory -Force -Path $script:EvidenceDir | Out-Null
+[void](Assert-UatEvidenceDirStillSafe -Stage 'after creating UAT evidence dir')
 $probeAfterMain = Invoke-DbProbe -PythonPath $pythonCommand.Source -ProbeScript $probeScript -DatabasePath $databasePath -Stage 'after-main' -OutputDir $outputFull
 Add-ProbeCommonChecks -Prefix 'dbProbe.afterMain' -Probe $probeAfterMain.Probe
 if ($null -ne $probeAfterMain.Probe) {
     $probe = $probeAfterMain.Probe
-    Add-DbCheck -Name 'dbProbe.afterMain.workItems12' -Pass ([int]$probe.work_items_total -eq 12) -Detail ('work_items=' + [string]$probe.work_items_total)
-    Add-DbCheck -Name 'dbProbe.afterMain.pending12' -Pass ([int]$probe.work_items_pending -eq 12) -Detail ('pending=' + [string]$probe.work_items_pending)
+    Add-DbCheck -Name 'dbProbe.afterMain.workItems14' -Pass ([int]$probe.work_items_total -eq 14) -Detail ('work_items=' + [string]$probe.work_items_total)
+    Add-DbCheck -Name 'dbProbe.afterMain.pending14' -Pass ([int]$probe.work_items_pending -eq 14) -Detail ('pending=' + [string]$probe.work_items_pending)
     Add-DbCheck -Name 'dbProbe.afterMain.unassigned1' -Pass ([int]$probe.work_items_null_project -eq 1) -Detail ('null_project=' + [string]$probe.work_items_null_project)
     Add-DbCheck -Name 'dbProbe.afterMain.archivedLink1' -Pass ([int]$probe.work_items_linked_archived -eq 1) -Detail ('linked_archived=' + [string]$probe.work_items_linked_archived)
-    Add-DbCheck -Name 'dbProbe.afterMain.linkedActive10' -Pass ([int]$probe.work_items_linked_active -eq 10) -Detail ('linked_active=' + [string]$probe.work_items_linked_active)
+    Add-DbCheck -Name 'dbProbe.afterMain.linkedActive12' -Pass ([int]$probe.work_items_linked_active -eq 12) -Detail ('linked_active=' + [string]$probe.work_items_linked_active)
     Add-DbCheck -Name 'dbProbe.afterMain.projects4Archived1' -Pass ([int]$probe.projects_total -eq 4 -and [int]$probe.projects_archived -eq 1) -Detail ('projects=' + [string]$probe.projects_total + ' archived=' + [string]$probe.projects_archived)
-    Add-DbCheck -Name 'dbProbe.afterMain.creationGroups4' -Pass ([int]$probe.creation_groups_total -eq 4) -Detail ('groups=' + [string]$probe.creation_groups_total)
-    Add-DbCheck -Name 'dbProbe.afterMain.members9' -Pass ([int]$probe.creation_group_members_total -eq 9) -Detail ('members=' + [string]$probe.creation_group_members_total)
+    Add-DbCheck -Name 'dbProbe.afterMain.creationGroups5' -Pass ([int]$probe.creation_groups_total -eq 5) -Detail ('groups=' + [string]$probe.creation_groups_total)
+    Add-DbCheck -Name 'dbProbe.afterMain.members11' -Pass ([int]$probe.creation_group_members_total -eq 11) -Detail ('members=' + [string]$probe.creation_group_members_total)
     $histogram = $probe.creation_group_size_histogram
-    Add-DbCheck -Name 'dbProbe.afterMain.groupSizeHistogram' -Pass ([int]$histogram.'2' -eq 3 -and [int]$histogram.'3' -eq 1) -Detail ($histogram | ConvertTo-Json -Compress)
-    $expectedGroupTitles = @(
-        'T1-04 虚构 两项目价格异常排查',
-        'T1-04 虚构 三项目进度同步',
-        'T1-04 虚构 重复提交批次工作',
-        'T1-04 虚构 刷新失败批次工作'
-    )
-    $groupTitles = @($probe.creation_group_titles)
-    $missing = @($expectedGroupTitles | Where-Object { $groupTitles -notcontains $_ })
-    Add-DbCheck -Name 'dbProbe.afterMain.expectedGroupTitles' -Pass ($missing.Count -eq 0) -Detail ('groups=' + ($groupTitles -join ' | '))
+    Add-DbCheck -Name 'dbProbe.afterMain.groupSizeHistogram' -Pass ([int]$histogram.'2' -eq 4 -and [int]$histogram.'3' -eq 1) -Detail ($histogram | ConvertTo-Json -Compress)
 }
 
 # ---------------------------------------------------------------------------
@@ -351,15 +417,21 @@ if ([string]::IsNullOrWhiteSpace($projectCId)) {
     $script:Failed = $true
 }
 else {
+    # T104-01 顺序：先验证实际数据库路径与身份，再执行故障注入；
+    # 注入后、启动应用前、应用关闭后、移除后都重新验证路径身份。
+    $dbIdentityBeforeFault = Assert-UatDatabasePathStillSafe -Stage 'before fault install'
     Write-Host "--- Installing atomic-rollback fault trigger for project C ($projectCId) ---"
     $installExit = Invoke-FaultControl -PythonPath $pythonCommand.Source -ControlScript $controlScript -Action 'install' -DatabasePath $databasePath -ProjectId $projectCId
     if ($installExit -ne 0) {
         $script:Failed = $true
         Write-Host "FAIL fault.installExit=$installExit"
     }
+    $dbIdentityAfterInstall = Assert-UatDatabasePathStillSafe -Stage 'after fault install before app start'
+    Assert-SameDatabaseIdentity -Before $dbIdentityBeforeFault -After $dbIdentityAfterInstall -Stage 'after fault install'
 
     $faultPort = $Port + 1
-    Assert-UatOutputDirStillSafe -Directory $appDir -Stage 'before fault-phase app start (database write)'
+    Assert-UatOutputDirStillSafe -Directory $appDir -Stage 'before fault-phase app start (application copy)'
+    [void](Assert-UatDatabasePathStillSafe -Stage 'before fault-phase app start (database write)')
     $second = Start-ReleaseApp -AppExe $appExe -WorkingDirectory $appDir -DebugPort $faultPort
     if ($second.Hwnd -eq [IntPtr]::Zero) {
         $script:Failed = $true
@@ -386,21 +458,26 @@ else {
         }
     }
 
+    $dbIdentityAfterFaultApp = Assert-UatDatabasePathStillSafe -Stage 'after fault app close before trigger removal'
+    Assert-SameDatabaseIdentity -Before $dbIdentityBeforeFault -After $dbIdentityAfterFaultApp -Stage 'after fault app close'
+
     $removeExit = Invoke-FaultControl -PythonPath $pythonCommand.Source -ControlScript $controlScript -Action 'remove' -DatabasePath $databasePath -ProjectId ''
     if ($removeExit -ne 0) {
         $script:Failed = $true
         Write-Host "FAIL fault.removeExit=$removeExit"
     }
+    $dbIdentityAfterRemove = Assert-UatDatabasePathStillSafe -Stage 'after fault trigger removal before probe'
+    Assert-SameDatabaseIdentity -Before $dbIdentityBeforeFault -After $dbIdentityAfterRemove -Stage 'after fault trigger removal'
 
     $probeAfterFault = Invoke-DbProbe -PythonPath $pythonCommand.Source -ProbeScript $probeScript -DatabasePath $databasePath -Stage 'after-fault' -OutputDir $outputFull
     Add-ProbeCommonChecks -Prefix 'dbProbe.afterFault' -Probe $probeAfterFault.Probe
     if ($null -ne $probeAfterFault.Probe) {
         $faultProbe = $probeAfterFault.Probe
-        Add-DbCheck -Name 'dbProbe.afterFault.workItemsStill12' -Pass ([int]$faultProbe.work_items_total -eq 12) -Detail ('work_items=' + [string]$faultProbe.work_items_total)
-        Add-DbCheck -Name 'dbProbe.afterFault.creationGroupsStill4' -Pass ([int]$faultProbe.creation_groups_total -eq 4) -Detail ('groups=' + [string]$faultProbe.creation_groups_total)
-        Add-DbCheck -Name 'dbProbe.afterFault.membersStill9' -Pass ([int]$faultProbe.creation_group_members_total -eq 9) -Detail ('members=' + [string]$faultProbe.creation_group_members_total)
-        $faultTitles = @($faultProbe.pending_titles)
-        Add-DbCheck -Name 'dbProbe.afterFault.noFaultBatchResidue' -Pass ($faultTitles -notcontains 'T1-04 虚构 原子回滚验证批次') -Detail ('titles=' + ($faultTitles -join ' | '))
+        Add-DbCheck -Name 'dbProbe.afterFault.workItemsStill14' -Pass ([int]$faultProbe.work_items_total -eq 14) -Detail ('work_items=' + [string]$faultProbe.work_items_total)
+        Add-DbCheck -Name 'dbProbe.afterFault.creationGroupsStill5' -Pass ([int]$faultProbe.creation_groups_total -eq 5) -Detail ('groups=' + [string]$faultProbe.creation_groups_total)
+        Add-DbCheck -Name 'dbProbe.afterFault.membersStill11' -Pass ([int]$faultProbe.creation_group_members_total -eq 11) -Detail ('members=' + [string]$faultProbe.creation_group_members_total)
+        $faultHistogram = $faultProbe.creation_group_size_histogram
+        Add-DbCheck -Name 'dbProbe.afterFault.noFaultBatchResidue' -Pass ([int]$faultProbe.work_items_total -eq 14 -and [int]$faultProbe.creation_groups_total -eq 5 -and [int]$faultProbe.creation_group_members_total -eq 11 -and [int]$faultHistogram.'2' -eq 4 -and [int]$faultHistogram.'3' -eq 1) -Detail ('work_items=' + [string]$faultProbe.work_items_total + ' groups=' + [string]$faultProbe.creation_groups_total + ' members=' + [string]$faultProbe.creation_group_members_total)
     }
 }
 
@@ -414,7 +491,8 @@ if (-not (Test-Path $prerequisitePath -PathType Leaf)) {
 else {
     $persistPort = $Port + 2
     Write-Host "--- Restarting Release (port $persistPort) for persistence checks ---"
-    Assert-UatOutputDirStillSafe -Directory $appDir -Stage 'before persistence-phase app start (database write)'
+    Assert-UatOutputDirStillSafe -Directory $appDir -Stage 'before persistence-phase app start (application copy)'
+    $dbIdentityBeforeRestart = Assert-UatDatabasePathStillSafe -Stage 'before persistence-phase app start (database write)'
     $third = Start-ReleaseApp -AppExe $appExe -WorkingDirectory $appDir -DebugPort $persistPort
     if ($third.Hwnd -eq [IntPtr]::Zero) {
         $script:Failed = $true
@@ -440,18 +518,20 @@ else {
             Write-Host "FAIL persistenceClose.nonZeroExit exitCode=$persistCloseExitCode"
         }
 
+        $dbIdentityAfterRestartApp = Assert-UatDatabasePathStillSafe -Stage 'after persistence app close before probe'
+        Assert-SameDatabaseIdentity -Before $dbIdentityBeforeRestart -After $dbIdentityAfterRestartApp -Stage 'after persistence app close'
+
         $probeAfterRestart = Invoke-DbProbe -PythonPath $pythonCommand.Source -ProbeScript $probeScript -DatabasePath $databasePath -Stage 'after-restart' -OutputDir $outputFull
         Add-ProbeCommonChecks -Prefix 'dbProbe.afterRestart' -Probe $probeAfterRestart.Probe
         if ($null -ne $probeAfterRestart.Probe) {
             $restartProbe = $probeAfterRestart.Probe
-            Add-DbCheck -Name 'dbProbe.afterRestart.workItems14' -Pass ([int]$restartProbe.work_items_total -eq 14) -Detail ('work_items=' + [string]$restartProbe.work_items_total)
-            Add-DbCheck -Name 'dbProbe.afterRestart.pending14' -Pass ([int]$restartProbe.work_items_pending -eq 14) -Detail ('pending=' + [string]$restartProbe.work_items_pending)
-            Add-DbCheck -Name 'dbProbe.afterRestart.creationGroups5' -Pass ([int]$restartProbe.creation_groups_total -eq 5) -Detail ('groups=' + [string]$restartProbe.creation_groups_total)
-            Add-DbCheck -Name 'dbProbe.afterRestart.members11' -Pass ([int]$restartProbe.creation_group_members_total -eq 11) -Detail ('members=' + [string]$restartProbe.creation_group_members_total)
+            Add-DbCheck -Name 'dbProbe.afterRestart.workItems16' -Pass ([int]$restartProbe.work_items_total -eq 16) -Detail ('work_items=' + [string]$restartProbe.work_items_total)
+            Add-DbCheck -Name 'dbProbe.afterRestart.pending16' -Pass ([int]$restartProbe.work_items_pending -eq 16) -Detail ('pending=' + [string]$restartProbe.work_items_pending)
+            Add-DbCheck -Name 'dbProbe.afterRestart.creationGroups6' -Pass ([int]$restartProbe.creation_groups_total -eq 6) -Detail ('groups=' + [string]$restartProbe.creation_groups_total)
+            Add-DbCheck -Name 'dbProbe.afterRestart.members13' -Pass ([int]$restartProbe.creation_group_members_total -eq 13) -Detail ('members=' + [string]$restartProbe.creation_group_members_total)
             $restartHistogram = $restartProbe.creation_group_size_histogram
-            Add-DbCheck -Name 'dbProbe.afterRestart.groupSizeHistogram' -Pass ([int]$restartHistogram.'2' -eq 4 -and [int]$restartHistogram.'3' -eq 1) -Detail ($restartHistogram | ConvertTo-Json -Compress)
-            $restartTitles = @($restartProbe.pending_titles)
-            Add-DbCheck -Name 'dbProbe.afterRestart.newBatchPersisted' -Pass ($restartTitles -contains 'T1-04 虚构 重启后新批次工作') -Detail ('titles=' + ($restartTitles -join ' | '))
+            Add-DbCheck -Name 'dbProbe.afterRestart.groupSizeHistogram' -Pass ([int]$restartHistogram.'2' -eq 5 -and [int]$restartHistogram.'3' -eq 1) -Detail ($restartHistogram | ConvertTo-Json -Compress)
+            Add-DbCheck -Name 'dbProbe.afterRestart.newBatchPersisted' -Pass ([int]$restartProbe.work_items_total -eq 16 -and [int]$restartProbe.creation_groups_total -eq 6 -and [int]$restartProbe.creation_group_members_total -eq 13 -and [int]$restartHistogram.'2' -eq 5) -Detail ('work_items=' + [string]$restartProbe.work_items_total + ' groups=' + [string]$restartProbe.creation_groups_total + ' members=' + [string]$restartProbe.creation_group_members_total)
             Add-DbCheck -Name 'dbProbe.afterRestart.noArchivedLinkLost' -Pass ([int]$restartProbe.work_items_linked_archived -eq 1) -Detail ('linked_archived=' + [string]$restartProbe.work_items_linked_archived)
         }
     }
@@ -523,6 +603,17 @@ $summary = [ordered]@{
     dbCheckCount                = @($script:DbChecks).Count
     dbFailedCheckCount          = $dbFailedCount
     dbChecks                    = @($script:DbChecks)
+    evidenceDir                 = $script:EvidenceDir
+    pathGuard                   = [ordered]@{
+        trustAnchorVerified                  = $true
+        databasePathAndAncestorsVerified     = $true
+        databaseFileReparsePointRejected     = $true
+        evidenceDirectoryBoundaryVerified    = $true
+        evidenceFileBoundaryVerified         = $true
+        volumeIdentityVerified               = $true
+        staticReparsePointsRejected          = $true
+        concurrentReplacementRisk            = 'DEC-029 / Issue #2 remains deferred and unresolved'
+    }
     dbProbeAfterMain            = $probeAfterMain.Path
     dbProbeAfterFault           = if ($null -ne $probeAfterFault) { $probeAfterFault.Path } else { $null }
     dbProbeAfterRestart         = if ($null -ne $probeAfterRestart) { $probeAfterRestart.Path } else { $null }

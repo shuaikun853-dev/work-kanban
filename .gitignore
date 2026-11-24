@@ -32,3 +32,7 @@ desktop.ini
 # 本地环境覆盖（机器专属，不入库）
 .env
 .env.local
+
+# Python ����
+__pycache__/
+*.pyc

@@ -3,15 +3,15 @@
  *
  * 前提：
  * - 同一 UAT 便携目录已关闭并重新启动 Release；
- * - 主检查创建了 12 条待安排工作、4 个创建组、9 条成员关系；
+ * - 主检查创建了 14 条待安排工作、5 个创建组、11 条成员关系；
  * - 故障注入阶段已证明整批回滚且无残留（t1-04-prerequisite.json）。
  *
  * 检查内容：
- * 1. 重启后 12 条工作副本仍存在（全部 pending），归档项目历史关联保留；
+ * 1. 重启后 14 条工作副本仍存在（全部 pending），归档项目历史关联保留；
  * 2. 多项目选择器仍只展示未归档项目（A/B/C），不展示已归档项目 D；
- * 3. 重启后仍可批量创建：A+B → 2 条新副本，待安排列表变为 14 条；
+ * 3. 重启后仍可批量创建：A+B → 2 条新副本，待安排列表变为 16 条；
  * 4. 截图与证据；真实关闭按钮退出由编排脚本验证；
- * 5. 数据库只读探针（编排脚本）验证 14 条工作 / 5 个创建组 / 11 条成员关系持久化。
+ * 5. 数据库只读探针（编排脚本）验证 16 条工作 / 6 个创建组 / 13 条成员关系持久化。
  *
  * 用法：node scripts/verify/inspect-t1-04-persistence.mjs <port> <outputDir> <prerequisitePath>
  */
@@ -24,8 +24,8 @@ const outputDir = process.argv[3] ?? `D:\\WorkManager-test-data\\t1-04-ui-persis
 const prerequisitePath = process.argv[4] ?? '';
 fs.mkdirSync(outputDir, { recursive: true });
 
-const ROWS_BEFORE = 12;
-const ROWS_AFTER = 14;
+const ROWS_BEFORE = 14;
+const ROWS_AFTER = 16;
 const NEW_BATCH_TITLE = 'T1-04 虚构 重启后新批次工作';
 
 const prerequisite = (() => {
@@ -296,7 +296,7 @@ try {
   const persisted = await directIpc('list_pending_work_items');
   const persistedItems = persisted.ok === true ? persisted.value : [];
   check(
-    'persistence.twelveRowsPersistedAsPending',
+    'persistence.fourteenRowsPersistedAsPending',
     persistedItems.length === ROWS_BEFORE &&
       persistedItems.every((item) => item.lifecycleStatus === 'pending'),
     JSON.stringify(persistedItems.length)
@@ -307,12 +307,13 @@ try {
     prerequisite?.titles?.unassigned,
     prerequisite?.titles?.single,
     prerequisite?.titles?.duplicate,
+    prerequisite?.titles?.doubleSubmit,
     prerequisite?.titles?.archivedLink,
     prerequisite?.titles?.refreshFailure
   ].filter((value) => typeof value === 'string' && value.length > 0);
   check(
     'persistence.expectedTitlesPersisted',
-    expectedTitles.length === 7 &&
+    expectedTitles.length === 8 &&
       expectedTitles.every((title) => persistedItems.some((item) => item.title === title)),
     JSON.stringify(expectedTitles)
   );

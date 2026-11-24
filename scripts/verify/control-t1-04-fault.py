@@ -10,49 +10,68 @@ TRIGGER，用于验证“第二条工作副本插入失败时整批回滚”。t
   python -X utf8 control-t1-04-fault.py remove  <databasePath>
   python -X utf8 control-t1-04-fault.py status  <databasePath>
 
-安全边界：
-- 只允许 D:\\WorkManager-test-data 之下的数据库路径；
-- 拒绝正式运行目录 D:\\WorkManager；
-- install 需要非空 projectId；remove/status 不需要。
+安全边界（T104-01）：
+- 不自行实现字符串前缀判断；所有路径先经 t1_04_path_guard 调用 PowerShell
+  原生守卫，复用 T1-03 的 Windows 句柄/信任锚/重解析点/最终路径/卷身份校验；
+- 数据库必须位于 D:\\WorkManager-test-data\\<UAT任务目录>\\ 之下，不能直接位于测试根；
+- 拒绝正式运行目录 D:\\WorkManager（字面路径 + 真实最终路径双重校验）；
+- 数据库文件自身及其父目录、全部祖先不得是未获批准的重解析点；
+- 安全校验失败必须在 sqlite3.connect() 之前终止；不会创建数据库文件；
+- install 需要规范 UUID projectId；remove/status 不需要。
 
-stdout 只输出 ASCII 状态行；失败退出码 3（安全边界/参数）或 2（数据库操作）。
+stdout 只输出 ASCII 状态行；安全边界/参数失败退出码 3，数据库操作失败退出码 2。
 """
 
-import os
 import sqlite3
 import sys
+import uuid
+from pathlib import Path
+from urllib.parse import quote
+
+from t1_04_path_guard import PathGuardError, assert_guarded_path
 
 TRIGGER_NAME = "t1_04_fault_second_copy"
-TEST_ROOT = "d:\\workmanager-test-data"
-FORMAL_ROOT = "d:\\workmanager"
 
 
-def comparable(path):
-    return os.path.abspath(path).replace("/", "\\").rstrip("\\").lower()
+def database_uri(database_path: str) -> str:
+    """构造只打开已有数据库（mode=rw）的 SQLite URI，避免缺失文件被新建。"""
+    absolute = Path(database_path).absolute().as_posix()
+    return "file:" + quote(absolute, safe="/:") + "?mode=rw"
 
 
-def assert_safe_path(database_path):
-    path = comparable(database_path)
-    if not path.startswith(TEST_ROOT + "\\"):
-        raise SystemExit("SAFETY_REFUSED: database path is not inside D:\\WorkManager-test-data")
-    if path == FORMAL_ROOT or path.startswith(FORMAL_ROOT + "\\"):
-        raise SystemExit("SAFETY_REFUSED: refusing formal release directory")
-    if not os.path.isfile(database_path):
-        raise SystemExit("SAFETY_REFUSED: database file does not exist")
+def assert_safe_path(database_path: str) -> dict:
+    if not database_path:
+        raise PathGuardError("数据库路径为空。已按 fail-closed 停止。")
+    result = assert_guarded_path("database", database_path)
+    if not Path(database_path).is_file():
+        raise PathGuardError("数据库文件不存在。已按 fail-closed 停止，不会创建新数据库。")
+    return result
 
 
-def open_database(database_path):
-    connection = sqlite3.connect(database_path, timeout=10.0)
+def open_database(database_path: str) -> sqlite3.Connection:
+    # 调用方必须先完成 assert_safe_path；本函数在任何情况下都不创建新数据库。
+    connection = sqlite3.connect(database_uri(database_path), uri=True, timeout=10.0)
     connection.execute("PRAGMA foreign_keys = ON")
     connection.execute("PRAGMA busy_timeout = 5000")
     return connection
 
 
-def install(database_path, project_id):
+def normalize_project_id(project_id: str) -> str:
+    try:
+        parsed = uuid.UUID(project_id)
+    except (ValueError, AttributeError) as error:
+        raise ValueError("projectId must be a canonical UUID") from error
+    canonical = str(parsed)
+    if canonical != project_id.lower() or str(parsed) != project_id:
+        raise ValueError("projectId must be a canonical lower-case UUID")
+    return canonical
+
+
+def install(database_path: str, project_id: str) -> None:
     connection = open_database(database_path)
     try:
-        # SQLite 不允许在 CREATE TRIGGER 的 DDL 中使用绑定参数，因此把已校验的
-        # UUID 项目 ID 转义单引号后嵌入 trigger 定义（只用于隔离 UAT 测试数据库）。
+        # SQLite 不允许在 CREATE TRIGGER 的 DDL 中使用绑定参数。projectId 已严格校验为
+        # 规范 UUID，仍然做单引号转义作为纵深防御；只用于隔离 UAT 测试数据库。
         escaped_project_id = project_id.replace("'", "''")
         connection.execute(f"DROP TRIGGER IF EXISTS {TRIGGER_NAME}")
         connection.execute(
@@ -70,7 +89,7 @@ def install(database_path, project_id):
     print(f"FAULT_TRIGGER_INSTALLED={count}")
 
 
-def remove(database_path):
+def remove(database_path: str) -> None:
     connection = open_database(database_path)
     try:
         connection.execute(f"DROP TRIGGER IF EXISTS {TRIGGER_NAME}")
@@ -84,7 +103,7 @@ def remove(database_path):
     print(f"FAULT_TRIGGER_REMAINING={count}")
 
 
-def status(database_path):
+def status(database_path: str) -> None:
     connection = open_database(database_path)
     try:
         count = connection.execute(
@@ -105,13 +124,24 @@ def main() -> int:
         return 3
     action = sys.argv[1]
     database_path = sys.argv[2]
-    assert_safe_path(database_path)
+
+    try:
+        assert_safe_path(database_path)
+    except PathGuardError as error:
+        print(f"SAFETY_REFUSED: {error}", file=sys.stderr)
+        return 3
+
     try:
         if action == "install":
             if len(sys.argv) < 4 or not sys.argv[3].strip():
                 print("usage: install requires a non-empty projectId", file=sys.stderr)
                 return 3
-            install(database_path, sys.argv[3].strip())
+            try:
+                project_id = normalize_project_id(sys.argv[3].strip())
+            except ValueError as error:
+                print(f"SAFETY_REFUSED: {error}", file=sys.stderr)
+                return 3
+            install(database_path, project_id)
         elif action == "remove":
             remove(database_path)
         elif action == "status":

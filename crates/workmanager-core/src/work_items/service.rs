@@ -10,7 +10,7 @@
 //!   写入创建组与全部独立副本及成员关系、事务内读回验证；任一步失败整批回滚，
 //!   不允许部分成功、静默跳过或补偿删除。
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use chrono::{SecondsFormat, Utc};
 use uuid::Uuid;
@@ -84,7 +84,17 @@ impl WorkItemService {
 
     /// 为多个项目批量创建互相独立的工作事项副本，整批原子提交（DEC-034）。
     ///
-    /// 规则：
+    /// 幂等语义（T104-02）：
+    /// - `request_id` 是客户端为一次逻辑创建操作生成的规范 UUID，并直接复用为
+    ///   `work_item_creation_groups.id`（不新增 schema 字段）；
+    /// - 同一请求标识 + 相同标题 + 相同项目列表：在真实 `IMMEDIATE` 写事务内返回既有批次，
+    ///   不重复创建任何工作副本；即使项目后来已归档，仍返回已提交的既有结果；
+    /// - 同一请求标识 + 不同标题或不同项目列表：返回稳定的
+    ///   `work-item-create-request-conflict`，不得覆盖或追加；
+    /// - 不同请求标识允许使用相同标题创建新的独立批次；
+    /// - 并发相同请求标识由 SQLite `IMMEDIATE` 写事务串行化，只允许一个批次。
+    ///
+    /// 业务规则：
     /// - 标题首尾空白规范化，空标题返回 `work-item-title-empty`；
     /// - 项目数量必须 >= 2，否则返回 `work-item-copies-too-few`；
     /// - 项目 ID 不得重复（不静默去重），否则返回 `work-item-copies-duplicate-project`；
@@ -92,10 +102,10 @@ impl WorkItemService {
     ///   全部工作副本与全部成员关系，最后在事务内读回验证；
     /// - 任一项目不存在（`project-not-found`）、已归档（`project-archived`）、
     ///   任一条写入失败（数据库错误）或读回验证不一致
-    ///   （`work-item-persistence-verification-failed`）时整批回滚；
-    /// - 相同标题可再次批量创建，产生新的创建组与新的独立副本。
+    ///   （`work-item-persistence-verification-failed`）时整批回滚。
     pub fn create_copies(
         database: &mut Database,
+        request_id: &str,
         raw_title: &str,
         project_ids: &[String],
     ) -> Result<CreatedWorkItemCopies, WorkItemError> {
@@ -103,10 +113,12 @@ impl WorkItemService {
         let title = normalize_title(raw_title)?;
         // 2. 批量项目数量与去重校验（在任何数据库写入之前拒绝）。
         validate_copy_batch(project_ids)?;
+        // 3. 客户端请求标识必须是规范 UUID；它同时作为创建组主键。
+        let group_id = normalize_request_id(request_id)?;
 
-        // 3. 生成创建组与每个项目独立的工作副本身份；时间戳统一使用同一 UTC 时刻。
+        // 4. 生成每个项目独立的工作副本身份；时间戳统一使用同一 UTC 时刻。
+        //    幂等重试时这些候选身份不会落库：事务内先按请求标识返回既有批次。
         let timestamp = now_utc();
-        let group_id = Uuid::new_v4().to_string();
         let work_items: Vec<WorkItem> = project_ids
             .iter()
             .map(|project_id| WorkItem {
@@ -124,9 +136,17 @@ impl WorkItemService {
             .collect();
         let database_path = database.database_path().to_path_buf();
 
-        // 4. 整批原子事务：验证全部项目 → 写创建组 → 写全部副本 → 写全部成员关系 → 读回验证。
+        // 5. 整批原子事务：先幂等查重 → 验证全部项目 → 写创建组 → 写全部副本
+        //    → 写全部成员关系 → 读回验证。
         database.write_transaction(move |transaction| {
-            // 4.1 先验证全部项目；此循环结束前不写入任何记录。
+            // 5.1 相同请求标识的已提交批次必须原样返回；标题/项目列表不一致则稳定拒绝。
+            if let Some(existing) =
+                find_existing_batch(transaction, &database_path, &group_id, &title, project_ids)?
+            {
+                return Ok(existing);
+            }
+
+            // 5.2 先验证全部项目；此循环结束前不写入任何记录。
             // 不得只校验第一个项目：任一项目不存在/已归档都导致整批失败。
             for work_item in &work_items {
                 let Some(project_id) = work_item.project_id.as_deref() else {
@@ -140,7 +160,7 @@ impl WorkItemService {
                 }
             }
 
-            // 4.2 创建组（来源标题 + 创建时间）。
+            // 5.3 创建组（客户端请求标识 + 来源标题 + 创建时间）。
             repository::insert_creation_group(
                 transaction,
                 &database_path,
@@ -149,12 +169,12 @@ impl WorkItemService {
                 &timestamp,
             )?;
 
-            // 4.3 全部独立工作副本。
+            // 5.4 全部独立工作副本。
             for work_item in &work_items {
                 repository::insert(transaction, &database_path, work_item)?;
             }
 
-            // 4.4 全部成员关系。
+            // 5.5 全部成员关系。
             for work_item in &work_items {
                 repository::insert_creation_group_member(
                     transaction,
@@ -164,7 +184,7 @@ impl WorkItemService {
                 )?;
             }
 
-            // 4.5 事务内读回验证：任何不一致都视为持久化验证失败并整批回滚。
+            // 5.6 事务内读回验证：任何不一致都视为持久化验证失败并整批回滚。
             let stored_group =
                 repository::find_creation_group(transaction, &database_path, &group_id)?
                     .ok_or(WorkItemError::PersistenceVerificationFailed)?;
@@ -216,6 +236,88 @@ impl WorkItemService {
             })
         })
     }
+}
+
+/// 在写事务内按客户端请求标识查找既有批次。
+///
+/// 返回 `Ok(None)` 表示请求标识尚未处理，可创建新批次；
+/// 返回 `Ok(Some(..))` 表示幂等重试，必须原样返回既有权威记录，不写入任何行；
+/// 相同请求标识对应不同标题/项目列表时返回 [`WorkItemError::CreateRequestConflict`]。
+/// 批次内部数据不一致时 fail-closed 返回持久化验证失败，绝不静默重建。
+fn find_existing_batch(
+    transaction: &rusqlite::Transaction<'_>,
+    database_path: &std::path::Path,
+    request_id: &str,
+    title: &str,
+    project_ids: &[String],
+) -> Result<Option<CreatedWorkItemCopies>, WorkItemError> {
+    let Some(stored_group) =
+        repository::find_creation_group(transaction, database_path, request_id)?
+    else {
+        return Ok(None);
+    };
+    if stored_group.source_title != title {
+        return Err(WorkItemError::CreateRequestConflict);
+    }
+
+    let stored_members =
+        repository::list_creation_group_members(transaction, database_path, request_id)?;
+    let member_row_count =
+        repository::count_creation_group_members(transaction, database_path, request_id)?;
+    if member_row_count != stored_members.len() as i64 {
+        // 成员关系表有行但 JOIN 不到工作副本/创建组：数据不一致，不得当作重试成功。
+        return Err(WorkItemError::PersistenceVerificationFailed);
+    }
+    if stored_members.len() != project_ids.len() {
+        return Err(WorkItemError::CreateRequestConflict);
+    }
+
+    // 以真实 project_id 建立索引；重复项目或缺失项目都表示请求内容与既有批次不一致。
+    let mut members_by_project: HashMap<String, repository::CreationGroupMemberRow> =
+        HashMap::with_capacity(stored_members.len());
+    for member in stored_members {
+        if member.group_id != request_id {
+            return Err(WorkItemError::PersistenceVerificationFailed);
+        }
+        let Some(project_id) = member.project_id.clone() else {
+            return Err(WorkItemError::PersistenceVerificationFailed);
+        };
+        if members_by_project.insert(project_id, member).is_some() {
+            return Err(WorkItemError::PersistenceVerificationFailed);
+        }
+    }
+
+    let mut work_items = Vec::with_capacity(project_ids.len());
+    for project_id in project_ids {
+        let Some(member) = members_by_project.remove(project_id) else {
+            return Err(WorkItemError::CreateRequestConflict);
+        };
+        let stored = repository::find(transaction, database_path, &member.work_item_id)?
+            .ok_or(WorkItemError::PersistenceVerificationFailed)?;
+        if stored.project_id.as_deref() != Some(project_id.as_str()) {
+            return Err(WorkItemError::PersistenceVerificationFailed);
+        }
+        work_items.push(stored);
+    }
+    if !members_by_project.is_empty() {
+        return Err(WorkItemError::CreateRequestConflict);
+    }
+
+    Ok(Some(CreatedWorkItemCopies {
+        group_id: request_id.to_string(),
+        work_items,
+    }))
+}
+
+/// 校验客户端请求标识：必须是规范小写连字符 UUID。
+fn normalize_request_id(raw_request_id: &str) -> Result<String, WorkItemError> {
+    let parsed =
+        Uuid::parse_str(raw_request_id).map_err(|_| WorkItemError::InvalidCreateRequestId)?;
+    let canonical = parsed.hyphenated().to_string();
+    if canonical != raw_request_id {
+        return Err(WorkItemError::InvalidCreateRequestId);
+    }
+    Ok(canonical)
 }
 
 /// 批量创建请求校验：至少两个项目，且项目 ID 不得重复。

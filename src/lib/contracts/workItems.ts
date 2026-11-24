@@ -77,10 +77,14 @@ export interface CreateWorkItemInput {
 /**
  * `create_work_item_copies` 请求体（对应 Rust `CreateWorkItemCopiesRequest`）。
  *
+ * - `requestId` 必须由客户端为一次逻辑创建操作生成规范 UUID，并在 IPC/Bridge 结果
+ *   不确定或用户重试时复用；成功确认后必须丢弃。服务端以该标识作为创建组主键
+ *   实现幂等，不新增 schema 字段；
  * - `projectIds` 必须包含 2 个及以上不同项目；少于 2 个或重复项目由 Rust Core 拒绝；
  * - 项目顺序即返回 `workItems` 的顺序；前端不得自行去重后提交。
  */
 export interface CreateWorkItemCopiesInput {
+  readonly requestId: string;
   readonly title: string;
   readonly projectIds: readonly string[];
 }

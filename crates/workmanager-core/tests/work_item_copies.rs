@@ -585,10 +585,12 @@ fn rejects_non_canonical_request_id_without_writing_any_rows() {
         )
         .expect_err("非规范 UUID 请求标识必须拒绝");
         assert_eq!(error.code(), "work-item-create-request-id-invalid");
-        assert!(
-            !error.to_string().contains(invalid_request_id),
-            "错误消息不得回显请求标识"
-        );
+        if !invalid_request_id.is_empty() {
+            assert!(
+                !error.to_string().contains(invalid_request_id),
+                "错误消息不得回显请求标识"
+            );
+        }
     }
     assert_eq!(count_work_items(&database), 0);
     assert_empty_batch_tables(&database, "非法请求标识");

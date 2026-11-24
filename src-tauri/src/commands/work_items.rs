@@ -29,12 +29,15 @@ pub struct CreateWorkItemRequest {
 
 /// 创建多项目独立副本请求（T1-04）。
 ///
+/// - `requestId` 必填：客户端为一次逻辑创建操作生成的规范 UUID，在失败/重试时复用；
+///   Rust Core 直接以该标识作为创建组主键实现幂等，不新增 schema 字段；
 /// - `title` 必填，由 Rust Core 负责 trim 与空值拒绝；
 /// - `projectIds` 必填字符串数组：批量接口由 Rust Core 校验“至少两个项目且不重复”，
 ///   命令层不做业务校验，只做 serde 结构校验（`deny_unknown_fields`）。
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CreateWorkItemCopiesRequest {
+    pub request_id: String,
     pub title: String,
     pub project_ids: Vec<String>,
 }
@@ -56,13 +59,14 @@ pub async fn create_work_item(
 /// 为多个项目批量创建互相独立的工作事项副本（整批原子提交，DEC-034）。
 ///
 /// 任意项目不存在/已归档或任意写入失败时整批回滚，命令层不实现该规则。
+/// 相同 `requestId` 的幂等重试由 Rust Core 在写事务内识别。
 #[tauri::command]
 pub async fn create_work_item_copies(
     app: tauri::AppHandle,
     input: CreateWorkItemCopiesRequest,
 ) -> Result<CreatedWorkItemCopies, CommandError> {
     run_work_item_command(app, move |context| {
-        context.create_work_item_copies(&input.title, &input.project_ids)
+        context.create_work_item_copies(&input.request_id, &input.title, &input.project_ids)
     })
     .await
 }
@@ -276,16 +280,19 @@ mod tests {
     #[test]
     fn create_copies_request_accepts_camel_case_array() {
         let request: CreateWorkItemCopiesRequest = serde_json::from_value(json!({
+            "requestId": "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a020",
             "title": "中核商品价格异常排查",
             "projectIds": ["project-a", "project-b"]
         }))
         .expect("合法批量创建请求");
+        assert_eq!(request.request_id, "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a020");
         assert_eq!(request.title, "中核商品价格异常排查");
         assert_eq!(request.project_ids, vec!["project-a", "project-b"]);
 
         // “至少两个项目”属于 Rust Core 业务规则：命令层只校验结构，
         // 因此单元素数组在 serde 层是合法请求，必须在 Core 返回稳定错误码。
         let single: CreateWorkItemCopiesRequest = serde_json::from_value(json!({
+            "requestId": "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a021",
             "title": "单项目请求",
             "projectIds": ["project-a"]
         }))
@@ -296,13 +303,16 @@ mod tests {
     #[test]
     fn create_copies_request_rejects_invalid_shapes() {
         for invalid in [
-            json!({ "projectIds": ["a", "b"] }),
-            json!({ "title": "x" }),
-            json!({ "title": "x", "projectIds": null }),
-            json!({ "title": "x", "projectIds": "a,b" }),
-            json!({ "title": "x", "projectIds": [1, 2] }),
-            json!({ "title": "x", "projectIds": ["a", "b"], "extra": true }),
-            json!({ "title": "x", "project_ids": ["a", "b"] }),
+            json!({ "requestId": "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a020", "projectIds": ["a", "b"] }),
+            json!({ "requestId": "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a020", "title": "x" }),
+            json!({ "requestId": "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a020", "title": "x", "projectIds": null }),
+            json!({ "requestId": "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a020", "title": "x", "projectIds": "a,b" }),
+            json!({ "requestId": "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a020", "title": "x", "projectIds": [1, 2] }),
+            json!({ "requestId": "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a020", "title": "x", "projectIds": ["a", "b"], "extra": true }),
+            json!({ "requestId": "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a020", "title": "x", "project_ids": ["a", "b"] }),
+            json!({ "title": "x", "projectIds": ["a", "b"] }),
+            json!({ "requestId": null, "title": "x", "projectIds": ["a", "b"] }),
+            json!({ "request_id": "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a020", "title": "x", "projectIds": ["a", "b"] }),
         ] {
             assert!(
                 serde_json::from_value::<CreateWorkItemCopiesRequest>(invalid.clone()).is_err(),
@@ -370,6 +380,14 @@ mod tests {
             (
                 WorkItemError::CopiesDuplicateProject,
                 "work-item-copies-duplicate-project",
+            ),
+            (
+                WorkItemError::InvalidCreateRequestId,
+                "work-item-create-request-id-invalid",
+            ),
+            (
+                WorkItemError::CreateRequestConflict,
+                "work-item-create-request-conflict",
             ),
         ] {
             let command_error = CommandError::from(error);

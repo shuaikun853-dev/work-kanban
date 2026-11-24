@@ -1,7 +1,7 @@
 /**
  * WorkManager T1-04 最小支持窗口布局检查 + 标题栏关闭按钮真实验证。
  *
- * 前提：Release 进程已启动（主检查已创建 12 条虚构待安排工作、4 个创建组），
+ * 前提：Release 进程已启动（主检查已创建 14 条虚构待安排工作、5 个创建组），
  * 外部编排脚本已把窗口调整到最小支持尺寸 860×640。
  *
  * 检查内容：
@@ -21,7 +21,7 @@ const port = Number(process.argv[2] ?? '9356');
 const outputDir = process.argv[3] ?? `D:\\WorkManager-test-data\\t1-04-ui-min-${Date.now()}`;
 fs.mkdirSync(outputDir, { recursive: true });
 
-const EXPECTED_ROWS = 12;
+const EXPECTED_ROWS = 14;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -248,7 +248,7 @@ try {
   );
 
   // 编排脚本已调用 SetWindowPos；等待尺寸变化真实传播到 WebView2 布局后再断言。
-  await waitForViewportSettled(12000);
+  await waitForViewportSettled(30000);
 
   viewport = await evaluate(`({
     innerWidth: window.innerWidth,

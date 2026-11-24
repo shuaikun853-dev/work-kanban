@@ -224,8 +224,12 @@ impl WorkItemContext {
     }
 
     /// 为多个项目批量创建独立工作副本（整批原子提交在 Rust Core 事务内完成）。
+    ///
+    /// `request_id` 是客户端为一次逻辑创建操作生成的规范 UUID；Rust Core 在真实写事务内
+    /// 以它识别幂等重试并返回既有批次。
     pub fn create_work_item_copies(
         &self,
+        request_id: &str,
         title: &str,
         project_ids: &[String],
     ) -> Result<CreatedWorkItemCopies, WorkItemError> {
@@ -233,7 +237,7 @@ impl WorkItemContext {
         let database = guard
             .as_mut()
             .ok_or_else(|| work_item_database_closed_error("批量创建工作事项副本"))?;
-        WorkItemService::create_copies(database, title, project_ids)
+        WorkItemService::create_copies(database, request_id, title, project_ids)
     }
 
     fn lock_database(&self) -> Result<std::sync::MutexGuard<'_, Option<Database>>, WorkItemError> {
@@ -508,11 +512,12 @@ mod tests {
             .create_project("虚构 IPC 批量项目乙")
             .expect("create project B");
         let batch_ids = vec![project_a.id.clone(), project_b.id.clone()];
+        let request_id = "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a030";
 
         let created = work_item_context
-            .create_work_item_copies("  IPC 批量创建  ", &batch_ids)
+            .create_work_item_copies(request_id, "  IPC 批量创建  ", &batch_ids)
             .expect("batch create via context");
-        assert!(!created.group_id.is_empty(), "必须返回创建组 ID");
+        assert_eq!(created.group_id, request_id, "创建组 ID 必须是请求标识");
         assert_eq!(created.work_items.len(), 2);
         assert_eq!(created.work_items[0].title, "IPC 批量创建");
         assert_eq!(created.work_items[0].lifecycle_status, "pending");
@@ -521,12 +526,40 @@ mod tests {
             .expect("list pending after batch");
         assert_eq!(pending.len(), 2);
 
-        // 归档项目乙：包含甲+乙的批量创建必须整批失败，不得为甲写入部分副本。
+        // 同一请求标识的幂等重试必须返回既有批次，不重复创建。
+        let retried = work_item_context
+            .create_work_item_copies(request_id, "IPC 批量创建", &batch_ids)
+            .expect("idempotent retry via context");
+        assert_eq!(retried, created);
+        assert_eq!(
+            work_item_context
+                .list_pending_work_items()
+                .expect("pending after retry")
+                .len(),
+            2
+        );
+
+        // 同一请求标识对应不同标题必须稳定拒绝。
+        let conflict = work_item_context
+            .create_work_item_copies(request_id, "IPC 修改后的标题", &batch_ids)
+            .expect_err("same request id with different title must conflict");
+        assert_eq!(conflict.code(), "work-item-create-request-conflict");
+
+        // 归档项目乙后：既有请求仍可幂等返回；新的请求标识必须整批失败，
+        // 不得为甲写入部分副本。
         project_context
             .archive_project(&project_b.id)
             .expect("archive project B");
+        let archived_retry = work_item_context
+            .create_work_item_copies(request_id, "IPC 批量创建", &batch_ids)
+            .expect("idempotent retry after archive must return existing batch");
+        assert_eq!(archived_retry, created);
         let error = work_item_context
-            .create_work_item_copies("整批失败工作", &batch_ids)
+            .create_work_item_copies(
+                "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a031",
+                "整批失败工作",
+                &batch_ids,
+            )
             .expect_err("archived project must fail whole batch");
         assert_eq!(error.code(), "project-archived");
         let pending = work_item_context
@@ -540,14 +573,22 @@ mod tests {
 
         // 少于两个项目属于 Rust Core 业务校验。
         let error = work_item_context
-            .create_work_item_copies("单项目批量请求", &[project_a.id.clone()])
+            .create_work_item_copies(
+                "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a032",
+                "单项目批量请求",
+                &[project_a.id.clone()],
+            )
             .expect_err("too few projects must fail");
         assert_eq!(error.code(), "work-item-copies-too-few");
 
         // 应用退出关闭连接后，批量创建必须返回结构化错误而不是 panic。
         state.shutdown();
         let error = work_item_context
-            .create_work_item_copies("数据库关闭后的批量请求", &batch_ids)
+            .create_work_item_copies(
+                "9d1c0f6a-5f5e-4a41-9f4b-0f2fc7d1a033",
+                "数据库关闭后的批量请求",
+                &batch_ids,
+            )
             .expect_err("database closed must fail with structured error");
         assert_eq!(error.code(), "database-sqlite-error");
 

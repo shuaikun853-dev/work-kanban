@@ -24,12 +24,14 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const port = Number(process.argv[2] ?? '9355');
 const outputDir = process.argv[3] ?? `D:\\WorkManager-test-data\\t1-04-ui-${Date.now()}`;
 fs.mkdirSync(outputDir, { recursive: true });
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const newRequestId = () => randomUUID();
 
 async function findPageTarget() {
   let lastError = null;
@@ -253,7 +255,10 @@ async function directIpc(command, args) {
  * CDP 传输层故障注入（不改产品代码）：
  * - command 匹配指定 IPC 命令；
  * - mode: 'reject' 返回 Tauri 错误载荷；'malformed' 返回非法成功载荷；
- *   'delay' 真实转发并延迟 delayMs。
+ *   'delay' 真实转发并延迟 delayMs；
+ *   'response-loss-once' **真实转发第一次请求并让服务端提交**，随后丢弃响应并抛出
+ *     传输错误（模拟数据库已提交但前端未收到响应），只触发一次；
+ *   'record' 真实转发并记录请求体（用于验证重试复用同一 requestId）。
  */
 async function installIpcFault(command, mode, delayMs = 0) {
   return evaluate(`(() => {
@@ -263,10 +268,18 @@ async function installIpcFault(command, mode, delayMs = 0) {
     window.__wmFaultCommand = ${JSON.stringify(command)};
     window.__wmFaultMode = ${JSON.stringify(mode)};
     window.__wmFaultDelayMs = ${Number(delayMs)};
+    if (${
+      JSON.stringify(mode)
+    } === 'response-loss-once') {
+      window.__wmFaultBodies = [];
+    }
     if (!window.__wmFaultFetchInstalled) {
       window.__wmFaultFetchInstalled = true;
       window.fetch = function (input, init) {
         const url = typeof input === 'string' ? input : (input && input.url) || '';
+        const body = init && init.body !== undefined && init.body !== null
+          ? (typeof init.body === 'string' ? init.body : String(init.body))
+          : '';
         workmanager_fault: {
           if (url.indexOf(window.__wmFaultCommand) === -1 || window.__wmFaultMode === 'off') {
             break workmanager_fault;
@@ -294,12 +307,58 @@ async function installIpcFault(command, mode, delayMs = 0) {
               setTimeout(() => resolve(window.__wmOriginalFetch(input, init)), window.__wmFaultDelayMs);
             });
           }
+          if (window.__wmFaultMode === 'response-loss-once') {
+            window.__wmFaultMode = 'off';
+            if (!Array.isArray(window.__wmFaultBodies)) window.__wmFaultBodies = [];
+            window.__wmFaultBodies.push({ phase: 'response-loss', body });
+            // 真实 IPC 必须完成：先等待原始响应（服务端事务已提交），再丢弃其响应体，
+            // 返回一个传输成功但业务载荷异常的响应。Bridge 必须将其识别为契约违规，
+            // UI 保留请求标识；重试时服务端按同一 requestId 返回既有批次。
+            return window.__wmOriginalFetch(input, init).then((response) => {
+              return response.arrayBuffer().catch(() => new ArrayBuffer(0)).then(() => {
+                return new Response(JSON.stringify({
+                  groupId: 'invalid-group-id',
+                  workItems: []
+                }), {
+                  status: 200,
+                  headers: { 'Content-Type': 'application/json', 'Tauri-Response': 'ok' }
+                });
+              });
+            });
+          }
+          if (window.__wmFaultMode === 'record') {
+            if (!Array.isArray(window.__wmFaultBodies)) window.__wmFaultBodies = [];
+            window.__wmFaultBodies.push({ phase: 'retry', body });
+            return window.__wmOriginalFetch(input, init);
+          }
         }
         return window.__wmOriginalFetch(input, init);
       };
     }
     return true;
   })()`);
+}
+
+async function readIpcFaultBodies() {
+  return evaluate(`Array.isArray(window.__wmFaultBodies) ? window.__wmFaultBodies : []`);
+}
+
+/** 从 Tauri IPC 请求体提取 input.requestId；无法解析时返回 null（测试必须失败）。 */
+function extractRequestId(body) {
+  if (typeof body !== 'string' || body.length === 0) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(body);
+    const requestId =
+      parsed?.payload?.input?.requestId ??
+      parsed?.input?.requestId ??
+      parsed?.requestId ??
+      null;
+    return typeof requestId === 'string' && requestId.length > 0 ? requestId : null;
+  } catch {
+    return null;
+  }
 }
 
 async function clearIpcFault() {
@@ -532,13 +591,14 @@ const titles = {
   unassigned: 'T1-04 虚构 未归属快速工作',
   single: 'T1-04 虚构 单项目快速工作',
   duplicate: 'T1-04 虚构 重复提交批次工作',
+  doubleSubmit: 'T1-04 虚构 双击保护批次工作',
   archivedLink: 'T1-04 虚构 归档项目历史关联工作',
   archiveRace: 'T1-04 虚构 归档竞态不应创建',
   contractViolation: 'T1-04 虚构 契约违规不应创建',
   refreshFailure: 'T1-04 虚构 刷新失败批次工作',
   bypass: 'T1-04 虚构 绕过 UI 的批量请求'
 };
-const backup = { pendingAfterMain: 12, groupsAfterMain: 4, membersAfterMain: 9 };
+const backup = { pendingAfterMain: 14, groupsAfterMain: 5, membersAfterMain: 11 };
 
 await send('Runtime.enable');
 await send('Page.enable');
@@ -548,11 +608,18 @@ const bootMarker = `wm-t1-04-${Date.now()}-${Math.random().toString(16).slice(2)
 await send('Page.addScriptToEvaluateOnNewDocument', {
   source: `window.__wmBootMarker = ${JSON.stringify(bootMarker)};
 window.__wmCspViolations = [];
+window.__wmCspListenerInstalled = true;
 document.addEventListener('securitypolicyviolation', (event) => {
   window.__wmCspViolations.push({
-    blockedURI: event.blockedURI,
-    violatedDirective: event.violatedDirective,
-    sample: event.sample
+    blockedURI: event.blockedURI || '',
+    violatedDirective: event.violatedDirective || '',
+    effectiveDirective: event.effectiveDirective || '',
+    originalPolicy: event.originalPolicy || '',
+    disposition: event.disposition || '',
+    sourceFile: event.sourceFile || '',
+    lineNumber: Number.isFinite(event.lineNumber) ? event.lineNumber : null,
+    columnNumber: Number.isFinite(event.columnNumber) ? event.columnNumber : null,
+    sample: event.sample || ''
   });
 });`
 });
@@ -566,10 +633,13 @@ await send('Page.reload', { ignoreCache: true });
 
 let projects = {};
 let archivedLinkItem = null;
+/** 实际采集的 CSP securitypolicyviolation 事件；null 表示采集未完成，绝不伪造 0。 */
+let capturedCspViolations = null;
+let cspCaptureStatus = 'not-attempted';
+let cspCaptureError = null;
 
 function writeEvidence(extra = {}) {
   const failed = checks.filter((item) => !item.pass).map((item) => item.name);
-  const cspViolations = null;
   const evidence = {
     generatedAt: new Date().toISOString(),
     task: 'T1-04',
@@ -583,7 +653,14 @@ function writeEvidence(extra = {}) {
     checkCount: checks.length,
     pageExceptionCount: pageErrors.filter((item) => item.type === 'exception').length,
     pageErrors,
-    cspViolations,
+    cspViolations: capturedCspViolations,
+    cspViolationCount:
+      capturedCspViolations === null ? null : capturedCspViolations.length,
+    cspCapture: {
+      status: cspCaptureStatus,
+      error: cspCaptureError,
+      source: 'WebView2 securitypolicyviolation listener installed before navigation/reload'
+    },
     fixtures: { prefix: fixturePrefix, titles },
     projects,
     archivedLinkItemId: archivedLinkItem?.id ?? null,
@@ -608,7 +685,7 @@ function writePrerequisite() {
     groupsAfterMain: backup.groupsAfterMain,
     membersAfterMain: backup.membersAfterMain,
     archivedLinkItemId: archivedLinkItem?.id ?? null,
-    expectedGroupTitles: [titles.batchTwo, titles.batchThree, titles.duplicate, titles.refreshFailure]
+    expectedGroupTitles: [titles.batchTwo, titles.batchThree, titles.duplicate, titles.doubleSubmit, titles.refreshFailure]
   };
   const prerequisitePath = path.join(outputDir, 't1-04-prerequisite.json');
   fs.writeFileSync(prerequisitePath, JSON.stringify(prerequisite, null, 2), 'utf8');
@@ -840,10 +917,115 @@ try {
     JSON.stringify(singleCopy)
   );
 
-  // 8. 批量创建期间重复点击保护 + 选择锁定（传输层延迟注入，不改产品代码）。
+  // 8. 真实 IPC 提交成功但响应丢失 → 前端保留请求标识 → 重试幂等返回原批次。
+  //    第一次请求真实转发到 Tauri/Rust/SQLite 并提交；随后在传输层丢弃响应。
+  //    第二次保存必须复用同一 requestId，服务端返回原批次，不产生第二批副本。
   await openCreateDialog();
   await waitForDialogProjectOptions([projects.A.id, projects.B.id]);
-  check('doubleSubmit.titleFilled', (await setDialogTitle(titles.duplicate)) === true);
+  check('idempotency.titleFilled', (await setDialogTitle(titles.duplicate)) === true);
+  await clickProjectCheckbox(projects.A.id);
+  await clickProjectCheckbox(projects.B.id);
+  await waitForSelection(2);
+  check(
+    'idempotency.responseLossInjected',
+    (await installIpcFault('create_work_item_copies', 'response-loss-once')) === true
+  );
+  check('idempotency.firstSaveClicked', (await submitDialogSave()) === true);
+  await waitFor(
+    `document.querySelector('dialog[open] .dialog-error') !== null`,
+    15000,
+    'response loss error shown in open dialog'
+  );
+  const responseLossError = await evaluate(`(() => {
+    const dialog = document.querySelector('dialog[open]');
+    const error = dialog?.querySelector('.dialog-error');
+    const code = dialog?.querySelector('.dialog-error-code');
+    const title = dialog?.querySelector('#work-item-title');
+    return {
+      dialogOpen: dialog !== null,
+      message: error ? (error.innerText || '').replace(/\\s+/g, ' ').trim() : null,
+      code: code ? (code.textContent || '').replace(/\\s+/g, ' ').trim() : null,
+      titleValue: title ? title.value : null,
+      selectedCount: dialog
+        ? dialog.querySelectorAll('input[data-project-id]:checked').length
+        : null
+    };
+  })()`);
+  check(
+    'idempotency.uiTreatsResultAsUncertainAndKeepsInput',
+    responseLossError.dialogOpen === true &&
+      responseLossError.titleValue === titles.duplicate &&
+      responseLossError.selectedCount === 2,
+    JSON.stringify(responseLossError)
+  );
+
+  // 第一次真实 IPC 已在服务端提交：通过真实 IPC 读取数据库权威列表，
+  // 此时 UI 仍显示失败，但数据库中必须恰好有两条该标题的工作副本。
+  const afterResponseLoss = await directIpc('list_pending_work_items');
+  const copiesAfterResponseLoss = afterResponseLoss.ok === true
+    ? afterResponseLoss.value.filter((item) => item.title === titles.duplicate)
+    : [];
+  check(
+    'idempotency.firstRequestCommittedExactlyOneBatch',
+    copiesAfterResponseLoss.length === 2 &&
+      new Set(copiesAfterResponseLoss.map((item) => item.id)).size === 2 &&
+      copiesAfterResponseLoss.map((item) => item.projectId).sort().join(',') ===
+        [projects.A.id, projects.B.id].sort().join(','),
+    JSON.stringify(copiesAfterResponseLoss)
+  );
+  const itemIdsAfterFirstCommit = copiesAfterResponseLoss.map((item) => item.id).sort();
+
+  const bodiesAfterLoss = await readIpcFaultBodies();
+  const firstRequestId = extractRequestId(
+    bodiesAfterLoss.find((entry) => entry.phase === 'response-loss')?.body
+  );
+  check(
+    'idempotency.firstRequestCarriesRequestId',
+    typeof firstRequestId === 'string' && firstRequestId.length === 36,
+    JSON.stringify({ firstRequestId, bodyCount: bodiesAfterLoss.length })
+  );
+
+  check(
+    'idempotency.retryRecordingInstalled',
+    (await installIpcFault('create_work_item_copies', 'record')) === true
+  );
+  check('idempotency.retrySaveClicked', (await submitDialogSave()) === true);
+  await waitDialogClosed(20000);
+  await waitForRows(9);
+  const retryBodies = await readIpcFaultBodies();
+  const retryRequestId = extractRequestId(
+    retryBodies.find((entry) => entry.phase === 'retry')?.body
+  );
+  check(
+    'idempotency.retryReusesSameRequestId',
+    typeof firstRequestId === 'string' &&
+      typeof retryRequestId === 'string' &&
+      firstRequestId === retryRequestId,
+    JSON.stringify({ firstRequestId, retryRequestId })
+  );
+
+  const afterIdempotentRetry = await directIpc('list_pending_work_items');
+  const copiesAfterRetry = afterIdempotentRetry.ok === true
+    ? afterIdempotentRetry.value.filter((item) => item.title === titles.duplicate)
+    : [];
+  check(
+    'idempotency.retryDoesNotCreateSecondBatch',
+    copiesAfterRetry.length === 2 &&
+      copiesAfterRetry.map((item) => item.id).sort().join(',') ===
+        itemIdsAfterFirstCommit.join(','),
+    JSON.stringify({
+      count: copiesAfterRetry.length,
+      before: itemIdsAfterFirstCommit,
+      after: copiesAfterRetry.map((item) => item.id).sort()
+    })
+  );
+  await clearIpcFault();
+
+  // 8b. 批量创建期间重复点击保护 + 输入锁定（传输层延迟注入，不改产品代码）。
+  //     保留 T1-04 原有覆盖，与 8 的真实响应丢失/幂等重试分开验证。
+  await openCreateDialog();
+  await waitForDialogProjectOptions([projects.A.id, projects.B.id]);
+  check('doubleSubmit.titleFilled', (await setDialogTitle(titles.doubleSubmit)) === true);
   await clickProjectCheckbox(projects.A.id);
   await clickProjectCheckbox(projects.B.id);
   await waitForSelection(2);
@@ -880,34 +1062,19 @@ try {
       );
     })()`,
     8000,
-    'submitting state locks project selection and save',
-    `(() => {
-      const dialog = document.querySelector('dialog[open]');
-      if (dialog === null) return { dialogOpen: false };
-      const fieldset = dialog.querySelector('fieldset.project-field');
-      const titleInput = dialog.querySelector('#work-item-title');
-      const saveButton = Array.from(dialog.querySelectorAll('button')).find(
-        (item) => (item.textContent || '').trim() === '保存'
-      );
-      return {
-        dialogOpen: true,
-        fieldsetDisabled: fieldset ? fieldset.disabled : null,
-        titleDisabled: titleInput ? titleInput.disabled : null,
-        saveDisabled: saveButton ? saveButton.disabled : null
-      };
-    })()`
+    'submitting state locks project selection and save'
   );
   check('doubleSubmit.locksSelectionWhileSubmitting', submittingState === true);
   await waitDialogClosed(20000);
-  await waitForRows(9);
-  const duplicateItems = await directIpc('list_pending_work_items');
-  const duplicateCopies = duplicateItems.ok === true
-    ? duplicateItems.value.filter((item) => item.title === titles.duplicate)
+  await waitForRows(11);
+  const doubleSubmitItems = await directIpc('list_pending_work_items');
+  const doubleSubmitCopies = doubleSubmitItems.ok === true
+    ? doubleSubmitItems.value.filter((item) => item.title === titles.doubleSubmit)
     : [];
   check(
     'doubleSubmit.createsSingleBatchOnly',
-    duplicateCopies.length === 2,
-    `匹配副本数=${duplicateCopies.length}`
+    doubleSubmitCopies.length === 2,
+    `匹配副本数=${doubleSubmitCopies.length}`
   );
   await clearIpcFault();
 
@@ -926,7 +1093,7 @@ try {
   const remountedAfterDirectCreate = await remountPendingViewAndSettle();
   check(
     'setup.pendingViewRefreshedAfterDirectIpcCreate',
-    remountedAfterDirectCreate.rows === 10,
+    remountedAfterDirectCreate.rows === 12,
     JSON.stringify(remountedAfterDirectCreate)
   );
 
@@ -980,7 +1147,7 @@ try {
   const pendingAfterRace = await waitForPendingSettled(15000);
   check(
     'archiveRace.noPartialCopiesCreated',
-    pendingAfterRace.rows === 10,
+    pendingAfterRace.rows === 12,
     JSON.stringify(pendingAfterRace)
   );
   const archivedLinkRows = await rowSnapshots();
@@ -996,7 +1163,11 @@ try {
 
   // 10. 绕过 UI 直接 IPC：批量接口仍必须被 Rust Core 拒绝。
   const bypassArchived = await directIpc('create_work_item_copies', {
-    input: { title: titles.bypass, projectIds: [projects.A.id, projects.D.id] }
+    input: {
+      requestId: newRequestId(),
+      title: titles.bypass,
+      projectIds: [projects.A.id, projects.D.id]
+    }
   });
   check(
     'ipc.bypassArchivedProjectRejectedWithWholeBatch',
@@ -1005,6 +1176,7 @@ try {
   );
   const bypassMissing = await directIpc('create_work_item_copies', {
     input: {
+      requestId: newRequestId(),
       title: titles.bypass,
       projectIds: [projects.A.id, '77777777-7777-4777-8777-777777777777']
     }
@@ -1015,7 +1187,11 @@ try {
     String(bypassMissing.error).slice(0, 300)
   );
   const bypassDuplicate = await directIpc('create_work_item_copies', {
-    input: { title: titles.bypass, projectIds: [projects.A.id, projects.A.id] }
+    input: {
+      requestId: newRequestId(),
+      title: titles.bypass,
+      projectIds: [projects.A.id, projects.A.id]
+    }
   });
   check(
     'ipc.bypassDuplicateProjectsRejected',
@@ -1025,7 +1201,7 @@ try {
   );
   for (const projectIds of [[projects.A.id], []]) {
     const bypassTooFew = await directIpc('create_work_item_copies', {
-      input: { title: titles.bypass, projectIds }
+      input: { requestId: newRequestId(), title: titles.bypass, projectIds }
     });
     check(
       'ipc.bypassTooFewProjectsRejected',
@@ -1034,7 +1210,11 @@ try {
     );
   }
   const bypassEmptyTitle = await directIpc('create_work_item_copies', {
-    input: { title: '   ', projectIds: [projects.A.id, projects.B.id] }
+    input: {
+      requestId: newRequestId(),
+      title: '   ',
+      projectIds: [projects.A.id, projects.B.id]
+    }
   });
   check(
     'ipc.bypassEmptyTitleRejected',
@@ -1042,7 +1222,12 @@ try {
     String(bypassEmptyTitle.error).slice(0, 300)
   );
   const bypassUnknownField = await directIpc('create_work_item_copies', {
-    input: { title: titles.bypass, projectIds: [projects.A.id, projects.B.id], extraField: 1 }
+    input: {
+      requestId: newRequestId(),
+      title: titles.bypass,
+      projectIds: [projects.A.id, projects.B.id],
+      extraField: 1
+    }
   });
   check(
     'ipc.bypassUnknownFieldRejected',
@@ -1050,7 +1235,11 @@ try {
     String(bypassUnknownField.error).slice(0, 300)
   );
   const bypassSnakeCase = await directIpc('create_work_item_copies', {
-    input: { title: titles.bypass, project_ids: [projects.A.id, projects.B.id] }
+    input: {
+      requestId: newRequestId(),
+      title: titles.bypass,
+      project_ids: [projects.A.id, projects.B.id]
+    }
   });
   check(
     'ipc.bypassSnakeCaseProjectIdsRejected',
@@ -1062,7 +1251,7 @@ try {
   const countAfterBypass = await directIpc('list_pending_work_items');
   check(
     'ipc.rejectedRequestsCreatedNoRows',
-    countAfterBypass.ok === true && countAfterBypass.value.length === 10,
+    countAfterBypass.ok === true && countAfterBypass.value.length === 12,
     JSON.stringify(countAfterBypass.value?.length)
   );
 
@@ -1112,7 +1301,7 @@ try {
   const pendingAfterContract = await waitForPendingSettled(15000);
   check(
     'contractViolation.noRowsCreated',
-    pendingAfterContract.rows === 10,
+    pendingAfterContract.rows === 12,
     JSON.stringify(pendingAfterContract)
   );
 
@@ -1151,14 +1340,14 @@ try {
   const countBeforeRetry = await directIpc('list_pending_work_items');
   check(
     'refreshFailure.noDuplicateCreateOnRefreshFailure',
-    countBeforeRetry.ok === true && countBeforeRetry.value.length === 12,
+    countBeforeRetry.ok === true && countBeforeRetry.value.length === 14,
     JSON.stringify(countBeforeRetry)
   );
   check('refreshFailure.retryClicked', (await clickByText('main', '重新加载', true)) === true);
   const recovered = await waitForPendingSettled(15000);
   check(
     'refreshFailure.retryRecoversListWithoutDuplicate',
-    recovered.rows === 12,
+    recovered.rows === 14,
     JSON.stringify(recovered)
   );
   await waitFor(
@@ -1172,19 +1361,43 @@ try {
   await screenshot('pending-refresh-recovered.png');
 
   // 13. CSP / 未捕获异常 / 正常窗口布局。
-  const cspViolations = await evaluate(`window.__wmCspViolations || []`);
-  check('security.cspViolationsZero', Array.isArray(cspViolations) && cspViolations.length === 0, JSON.stringify(cspViolations));
+  try {
+    const cspProbe = await evaluate(`(() => ({
+      installed: window.__wmCspListenerInstalled === true,
+      violations: Array.isArray(window.__wmCspViolations) ? window.__wmCspViolations : null
+    }))()`);
+    if (cspProbe?.installed === true && Array.isArray(cspProbe.violations)) {
+      capturedCspViolations = cspProbe.violations;
+      cspCaptureStatus = 'captured';
+      cspCaptureError = null;
+    } else {
+      capturedCspViolations = null;
+      cspCaptureStatus = 'collection-failed';
+      cspCaptureError = JSON.stringify(cspProbe);
+    }
+  } catch (error) {
+    capturedCspViolations = null;
+    cspCaptureStatus = 'collection-failed';
+    cspCaptureError = String(error);
+  }
+  check(
+    'security.cspViolationsZero',
+    capturedCspViolations !== null && capturedCspViolations.length === 0,
+    capturedCspViolations === null
+      ? `CSP 采集失败：${cspCaptureError}`
+      : JSON.stringify(capturedCspViolations)
+  );
   const exceptionCount = pageErrors.filter((item) => item.type === 'exception').length;
   check('security.pageExceptionsZero', exceptionCount === 0, JSON.stringify(pageErrors).slice(0, 500));
   const finalPending = await waitForPendingSettled(15000);
-  check('final.pendingCount12', finalPending.rows === 12, JSON.stringify(finalPending));
+  check('final.pendingCount14', finalPending.rows === 14, JSON.stringify(finalPending));
   const finalList = await directIpc('list_pending_work_items');
   check(
     'final.pendingListAllPendingAndExpectedTitles',
     finalList.ok === true &&
-      finalList.value.length === 12 &&
+      finalList.value.length === 14 &&
       finalList.value.every((item) => item.lifecycleStatus === 'pending') &&
-      [titles.batchTwo, titles.batchThree, titles.unassigned, titles.single, titles.duplicate, titles.archivedLink, titles.refreshFailure].every(
+      [titles.batchTwo, titles.batchThree, titles.unassigned, titles.single, titles.duplicate, titles.doubleSubmit, titles.archivedLink, titles.refreshFailure].every(
         (expectedTitle) => finalList.value.some((item) => item.title === expectedTitle)
       ),
     JSON.stringify(finalList.value?.length)

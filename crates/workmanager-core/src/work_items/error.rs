@@ -36,6 +36,19 @@ pub enum WorkItemError {
     #[error("所选项目存在重复，请重新选择项目后提交。")]
     CopiesDuplicateProject,
 
+    /// 客户端批量创建请求标识不是规范 UUID。
+    ///
+    /// 请求标识用于跨 IPC 失败/重试的服务端幂等识别，必须是客户端生成的规范 UUID；
+    /// 无效标识在开启写事务之前拒绝，错误消息不得回显用户输入。
+    #[error("创建请求标识无效，请重新发起创建。")]
+    InvalidCreateRequestId,
+
+    /// 相同请求标识被用于不同标题或不同项目列表。
+    ///
+    /// 服务端不得把不同业务操作错误地当成同一批次重试，也不得覆盖既有批次。
+    #[error("该创建请求与已处理的内容不一致，请重新发起创建。")]
+    CreateRequestConflict,
+
     /// 创建事务提交后无法按 ID 读回刚写入的记录（不应发生的内部一致性错误）。
     #[error("工作事项已写入但无法读取，请重试或检查数据库状态。")]
     PersistenceVerificationFailed,
@@ -54,6 +67,8 @@ impl WorkItemError {
             Self::ProjectArchived => "project-archived",
             Self::CopiesTooFewProjects => "work-item-copies-too-few",
             Self::CopiesDuplicateProject => "work-item-copies-duplicate-project",
+            Self::InvalidCreateRequestId => "work-item-create-request-id-invalid",
+            Self::CreateRequestConflict => "work-item-create-request-conflict",
             Self::PersistenceVerificationFailed => "work-item-persistence-verification-failed",
             Self::Database(error) => error.code(),
         }
@@ -72,6 +87,8 @@ mod tests {
             WorkItemError::ProjectArchived,
             WorkItemError::CopiesTooFewProjects,
             WorkItemError::CopiesDuplicateProject,
+            WorkItemError::InvalidCreateRequestId,
+            WorkItemError::CreateRequestConflict,
             WorkItemError::PersistenceVerificationFailed,
         ] {
             let message = error.to_string();
@@ -93,6 +110,14 @@ mod tests {
         assert_eq!(
             WorkItemError::CopiesDuplicateProject.code(),
             "work-item-copies-duplicate-project"
+        );
+        assert_eq!(
+            WorkItemError::InvalidCreateRequestId.code(),
+            "work-item-create-request-id-invalid"
+        );
+        assert_eq!(
+            WorkItemError::CreateRequestConflict.code(),
+            "work-item-create-request-conflict"
         );
         assert_eq!(
             WorkItemError::PersistenceVerificationFailed.code(),

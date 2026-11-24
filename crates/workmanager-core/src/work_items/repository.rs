@@ -186,6 +186,21 @@ pub(crate) fn list_creation_group_members(
     Ok(members)
 }
 
+/// 在写事务内统计创建组成员关系行数（不 JOIN），用于与 JOIN 读回结果交叉校验。
+pub(crate) fn count_creation_group_members(
+    transaction: &Transaction<'_>,
+    database_path: &Path,
+    group_id: &str,
+) -> Result<i64, WorkItemError> {
+    transaction
+        .query_row(
+            "SELECT COUNT(*) FROM work_item_creation_group_members WHERE group_id = ?1",
+            params![group_id],
+            |row| row.get(0),
+        )
+        .map_err(|error| map_error("统计工作事项创建组成员关系", database_path, error))
+}
+
 /// 查询待安排工作事项：有/无项目均返回，项目归档后历史关联继续展示。
 ///
 /// 排序固定为创建时间倒序、稳定 ID 次级键；T1-03 不实现手动排序或优先级排序。

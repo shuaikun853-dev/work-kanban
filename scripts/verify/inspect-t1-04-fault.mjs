@@ -5,13 +5,13 @@
  * - Release 进程已启动在同一 UAT 便携目录；
  * - 编排脚本已在**应用关闭时**向 UAT 数据库安装真实 SQLite TRIGGER：
  *   项目 C 的工作事项插入会真实 ABORT（模拟第二条工作副本写入失败）；
- * - 主检查阶段已创建 12 条待安排工作、4 个创建组（见 t1-04-prerequisite.json）。
+ * - 主检查阶段已创建 14 条待安排工作、5 个创建组（见 t1-04-prerequisite.json）。
  *
  * 检查内容：
- * 1. 待安排列表仍为 12 条；
+ * 1. 待安排列表仍为 14 条；
  * 2. 通过真实 UI 选择两个项目（A + C）提交批量创建；
  * 3. 第二条工作副本真实插入失败 → Rust Core 整批回滚，UI 显示数据库错误；
- * 4. 失败后待安排列表仍为 12 条（无部分成功）；
+ * 4. 失败后待安排列表仍为 14 条（无部分成功）；
  * 5. 通过真实关闭按钮退出；数据库只读探针由编排脚本验证无创建组/成员/副本残留。
  *
  * 用法：node scripts/verify/inspect-t1-04-fault.mjs <port> <outputDir> <prerequisitePath>
@@ -25,7 +25,7 @@ const outputDir = process.argv[3] ?? `D:\\WorkManager-test-data\\t1-04-ui-fault-
 const prerequisitePath = process.argv[4] ?? '';
 fs.mkdirSync(outputDir, { recursive: true });
 
-const EXPECTED_ROWS = 12;
+const EXPECTED_ROWS = 14;
 const FAULT_TITLE = 'T1-04 虚构 原子回滚验证批次';
 
 const prerequisite = (() => {
@@ -345,7 +345,7 @@ try {
   );
   await screenshot('batch-rollback-error.png');
 
-  // 整批回滚：待安排列表仍为 12 条；失败批次不产生任何部分记录。
+  // 整批回滚：待安排列表仍为 14 条；失败批次不产生任何部分记录。
   await waitFor(
     `document.querySelectorAll('[data-work-item-id]').length === ${EXPECTED_ROWS}`,
     10000,

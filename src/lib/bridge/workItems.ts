@@ -51,16 +51,23 @@ export async function createWorkItem(
 /**
  * 为多个项目批量创建互相独立的工作事项副本（整批原子提交，DEC-034）。
  *
+ * - `requestId` 是调用方为一次逻辑创建操作生成的规范 UUID；同一次操作在 IPC 失败、
+ *   Bridge 解析失败或用户重试时必须复用，成功确认后才可丢弃；
  * - `projectIds` 必须包含 2 个及以上不同项目；少于 2 个或重复项目由 Rust Core 拒绝；
  * - 响应必须通过严格运行时契约校验（数量、项目一一对应、ID 唯一、全部 pending）；
  * - 任一项目不存在/已归档时后端整批失败，不会返回部分成功。
  */
 export async function createWorkItemCopies(
+  requestId: string,
   title: string,
   projectIds: readonly string[]
 ): Promise<CreatedWorkItemCopiesDto> {
   ensureDesktopRuntime();
-  const input: CreateWorkItemCopiesInput = { title, projectIds: [...projectIds] };
+  const input: CreateWorkItemCopiesInput = {
+    requestId,
+    title,
+    projectIds: [...projectIds]
+  };
   const raw = await invokeWorkItemCommand(CREATE_WORK_ITEM_COPIES_COMMAND, { input });
   return parseCreatedWorkItemCopies(raw, projectIds);
 }

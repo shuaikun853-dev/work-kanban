@@ -1,199 +1,277 @@
 #!/usr/bin/env python3
-"""T1-04 Release UAT 数据库只读探针。
+"""T1-04 Release UAT 数据库只读探针（T104-01 路径安全收紧）。
 
 用标准库 sqlite3 以只读方式检查独立 UAT 便携目录中的数据库：
 - schema 版本、完整性、journal_mode、schema_migrations、外键检查；
-- projects / work_items 行数与状态分布；
-- work_item_creation_groups / work_item_creation_group_members 行数、组成员数量分布、
-  孤儿成员、多创建组工作副本等原子性不变量。
+- projects / work_items 行数与状态分布（不输出任何标题/项目名称）；
+- 创建组 / 成员关系行数、组成员数量分布、孤儿成员、多创建组工作副本等不变量。
 
-只读打开，不修改任何数据。用法：
-  python -X utf8 probe-t1-04-db.py <databasePath> <stage> [outputPath]
-提供 outputPath 时 JSON 以 UTF-8 写入该文件；未提供时 JSON 输出到 stdout。
-无法只读打开或查询失败时退出码 2。
+路径安全（T104-01）：
+- 数据库路径必须经 t1_04_path_guard 调用 PowerShell 原生守卫，复用 T1-03
+  已验证的 Windows 句柄/信任锚/重解析点/最终路径/卷身份校验；
+- outputPath 只能是 UAT 根目录下直接名为 evidence 的目录的直接 .json 子文件；
+- 证据目录、证据文件与数据库父目录/全部祖先均在写入前完成原生校验；
+- 安全校验失败时退出码 3，且在 sqlite3.connect() 与任何文件写入之前终止；
+- 数据库打开/查询失败时退出码 2，绝不生成“成功”证据文件。
+
+用法：
+  python -X utf8 probe-t1-04-db.py <databasePath> <stage> [outputPath] \
+      [--evidence-dir <UatEvidenceDir>]
+提供 outputPath 时必须提供 --evidence-dir；未提供 outputPath 时 JSON 输出到 stdout。
 """
 
+from __future__ import annotations
+
+import argparse
 import json
-import os
+import re
 import sqlite3
 import sys
+from pathlib import Path
+from urllib.parse import quote
+
+from t1_04_path_guard import PathGuardError, assert_guarded_path
+
+STAGE_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
+REQUIRED_TABLES = {
+    "schema_migrations",
+    "projects",
+    "work_items",
+    "work_item_creation_groups",
+    "work_item_creation_group_members",
+}
 
 
-def emit(report, exit_code):
-    output_path = report.pop("_outputPath", None)
-    text = json.dumps(report, ensure_ascii=False, indent=2)
-    if output_path:
-        with open(output_path, "w", encoding="utf-8") as handle:
-            handle.write(text)
-        print("DB_PROBE_WRITTEN=" + output_path)
-    else:
-        print(text)
-    return exit_code
+class ProbeError(RuntimeError):
+    """数据库不存在、打开失败或查询失败；不得输出成功证据。"""
 
 
-def scalar(connection, sql):
-    return connection.execute(sql).fetchone()[0]
+def database_uri(database_path: str) -> str:
+    absolute = Path(database_path).absolute().as_posix()
+    return "file:" + quote(absolute, safe="/:") + "?mode=ro"
 
 
-def main() -> int:
-    if len(sys.argv) < 3:
-        print("usage: probe-t1-04-db.py <databasePath> <stage> [outputPath]", file=sys.stderr)
-        return 2
+def scalar(connection: sqlite3.Connection, sql: str):
+    row = connection.execute(sql).fetchone()
+    if row is None:
+        raise ProbeError(f"query returned no row: {sql}")
+    return row[0]
 
-    database_path = sys.argv[1]
-    stage = sys.argv[2]
-    output_path = sys.argv[3] if len(sys.argv) > 3 else None
+
+def table_names(connection: sqlite3.Connection) -> set[str]:
+    return {
+        row[0]
+        for row in connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
+        ).fetchall()
+    }
+
+
+def build_report(connection: sqlite3.Connection, stage: str) -> dict:
+    tables = table_names(connection)
+    missing = sorted(REQUIRED_TABLES - tables)
+    if missing:
+        raise ProbeError("required tables missing: " + ",".join(missing))
+
+    integrity_rows = [
+        str(row[0]) for row in connection.execute("PRAGMA integrity_check").fetchall()
+    ]
+    integrity_check = " | ".join(integrity_rows) if integrity_rows else "no-result"
+    foreign_key_violations = len(
+        connection.execute("PRAGMA foreign_key_check").fetchall()
+    )
+    migration_versions = [
+        int(row[0])
+        for row in connection.execute(
+            "SELECT version FROM schema_migrations ORDER BY version"
+        ).fetchall()
+    ]
+
+    histogram: dict[str, int] = {}
+    for size, count in connection.execute(
+        "SELECT member_count, COUNT(*) FROM ("
+        "  SELECT group_id, COUNT(*) AS member_count "
+        "  FROM work_item_creation_group_members GROUP BY group_id"
+        ") GROUP BY member_count ORDER BY member_count"
+    ).fetchall():
+        histogram[str(int(size))] = int(count)
+
     report = {
         "task": "T1-04",
         "stage": stage,
-        "database_path": database_path,
-        "exists": os.path.isfile(database_path),
-        "user_version": None,
-        "integrity_check": None,
-        "journal_mode": None,
-        "foreign_keys": None,
-        "tables": [],
-        "schema_migrations": [],
-        "projects_total": None,
-        "projects_archived": None,
-        "work_items_total": None,
-        "work_items_pending": None,
-        "work_items_other_status": None,
-        "work_items_null_project": None,
-        "work_items_linked_archived": None,
-        "work_items_linked_active": None,
-        "creation_groups_total": None,
-        "creation_group_members_total": None,
-        "creation_group_size_histogram": {},
-        "creation_groups_without_members": None,
-        "orphan_creation_group_members": None,
-        "work_items_with_multiple_groups": None,
-        "creation_group_titles": [],
-        "pending_titles": [],
-        "foreign_key_violations": None,
-        "_outputPath": output_path,
-    }
-
-    if not report["exists"]:
-        return emit(report, 2)
-
-    try:
-        connection = sqlite3.connect(f"file:{database_path}?mode=ro", uri=True, timeout=5.0)
-    except sqlite3.Error as error:
-        report["error"] = f"read-only open failed: {error}"
-        return emit(report, 2)
-
-    try:
-        connection.execute("PRAGMA foreign_keys = ON")
-        report["user_version"] = scalar(connection, "PRAGMA user_version")
-        report["integrity_check"] = scalar(connection, "PRAGMA integrity_check")
-        report["journal_mode"] = scalar(connection, "PRAGMA journal_mode")
-        report["foreign_keys"] = scalar(connection, "PRAGMA foreign_keys")
-        report["tables"] = [
-            row[0]
-            for row in connection.execute(
-                "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
-            ).fetchall()
-        ]
-        if "schema_migrations" in report["tables"]:
-            report["schema_migrations"] = [
-                {"version": row[0], "name": row[1]}
-                for row in connection.execute(
-                    "SELECT version, name FROM schema_migrations ORDER BY version"
-                ).fetchall()
-            ]
-        if "projects" in report["tables"]:
-            report["projects_total"] = scalar(connection, "SELECT COUNT(*) FROM projects")
-            report["projects_archived"] = scalar(
-                connection, "SELECT COUNT(*) FROM projects WHERE is_archived = 1"
-            )
-        if "work_items" in report["tables"]:
-            report["work_items_total"] = scalar(
-                connection, "SELECT COUNT(*) FROM work_items"
-            )
-            report["work_items_pending"] = scalar(
+        "status": "ok",
+        "scope": "uat",
+        "schema_version": int(scalar(connection, "PRAGMA user_version")),
+        "migration_versions": migration_versions,
+        "integrity_check": integrity_check,
+        "journal_mode": str(scalar(connection, "PRAGMA journal_mode")),
+        "foreign_keys": bool(scalar(connection, "PRAGMA foreign_keys")),
+        "required_tables_present": True,
+        "projects_total": int(scalar(connection, "SELECT COUNT(*) FROM projects")),
+        "projects_archived": int(
+            scalar(connection, "SELECT COUNT(*) FROM projects WHERE is_archived = 1")
+        ),
+        "work_items_total": int(scalar(connection, "SELECT COUNT(*) FROM work_items")),
+        "work_items_pending": int(
+            scalar(
                 connection,
                 "SELECT COUNT(*) FROM work_items WHERE lifecycle_status = 'pending'",
             )
-            report["work_items_other_status"] = scalar(
+        ),
+        "work_items_other_status": int(
+            scalar(
                 connection,
                 "SELECT COUNT(*) FROM work_items WHERE lifecycle_status != 'pending'",
             )
-            report["work_items_null_project"] = scalar(
-                connection, "SELECT COUNT(*) FROM work_items WHERE project_id IS NULL"
-            )
-            report["work_items_linked_archived"] = scalar(
+        ),
+        "work_items_null_project": int(
+            scalar(connection, "SELECT COUNT(*) FROM work_items WHERE project_id IS NULL")
+        ),
+        "work_items_linked_archived": int(
+            scalar(
                 connection,
                 "SELECT COUNT(*) FROM work_items w JOIN projects p ON p.id = w.project_id "
                 "WHERE p.is_archived = 1",
             )
-            report["work_items_linked_active"] = scalar(
+        ),
+        "work_items_linked_active": int(
+            scalar(
                 connection,
                 "SELECT COUNT(*) FROM work_items w JOIN projects p ON p.id = w.project_id "
                 "WHERE p.is_archived = 0",
             )
-            report["pending_titles"] = [
-                row[0]
-                for row in connection.execute(
-                    "SELECT title FROM work_items WHERE lifecycle_status = 'pending' "
-                    "ORDER BY created_at DESC, id DESC"
-                ).fetchall()
-            ]
-        if "work_item_creation_groups" in report["tables"]:
-            report["creation_groups_total"] = scalar(
-                connection, "SELECT COUNT(*) FROM work_item_creation_groups"
-            )
-            report["creation_group_titles"] = [
-                row[0]
-                for row in connection.execute(
-                    "SELECT source_title FROM work_item_creation_groups "
-                    "ORDER BY created_at DESC, id DESC"
-                ).fetchall()
-            ]
-        if "work_item_creation_group_members" in report["tables"]:
-            report["creation_group_members_total"] = scalar(
-                connection, "SELECT COUNT(*) FROM work_item_creation_group_members"
-            )
-            histogram = {}
-            for size, count in connection.execute(
-                "SELECT member_count, COUNT(*) FROM ("
-                "  SELECT group_id, COUNT(*) AS member_count "
-                "  FROM work_item_creation_group_members GROUP BY group_id"
-                ") GROUP BY member_count ORDER BY member_count"
-            ).fetchall():
-                histogram[str(int(size))] = int(count)
-            report["creation_group_size_histogram"] = histogram
-            report["creation_groups_without_members"] = scalar(
+        ),
+        "creation_groups_total": int(
+            scalar(connection, "SELECT COUNT(*) FROM work_item_creation_groups")
+        ),
+        "creation_group_members_total": int(
+            scalar(
                 connection,
-                "SELECT COUNT(*) FROM work_item_creation_groups g "
-                "WHERE NOT EXISTS ("
+                "SELECT COUNT(*) FROM work_item_creation_group_members",
+            )
+        ),
+        "creation_group_size_histogram": histogram,
+        "creation_groups_without_members": int(
+            scalar(
+                connection,
+                "SELECT COUNT(*) FROM work_item_creation_groups g WHERE NOT EXISTS ("
                 "  SELECT 1 FROM work_item_creation_group_members m WHERE m.group_id = g.id"
                 ")",
             )
-            report["orphan_creation_group_members"] = scalar(
+        ),
+        "orphan_creation_group_members": int(
+            scalar(
                 connection,
                 "SELECT COUNT(*) FROM work_item_creation_group_members m "
                 "LEFT JOIN work_item_creation_groups g ON g.id = m.group_id "
                 "LEFT JOIN work_items w ON w.id = m.work_item_id "
                 "WHERE g.id IS NULL OR w.id IS NULL",
             )
-            report["work_items_with_multiple_groups"] = scalar(
+        ),
+        "work_items_with_multiple_groups": int(
+            scalar(
                 connection,
                 "SELECT COUNT(*) FROM ("
                 "  SELECT work_item_id FROM work_item_creation_group_members "
                 "  GROUP BY work_item_id HAVING COUNT(*) > 1"
                 ")",
             )
-        report["foreign_key_violations"] = len(
-            connection.execute("PRAGMA foreign_key_check").fetchall()
-        )
-    except sqlite3.Error as error:
-        report["error"] = f"query failed: {error}"
-        return emit(report, 2)
-    finally:
-        connection.close()
+        ),
+        "batch_items_not_pending": int(
+            scalar(
+                connection,
+                "SELECT COUNT(*) FROM work_item_creation_group_members m "
+                "JOIN work_items w ON w.id = m.work_item_id "
+                "WHERE w.lifecycle_status != 'pending'",
+            )
+        ),
+        "foreign_key_violations": foreign_key_violations,
+    }
+    return report
 
-    return emit(report, 0)
+
+def write_success(report: dict, output_path: str | None) -> int:
+    text = json.dumps(report, ensure_ascii=False, indent=2)
+    if output_path:
+        try:
+            with open(output_path, "w", encoding="utf-8") as handle:
+                handle.write(text)
+                handle.flush()
+        except OSError as error:
+            print(f"DB_PROBE_WRITE_FAILED={error}", file=sys.stderr)
+            return 2
+        print("DB_PROBE_WRITTEN=" + output_path)
+    else:
+        print(text)
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(add_help=True)
+    parser.add_argument("database_path")
+    parser.add_argument("stage")
+    parser.add_argument("output_path", nargs="?")
+    parser.add_argument("--evidence-dir", default=None)
+    args = parser.parse_args()
+
+    if not STAGE_PATTERN.fullmatch(args.stage):
+        print("SAFETY_REFUSED: invalid stage name", file=sys.stderr)
+        return 3
+
+    try:
+        # 1. 数据库路径必须最先通过原生守卫；任何失败都不得连接 SQLite。
+        assert_guarded_path("database", args.database_path)
+        if not Path(args.database_path).is_file():
+            raise PathGuardError(
+                "数据库文件不存在。已按 fail-closed 停止，不会创建新数据库。"
+            )
+
+        # 2. 输出路径必须在任何目录创建/写文件之前完成证据目录与文件校验。
+        if args.output_path:
+            if not args.evidence_dir:
+                print(
+                    "SAFETY_REFUSED: --evidence-dir is required when outputPath is provided",
+                    file=sys.stderr,
+                )
+                return 3
+            assert_guarded_path(
+                "evidence-dir",
+                args.evidence_dir,
+                database_path=args.database_path,
+            )
+            assert_guarded_path(
+                "evidence-file",
+                args.output_path,
+                database_path=args.database_path,
+                evidence_directory=args.evidence_dir,
+            )
+    except PathGuardError as error:
+        print(f"SAFETY_REFUSED: {error}", file=sys.stderr)
+        return 3
+
+    # 仅在全部路径校验完成后，才允许删除/覆盖已校验的证据文件。
+    if args.output_path:
+        try:
+            Path(args.output_path).unlink(missing_ok=True)
+        except OSError as error:
+            print(f"DB_PROBE_OUTPUT_PREPARE_FAILED={error}", file=sys.stderr)
+            return 2
+
+    connection = None
+    try:
+        connection = sqlite3.connect(
+            database_uri(args.database_path), uri=True, timeout=5.0
+        )
+        connection.execute("PRAGMA foreign_keys = ON")
+        report = build_report(connection, args.stage)
+    except (sqlite3.Error, ProbeError) as error:
+        print(f"DB_PROBE_FAILED={error}", file=sys.stderr)
+        return 2
+    finally:
+        if connection is not None:
+            connection.close()
+
+    return write_success(report, args.output_path)
 
 
 if __name__ == "__main__":
