@@ -34,7 +34,7 @@
 - 分支：`task/T1-03-quick-create-pending`
 - 当前 HEAD：`e8205cae22e98afce6480f5a5a0695543a61dee3`
 - PR：[ #8 ](https://github.com/shuaikun853-dev/work-kanban/pull/8)，Open，未合并
-- 当前状态：第四轮 F1/F2 定向修复及自测完成，等待第四轮独立审计。
+- 当前状态：第四轮 F1/F2 定向修复及自测完成，等待第四轮独立审计。详见 [T1-03 开发与验证报告](testing/reports/T1-03-REPORT.md)。
 - F1：测试根目录写入前信任锚验证和 fail-closed 已完成。
 - F2：清理失败、链接仍存在、未预期重解析点或身份变化时停止递归清理并保留现场；删除失败使用受控 FaultHook 注入，**不是实际 Windows ACL Access Denied 测试**。
 - P2-01：当前分支与证据扫描未发现新的具体机器标识，但旧提交 `2342828852abee43ab56610e7d1fa91a02310bfe` 仍可经 GitHub API 读取，9 个原始命令日志仍可列出/下载；GitHub Support 服务端清理尚未完成，**仍保持 OPEN**。
@@ -44,7 +44,7 @@
 
 - 分支：`task/T1-04-multi-project-copies`
 - 当前 HEAD：`4bd69f1e4c715410490496bc9fbe8e2a60623a0f`
-- 当前状态：第六轮独立审计后的 R6-01～R6-03 定向补正完成，开发与自测完成，等待独立代码审计。
+- 当前状态：第六轮独立审计后的 R6-01～R6-03 定向补正完成，开发与自测完成，等待独立代码审计。详见 [T1-04 开发与验证报告](testing/reports/T1-04-REPORT.md)。
 - 已实现：多项目独立副本、创建组/成员关系、整批 IMMEDIATE 事务、事务内读回验证、requestId 幂等重试、Migration 0004、路径安全守卫和 Bridge 契约校验。
 - 本轮补正：Rust/TypeScript 标题 Unicode White_Space 规范化统一；Migration 清理对悬空 Junction 的原生识别与 fail-closed；Bridge 注释和任务文档状态同步。
 - 当前分支仍包含 T1-03 堆叠历史。PR #8 未处理前，不直接创建把 T1-03 diff 重复带入 main 的 T1-04 PR。
