@@ -1,13 +1,14 @@
 # WorkManager
 
-Windows 本地工作管理软件（绿色便携版）。当前进度：**T1-01 已于 2026-11-18 经第四轮独立审计及用户验收，验收完成**。R3-01/R3-02 修复提交分别为 `ae1eb65`、`4942eb0`；[PR #1](https://github.com/shuaikun853-dev/work-kanban/pull/1) 已于 2026-11-18 合并到 main（commit `260e6c0`）；审计结论见[第四轮独立审计报告](docs/testing/reports/T1-01-FOURTH-AUDIT-REPORT.md)，用户确认见[验收记录](docs/testing/reports/T1-01-USER-ACCEPTANCE.md)。TOCTOU 按 DEC-029 接受并延期至独立[Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，仍未修复。**T1-02 项目创建、编辑、归档已完成开发与自测，第一轮独立审计问题（P2-01/P3-01/P3-02）已修复并重新回归，当前状态“待审计”（等待第二轮独立审计，PR #7 未合并）**，详见 [T1-02 测试报告](docs/testing/reports/T1-02-REPORT.md) 与 [返工修复报告](docs/testing/reports/T1-02-AUDIT-FIX-REPORT.md)。T1-03 及后续工作事项、每日复盘、报表、附件等业务功能尚未实现；本仓库不表示这些功能已经可用。
+Windows 本地工作管理软件（绿色便携版）。当前处于 **M0 现有代码收口** 阶段：T1-01、T1-02 已通过独立审计和用户验收并合并到 main；T1-03 的开发与自测已完成，PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 OPEN，等待第四轮独立审计、用户验收和 P2-01 服务端历史清理验证（P2-01 是合并硬门禁）；T1-04 等待第六轮补正后的独立审计，PR #8 未合并前不得通过堆叠分支提前进入 main。V1 正式开发路线（M0～M6）、开发理念和 AI 合并门禁分别见 [开发计划书](docs/development/DEVELOPMENT_PLAN.md)、[开发理念](docs/development/DEVELOPMENT_PHILOSOPHY.md) 和 [AGENTS.md](AGENTS.md)。M1～M6 业务功能尚未开始；本仓库不表示这些功能已经可用。
 
 ## 文档
 
 - [产品需求规格说明书](docs/requirements/PRD.md)
 - [技术架构设计说明书](docs/architecture/TECHNICAL_DESIGN.md)
 - [已确认决策记录](docs/decisions/DECISIONS.md)
-- [开发计划书](docs/development/DEVELOPMENT_PLAN.md)
+- [V1 开发计划书（M0～M6）](docs/development/DEVELOPMENT_PLAN.md)
+- [开发理念与 AI Agent 强制规则](docs/development/DEVELOPMENT_PHILOSOPHY.md)
 - [开发状态](docs/STATUS.md)
 - [UI 设计规范与原型图](docs/design/UI-DESIGN-SPEC.md)
 - [开发与协作规范](AGENTS.md)
