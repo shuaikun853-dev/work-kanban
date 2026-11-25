@@ -1,0 +1,7 @@
+---
+description: Mandatory WorkManager project instructions for all tasks
+alwaysApply: true
+---
+
+@AGENTS.md
+@docs/development/DEVELOPMENT_PHILOSOPHY.md

@@ -2,16 +2,42 @@
 
 本文件约束所有参与 WorkManager 仓库工作的 AI Agent、自动化工具和开发者。遇到冲突时，用户明确确认的决策优先于助手建议和技术默认值。
 
+## 0. 强制开发路线与 Skill（所有任务适用）
+
+**WorkManager 是用户个人使用的 Windows 本地工作软件，不是商业化 SaaS 或面向公众发行的通用产品。** 开发目标是稳定满足用户已经确认的真实使用需求，不是覆盖所有理论场景或追求企业级通用性。
+
+所有 AI Agent 在每次任务开始前，必须先阅读：
+
+- [开发理念与 AI Agent 强制规则](docs/development/DEVELOPMENT_PHILOSOPHY.md)
+- 本文件中与当前任务相关的约束
+- 当前任务说明及其明确引用的权威文档
+
+所有代码开发任务必须实际加载并遵循以下两个上游 Skill，不得只在报告中写“已使用”：
+
+1. **Ponytail**：精简实现和防止过度设计。默认使用 `full` 级别，读取上游 `skills/ponytail/SKILL.md`；它要求先理解真实调用链，再选择最小完整实现。
+   - [Ponytail Skill](https://github.com/DietrichGebert/ponytail/blob/main/skills/ponytail/SKILL.md)
+2. **Matt Pocock Skills**：工程实现流程。以 `skills/engineering/implement/SKILL.md` 为代码任务主流程；根据任务类型再选择性加载 TDD、Bug 诊断和 Code Review Skill。
+   - [Implement Skill](https://github.com/mattpocock/skills/blob/main/skills/engineering/implement/SKILL.md)
+   - [TDD Skill](https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/SKILL.md)
+   - [Diagnosing Bugs Skill](https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnosing-bugs/SKILL.md)
+   - [Code Review Skill](https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md)
+
+如果当前 AI 宿主支持 Skill 调用，直接加载/调用对应 Skill；否则读取上述 GitHub Markdown 原文并遵循。无法联网或无法读取时，必须如实说明，继续遵守本仓库的本地开发理念，不得虚报已加载 Skill。Skill 是开发指导，不是要求安装额外运行时依赖；不得为了使用 Skill 而引入无关插件、框架或工具。
+
+新建开发任务说明或编写交给其他 AI 的开发提示词时，必须使用 [开发任务提示词模板](docs/development/DEVELOPMENT_TASK_TEMPLATE.md)，并明确写入本节的 Skill 和开发理念要求。历史任务报告作为历史证据保留，不要求为本规则而追溯改写。
+
 ## 1. 权威文档与决策顺序
 
-开始任务前先阅读：
+每项任务按以下顺序读取，**只深入阅读与本任务有关的内容，不要求每次通读所有历史文档**：
 
-1. docs/requirements/PRD.md：产品需求和验收标准。
-2. docs/decisions/DECISIONS.md：已确认决策及待确认事项。
-3. docs/architecture/TECHNICAL_DESIGN.md：技术架构和实现约束。
-4. docs/development/DEVELOPMENT_PLAN.md：阶段划分、任务编号、任务验收标准和依赖关系。
-5. docs/STATUS.md：当前真实进度。
-6. docs/design/UI-DESIGN-SPEC.md：用户确认的 UI 原型、视觉规范、组件边界和 UI 回归要求。
+1. `AGENTS.md` 和 [开发理念](docs/development/DEVELOPMENT_PHILOSOPHY.md)：所有任务必读。
+2. 当前任务说明：确认任务 ID、范围、依赖、允许修改文件和验收标准。
+3. `docs/STATUS.md`：确认当前真实进度、阻塞项和当前分支状态。
+4. 按任务需要查阅 `docs/requirements/PRD.md`、`docs/decisions/DECISIONS.md`、`docs/architecture/TECHNICAL_DESIGN.md` 的相关章节。
+5. 只有涉及 UI 时才需要阅读 `docs/design/UI-DESIGN-SPEC.md`；只读相关页面、组件和视觉约束。
+6. 只有需要核验历史实现或审计证据时，才读取对应测试报告和历史记录；不要为了形式重复通读无关报告。
+
+`docs/development/DEVELOPMENT_PLAN.md` 用于确认任务依赖和阶段边界；涉及任务启动、依赖或范围时必须查阅。
 
 用户在当前对话中明确作出的新决定优先于旧文档。发现文档冲突时，先记录并解决冲突，不得选择对实现最方便的一条自行继续。
 
@@ -53,7 +79,7 @@
 - 所有颜色、字体、间距、圆角和层级从语义化 Design Tokens 读取；使用 Svelte scoped styles，禁止通过全局 CSS 选择器侵入其他 Feature。
 - 当前工作指针、工作事项生命周期状态和每日执行结果不得在前端重复维护或混为一谈；动态任务列表必须使用稳定业务 ID 作为 key。
 - UI 改动必须先给出组件树、影响文件清单和回归计划；一次只改一个页面或一个可验证纵向切片。修改共享组件时必须检查所有使用方。
-- 每次 UI 变更必须运行 `npm run check`、`npm run build`，并提供工作总览/今日工作截图；涉及 Bridge、DTO 或 Rust Core 时运行对应 Rust 测试。
+- UI 结构、样式或交互有实际变化时，必须运行 `npm run check`、`npm run build`，并提供本次受影响页面的截图；不要求为未改动页面重复截图。涉及 Bridge、DTO 或 Rust Core 时运行对应测试。
 - 不得声称仓库已有独立前端组件测试或视觉回归框架；新增测试依赖须先说明必要性和影响，并纳入具体任务评审。
 
 ## 4. 安全与数据保护
@@ -69,8 +95,9 @@
 ## 5. 需求、实现和验收
 
 - 先把需求拆成可验证的纵向切片，再实现 UI、IPC、Core、数据库和测试。
-- 优先采用 TDD：先写失败测试，再实现最小正确行为，最后重构。
-- 业务行为必须有自动化测试；SQLite 事务、migration、便携路径、数据清理和备份恢复必须有专项测试。
+- 对新增或修改的非平凡逻辑优先采用 TDD：在合适的公共接口/测试 seam 先写能复现需求或 Bug 的小测试，再实现最小正确行为。简单文档、重命名、纯配置说明或无逻辑的机械修改不强制新增测试。
+- 测试目标是证明本任务的核心行为和真实风险得到验证，不是追求测试数量、覆盖率数字或穷举所有理论边界。不得为未提出的未来功能、极低概率且无实际影响的场景新增大批测试。
+- 涉及数据库事务/migration、持久化、路径信任边界、数据清理/备份、安全校验或可能导致数据丢失的逻辑，必须有针对性测试；这些属于本软件不能省略的关键质量边界。
 - “代码已写”“本地能启动”“测试通过”“独立审计通过”“用户验收通过”是不同状态，不得混写。
 - 需求不清楚时，提出一个最关键的澄清问题；不得用猜测填补业务规则。
 - 对有数据破坏风险的改动，必须先说明影响范围、验证步骤和回滚方案。
