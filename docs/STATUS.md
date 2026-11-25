@@ -1,9 +1,10 @@
 # WorkManager 开发状态
 
-**更新日期：** 2026-11-25（第二次更新，按用户当日最新确认同步 V1 路线与 P2-01 合并门禁）\
-**开发计划：** [DEVELOPMENT_PLAN.md V3.1](development/DEVELOPMENT_PLAN.md)（已提交 PR #9，待审查/合并）\
+**更新日期：** 2026-11-25（第三次更新：PR #9 已合并、M0-05 完成、M0-06 只读核验完成，Git 基线按最新 main 重测）\
+**开发计划：** [DEVELOPMENT_PLAN.md V3.1](development/DEVELOPMENT_PLAN.md)（PR #9 已于 2026-11-25T06:05:45Z 合并，已进入 main）\
 **当前里程碑：** M0 — 现有代码收口\
-**总体状态：** M0 进行中；独立审计与合并门禁分开管理；M1～M6 尚未启动。
+**收口包：** [M0-CLOSEOUT.md](development/M0-CLOSEOUT.md)（Git 基线、两项审计材料包、P2-01 复核、整合方案、最终验收清单）\
+**总体状态：** M0 进行中；M0-05 完成、M0-06 只读核验完成；T1-03/T1-04 仍待独立审计与用户验收；M1～M6 尚未启动。
 
 ---
 
@@ -11,12 +12,13 @@
 
 | 分支/PR | 当前事实 | 状态 |
 |---|---|---|
-| main | `018e851e8daf5835391a7b61caf881bc57c2ad42` | 当前主分支基线 |
-| T1-03 | `task/T1-03-quick-create-pending`，HEAD `e8205cae22e98afce6480f5a5a0695543a61dee3` | PR #8 Open，未合并；P2-01 合并门禁生效 |
-| T1-04 | `task/T1-04-multi-project-copies`，HEAD `4bd69f1e4c715410490496bc9fbe8e2a60623a0f` | 堆叠在 T1-03 上；待独立审计；未创建 main PR；不得用堆叠分支绕过 PR #8 |
-| 开发理念/计划文档 | `docs/ai-development-principles` | PR #9 Open；本次 V3.1 计划、状态和 AI 入口更新在此分支，待审查/合并 |
+| main | `9171fe3` Merge pull request #9（PR #8 的 base 为合并前的 `018e851`） | 最新主分支基线 |
+| T1-03 | `task/T1-03-quick-create-pending`，HEAD `e8205cae22e98afce6480f5a5a0695543a61dee3` | PR #8 Open，未合并；`CONFLICTING / DIRTY`；P2-01 合并门禁生效 |
+| T1-04 | `task/T1-04-multi-project-copies`，HEAD `4bd69f1e4c715410490496bc9fbe8e2a60623a0f` | 堆叠在 T1-03 上（merge-base = `e8205ca`）；待独立审计；未创建 main PR；不得用堆叠分支绕过 PR #8 |
+| 开发理念/计划文档 | `docs/ai-development-principles` → PR #9 | **已合并**（2026-11-25T06:05:45Z），V3.1 计划、STATUS、AGENTS/Skill 规则与 AI 入口已在 main |
+| PR #3 | `docs/t1-01-merge-status-sync`，head `a527369` | Open、CONFLICTING；内容已被 PR #6 和 PR #9 覆盖；本轮不关闭、不合并、不删除 |
 
-2026-11-25 Git 比较结果：T1-04 分支较 T1-03 分支领先 14 个提交，较 main 领先 39 个提交。T1-03/T1-04 的代码尚未进入 main。PR #9 的 HEAD 会在本次修订推送后变化，以 PR #9 页面和最终交付报告记录的 commit 为准。
+2026-11-25 重新 fetch 后的 Git 比较结果：main 较 T1-03 领先 12 个提交，T1-03 较 main 领先 25 个；main 较 T1-04 领先 12 个，T1-04 较 main 领先 39 个；T1-04 较 T1-03 领先 14 个。T1-03/T1-04 的代码尚未进入 main。完整基线与冲突分析见 [M0-CLOSEOUT.md](development/M0-CLOSEOUT.md) 第 1、7 节。
 
 ### P2-01 合并门禁事实
 
@@ -41,6 +43,7 @@
 - 分支：`task/T1-03-quick-create-pending`
 - 当前 HEAD：`e8205cae22e98afce6480f5a5a0695543a61dee3`
 - PR：[ #8 ](https://github.com/shuaikun853-dev/work-kanban/pull/8)，Open，未合并
+- PR 状态（2026-11-25 实测）：`mergeable=CONFLICTING`、`mergeStateStatus=DIRTY`；冲突仅涉及 `README.md`、`docs/STATUS.md`、`docs/decisions/DECISIONS.md`、`docs/development/DEVELOPMENT_PLAN.md`、`docs/requirements/PRD.md` 五个文档，无代码、migration、Tauri command、Bridge 或前端组件冲突。`reviewCount=0`、`reviewCommentCount=0`，GitHub 上不存在独立审计记录。
 - 当前状态：第四轮 F1/F2 定向修复及自测完成，等待第四轮独立审计。开发与验证报告位于 `task/T1-03-quick-create-pending` 分支的 `docs/testing/reports/T1-03-REPORT.md`（PR #8 合并后进入 main，本分支暂不提供相对链接）。
 - F1：测试根目录写入前信任锚验证和 fail-closed 已完成。
 - F2：清理失败、链接仍存在、未预期重解析点或身份变化时停止递归清理并保留现场；删除失败使用受控 FaultHook 注入，**不是实际 Windows ACL Access Denied 测试**。
@@ -67,8 +70,8 @@
 | M0-02 | T1-04 第六轮补正后的独立审计 | 待独立审计（可与 P2-01 并行） |
 | M0-03 | P2-01 合并门禁独立追踪 | 阻塞中；等待 GitHub Support 服务端历史清理 |
 | M0-04 | T1-03/T1-04 按顺序处理 PR 和合并 | 阻塞，依赖 M0-01/M0-02/M0-03 |
-| M0-05 | PR #9 开发理念、V1 开发计划和 Skill 规则入库 | 本次修订已提交 PR #9，待审查/合并 |
-| M0-06 | 核验 T1-01 已有数据库初始化和异常保护 | 待核验（只读核验源代码与测试证据，不修改产品代码；发现真实缺口只单独提出补充任务） |
+| M0-05 | PR #9 开发理念、V1 开发计划和 Skill 规则入库 | **完成**（2026-11-25T06:05:45Z 合并） |
+| M0-06 | 核验 T1-01 已有数据库初始化和异常保护 | **只读核验完成**（未重新运行 Windows 测试；仅核对 main 源码、历史测试代码、历史独立审计与用户验收记录） |
 | M1 | 完整工作事项管理 | 未开始，M0 完成后启动 |
 | M2 | 每日工作管理 | 未开始 |
 | M3 | 每日复盘与提醒 | 未开始 |
@@ -105,12 +108,14 @@
 
 ## 6. 下一步执行顺序
 
-1. T1-03 第四轮独立审计与 T1-04 独立审计可继续并行进行，审计对象必须是各自当前准确 HEAD；审计通过不等于允许合并。
-2. P2-01 由仓库所有者在 GitHub Support 服务端清理完成后重新核验旧提交 `2342828852abee43ab56610e7d1fa91a02310bfe` 和 9 个原始命令日志不可访问，取得可核验证据后关闭。
-3. PR #8 的三项合并条件（独立审计通过、用户验收通过、P2-01 服务端清理验证通过）全部满足后，按顺序合并 PR #8；随后只把 T1-04 自身提交迁移到更新后的 main 并创建独立 PR。
-4. 审查并合并 PR #9；合并后本计划 V3.1 作为所有 AI Agent 的统一开发路线。
-5. 完成 M0-06：只读核验 main 当前 HEAD 下 T1-01 数据库初始化、Migration 执行/事务/失败回滚、完整性检查、异常保护及对应自动化测试和历史独立审计报告；明确区分 main 已有能力与 T1-03/T1-04 尚未合并能力，形成可复核结论；发现真实缺口只单独提出补充任务，不修改产品代码，避免重复开发。
-6. M0 全部完成后，从统一 main 开始 M1，不重做已有功能。
+1. T1-03 第四轮独立审计与 T1-04 第六轮补正后的独立审计可继续并行进行，审计对象分别是 `e8205ca` 和 `4bd69f1`；审计通过不等于允许合并。审计材料包见 [M0-CLOSEOUT.md](development/M0-CLOSEOUT.md) 第 4、5 节。
+2. P2-01 由仓库所有者在 GitHub Support 服务端清理完成后重新核验旧提交 `2342828852abee43ab56610e7d1fa91a02310bfe` 和 9 个原始命令日志不可访问，取得可核验证据后关闭。2026-11-25 复核结果：旧 SHA 与 9/9 日志（147,009 字节）仍可读取，清理未完成。
+3. PR #8 的三项合并条件（独立审计通过、用户验收通过、P2-01 服务端清理验证通过）全部满足后，按 [M0-CLOSEOUT.md](development/M0-CLOSEOUT.md) 第 7.6 节的 S1→S2 执行：先把 T1-03 的 5 个冲突文档改写到 V3.x / M0～M6 口径（只改文档），再由用户合并 PR #8。
+4. T1-03 进入 main 后按 S3→S4 执行：从更新后的 main 新建集成分支，`cherry-pick e8205ca..4bd69f1`（仅 14 个 T1-04 自身提交），禁止重复携带 T1-03 的 25 个提交，然后创建并审查 T1-04 独立 PR。
+5. 两项 PR 合并后按 S5 收尾：重跑 `cargo test --workspace`、`npm run check`、`npm run build`、`git diff --check`，确认 `git status` 干净，再更新本 STATUS 与 DEVELOPMENT_PLAN。
+6. M0 全部完成后，从统一 main 开始 M1，不重做已有功能；M1-02 开发前必须先就 OPEN-012 向用户确认。
+
+> M0-05（PR #9 入库）已于 2026-11-25 完成；M0-06（T1-01 数据库基础设施只读核验）已于 2026-11-25 完成，结论见 [M0-CLOSEOUT.md](development/M0-CLOSEOUT.md) 第 3 节。M0-06 未重新运行 Windows 测试。
 
 ---
 
@@ -124,4 +129,4 @@
 - 未取得用户决定的方案只能标记为建议或待确认。
 - 所有状态变化必须同步更新 DEVELOPMENT_PLAN.md 和 STATUS.md，并保留历史证据。
 
-**当前真实结论：** T1-01、T1-02 已验收并合并；T1-03 和 T1-04 的开发与自测已完成，但仍分别待独立审计；P2-01 仍是 PR #8 的合并硬门禁，PR #8 保持 OPEN；M1～M6 尚未开始。WorkManager 仍处于 M0 现有代码收口阶段。
+**当前真实结论：** T1-01、T1-02 已验收并合并；M0-05 完成（PR #9 已合并）；M0-06 只读核验完成（未重新运行测试）；T1-03 和 T1-04 的开发与自测已完成，但仍分别待独立审计与用户验收；P2-01 仍是 PR #8 的合并硬门禁，PR #8 保持 OPEN 且当前为 `CONFLICTING / DIRTY`（文档冲突）；M1～M6 尚未开始。WorkManager 仍处于 M0 现有代码收口阶段。
