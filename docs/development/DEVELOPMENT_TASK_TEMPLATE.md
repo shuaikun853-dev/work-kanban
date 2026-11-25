@@ -6,6 +6,7 @@
 
 - 任务 ID：
 - 任务名称：
+- 所属阶段（M0～M6）：
 - 当前分支 / 基线 commit：
 - 任务状态：
 - 依赖任务：
@@ -19,7 +20,8 @@
 
 1. 根目录 `AGENTS.md`
 2. `docs/development/DEVELOPMENT_PHILOSOPHY.md`
-3. 本任务说明及必要的 PRD、DECISIONS、TECHNICAL_DESIGN、UI-DESIGN-SPEC 相关章节
+3. `docs/development/DEVELOPMENT_PLAN.md`（确认所属阶段、任务依赖和范围边界）
+4. 本任务说明及必要的 PRD、DECISIONS、TECHNICAL_DESIGN、UI-DESIGN-SPEC 相关章节
 
 本任务必须实际加载两套 Skill：
 
@@ -62,5 +64,6 @@
 - Commit SHA / PR：
 - 未实现或未测试的内容：
 - 遗留风险：
+- 合并门禁状态：是否涉及 PR #8 / P2-01；是否已满足独立审计、用户验收和 P2-01 服务端清理验证（见 AGENTS.md 8.6）
 
-完成本任务要求的工作后，按项目当前流程更新文档并停止。不得自行开始下一个任务。
+完成本任务要求的工作后，按项目当前流程更新文档并停止。不得自行开始下一个任务，不得擅自合并任何 PR。
