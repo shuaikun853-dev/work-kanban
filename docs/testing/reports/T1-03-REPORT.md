@@ -560,7 +560,7 @@ SANITIZATION.md                               # 第四轮脱敏扫描、旧提�
 - 第四轮 F1/F2 修复提交：`d82bdd47ae7c3c27fb4383d72ee16a131c89036d`（仅验证脚本/测试脚本 + UI 编排信任锚；**未修改产品代码、未重写历史、未强制推送**）
 - 第四轮证据/文档同步提交：`5ab1f49ac16705126d6c27dcaf091990d38a8b3f` 及其后的元数据修正提交（`origin/main..HEAD` 本轮前 = **22** 个提交）
 - 本轮第四轮审计基准 HEAD：`e8205cae22e98afce6480f5a5a0695543a61dee3`
-- 本轮 F1/F2 最小修复提交：`PENDING_COMMIT_SHA`（仅验证脚本/测试脚本 + 本轮证据/文档；**未修改产品代码、未重写历史、未强制推送**）
+- 本轮 F1/F2 最小修复提交：`af2421e9207f7b9ac185b0d29c3a98f80b5eb11a`（仅验证脚本/测试脚本 + 本轮证据/文档；**未修改产品代码、未重写历史、未强制推送**）
 - 本轮文档同步提交：紧随修复提交之后的证据/状态文档同步提交（PR #8 时间线可见；其自身 SHA 无法在本文件内自引用）
 - 推送：`git push origin HEAD:task/T1-03-quick-create-pending`（快进推送，未使用强制推送）
 - PR：[#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) → `main`，保持 Open（未合并）

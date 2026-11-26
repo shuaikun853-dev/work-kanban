@@ -13,7 +13,7 @@
   "localBranch": "task/T1-03-quick-create-pending-r4",
   "branchNote": "目标分支已在另一个既有 git worktree 中检出；本轮未删除、未移动该 worktree，也未丢弃其工作。本工作区以同一基线创建本地分支开发，并通过 HEAD:task/T1-03-quick-create-pending 推送。",
   "mainBaseline": "018e851e8daf5835391a7b61caf881bc57c2ad42",
-  "fixCommit": "",
+  "fixCommit": "af2421e9207f7b9ac185b0d29c3a98f80b5eb11a",
   "upstreamSkills": {
     "ponytail": {
       "repo": "https://github.com/DietrichGebert/ponytail",
