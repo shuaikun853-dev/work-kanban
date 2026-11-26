@@ -879,7 +879,10 @@ function Find-T103ReparsePointsInTree {
 function Remove-T103VerifiedDirectoryTree {
     param(
         [Parameter(Mandatory = $true)][string]$Directory,
-        [string]$StopPrefix = '安全清理'
+        [string]$StopPrefix = '安全清理',
+        # 仅专项测试使用的受控故障注入：在真实条目删除步骤抛出确定性异常，
+        # 用于验证“递归删除已开始但未完整结束”的结果语义。
+        [scriptblock]$FaultHook = $null
     )
     $normalized = Get-T103UatNormalizedPath $Directory
     $info = Get-T103NativePathInfo -Path $normalized -OpenReparsePoint $true
@@ -894,6 +897,9 @@ function Remove-T103VerifiedDirectoryTree {
     }
     $entries = @([System.IO.Directory]::EnumerateFileSystemEntries($normalized))
     foreach ($entry in $entries) {
+        if ($null -ne $FaultHook) {
+            & $FaultHook 'beforeEntryDelete' $entry
+        }
         $entryInfo = Get-T103NativePathInfo -Path $entry -OpenReparsePoint $true
         if (-not $entryInfo.Exists) {
             throw ("{0}：条目在删除前消失或被替换：{1}" -f $StopPrefix, $entry)
@@ -902,7 +908,7 @@ function Remove-T103VerifiedDirectoryTree {
             throw ("{0}：发现未预期的重解析点（tag=0x{1:X8}），拒绝递归删除：{2}" -f $StopPrefix, $entryInfo.ReparseTag, $entry)
         }
         if ($entryInfo.IsDirectory) {
-            Remove-T103VerifiedDirectoryTree -Directory $entry -StopPrefix $StopPrefix
+            Remove-T103VerifiedDirectoryTree -Directory $entry -StopPrefix $StopPrefix -FaultHook $FaultHook
         }
         else {
             [System.IO.File]::Delete($entry)
@@ -926,12 +932,61 @@ function Stop-T103UnsafeCleanup {
     throw (New-Object System.Exception(('T103CLEANUP|' + $Code + '|' + $Message)))
 }
 
-# Fail-closed 沙箱清理（第四轮 F2）：
-# 1. 清理前确认沙箱真实身份（与创建时记录一致）；
-# 2. 逐个删除跟踪的 Junction / Symbolic Link，并用原生句柄复验确实已消失；
-# 3. 扫描整个沙箱，确认不存在任何未预期重解析点；
-# 4. 再次复验沙箱身份；
-# 5. 只有以上全部通过，才执行逐条目校验的安全递归删除。
+# 第六轮 F2：先验证全部跟踪链接，再允许任何删除。
+# 跟踪链接只允许是“已通过身份复验的沙箱”的直接子项（最小实现：现有调用方均为直接子项；
+# 不支持任意嵌套，无法确认安全的嵌套路径一律拒绝）。同时记录链接对象自身的
+# 卷序列号 + 文件 ID + reparse tag，删除前必须精确匹配，防止删除被替换的对象。
+function Get-T103ValidatedTrackedLinkRecords {
+    param(
+        [Parameter(Mandatory = $true)][string]$SandboxPath,
+        [Parameter(Mandatory = $true)][AllowEmptyCollection()][string[]]$TrackedLinks
+    )
+    $sandboxLiteral = Get-T103UatNormalizedPath $SandboxPath
+    $records = New-Object System.Collections.ArrayList
+    foreach ($link in @($TrackedLinks | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })) {
+        $linkPath = Get-T103UatNormalizedPath ([string]$link)
+        $parentPath = Split-Path -Parent $linkPath
+        if ([string]::IsNullOrWhiteSpace($parentPath) -or (-not (Test-T103UatPathEquals $parentPath $sandboxLiteral))) {
+            Stop-T103UnsafeCleanup -Code 'trackedLinkNotDirectChild' -Message ('跟踪链接不是测试沙箱的直接子项，拒绝删除（可能穿过未跟踪 Junction 进入沙箱外）：' + $linkPath) -Path $linkPath
+        }
+        $info = Get-T103NativePathInfo -Path $linkPath -OpenReparsePoint $true
+        if (-not $info.Exists) {
+            [void]$records.Add([pscustomobject]@{
+                path               = $linkPath
+                exists             = $false
+                isReparsePoint     = $false
+                volumeSerialNumber = ''
+                fileIdHex          = ''
+                reparseTag         = [uint32]0
+            })
+            continue
+        }
+        if (-not $info.IsReparsePoint) {
+            Stop-T103UnsafeCleanup -Code 'trackedLinkReplaced' -Message ('跟踪链接已不是重解析点（可能被替换为普通文件/目录），拒绝继续清理：' + $linkPath) -Path $linkPath
+        }
+        if ([string]::IsNullOrWhiteSpace([string]$info.VolumeSerialNumber) -or [string]::IsNullOrWhiteSpace([string]$info.FileIdHex)) {
+            Stop-T103UnsafeCleanup -Code 'trackedLinkIdentityUnconfirmed' -Message ('无法读取跟踪链接的对象身份（卷序列号 / 文件 ID），拒绝删除：' + $linkPath) -Path $linkPath
+        }
+        [void]$records.Add([pscustomobject]@{
+            path               = $linkPath
+            exists             = $true
+            isReparsePoint     = $true
+            volumeSerialNumber = [string]$info.VolumeSerialNumber
+            fileIdHex          = [string]$info.FileIdHex
+            reparseTag         = [uint32]$info.ReparseTag
+        })
+    }
+    return @($records)
+}
+
+# Fail-closed 沙箱清理（第四轮 F2；第六轮按审计要求收紧顺序）：
+# 1. 清理前确认沙箱真实身份（与创建时记录一致），并原生校验沙箱到盘符根的父目录链；
+# 2. 先验证全部跟踪链接（只允许沙箱直接子项，父目录必须是已确认沙箱；记录对象身份）；
+# 3. 删除任何对象之前先扫描整个沙箱：除已登记跟踪链接外出现任何重解析点立即停止；
+# 4. 只删除身份精确匹配的已登记跟踪链接，删除后用原生句柄复验确实消失；
+# 5. 删除后再次扫描整个沙箱，确认没有残余重解析点；
+# 6. 再次复验沙箱身份；
+# 7. 只有以上全部通过，才执行逐条目校验的安全递归删除，并区分“未开始 / 已开始未完成 / 已完成”。
 # 任一条件不满足：立即停止、不执行整个沙箱递归删除、保留现场、返回可定位失败信息。
 function Invoke-T103FailClosedSandboxCleanup {
     param(
@@ -944,6 +999,8 @@ function Invoke-T103FailClosedSandboxCleanup {
     $script:T103CleanupUnsafePaths = New-Object System.Collections.ArrayList
     $script:T103CleanupSteps = New-Object System.Collections.ArrayList
     $sandboxLiteral = Get-T103UatNormalizedPath $SandboxPath
+    $recursiveDeleteStarted = $false
+    $recursiveDeleteCompleted = $false
     try {
         # 0) 沙箱必须在测试根目录内（字面 + 信任锚真实最终路径）。
         $testRootLiteral = Get-T103UatNormalizedPath $TestRoot
@@ -967,20 +1024,56 @@ function Invoke-T103FailClosedSandboxCleanup {
         }
         [void]$script:T103CleanupSteps.Add('sandbox.identityVerified')
 
-        # 2) 逐个删除跟踪链接（只删除链接本身，非递归），并用原生句柄复验确实消失。
-        $trackedList = @($TrackedLinks | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-        foreach ($link in $trackedList) {
-            $linkPath = Get-T103UatNormalizedPath ([string]$link)
-            if (-not (Test-T103UatPathInside $linkPath $sandboxLiteral)) {
-                Stop-T103UnsafeCleanup -Code 'trackedLinkOutsideSandbox' -Message ('跟踪链接不在测试沙箱内，拒绝删除：' + $linkPath) -Path $linkPath
+        # 2) 父目录链原生校验：跟踪链接只允许沙箱直接子项；父目录已由第 1 步身份复验确认
+        #    为沙箱。沙箱到盘符根任意组件出现 Junction / Symbolic Link / reparse point 时立即停止。
+        try {
+            $sandboxChain = Get-T103NativePathChain -Path $sandboxLiteral -Label '测试沙箱父目录链'
+            if (@($sandboxChain.Missing).Count -gt 0) {
+                throw ('测试沙箱路径链包含缺失组件：' + $sandboxLiteral)
+            }
+        }
+        catch {
+            Stop-T103UnsafeCleanup -Code 'sandboxParentChainUnsafe' -Message ('测试沙箱父目录链原生校验失败（疑似未跟踪 Junction / 身份不明）：' + $_.Exception.Message) -Path $sandboxLiteral
+        }
+        [void]$script:T103CleanupSteps.Add('sandbox.parentChainVerified')
+
+        # 3) 先验证全部跟踪链接（不执行任何删除）：只接受沙箱直接子项，并记录链接对象身份。
+        $trackedRecords = @(Get-T103ValidatedTrackedLinkRecords -SandboxPath $sandboxLiteral -TrackedLinks @($TrackedLinks))
+        [void]$script:T103CleanupSteps.Add('link.allValidated')
+
+        # 4) 删除任何对象之前先扫描整个沙箱：除已登记跟踪链接外，任何重解析点都必须在
+        #    删除跟踪链接之前停止（修复前先删链接、后扫描，会穿过未跟踪 Junction 误删外部链接）。
+        if ($null -ne $FaultHook) {
+            & $FaultHook 'beforeTreeScan' $sandboxLiteral
+        }
+        $reparsePointsBefore = @(Find-T103ReparsePointsInTree -RootDirectory $sandboxLiteral)
+        $trackedPathSet = @($trackedRecords | Where-Object { $_.exists } | ForEach-Object { [string]$_.path })
+        $unexpectedBefore = @($reparsePointsBefore | Where-Object { $trackedPathSet -notcontains [string]$_.path })
+        if ($unexpectedBefore.Count -gt 0) {
+            foreach ($item in $unexpectedBefore) {
+                [void]$script:T103CleanupUnsafePaths.Add([string]$item.path)
+            }
+            Stop-T103UnsafeCleanup -Code 'unexpectedReparsePoint' -Message ('测试沙箱中存在 {0} 个未登记重解析点，已在删除任何跟踪链接之前停止' -f $unexpectedBefore.Count) -Path $sandboxLiteral
+        }
+        [void]$script:T103CleanupSteps.Add('tree.scannedBeforeLinkDelete')
+
+        # 5) 只删除精确匹配的已登记跟踪链接对象（非递归），删除后用原生句柄复验消失。
+        foreach ($record in $trackedRecords) {
+            $linkPath = [string]$record.path
+            if (-not $record.exists) {
+                [void]$script:T103CleanupSteps.Add('link.alreadyAbsent')
+                continue
             }
             $beforeInfo = Get-T103NativePathInfo -Path $linkPath -OpenReparsePoint $true
             if (-not $beforeInfo.Exists) {
                 [void]$script:T103CleanupSteps.Add('link.alreadyAbsent')
                 continue
             }
-            if (-not $beforeInfo.IsReparsePoint) {
-                Stop-T103UnsafeCleanup -Code 'trackedLinkReplaced' -Message ('跟踪链接已不是重解析点（可能被替换为普通文件/目录），拒绝继续清理：' + $linkPath) -Path $linkPath
+            if ((-not $beforeInfo.IsReparsePoint) -or
+                ([string]$beforeInfo.FileIdHex -ne [string]$record.fileIdHex) -or
+                ([string]$beforeInfo.VolumeSerialNumber -ne [string]$record.volumeSerialNumber) -or
+                ([uint32]$beforeInfo.ReparseTag -ne [uint32]$record.reparseTag)) {
+                Stop-T103UnsafeCleanup -Code 'trackedLinkReplaced' -Message ('跟踪链接在验证后发生变化（不是已登记的对象），拒绝删除：' + $linkPath) -Path $linkPath
             }
             if ($null -ne $FaultHook) {
                 try {
@@ -1019,20 +1112,17 @@ function Invoke-T103FailClosedSandboxCleanup {
             [void]$script:T103CleanupSteps.Add('link.removed')
         }
 
-        # 3) 扫描整个沙箱，确认不存在任何未预期重解析点。
-        if ($null -ne $FaultHook) {
-            & $FaultHook 'beforeTreeScan' $sandboxLiteral
-        }
-        $reparsePoints = @(Find-T103ReparsePointsInTree -RootDirectory $sandboxLiteral)
-        if ($reparsePoints.Count -gt 0) {
-            foreach ($item in $reparsePoints) {
+        # 6) 删除跟踪链接后再次扫描整个沙箱，确认没有残余重解析点。
+        $reparsePointsAfter = @(Find-T103ReparsePointsInTree -RootDirectory $sandboxLiteral)
+        if ($reparsePointsAfter.Count -gt 0) {
+            foreach ($item in $reparsePointsAfter) {
                 [void]$script:T103CleanupUnsafePaths.Add([string]$item.path)
             }
-            Stop-T103UnsafeCleanup -Code 'unexpectedReparsePoint' -Message ('测试沙箱中仍存在 {0} 个未预期重解析点，拒绝执行递归删除' -f $reparsePoints.Count) -Path $sandboxLiteral
+            Stop-T103UnsafeCleanup -Code 'residualReparsePoint' -Message ('删除跟踪链接后测试沙箱中仍有 {0} 个残余重解析点，拒绝执行递归删除' -f $reparsePointsAfter.Count) -Path $sandboxLiteral
         }
-        [void]$script:T103CleanupSteps.Add('tree.noUnexpectedReparsePoint')
+        [void]$script:T103CleanupSteps.Add('tree.noResidualReparsePoint')
 
-        # 4) 再次复验沙箱身份（清理过程中可能出现身份变化）。
+        # 7) 再次复验沙箱身份（清理过程中可能出现身份变化）。
         try {
             $currentAfterScan = Get-T103DirectoryIdentityRecord -Path $sandboxLiteral -Label '测试沙箱'
             Compare-T103DirectoryIdentity -Expected $TrustRecord -Current $currentAfterScan
@@ -1042,23 +1132,31 @@ function Invoke-T103FailClosedSandboxCleanup {
         }
         [void]$script:T103CleanupSteps.Add('sandbox.identityReVerified')
 
-        # 5) 全部条件满足：逐条目校验的安全递归删除（绝不跟随重解析点）。
+        # 8) 全部条件满足：逐条目校验的安全递归删除（绝不跟随重解析点）。
+        #    单独记录“已开始 / 已完整结束”，异常时不得把已发生的部分删除描述为完全没有执行。
         if ($null -ne $FaultHook) {
             & $FaultHook 'beforeRecursiveDelete' $sandboxLiteral
         }
-        Remove-T103VerifiedDirectoryTree -Directory $sandboxLiteral -StopPrefix '安全清理'
+        $recursiveDeleteStarted = $true
+        [void]$script:T103CleanupSteps.Add('recursiveDelete.started')
+        Remove-T103VerifiedDirectoryTree -Directory $sandboxLiteral -StopPrefix '安全清理' -FaultHook $FaultHook
+        $recursiveDeleteCompleted = $true
+        [void]$script:T103CleanupSteps.Add('recursiveDelete.completed')
         $finalInfo = Get-T103NativePathInfo -Path $sandboxLiteral -OpenReparsePoint $true
         if ($finalInfo.Exists) {
             Stop-T103UnsafeCleanup -Code 'sandboxStillExists' -Message ('安全递归清理后测试沙箱仍然存在：' + $sandboxLiteral) -Path $sandboxLiteral
         }
         return [pscustomobject]@{
-            safe                    = $true
+            safe                     = $true
             recursiveDeletePerformed = $true
-            stopCode                = ''
-            stopReason              = ''
-            unsafePaths             = @()
-            steps                   = @($script:T103CleanupSteps)
-            sandboxPath             = $sandboxLiteral
+            recursiveDeleteStarted   = $true
+            recursiveDeleteCompleted = $true
+            recursiveDeletePartial   = $false
+            stopCode                 = ''
+            stopReason               = ''
+            unsafePaths              = @()
+            steps                    = @($script:T103CleanupSteps)
+            sandboxPath              = $sandboxLiteral
         }
     }
     catch {
@@ -1076,14 +1174,26 @@ function Invoke-T103FailClosedSandboxCleanup {
                 $text = $code
             }
         }
+        # 递归删除已开始但未完整结束：可能已经删除了部分测试沙箱内容，必须如实报告。
+        $recursiveDeletePartial = [bool]($recursiveDeleteStarted -and (-not $recursiveDeleteCompleted))
+        if ($recursiveDeletePartial) {
+            if ($code -eq 'unexpectedCleanupError') {
+                $code = 'recursiveDeleteFailed'
+            }
+            $text = ('递归删除已开始但未完整结束（测试沙箱可能已被部分删除，不是完全没有执行）：{0}；原因：{1}' -f $sandboxLiteral, $text)
+            [void]$script:T103CleanupUnsafePaths.Add($sandboxLiteral)
+        }
         return [pscustomobject]@{
-            safe                    = $false
+            safe                     = $false
             recursiveDeletePerformed = $false
-            stopCode                = $code
-            stopReason              = $text
-            unsafePaths             = @($script:T103CleanupUnsafePaths)
-            steps                   = @($script:T103CleanupSteps)
-            sandboxPath             = $sandboxLiteral
+            recursiveDeleteStarted   = [bool]$recursiveDeleteStarted
+            recursiveDeleteCompleted = [bool]$recursiveDeleteCompleted
+            recursiveDeletePartial   = $recursiveDeletePartial
+            stopCode                 = $code
+            stopReason               = $text
+            unsafePaths              = @($script:T103CleanupUnsafePaths)
+            steps                    = @($script:T103CleanupSteps)
+            sandboxPath              = $sandboxLiteral
         }
     }
 }
@@ -1131,6 +1241,9 @@ function New-T103CleanupStopResult {
     return [pscustomobject]@{
         safe                     = $false
         recursiveDeletePerformed = $false
+        recursiveDeleteStarted   = $false
+        recursiveDeleteCompleted = $false
+        recursiveDeletePartial   = $false
         stopCode                 = $StopCode
         stopReason               = $StopReason
         unsafePaths              = @($UnsafePaths)
@@ -1201,6 +1314,9 @@ function Invoke-T103SandboxCleanupEntrypoint {
         return [pscustomobject]@{
             safe                     = $true
             recursiveDeletePerformed = $false
+            recursiveDeleteStarted   = $false
+            recursiveDeleteCompleted = $false
+            recursiveDeletePartial   = $false
             stopCode                 = 'sandboxAlreadyAbsent'
             stopReason               = ''
             unsafePaths              = @()
@@ -1216,18 +1332,24 @@ function Invoke-T103SandboxCleanupEntrypoint {
         -FaultHook $FaultHook
 }
 
-# 证据文件写入边界（第五轮 F1）：写入前必须用 Windows 原生句柄确认
+# 证据文件写入边界（第五轮 F1；第六轮 P2 收紧函数级不变量）：
+# 写入前必须用 Windows 原生句柄确认
 # 1. 证据目录存在、是真实目录、真实最终路径与字面路径一致（固定身份）；
 # 2. 请求路径的每个已存在组件都是普通目录（拒绝 Junction / Symbolic Link / 悬空链接）；
 # 3. 请求路径真实最终路径严格位于证据目录内（不是字符串前缀比较）；
 # 4. 已存在的目标文件是普通文件且只有 1 个硬链接（防止覆盖数据库/业务文件的硬链接别名）。
 # 相对路径按仓库根目录解析；任何身份无法确认的情况 fail closed。
+# 第六轮 P2：实际写入（Write-T103EvidenceFile）必须提供启动时记录的证据根目录身份，
+# 缺少记录时拒绝写入；目录身份变化时拒绝写入。EvidenceRoot 参数仅供专项测试注入隔离
+# 目录使用，不是生产 CLI 参数；测试注入时必须显式传入该隔离目录的身份记录。
 function Assert-T103EvidenceWritePath {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
         [string]$EvidenceRoot = $script:T103EvidenceRoot,
-        # 可选：启动时记录的证据目录身份（卷序列号 + 文件 ID + 真实最终路径）；提供时必须一致。
-        [object]$ExpectedRootIdentity = $null
+        # 启动时记录的证据目录身份（卷序列号 + 文件 ID + 真实最终路径）；提供时必须一致。
+        [object]$ExpectedRootIdentity = $null,
+        # 实际写入时为 true：缺少身份记录必须拒绝，不能跳过身份校验。
+        [switch]$RequireRootIdentity
     )
     if ([string]::IsNullOrWhiteSpace($Path)) {
         throw '证据输出路径不能为空。'
@@ -1272,6 +1394,9 @@ function Assert-T103EvidenceWritePath {
         $currentRootIdentity = Get-T103DirectoryIdentityRecord -Path $rootPath -Label '证据目录'
         Compare-T103DirectoryIdentity -Expected $ExpectedRootIdentity -Current $currentRootIdentity
     }
+    elseif ($RequireRootIdentity) {
+        throw ("证据写入被拒绝：缺少启动时记录的证据根目录身份，无法确认写入位置未被替换：{0}。已按 fail-closed 拒绝。" -f $normalized)
+    }
 
     $chain = Get-T103NativePathChain -Path $normalized -Label '证据输出' -AllowFinalFile
     $missing = @($chain.Missing)
@@ -1297,7 +1422,8 @@ function Assert-T103EvidenceWritePath {
     return $normalized
 }
 
-# 证据文件写入（发现的最小 seam）：写之前必须先通过证据目录写入边界校验（第五轮 F1）。
+# 证据文件写入（发现的最小 seam）：写之前必须先通过证据目录写入边界校验（第五轮 F1），
+# 并且必须提供启动时记录的证据根目录身份（第六轮 P2）。缺少身份记录时拒绝写入。
 function Write-T103EvidenceFile {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -1305,10 +1431,46 @@ function Write-T103EvidenceFile {
         [string]$EvidenceRoot = $script:T103EvidenceRoot,
         [object]$ExpectedRootIdentity = $null
     )
-    $normalized = Assert-T103EvidenceWritePath -Path $Path -EvidenceRoot $EvidenceRoot -ExpectedRootIdentity $ExpectedRootIdentity
+    $normalized = Assert-T103EvidenceWritePath -Path $Path -EvidenceRoot $EvidenceRoot -ExpectedRootIdentity $ExpectedRootIdentity -RequireRootIdentity
     $evidenceDir = Split-Path -Parent $normalized
     if (-not (Test-Path -LiteralPath $evidenceDir)) {
         New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
+    }
+    Set-Content -LiteralPath $normalized -Value $Content -Encoding UTF8
+    return $normalized
+}
+
+# UAT 输出目录内文件写入（第六轮 P3）：verify-t1-03-ui.ps1 最终摘要写入前，
+# 重新执行原生路径检查并复验输出目录身份；输出目录被替换为 Junction / Symbolic Link /
+# 其他 reparse point 或目录身份变化时拒绝写入；只允许覆盖普通单硬链接文件。
+# shortcut: 检查与 Set-Content 之间仍存在并发替换窗口（DEC-029 接受，未消除）。
+function Write-T103VerifiedOutputFile {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Content,
+        [Parameter(Mandatory = $true)][string]$TestRoot,
+        [Parameter(Mandatory = $true)][string]$FormalRoot,
+        [Parameter(Mandatory = $true)][object]$ExpectedRootIdentity
+    )
+    $normalized = Get-T103UatNormalizedPath $Path
+    $directory = Split-Path -Parent $normalized
+    if ([string]::IsNullOrWhiteSpace($directory)) {
+        throw ("UAT 输出文件路径没有父目录，拒绝写入：{0}" -f $normalized)
+    }
+    # 1) 原生路径检查（重解析点 / 真实最终路径 / 卷身份 / 正式目录边界）。
+    [void](Assert-T103NativePathSafety -RequestedPath $directory -TestRoot $TestRoot -FormalRoot $FormalRoot)
+    # 2) 输出目录身份复验（卷序列号 + 文件 ID + 真实最终路径），防止目录在运行期间被替换。
+    $currentIdentity = Get-T103DirectoryIdentityRecord -Path $directory -Label 'UAT 输出目录'
+    Compare-T103DirectoryIdentity -Expected $ExpectedRootIdentity -Current $currentIdentity
+    # 3) 已存在的目标文件必须是普通单硬链接文件（不得覆盖目录/重解析点/硬链接别名）。
+    $targetInfo = Get-T103NativePathInfo -Path $normalized -OpenReparsePoint $true
+    if ($targetInfo.Exists) {
+        if ($targetInfo.IsReparsePoint -or $targetInfo.IsDirectory) {
+            throw ("UAT 输出摘要目标不是普通文件（可能是目录或重解析点），拒绝写入：{0}" -f $normalized)
+        }
+        if ([uint32]$targetInfo.NumberOfLinks -ne 1) {
+            throw ("UAT 输出摘要目标不是单一硬链接文件（可能是业务文件的硬链接别名），拒绝写入：{0}" -f $normalized)
+        }
     }
     Set-Content -LiteralPath $normalized -Value $Content -Encoding UTF8
     return $normalized

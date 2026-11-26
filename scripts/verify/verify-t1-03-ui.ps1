@@ -111,14 +111,38 @@ function Set-WindowSize([IntPtr]$Hwnd, [int]$Width, [int]$Height) {
         Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
+public struct Win32ClientRect {
+    public int Left;
+    public int Top;
+    public int Right;
+    public int Bottom;
+}
 public static class Win32Window {
     [DllImport("user32.dll", SetLastError=true)]
     public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+    [DllImport("user32.dll", SetLastError=true)]
+    public static extern bool GetClientRect(IntPtr hWnd, out Win32ClientRect lpRect);
 }
 "@
     }
     $SWP_NOZORDER = 0x0004
-    return [Win32Window]::SetWindowPos($Hwnd, [IntPtr]::Zero, 40, 40, $Width, $Height, $SWP_NOZORDER)
+    # 环境时序加固（验证脚本，非产品代码）：应用启动后 Tauri 可能随后套用初始窗口尺寸，
+    # 单次 SetWindowPos 会被覆盖（2026-11-27 实测 minWindow.sizeNear860x640 环境性抖动）。
+    # 有限重试并检查真实客户区尺寸，避免把时序抖动误报为最小窗口回归。
+    for ($attempt = 1; $attempt -le 6; $attempt++) {
+        $null = [Win32Window]::SetWindowPos($Hwnd, [IntPtr]::Zero, 40, 40, $Width, $Height, $SWP_NOZORDER)
+        Start-Sleep -Milliseconds 800
+        $rect = New-Object Win32ClientRect
+        if ([Win32Window]::GetClientRect($Hwnd, [ref]$rect)) {
+            $clientWidth = $rect.Right - $rect.Left
+            $clientHeight = $rect.Bottom - $rect.Top
+            if ($clientWidth -le ($Width + 8) -and $clientHeight -le ($Height + 8)) {
+                Write-Host ("最小窗口尺寸应用成功（第 {0} 次尝试）：client={1}x{2}" -f $attempt, $clientWidth, $clientHeight)
+                return $true
+            }
+        }
+    }
+    return $false
 }
 
 function Close-ReleaseApp([System.Diagnostics.Process]$Process) {
@@ -211,6 +235,16 @@ if ($null -ne $initialGuard) {
 }
 New-Item -ItemType Directory -Force -Path $outputFull | Out-Null
 Assert-UatOutputDirStillSafe -Directory $outputFull -Stage '创建 UAT 根目录后'
+# 第六轮 P3：记录 UAT 输出目录身份（卷序列号 + 文件 ID + 真实最终路径），
+# 最终摘要写入前再次原生复验；记录失败即 fail closed。
+$outputDirIdentity = $null
+try {
+    $outputDirIdentity = Get-T103DirectoryIdentityRecord -Path $outputFull -Label 'UAT 输出目录'
+}
+catch {
+    Write-Host ("PRECONDITION_FAILED: 无法记录 UAT 输出目录身份（fail closed）：" + $_.Exception.Message)
+    exit 2
+}
 
 $appDir = Join-Path $outputFull 'app'
 New-Item -ItemType Directory -Force -Path $appDir | Out-Null
@@ -418,9 +452,20 @@ $summary = [ordered]@{
     pass                        = (-not $script:Failed)
 }
 $summaryPath = Join-Path $outputFull 't1-03-ui-orchestration.json'
-$summary | ConvertTo-Json -Depth 8 | Set-Content -Path $summaryPath -Encoding UTF8
+$summaryJson = $summary | ConvertTo-Json -Depth 8
+# 第六轮 P3：最终摘要写入前重新执行原生路径检查并复验输出目录身份；
+# 输出目录被替换为 Junction / Symbolic Link 或目录身份变化时拒绝写入。
+# TOCTOU 残余风险仍按 DEC-029 接受，此处不宣称已消除。
+try {
+    [void](Write-T103VerifiedOutputFile -Path $summaryPath -Content $summaryJson -TestRoot $script:T103UatTestRoot -FormalRoot $script:T103UatFormalRoot -ExpectedRootIdentity $outputDirIdentity)
+}
+catch {
+    Write-Host ("FAIL summary.writeGuard — 最终摘要写入被拒绝（输出目录身份无法确认）：" + $_.Exception.Message)
+    exit 1
+}
 Write-Host "T1-03 证据摘要：$summaryPath"
-Write-Host ($summary | ConvertTo-Json -Depth 8)
+Write-Host 'PASS summary.writeGuard — 最终摘要写入前原生路径检查与输出目录身份复验通过（TOCTOU 残余风险仍按 DEC-029 接受，未消除）'
+Write-Host $summaryJson
 
 if ($script:Failed) { exit 1 }
 Write-Host 'T1_03_RELEASE_UI_E2E=PASS'

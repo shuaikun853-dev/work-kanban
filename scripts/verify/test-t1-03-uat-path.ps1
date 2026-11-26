@@ -226,11 +226,29 @@ $script:Round5ExpectedNewCheckNames = @(
     'f2.canariesUnchangedAfterFailureCases'
 )
 
+# 第六轮定向补正必须存在的检查名称（F2 外部跟踪链接 / P4 递归删除部分失败语义 /
+# F1 证据写入身份必需 / P3 最终摘要写入守卫 / B5 脱敏占位统一）。
+$script:Round6ExpectedNewCheckNames = @(
+    'f2.trackedLinkThroughJunctionRejectedBeforeDelete',
+    'f2.trackedLinkThroughJunctionExternalTargetIntact',
+    'f2.trackedLinkThroughJunctionSandboxPreserved',
+    'f2.recursiveDeletePartialFailureReported',
+    'f2.recursiveDeletePartialFailureRealDeletionsObserved',
+    'f1.evidenceWriteMissingRootIdentityRejected',
+    'f1.evidenceDefaultRootWriteMissingRootIdentityRejected',
+    'f1.evidenceWriteWithPinnedRootIdentitySucceeds',
+    'f3.outputSummaryGuardNormalWriteSucceeds',
+    'f3.outputSummaryGuardRejectsJunctionSwap',
+    'f3.outputSummaryGuardRejectsIdentityChange',
+    'evidence.uatRootPlaceholderUnified'
+)
+
 $script:DefaultEvidencePath = Join-Path $repoRoot 'docs/testing/reports/T1-03-assets/evidence/t1-03-uat-path-evidence.json'
 $script:F1Summary = [ordered]@{}
 $script:F2Summary = [ordered]@{}
 $script:Round5F1Summary = [ordered]@{}
 $script:Round5F2Summary = [ordered]@{}
+$script:Round6Summary = [ordered]@{}
 $script:SandboxTrustRecord = $null
 $script:CleanupResult = $null
 
@@ -271,6 +289,9 @@ function Format-EvidencePath([string]$Value) {
     }
     # 其余盘符绝对路径统一占位（保留相对路径与 <uat-root> 等占位符）。
     $text = [regex]::Replace($text, '(?<![A-Za-z0-9_<>])[A-Za-z]:\\', '<drive-root>\')
+    # B5：固定测试根路径统一使用 <uat-root> 占位；虚构的其它盘符同名测试目录
+    # （例如拒绝用例里的 C:\WorkManager-test-data\...）同样归一为 <uat-root>。
+    $text = [regex]::Replace($text, '(?i)<drive-root>\\WorkManager-test-data', '<uat-root>')
     return $text
 }
 
@@ -514,12 +535,14 @@ function New-F2EntryCaseRoot([string]$Name) {
     return $caseRoot
 }
 
-# 第五轮 F1：以真实文件系统对象验证证据写入被拒绝，且拒绝时不产生写入。
+# 第五轮 F1 / 第六轮 P2：以真实文件系统对象验证证据写入被拒绝，且拒绝时不产生写入。
+# 第六轮起写入必须提供证据根目录身份；本辅助函数在注入证据目录时即时记录其身份。
 function Test-EvidenceWriteRejected([string]$Name, [string]$Path, [string]$EvidenceRoot, [string]$ExpectedKeyword, [string]$SideEffectDetail = '') {
     $rejected = $false
     $message = ''
+    $rootIdentity = Get-T103DirectoryIdentityRecord -Path $EvidenceRoot -Label '测试注入证据目录'
     try {
-        [void](Write-T103EvidenceFile -Path $Path -Content '{"round5":"must-not-be-written"}' -EvidenceRoot $EvidenceRoot)
+        [void](Write-T103EvidenceFile -Path $Path -Content '{"round5":"must-not-be-written"}' -EvidenceRoot $EvidenceRoot -ExpectedRootIdentity $rootIdentity)
     }
     catch {
         $rejected = $true
@@ -661,7 +684,9 @@ $junctionCDriveLink = Join-Path $sandbox 'junction-c-drive-link'
 New-TestJunction $junctionCDriveLink 'C:\Windows'
 
 $syntheticRootJunction = Join-Path $synthRoot 'root-junction'
-New-TestJunction $syntheticRootJunction $syntheticRootTarget
+# 第六轮 F2：跟踪链接只允许沙箱直接子项；该 Junction 仅用于合成测试根目录场景，
+# 不登记为跟踪链接，并在用例结束后显式删除链接本身。
+New-UntrackedTestJunction $syntheticRootJunction $syntheticRootTarget
 
 # 失败无副作用验证目标：canary 文件 + 既有数据库内容 + 不能新增 EXE/数据库。
 $sideEffectTarget = Join-Path $sandbox 'side-effect-target'
@@ -757,6 +782,7 @@ try {
     # 3.4 专用测试根目录路径上某一级目录为 Junction：拒绝。
     $syntheticSubRootViaJunction = Join-Path $syntheticRootJunction 'sub-root'
     Test-UatPathRejectedCore -Name 'native.testRootPathContainsJunctionRejected' -RequestedPath (Join-Path $syntheticSubRootViaJunction 'out') -TestRoot $syntheticSubRootViaJunction -FormalRoot (Join-Path $synthRoot 'formal-unused') -ExpectedKeyword '重解析点'
+    Remove-UntrackedTestLink $syntheticRootJunction
 
     # 3.5 输出目录路径中间组件为 Junction：拒绝。
     Test-UatPathRejected -Name 'native.middleComponentJunctionRejected' -RequestedPath (Join-Path $middleJunction 'child') -ExpectedKeyword '重解析点'
@@ -945,7 +971,7 @@ try {
     Remove-TestTreeSafely $f1Root
 
     $script:F1Summary = [ordered]@{
-        trustAnchorPath                = [string]$f1TrustRecord.path
+        trustAnchorPath                = (Format-EvidencePath ([string]$f1TrustRecord.path))
         trustAnchorComponents          = [int]$f1TrustRecord.existingComponentCount
         rootJunctionChildExitCode      = $f1Child.ExitCode
         rootJunctionCanaryUnchanged    = [bool](($f1CanaryDiffRemoved.Count -eq 0) -and ($f1CanaryDiffAdded.Count -eq 0) -and ($f1CanaryDiffChanged.Count -eq 0))
@@ -1079,6 +1105,9 @@ try {
     Remove-UntrackedTestLink $f2Reappear.Link
     Remove-TestTreeSafely $f2Reappear.Sandbox
     Remove-TestTreeSafely $f2Reappear.Root
+    # 第六轮 F2：未跟踪重解析点用例在删除任何跟踪链接之前停止，跟踪链接仍在沙箱内，
+    # 必须先显式删除它，测试自清理才能继续（否则 Remove-TestTreeSafely 会 fail closed）。
+    Remove-UntrackedTestLink $f2Untracked.Link
     Remove-UntrackedTestLink $f2UntrackedLink
     Remove-TestTreeSafely $f2Untracked.Sandbox
     Remove-TestTreeSafely $f2UntrackedTarget
@@ -1112,12 +1141,14 @@ try {
     # F1 注入用证据目录（真实普通目录；长名称用于 8.3 短名身份用例）。
     $r5EvidenceRoot = Join-Path $r5Root 'evidence-root-long-name'
     New-Item -ItemType Directory -Force -Path $r5EvidenceRoot | Out-Null
+    # 第六轮 P2：证据写入必须提供启动时记录的证据根目录身份；注入目录在首次写入前记录。
+    $r5EvidenceRootIdentity = Get-T103DirectoryIdentityRecord -Path $r5EvidenceRoot -Label '第五轮注入证据目录'
     $r5OkContent = ''
 
     # F1-1 正常写入：必须真实写入注入证据目录之内。
     $r5OkPath = Join-Path $r5EvidenceRoot 'sub\ok-evidence.json'
     try {
-        $r5Written = Write-T103EvidenceFile -Path $r5OkPath -Content '{"round5":"ok"}' -EvidenceRoot $r5EvidenceRoot
+        $r5Written = Write-T103EvidenceFile -Path $r5OkPath -Content '{"round5":"ok"}' -EvidenceRoot $r5EvidenceRoot -ExpectedRootIdentity $r5EvidenceRootIdentity
         $r5OkContent = if (Test-Path -LiteralPath $r5OkPath -PathType Leaf) { (Get-Content -LiteralPath $r5OkPath -Raw -Encoding UTF8).Trim() } else { '' }
         $r5Ok = ($r5OkContent -eq '{"round5":"ok"}') -and [bool](Test-T103FinalPathInside $r5Written $script:T103UatTestRoot)
         Add-UatPathCheck -Name 'f1.evidenceWriteInsideRootSucceeds' -Pass $r5Ok -Detail ('written=' + (Format-EvidencePath $r5Written) + '; contentMatched=' + [bool]($r5OkContent -eq '{"round5":"ok"}'))
@@ -1206,7 +1237,7 @@ try {
     # F1-11 默认证据目录必须能通过同一守卫（只校验，不写入）。
     $r5DefaultOk = $false
     try {
-        $r5DefaultCandidate = Assert-T103EvidenceWritePath -Path (Join-Path $script:T103EvidenceRoot 'round5\t1-03-uat-path-evidence.json')
+        $r5DefaultCandidate = Assert-T103EvidenceWritePath -Path (Join-Path $script:T103EvidenceRoot 'round5\t1-03-uat-path-evidence.json') -ExpectedRootIdentity $script:EvidenceRootIdentity -RequireRootIdentity
         $r5DefaultOk = [bool](Test-T103FinalPathInside $r5DefaultCandidate $script:T103EvidenceRoot)
     }
     catch {
@@ -1382,6 +1413,233 @@ try {
         canariesUnchanged           = [bool]$r5F2CanariesOk
     }
 
+    # -----------------------------------------------------------------------
+    # 8c. 第六轮定向补正：F2 跟踪链接穿过未跟踪 Junction 的删除问题
+    #
+    # 审计复现：sandbox\evil 是指向沙箱外 external 的 Junction，
+    # external\victim-link 是另一个 Junction；把 sandbox\evil\victim-link 传入
+    # TrackedLinks。修复前实现先删除跟踪链接、后扫描重解析点，会穿过 evil Junction
+    # 删除 external\victim-link。修复后必须在任何删除之前失败，且外部目标、Canary、
+    # 沙箱都保持不变。
+    # -----------------------------------------------------------------------
+    $r6Root = Join-Path $sandbox 'round6'
+    New-Item -ItemType Directory -Force -Path $r6Root | Out-Null
+    [void]$script:Targets.Add($r6Root)
+
+    # F2-10 外部跟踪链接：sandbox\evil(Junction)->external；evil\victim-link(Junction)->victim-target。
+    $r6F2Case = Join-Path $r6Root 'f2-external-tracked'
+    New-Item -ItemType Directory -Force -Path $r6F2Case | Out-Null
+    $r6F2External = Join-Path $r6F2Case 'external'
+    New-Item -ItemType Directory -Force -Path $r6F2External | Out-Null
+    $r6F2VictimTarget = Join-Path $r6F2External 'victim-target'
+    New-Item -ItemType Directory -Force -Path $r6F2VictimTarget | Out-Null
+    $r6F2VictimCanary = Join-Path $r6F2VictimTarget 'victim-canary.txt'
+    Set-Content -LiteralPath $r6F2VictimCanary -Value 'ROUND6-F2-VICTIM-CANARY' -Encoding UTF8
+    $r6F2VictimCanaryHashBefore = (Get-FileHash -LiteralPath $r6F2VictimCanary -Algorithm SHA256).Hash
+    $r6F2Sandbox = Join-Path $r6F2Case 'sandbox'
+    New-Item -ItemType Directory -Force -Path $r6F2Sandbox | Out-Null
+    Set-Content -LiteralPath (Join-Path $r6F2Sandbox 'sentinel.txt') -Value 'r6-f2-sentinel' -Encoding UTF8
+    $r6F2Evil = Join-Path $r6F2Sandbox 'evil'
+    New-UntrackedTestJunction $r6F2Evil $r6F2External
+    $r6F2VictimLink = Join-Path $r6F2Evil 'victim-link'
+    New-UntrackedTestJunction $r6F2VictimLink $r6F2VictimTarget
+    $r6F2Trust = Get-T103DirectoryIdentityRecord -Path $r6F2Sandbox -Label '第六轮 F2 外部跟踪链接沙箱'
+    $r6F2Result = Invoke-T103FailClosedSandboxCleanup -SandboxPath $r6F2Sandbox -TestRoot $script:T103UatTestRoot -TrustRecord $r6F2Trust -TrackedLinks @($r6F2VictimLink)
+    $r6F2VictimLinkStill = Test-IsReparseLink $r6F2VictimLink
+    $r6F2VictimCanaryAfter = Get-CanaryContent $r6F2VictimCanary
+    $r6F2VictimCanaryHashAfter = if (Test-Path -LiteralPath $r6F2VictimCanary -PathType Leaf) { (Get-FileHash -LiteralPath $r6F2VictimCanary -Algorithm SHA256).Hash } else { '' }
+    $r6F2SandboxPreserved = Test-Path -LiteralPath $r6F2Sandbox
+    $r6F2EvilStill = Test-IsReparseLink $r6F2Evil
+    $r6F2Sentinel = Get-CanaryContent (Join-Path $r6F2Sandbox 'sentinel.txt')
+    $r6F2StartedStopped = ($r6F2Result.recursiveDeleteStarted -eq $false) -and ($r6F2Result.recursiveDeletePerformed -eq $false)
+    $r6F2RejectedBeforeDelete = ($r6F2Result.safe -eq $false) -and ($r6F2Result.stopCode -eq 'trackedLinkNotDirectChild') -and $r6F2StartedStopped
+    Add-UatPathCheck -Name 'f2.trackedLinkThroughJunctionRejectedBeforeDelete' -Pass $r6F2RejectedBeforeDelete -Detail ('safe=' + [string]$r6F2Result.safe + '; stopCode=' + [string]$r6F2Result.stopCode + '; recursiveDeleteStarted=' + [string]$r6F2Result.recursiveDeleteStarted + '; recursiveDeletePerformed=' + [string]$r6F2Result.recursiveDeletePerformed + '; victimLinkStillPresent=' + [bool]$r6F2VictimLinkStill)
+    $r6F2ExternalIntact = $r6F2VictimLinkStill -and ($r6F2VictimCanaryAfter -eq 'ROUND6-F2-VICTIM-CANARY') -and ($r6F2VictimCanaryHashAfter -eq $r6F2VictimCanaryHashBefore)
+    Add-UatPathCheck -Name 'f2.trackedLinkThroughJunctionExternalTargetIntact' -Pass $r6F2ExternalIntact -Detail ('victimLinkStillPresent=' + [bool]$r6F2VictimLinkStill + '; canaryContent=' + $r6F2VictimCanaryAfter + '; canarySha256Unchanged=' + [bool]($r6F2VictimCanaryHashAfter -eq $r6F2VictimCanaryHashBefore))
+    $r6F2SandboxIntact = $r6F2SandboxPreserved -and $r6F2EvilStill -and ($r6F2Sentinel -eq 'r6-f2-sentinel')
+    Add-UatPathCheck -Name 'f2.trackedLinkThroughJunctionSandboxPreserved' -Pass $r6F2SandboxIntact -Detail ('sandboxPreserved=' + [bool]$r6F2SandboxPreserved + '; evilJunctionPresent=' + [bool]$r6F2EvilStill + '; sentinelPreserved=' + [bool]($r6F2Sentinel -eq 'r6-f2-sentinel'))
+    # 用例自清理：先删真实链接本身，再逐条目安全删除普通目录。
+    Remove-UntrackedTestLink $r6F2VictimLink
+    Remove-UntrackedTestLink $r6F2Evil
+    Remove-TestTreeSafely $r6F2External
+    Remove-TestTreeSafely $r6F2Sandbox
+    Remove-TestTreeSafely $r6F2Case
+
+    # P4 递归删除部分失败：受控故障注入在真实条目删除步骤（第 2 个条目）抛出异常，
+    # 此时第 1 个条目已被真实删除；结果必须区分“已开始但未完整结束”，
+    # 不得把已发生的部分删除描述为完全没有执行。
+    $r6PartialRoot = Join-Path $r6Root 'f2-partial'
+    New-Item -ItemType Directory -Force -Path $r6PartialRoot | Out-Null
+    $r6PartialSandbox = Join-Path $r6PartialRoot 'sandbox'
+    New-Item -ItemType Directory -Force -Path $r6PartialSandbox | Out-Null
+    foreach ($entryName in @('entry-a.txt', 'entry-b.txt', 'entry-c.txt')) {
+        Set-Content -LiteralPath (Join-Path $r6PartialSandbox $entryName) -Value ('r6-' + $entryName) -Encoding UTF8
+    }
+    $r6PartialEntryCountBefore = @(Get-ChildItem -LiteralPath $r6PartialSandbox -Force).Count
+    $r6PartialTrust = Get-T103DirectoryIdentityRecord -Path $r6PartialSandbox -Label '第六轮 P4 部分删除沙箱'
+    $script:R6PartialDeleteEntryCount = 0
+    $r6PartialHook = {
+        param($stage, $path)
+        if ($stage -eq 'beforeEntryDelete') {
+            $script:R6PartialDeleteEntryCount++
+            if ($script:R6PartialDeleteEntryCount -eq 2) {
+                throw '故障注入：模拟递归删除第 2 个条目时操作系统失败（受控注入，不改动真实 ACL）。'
+            }
+        }
+    }
+    $r6PartialResult = Invoke-T103FailClosedSandboxCleanup -SandboxPath $r6PartialSandbox -TestRoot $script:T103UatTestRoot -TrustRecord $r6PartialTrust -TrackedLinks @() -FaultHook $r6PartialHook
+    $r6PartialSandboxExists = Test-Path -LiteralPath $r6PartialSandbox
+    $r6PartialEntriesLeft = if ($r6PartialSandboxExists) { @(Get-ChildItem -LiteralPath $r6PartialSandbox -Force).Count } else { 0 }
+    $r6PartialDeletedCount = $r6PartialEntryCountBefore - $r6PartialEntriesLeft
+    $r6PartialSemanticsOk = ($r6PartialResult.safe -eq $false) -and
+        ($r6PartialResult.stopCode -eq 'recursiveDeleteFailed') -and
+        ($r6PartialResult.recursiveDeleteStarted -eq $true) -and
+        ($r6PartialResult.recursiveDeleteCompleted -eq $false) -and
+        ($r6PartialResult.recursiveDeletePerformed -eq $false) -and
+        ($r6PartialResult.recursiveDeletePartial -eq $true) -and
+        ([string]$r6PartialResult.stopReason).Contains('部分删除')
+    Add-UatPathCheck -Name 'f2.recursiveDeletePartialFailureReported' -Pass $r6PartialSemanticsOk -Detail ('safe=' + [string]$r6PartialResult.safe + '; stopCode=' + [string]$r6PartialResult.stopCode + '; started=' + [string]$r6PartialResult.recursiveDeleteStarted + '; completed=' + [string]$r6PartialResult.recursiveDeleteCompleted + '; performed=' + [string]$r6PartialResult.recursiveDeletePerformed + '; partial=' + [string]$r6PartialResult.recursiveDeletePartial + '; reason=' + (Format-EvidencePath ([string]$r6PartialResult.stopReason)))
+    $r6PartialRealDeletionOk = ($r6PartialDeletedCount -ge 1) -and ($r6PartialEntriesLeft -ge 1) -and $r6PartialSandboxExists
+    Add-UatPathCheck -Name 'f2.recursiveDeletePartialFailureRealDeletionsObserved' -Pass $r6PartialRealDeletionOk -Detail ('entriesBefore=' + $r6PartialEntryCountBefore + '; entriesLeft=' + $r6PartialEntriesLeft + '; deleted=' + $r6PartialDeletedCount + '; sandboxStillExists=' + [bool]$r6PartialSandboxExists)
+    if ($r6PartialSandboxExists) { Remove-TestTreeSafely $r6PartialSandbox }
+    Remove-TestTreeSafely $r6PartialRoot
+
+    # P2 / F1：证据实际写入必须提供启动时记录的证据根目录身份；缺少身份记录时拒绝写入。
+    # （独立测试仍可通过内部函数参数注入隔离 EvidenceRoot，但必须显式传入该目录身份；
+    #   该注入能力不是生产 CLI 参数。）
+    $r6EvidenceRoot = Join-Path $r6Root 'evidence-root'
+    New-Item -ItemType Directory -Force -Path $r6EvidenceRoot | Out-Null
+    $r6EvidenceRootIdentity = Get-T103DirectoryIdentityRecord -Path $r6EvidenceRoot -Label '第六轮注入证据目录'
+    $r6NoIdentityPath = Join-Path $r6EvidenceRoot 'no-identity-must-not-be-written.json'
+    $r6NoIdentityRejected = $false
+    $r6NoIdentityMessage = ''
+    try {
+        [void](Write-T103EvidenceFile -Path $r6NoIdentityPath -Content '{"round6":"must-not-be-written"}' -EvidenceRoot $r6EvidenceRoot)
+    }
+    catch {
+        $r6NoIdentityRejected = $true
+        $r6NoIdentityMessage = $_.Exception.Message
+    }
+    $r6NoIdentityFileCreated = Test-Path -LiteralPath $r6NoIdentityPath
+    $r6NoIdentityOk = $r6NoIdentityRejected -and $r6NoIdentityMessage.Contains('身份') -and (-not $r6NoIdentityFileCreated)
+    Add-UatPathCheck -Name 'f1.evidenceWriteMissingRootIdentityRejected' -Pass $r6NoIdentityOk -Detail ('rejected=' + [bool]$r6NoIdentityRejected + '; message=' + (Format-EvidencePath $r6NoIdentityMessage) + '; fileCreated=' + [bool]$r6NoIdentityFileCreated)
+    if ($r6NoIdentityFileCreated) { Remove-Item -LiteralPath $r6NoIdentityPath -Force -ErrorAction SilentlyContinue }
+
+    # 默认（仓库）证据根：同样不得在缺少启动时身份记录时写入。
+    $r6DefaultNoIdentityPath = Join-Path $script:T103EvidenceRoot 'round6-remediation\missing-identity-must-not-exist.json'
+    if (Test-Path -LiteralPath $r6DefaultNoIdentityPath) { Remove-Item -LiteralPath $r6DefaultNoIdentityPath -Force -ErrorAction SilentlyContinue }
+    $r6DefaultNoIdentityRejected = $false
+    $r6DefaultNoIdentityMessage = ''
+    try {
+        [void](Write-T103EvidenceFile -Path $r6DefaultNoIdentityPath -Content '{"round6":"must-not-be-written"}')
+    }
+    catch {
+        $r6DefaultNoIdentityRejected = $true
+        $r6DefaultNoIdentityMessage = $_.Exception.Message
+    }
+    $r6DefaultNoIdentityFileCreated = Test-Path -LiteralPath $r6DefaultNoIdentityPath
+    $r6DefaultNoIdentityOk = $r6DefaultNoIdentityRejected -and $r6DefaultNoIdentityMessage.Contains('身份') -and (-not $r6DefaultNoIdentityFileCreated)
+    Add-UatPathCheck -Name 'f1.evidenceDefaultRootWriteMissingRootIdentityRejected' -Pass $r6DefaultNoIdentityOk -Detail ('rejected=' + [bool]$r6DefaultNoIdentityRejected + '; message=' + (Format-EvidencePath $r6DefaultNoIdentityMessage) + '; fileCreated=' + [bool]$r6DefaultNoIdentityFileCreated)
+    if ($r6DefaultNoIdentityFileCreated) { Remove-Item -LiteralPath $r6DefaultNoIdentityPath -Force -ErrorAction SilentlyContinue }
+
+    # 注入目录身份仍可用于正常写入（能力保留；必须显式提供身份）。
+    $r6WithIdentityPath = Join-Path $r6EvidenceRoot 'with-identity.json'
+    $r6WithIdentityOk = $false
+    try {
+        [void](Write-T103EvidenceFile -Path $r6WithIdentityPath -Content '{"round6":"with-identity"}' -EvidenceRoot $r6EvidenceRoot -ExpectedRootIdentity $r6EvidenceRootIdentity)
+        $r6WithIdentityOk = (Test-Path -LiteralPath $r6WithIdentityPath -PathType Leaf) -and ((Get-Content -LiteralPath $r6WithIdentityPath -Raw -Encoding UTF8).Trim() -eq '{"round6":"with-identity"}')
+    }
+    catch {
+        $r6WithIdentityOk = $false
+    }
+    Add-UatPathCheck -Name 'f1.evidenceWriteWithPinnedRootIdentitySucceeds' -Pass $r6WithIdentityOk -Detail ('writtenWithIdentity=' + [bool]$r6WithIdentityOk)
+    Remove-TestTreeSafely $r6EvidenceRoot
+
+    # P3：verify-t1-03-ui.ps1 最终摘要写入安全守卫（第六轮）。
+    # 正常写入通过“原生路径检查 + 输出目录身份复验”；输出目录被替换为 Junction 或
+    # 目录身份变化时拒绝写入，外部 Canary 不变。TOCTOU 残余风险仍按 DEC-029 接受。
+    $r6UiRoot = Join-Path $r6Root 'p3-summary'
+    New-Item -ItemType Directory -Force -Path $r6UiRoot | Out-Null
+    $r6UiOut = Join-Path $r6UiRoot 'output'
+    New-Item -ItemType Directory -Force -Path $r6UiOut | Out-Null
+    $r6UiOutRecord = Get-T103DirectoryIdentityRecord -Path $r6UiOut -Label '第六轮 UI 输出目录'
+    $r6UiSummaryName = 't1-03-ui-orchestration.json'
+    $r6UiNormalOk = $false
+    $r6UiNormalMessage = ''
+    try {
+        [void](Write-T103VerifiedOutputFile -Path (Join-Path $r6UiOut $r6UiSummaryName) -Content '{"round6":"ui-orchestration"}' -TestRoot $script:T103UatTestRoot -FormalRoot $script:T103UatFormalRoot -ExpectedRootIdentity $r6UiOutRecord)
+        $r6UiNormalContent = if (Test-Path -LiteralPath (Join-Path $r6UiOut $r6UiSummaryName) -PathType Leaf) { (Get-Content -LiteralPath (Join-Path $r6UiOut $r6UiSummaryName) -Raw -Encoding UTF8).Trim() } else { '' }
+        $r6UiNormalOk = ($r6UiNormalContent -eq '{"round6":"ui-orchestration"}')
+    }
+    catch {
+        $r6UiNormalMessage = $_.Exception.Message
+        $r6UiNormalOk = $false
+    }
+    Add-UatPathCheck -Name 'f3.outputSummaryGuardNormalWriteSucceeds' -Pass $r6UiNormalOk -Detail ('written=' + [bool]$r6UiNormalOk + '; message=' + (Format-EvidencePath $r6UiNormalMessage))
+
+    # P3-1 输出目录被替换为指向外部目录的 Junction：必须拒绝写入，外部 Canary 不变。
+    $r6UiOutMoved = $r6UiOut + '-moved'
+    Rename-Item -LiteralPath $r6UiOut -NewName (Split-Path $r6UiOutMoved -Leaf)
+    $r6UiExternal = Join-Path $r6UiRoot 'external'
+    New-Item -ItemType Directory -Force -Path $r6UiExternal | Out-Null
+    $r6UiExternalCanary = Join-Path $r6UiExternal 'external-canary.txt'
+    Set-Content -LiteralPath $r6UiExternalCanary -Value 'ROUND6-P3-EXTERNAL-CANARY' -Encoding UTF8
+    $r6UiExternalCanaryHashBefore = (Get-FileHash -LiteralPath $r6UiExternalCanary -Algorithm SHA256).Hash
+    New-UntrackedTestJunction $r6UiOut $r6UiExternal
+    $r6UiJunctionRejected = $false
+    $r6UiJunctionMessage = ''
+    try {
+        [void](Write-T103VerifiedOutputFile -Path (Join-Path $r6UiOut $r6UiSummaryName) -Content '{"round6":"must-not-be-written"}' -TestRoot $script:T103UatTestRoot -FormalRoot $script:T103UatFormalRoot -ExpectedRootIdentity $r6UiOutRecord)
+    }
+    catch {
+        $r6UiJunctionRejected = $true
+        $r6UiJunctionMessage = $_.Exception.Message
+    }
+    $r6UiJunctionInsideExternal = Test-Path -LiteralPath (Join-Path $r6UiExternal $r6UiSummaryName)
+    $r6UiExternalCanaryHashAfter = if (Test-Path -LiteralPath $r6UiExternalCanary -PathType Leaf) { (Get-FileHash -LiteralPath $r6UiExternalCanary -Algorithm SHA256).Hash } else { '' }
+    $r6UiJunctionKeywordOk = $r6UiJunctionMessage.Contains('身份') -or $r6UiJunctionMessage.Contains('重解析点')
+    $r6UiJunctionOk = $r6UiJunctionRejected -and $r6UiJunctionKeywordOk -and (-not $r6UiJunctionInsideExternal) -and ($r6UiExternalCanaryHashAfter -eq $r6UiExternalCanaryHashBefore)
+    Add-UatPathCheck -Name 'f3.outputSummaryGuardRejectsJunctionSwap' -Pass $r6UiJunctionOk -Detail ('rejected=' + [bool]$r6UiJunctionRejected + '; keywordOk=' + [bool]$r6UiJunctionKeywordOk + '; fileWrittenIntoExternal=' + [bool]$r6UiJunctionInsideExternal + '; externalCanaryUnchanged=' + [bool]($r6UiExternalCanaryHashAfter -eq $r6UiExternalCanaryHashBefore) + '; message=' + (Format-EvidencePath $r6UiJunctionMessage))
+    Remove-UntrackedTestLink $r6UiOut
+    Remove-TestTreeSafely $r6UiOutMoved
+    Remove-TestTreeSafely $r6UiExternal
+
+    # P3-2 输出目录被 rename + 重建（真实 File ID 变化）：身份复验必须拒绝写入。
+    $r6UiReplaceDir = Join-Path $r6UiRoot 'replace-output'
+    New-Item -ItemType Directory -Force -Path $r6UiReplaceDir | Out-Null
+    $r6UiReplaceRecord = Get-T103DirectoryIdentityRecord -Path $r6UiReplaceDir -Label '第六轮 UI 输出目录（替换前）'
+    Rename-Item -LiteralPath $r6UiReplaceDir -NewName 'replace-output-moved'
+    New-Item -ItemType Directory -Force -Path $r6UiReplaceDir | Out-Null
+    $r6UiReplaceRejected = $false
+    $r6UiReplaceMessage = ''
+    try {
+        [void](Write-T103VerifiedOutputFile -Path (Join-Path $r6UiReplaceDir $r6UiSummaryName) -Content '{"round6":"must-not-be-written"}' -TestRoot $script:T103UatTestRoot -FormalRoot $script:T103UatFormalRoot -ExpectedRootIdentity $r6UiReplaceRecord)
+    }
+    catch {
+        $r6UiReplaceRejected = $true
+        $r6UiReplaceMessage = $_.Exception.Message
+    }
+    $r6UiReplaceFileWritten = Test-Path -LiteralPath (Join-Path $r6UiReplaceDir $r6UiSummaryName)
+    $r6UiReplaceOk = $r6UiReplaceRejected -and $r6UiReplaceMessage.Contains('身份') -and (-not $r6UiReplaceFileWritten)
+    Add-UatPathCheck -Name 'f3.outputSummaryGuardRejectsIdentityChange' -Pass $r6UiReplaceOk -Detail ('rejected=' + [bool]$r6UiReplaceRejected + '; keywordOk=' + [bool]$r6UiReplaceMessage.Contains('身份') + '; fileWritten=' + [bool]$r6UiReplaceFileWritten + '; message=' + (Format-EvidencePath $r6UiReplaceMessage))
+    Remove-TestTreeSafely $r6UiReplaceDir
+    Remove-TestTreeSafely (Join-Path $r6UiRoot 'replace-output-moved')
+    Remove-TestTreeSafely $r6UiRoot
+
+    $script:Round6Summary = [ordered]@{
+        f2TrackedLinkThroughJunctionRejected = [bool]$r6F2RejectedBeforeDelete
+        f2TrackedLinkThroughJunctionTargetIntact = [bool]$r6F2ExternalIntact
+        f2TrackedLinkThroughJunctionSandboxPreserved = [bool]$r6F2SandboxIntact
+        f2RecursiveDeletePartialFailureReported = [bool]$r6PartialSemanticsOk
+        f2RecursiveDeletePartialRealDeletions = [bool]$r6PartialRealDeletionOk
+        f1EvidenceWriteMissingRootIdentityRejected = [bool]$r6NoIdentityOk
+        f1EvidenceDefaultRootWriteMissingRootIdentityRejected = [bool]$r6DefaultNoIdentityOk
+        f1EvidenceWriteWithPinnedRootIdentitySucceeds = [bool]$r6WithIdentityOk
+        f3UiSummaryNormalWriteSucceeds = [bool]$r6UiNormalOk
+        f3UiSummaryJunctionSwapRejected = [bool]$r6UiJunctionOk
+        f3UiSummaryIdentityChangeRejected = [bool]$r6UiReplaceOk
+    }
+
     $script:F2Summary = $f2CaseSummary
 }
 finally {
@@ -1442,11 +1700,18 @@ if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) { $leakPatterns += [reg
 $leakPatterns += [regex]::Escape($repoRoot)
 $leakPatterns += 'C:\\Users\\'
 $leakPatterns += 'T1-03-assets\\logs'
+# B5：固定测试根路径必须统一为 <uat-root> 占位；机器标识扫描口径不放宽。
+$leakPatterns += ('(?i)' + [regex]::Escape($script:T103UatTestRoot))
+$leakPatterns += '(?i)WorkManager-test-data'
 $leakFound = $false
 foreach ($pattern in $leakPatterns) {
     if ($sanitizedProbe -match $pattern) { $leakFound = $true; break }
 }
 Add-UatPathCheck -Name 'evidence.machineIdentifiersRedacted' -Pass (-not $leakFound) -Detail ('sensitivePatternsFound=' + [bool]$leakFound + '; patternsChecked=' + $leakPatterns.Count)
+
+# B5：机器可读证据中的固定测试根路径必须全部使用 <uat-root> 占位（独立检查，防止扫描规则被稀释）。
+$uatRootPlaceholderLeak = $sanitizedProbe.Contains('WorkManager-test-data')
+Add-UatPathCheck -Name 'evidence.uatRootPlaceholderUnified' -Pass (-not $uatRootPlaceholderLeak) -Detail ('rawTestRootNameFound=' + [bool]$uatRootPlaceholderLeak + '; placeholder=<uat-root>')
 
 $checkNames = @($script:Checks | ForEach-Object { $_.name })
 # evidence.passState 是本段最后添加的自引用检查，比较时排除；其余第三轮 59 项必须全部存在。
@@ -1461,6 +1726,11 @@ $missingRound5 = @($script:Round5ExpectedNewCheckNames | Where-Object { $round5N
 $round5Skipped = @($script:Skipped | Where-Object { $script:Round5ExpectedNewCheckNames -contains $_.name })
 Add-UatPathCheck -Name 'evidence.round5NewChecksPresent' -Pass ($missingRound5.Count -eq 0) -Detail ('round5Expected=' + @($script:Round5ExpectedNewCheckNames).Count + '; missing=' + $missingRound5.Count + '; skippedButPresent=' + $round5Skipped.Count + '; missingNames=' + ($missingRound5 -join ','))
 
+# 第六轮新增检查必须全部存在（含 B5 脱敏占位检查）。
+$round6NamesPresent = @($script:Checks | ForEach-Object { $_.name }) + @($script:Skipped | ForEach-Object { $_.name })
+$missingRound6 = @($script:Round6ExpectedNewCheckNames | Where-Object { $round6NamesPresent -notcontains $_ })
+Add-UatPathCheck -Name 'evidence.round6NewChecksPresent' -Pass ($missingRound6.Count -eq 0) -Detail ('round6Expected=' + @($script:Round6ExpectedNewCheckNames).Count + '; missing=' + $missingRound6.Count + '; missingNames=' + ($missingRound6 -join ','))
+
 $evidencePass = (@($script:Checks | Where-Object { -not $_.pass }).Count -eq 0)
 Add-UatPathCheck -Name 'evidence.passState' -Pass $evidencePass -Detail ('failed=' + (@($script:Checks | Where-Object { -not $_.pass }).Count))
 
@@ -1468,6 +1738,9 @@ $failed = @($script:Checks | Where-Object { -not $_.pass })
 $cleanupForEvidence = [ordered]@{
     safe                     = [bool]$script:CleanupResult.safe
     recursiveDeletePerformed = [bool]$script:CleanupResult.recursiveDeletePerformed
+    recursiveDeleteStarted   = [bool]$script:CleanupResult.recursiveDeleteStarted
+    recursiveDeleteCompleted = [bool]$script:CleanupResult.recursiveDeleteCompleted
+    recursiveDeletePartial   = [bool]$script:CleanupResult.recursiveDeletePartial
     stopCode                 = [string]$script:CleanupResult.stopCode
     stopReason               = (Format-EvidencePath ([string]$script:CleanupResult.stopReason))
     unsafePathCount          = @($script:CleanupResult.unsafePaths).Count
@@ -1475,7 +1748,7 @@ $cleanupForEvidence = [ordered]@{
 }
 $evidence = [ordered]@{
     task                = 'T1-03'
-    fix                 = 'P3-02 + round-4 F1/F2 UAT path safety (test-root trust anchor + fail-closed sandbox cleanup) + round-5 F1/F2 (evidence write boundary + sandbox entry native check)'
+    fix                 = 'P3-02 + round-4 F1/F2 UAT path safety (test-root trust anchor + fail-closed sandbox cleanup) + round-5 F1/F2 (evidence write boundary + sandbox entry native check) + round-6 remediation (F2 tracked-link direct-child validation/pre-delete scan/exact-object delete, F1 pinned evidence-root identity, P3 UI summary guard, P4 partial recursive-delete semantics)'
     generatedAt         = (Get-Date).ToUniversalTime().ToString('o')
     command             = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\test-t1-03-uat-path.ps1'
     environment         = [ordered]@{
@@ -1510,6 +1783,16 @@ $evidence = [ordered]@{
         expectedNewCheckCount = @($script:Round5ExpectedNewCheckNames).Count
     }
     round5NewCheckTarget = @($script:Round5ExpectedNewCheckNames).Count
+    round6              = [ordered]@{
+        fix = 'F2 tracked-link through untracked junction (validate all links first, direct children only, pre-delete tree scan, exact-object delete, post-delete rescan); F1 evidence write requires startup-pinned root identity; P3 final UI summary native guard + output-dir identity re-verify; P4 recursive-delete started/completed/partial semantics'
+        f1AndF2AndP3AndP4 = $script:Round6Summary
+        redBaselineCommit = 'e8205cae22e98afce6480f5a5a0695543a61dee3'
+        redEvidence = 'docs/testing/reports/T1-03-assets/evidence/round6-remediation/red/round6-red-evidence.json'
+        greenEvidence = 'docs/testing/reports/T1-03-assets/evidence/round6-remediation/green/t1-03-uat-path-evidence.json'
+        expectedNewCheckCount = @($script:Round6ExpectedNewCheckNames).Count
+        acceptedResidualRisk = 'DEC-029: check-before-write / check-before-delete TOCTOU window remains; not claimed eliminated'
+    }
+    round6NewCheckTarget = @($script:Round6ExpectedNewCheckNames).Count
     round3CheckCountPreserved = @($script:Round3CheckNames).Count
     round4NewCheckTarget      = @($script:Round4ExpectedNewCheckNames).Count
     originalCheckCount  = @($script:OriginalCheckNames).Count
@@ -1538,7 +1821,7 @@ if ($finalLeak) {
 }
 [void](Write-T103EvidenceFile -Path $EvidencePath -Content $evidenceJson -ExpectedRootIdentity $script:EvidenceRootIdentity)
 Write-Host ("UAT_PATH_EVIDENCE=" + $EvidencePath)
-Write-Host ("UAT_PATH_CHECK_TOTAL=" + $evidence.checkCount + " ORIGINAL=" + $evidence.originalCheckCount + " ROUND3_PRESERVED=" + $evidence.round3CheckCountPreserved + " ROUND4_NEW_TARGET=" + $evidence.round4NewCheckTarget + " SKIPPED=" + $evidence.skipCount + " FAILED=" + $failed.Count)
+Write-Host ("UAT_PATH_CHECK_TOTAL=" + $evidence.checkCount + " ORIGINAL=" + $evidence.originalCheckCount + " ROUND3_PRESERVED=" + $evidence.round3CheckCountPreserved + " ROUND4_NEW_TARGET=" + $evidence.round4NewCheckTarget + " ROUND6_NEW_TARGET=" + $evidence.round6NewCheckTarget + " SKIPPED=" + $evidence.skipCount + " FAILED=" + $failed.Count)
 Write-Host ("UAT_PATH_TRUST_ANCHOR=" + $(if ([bool]$evidence.trustAnchor.verified) { 'PASS' } else { 'FAIL' }) + " CLEANUP_SAFE=" + [string]$evidence.cleanup.safe + " CLEANUP_STOP_CODE=" + [string]$evidence.cleanup.stopCode)
 Write-Host ('T1_03_UAT_PATH_SECURITY=PASS')
 exit 0
