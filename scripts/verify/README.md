@@ -28,8 +28,8 @@
 | `inspect-t1-03-min-window.mjs` | T1-03 最小窗口检查：待安排列表/长标题/按钮在 860×640 下无横向溢出和裁切，快速创建对话框完整可见，最后点击真实关闭按钮（进程退出由编排脚本验证）。 |
 | `inspect-t1-03-persistence.mjs` | T1-03 关闭重开持久化检查：同一 UAT 便携目录重启 Release，验证 5 条虚构待安排工作仍存在、归档项目历史关联保留且显示“项目已归档”、选择器仍只展示未归档项目、重启后仍可创建新工作，最后真实关闭。 |
 | `probe-t1-03-db.py` | T1-03 数据库只读探针（标准库 sqlite3）：`user_version`、完整性、journal_mode、`schema_migrations`、项目/工作事项行数、生命周期状态分布、`project_id` NULL/归档关联计数、`foreign_key_check`；不修改任何数据。 |
-| `T1-03UatPath.ps1` | T1-03 UAT 输出目录安全校验模块（P3-02 + 第四轮 F1/F2）：`GetFullPath` 规范化、限定 `D:\WorkManager-test-data\`、拒绝正式应用目录/根目录外/`..` 越界/已含数据库/非空未知目录；`Assert-T103UatTrustedTestRoot` 信任锚在任何写操作前用 Windows 原生句柄验证真实测试根目录（存在/真实目录/全部已存在祖先/重解析点/最终路径/卷身份/正式目录排除，缺失不自动创建）；`Invoke-T103FailClosedSandboxCleanup` 清理前复验沙箱身份、逐个删除并复验链接、扫描未预期 reparse point、身份再复验，任一失败停止递归删除并保留现场；只在校验通过时执行逐条目校验的安全递归删除。 |
-| `test-t1-03-uat-path.ps1` | T1-03 UAT 路径安全专项测试（第四轮 93 项）：第三轮 60 项全部保留（合法新目录/空目录、C 盘/正式目录/根目录外/`..`/既有数据库/非空目录拒绝、真实 Junction 7 类、UNC/设备/保留名/尾部点空白、无副作用与清理语义），第四轮新增 F1 信任锚/真实入口无副作用子进程测试与 F2 清理 fail-closed：删除失败由受控 FaultHook 注入（未修改 Windows ACL、非实际 Access Denied 测试），链接重建/未跟踪 reparse point/身份替换及 Canary 复检使用真实文件系统对象；1 项 Symbolic Link 场景因权限限制明确记录 SKIP、不计 PASS。 |
+| `T1-03UatPath.ps1` | T1-03 UAT 输出目录安全校验模块（P3-02 + 第四轮 F1/F2 + 本轮 F1/F2）：`GetFullPath` 规范化、限定 `D:\WorkManager-test-data\`、拒绝正式应用目录/根目录外/`..` 越界/已含数据库/非空未知目录；`Assert-T103UatTrustedTestRoot` 信任锚在任何写操作前用 Windows 原生句柄验证真实测试根目录；`Invoke-T103FailClosedSandboxCleanup` 清理前复验沙箱身份、逐个删除并复验链接、扫描未预期 reparse point、身份再复验，任一失败停止递归删除并保留现场；本轮新增 `Assert-T103EvidenceWritePath` / `Write-T103EvidenceFile`（证据写入真实身份/祖先链/严格边界/单硬链接校验）与 `Get-T103EntryNativeState` / `Invoke-T103SandboxCleanupEntrypoint`（沙箱入口原生检查，不再使用 `Test-Path` 判断存在性）。 |
+| `test-t1-03-uat-path.ps1` | T1-03 UAT 路径安全专项测试（本轮 115 项）：第三轮 60 项 + 第四轮 31 项全部保留，本轮新增 21 项 F1 证据写入边界（相对/`..`/绝对越界、Junction、悬空 Junction、硬链接、身份替换、正式数据库、原生检查失败）与 F2 沙箱入口原生检查（正常入口/真实不存在/正常 Junction/悬空 Junction/`Test-Path=False` 路径/父目录重解析点/身份不明/原生检查失败）；1 项 Symbolic Link 场景因权限限制明确记录 SKIP、不计 PASS。 |
 
 ## 用法
 
@@ -97,12 +97,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-t1-03-
 ## 当前验证结果（2026-11-20，T1-03 第四轮 F1/F2 定向修复后，等待第四轮独立审计）
 
 Release 产物：`target\release\workmanager.exe`，10,352,128 字节，
-SHA-256 `3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3`。
+SHA-256 `f46c9b0cb3c9d094475cab6abd8276276126f2ea0d2e5b38b6d6a4fbf92b2b68`
+（本轮按本分支重建；工作区原有二进制为 schema 4/T1-04 构建，与 T1-03 schema 3 不符）。
 
 | 脚本 | 退出码 | 结果 |
 |---|---|---|
-| `verify-t1-03-ui.ps1`（UAT `t1-03-ui-r4-20261120-181549`） | 0 | 主 UI/IPC **84/84**；最小窗口 **12/12**；重启持久化 **17/17**；数据库探针 **25/25**；两次真实关闭退出码 **0/0**；CSP 0；未捕获异常 0 |
-| `test-t1-03-uat-path.ps1`（第四轮证据路径） | 0 | UAT 路径安全 **93 项：FAILED=0、SKIPPED=1**（第三轮 60 项全部保留；F1/F2 新增 31 项全部通过；Symbolic Link 因权限限制 SKIP、不计 PASS）；主套件清理 SAFE、无遗留 |
+| `verify-t1-03-ui.ps1`（UAT `t1-03-ui-r5b-20261126-183147`） | 0 | 主 UI/IPC **84/84**；最小窗口 **12/12**；重启持久化 **17/17**；数据库探针 **25/25**；两次真实关闭退出码 **0/0**；CSP 0；未捕获异常 0 |
+| `test-t1-03-uat-path.ps1`（本轮 `evidence/round5/`） | 0 | UAT 路径安全 **115 项：FAILED=0、SKIPPED=1**（第三轮 60 项 + 第四轮 31 项全部保留；本轮新增 21 项全部通过；Symbolic Link 因权限限制 SKIP、不计 PASS）；主套件清理 SAFE、无遗留 |
 | `verify-t1-02-ui.ps1`（继承回归） | 0 | 主 UI/IPC **73/73**；最小窗口 **12/12**；关闭按钮后进程退出码 0；CSP 0；页面异常 0（首次执行环境性失败，无并发负载重跑通过） |
 | `verify-release-portable.ps1`（继承回归） | 0 | TOTAL=106 PASS=90 FAIL=0 **WARN=1（保留既有 WARN）** INFO=15 |
 | `verify-release-faults.ps1`（继承回归） | 0 | TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9 |

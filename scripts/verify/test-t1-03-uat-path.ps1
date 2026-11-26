@@ -34,6 +34,17 @@
 # - 正常路径使用逐条目校验的安全递归删除，绝不跟随 Junction / Symbolic Link 进入外部目录；
 # - 使用真实 Junction + 受控删除失败注入 / 真实链接重建 / 真实未跟踪链接 / 真实身份替换构造故障。
 #
+# 第五轮 F1（证据文件写入边界，2026-11-26）：
+# - `-EvidencePath` 必须先通过 Windows 原生句柄校验：证据目录存在、是真实目录、真实最终
+#   路径与字面一致；请求路径每个已存在组件都是普通目录；真实最终路径严格位于证据目录内；
+#   已存在目标文件是单硬链接普通文件。相对路径按仓库根目录解析。越界、别名、重解析点、
+#   悬空 Junction、硬链接、原生检查失败一律 fail closed，不创建、不覆盖、不自动建目录。
+#
+# 第五轮 F2（沙箱入口原生检查，2026-11-26）：
+# - 不再用 Test-Path 判断沙箱入口是否存在；改用原生句柄检查入口本身、父目录与全部已存在
+#   祖先。Test-Path 对悬空 Junction 之下的路径返回 False，旧实现会把它当作“入口不存在”
+#   并跳过清理；新实现只有原生检查确认不存在时才按原有业务规则处理，其余情况 fail closed。
+#
 # Junction 使用真实 cmd.exe mklink /J 创建；Symbolic Link 使用 mklink /D 尝试创建，
 # 失败时记录 SKIP 原因（不把未执行测试算作 PASS）。
 #
@@ -190,9 +201,36 @@ $script:Round4ExpectedNewCheckNames = @(
     'cleanup.sandboxRemovedSafely'
 )
 
+# 第五轮 F1/F2 最小修复必须存在的检查名称（防止写入边界/入口原生检查被静默跳过或删除）。
+$script:Round5ExpectedNewCheckNames = @(
+    'f1.evidenceWriteInsideRootSucceeds',
+    'f1.evidenceRelativeEscapeRejected',
+    'f1.evidenceDotDotTraversalRejected',
+    'f1.evidenceAbsoluteOutsideRejected',
+    'f1.evidenceJunctionBypassRejected',
+    'f1.evidenceDanglingJunctionRejected',
+    'f1.evidenceUnsafeExistingTargetRejected',
+    'f1.evidenceRootIdentityMismatchRejected',
+    'f1.evidenceFormalDatabaseTargetRejected',
+    'f1.evidenceNativeCheckFailureFailsClosed',
+    'f1.evidenceDefaultRootTrusted',
+    'f1.canariesUnchangedAfterRejections',
+    'f2.entryTrulyAbsentConfirmedByNativeCheck',
+    'f2.entryNormalDirectoryNativeCheckPasses',
+    'f2.entryNormalJunctionDetected',
+    'f2.entryDanglingJunctionDetected',
+    'f2.entryTestPathFalseDanglingJunctionNotBypassed',
+    'f2.entryParentReparsePointFailsClosed',
+    'f2.entryIdentityUnconfirmedFailsClosed',
+    'f2.entryNativeCheckFailureFailsClosed',
+    'f2.canariesUnchangedAfterFailureCases'
+)
+
 $script:DefaultEvidencePath = Join-Path $repoRoot 'docs/testing/reports/T1-03-assets/evidence/t1-03-uat-path-evidence.json'
 $script:F1Summary = [ordered]@{}
 $script:F2Summary = [ordered]@{}
+$script:Round5F1Summary = [ordered]@{}
+$script:Round5F2Summary = [ordered]@{}
 $script:SandboxTrustRecord = $null
 $script:CleanupResult = $null
 
@@ -285,11 +323,9 @@ function Test-UatPathRejectedCore([string]$Name, [string]$RequestedPath, [string
 }
 
 function Test-IsReparseLink([string]$Path) {
-    if (-not (Test-Path -LiteralPath $Path)) {
-        return $false
-    }
-    $item = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
-    return (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0)
+    # 原生检查（不跟随重解析点）：悬空 Junction 的 Test-Path 结果不可靠。
+    $state = Get-T103EntryNativeState -Path $Path -Label '测试链接'
+    return ($state.exists -and $state.isReparsePoint)
 }
 
 function New-TestDirectory([string]$Path) {
@@ -337,7 +373,8 @@ function Try-New-TestSymbolicLink([string]$Link, [string]$Target) {
 
 # 只删除链接本身（非递归），绝不删除链接指向的目标。
 function Remove-TestLink([string]$Link) {
-    if (-not (Test-Path -LiteralPath $Link)) {
+    $state = Get-T103EntryNativeState -Path $Link -Label '测试链接'
+    if (-not $state.exists) {
         return
     }
     try {
@@ -398,11 +435,13 @@ function New-UntrackedTestJunction([string]$Link, [string]$Target) {
 }
 
 # 只删除链接本身（非递归）；拒绝用于非重解析点路径。
+# 使用原生检查判断存在性：悬空 Junction 的 Test-Path 为 False，但链接本身仍存在。
 function Remove-UntrackedTestLink([string]$Link) {
-    if (-not (Test-Path -LiteralPath $Link)) {
+    $state = Get-T103EntryNativeState -Path $Link -Label '测试链接'
+    if (-not $state.exists) {
         return
     }
-    if (-not (Test-IsReparseLink $Link)) {
+    if (-not $state.isReparsePoint) {
         throw ("拒绝删除非重解析点路径（fail closed）：{0}" -f $Link)
     }
     try {
@@ -411,15 +450,20 @@ function Remove-UntrackedTestLink([string]$Link) {
     catch {
         Remove-Item -LiteralPath $Link -Force -ErrorAction Stop
     }
-    if (Test-Path -LiteralPath $Link) {
+    $after = Get-T103EntryNativeState -Path $Link -Label '测试链接'
+    if ($after.exists) {
         throw ("链接删除后仍然存在：{0}" -f $Link)
     }
 }
 
 # 用例自清理：先扫描确认目录树中无任何 reparse point，再逐条目校验后删除。
 function Remove-TestTreeSafely([string]$Path) {
-    if (-not (Test-Path -LiteralPath $Path)) {
+    $state = Get-T103EntryNativeState -Path $Path -Label '测试自清理目标'
+    if (-not $state.exists) {
         return
+    }
+    if ($state.isReparsePoint) {
+        throw ("测试自清理拒绝递归删除重解析点（fail closed）：{0}" -f $Path)
     }
     $reparsePoints = @(Find-T103ReparsePointsInTree -RootDirectory $Path)
     if ($reparsePoints.Count -gt 0) {
@@ -460,6 +504,33 @@ function Get-CanaryContent([string]$Path) {
         return ''
     }
     return (Get-Content -LiteralPath $Path -Raw -Encoding UTF8).Trim()
+}
+
+# 第五轮 F2：构造以“入口不存在/入口是链接/入口身份异常”为对象的用例目录。
+function New-F2EntryCaseRoot([string]$Name) {
+    $caseRoot = Join-Path $sandbox ('f2-entry-' + $Name)
+    New-Item -ItemType Directory -Force -Path $caseRoot | Out-Null
+    [void]$script:Targets.Add($caseRoot)
+    return $caseRoot
+}
+
+# 第五轮 F1：以真实文件系统对象验证证据写入被拒绝，且拒绝时不产生写入。
+function Test-EvidenceWriteRejected([string]$Name, [string]$Path, [string]$EvidenceRoot, [string]$ExpectedKeyword, [string]$SideEffectDetail = '') {
+    $rejected = $false
+    $message = ''
+    try {
+        [void](Write-T103EvidenceFile -Path $Path -Content '{"round5":"must-not-be-written"}' -EvidenceRoot $EvidenceRoot)
+    }
+    catch {
+        $rejected = $true
+        $message = $_.Exception.Message
+    }
+    $keywordOk = $message.Contains($ExpectedKeyword)
+    $detail = ('rejected=' + [bool]$rejected + '; keywordOk=' + [bool]$keywordOk + '; message=' + (Format-EvidencePath $message))
+    if (-not [string]::IsNullOrWhiteSpace($SideEffectDetail)) {
+        $detail = $detail + '; ' + $SideEffectDetail
+    }
+    Add-UatPathCheck -Name $Name -Pass ($rejected -and $keywordOk) -Detail $detail
 }
 
 # ---------------------------------------------------------------------------
@@ -506,6 +577,16 @@ catch {
 $script:T103UatTestRoot = $effectiveTestRoot
 if ($testRootOverrideActive) {
     Write-Host 'PRECONDITION_FAILED: 测试注入模式（-TestRootOverride）仅用于 F1 信任锚失败场景；不会在覆盖根目录下执行完整测试套件，也不会创建沙箱。'
+    exit 2
+}
+# 第五轮 F1：在第一个写操作之前记录证据目录真实身份（卷序列号 + 文件 ID + 真实最终路径）。
+# 证据写入时必须与该身份一致；无法确认身份时 fail closed。
+$script:EvidenceRootIdentity = $null
+try {
+    $script:EvidenceRootIdentity = Get-T103DirectoryIdentityRecord -Path $script:T103EvidenceRoot -Label '证据目录'
+}
+catch {
+    Write-Host ("PRECONDITION_FAILED: 证据目录真实身份无法确认（fail closed）：" + $_.Exception.Message)
     exit 2
 }
 Write-Host ("TRUST_ANCHOR=PASS path=" + (Format-EvidencePath $trustRecord.path) + " components=" + $trustRecord.existingComponentCount + " volumeIdentity=verified finalPath=verified")
@@ -1008,6 +1089,299 @@ try {
     Remove-TestTreeSafely $f2IdentityTarget
     Remove-TestTreeSafely $f2Identity.Root
 
+    # -----------------------------------------------------------------------
+    # 8b. 第五轮 F1/F2 最小修复：证据写入边界 + 沙箱入口原生检查
+    # ---------------------------------------------------------------
+    # 全部使用真实文件系统对象（真实目录 / 真实 Junction / 真实悬空 Junction /
+    # 真实硬链接），不修改 Windows ACL，不执行 Access Denied 测试。
+    # -----------------------------------------------------------------------
+    $r5Root = Join-Path $sandbox 'round5'
+    New-Item -ItemType Directory -Force -Path $r5Root | Out-Null
+    [void]$script:Targets.Add($r5Root)
+
+    # 证据目录之外的外部 Canary：业务数据库文件 + 守护 Canary。
+    $r5BusinessDir = Join-Path $r5Root 'business'
+    New-Item -ItemType Directory -Force -Path $r5BusinessDir | Out-Null
+    $r5BusinessFile = Join-Path $r5BusinessDir 'work.db'
+    Set-Content -LiteralPath $r5BusinessFile -Value 'ROUND5-BUSINESS-DB-CONTENT' -Encoding UTF8
+    $r5BusinessHashBefore = (Get-FileHash -LiteralPath $r5BusinessFile -Algorithm SHA256).Hash
+    $r5CanaryFile = Join-Path $r5Root 'guardian-canary.txt'
+    Set-Content -LiteralPath $r5CanaryFile -Value 'ROUND5-GUARDIAN-CANARY' -Encoding UTF8
+    $r5CanaryHashBefore = (Get-FileHash -LiteralPath $r5CanaryFile -Algorithm SHA256).Hash
+
+    # F1 注入用证据目录（真实普通目录；长名称用于 8.3 短名身份用例）。
+    $r5EvidenceRoot = Join-Path $r5Root 'evidence-root-long-name'
+    New-Item -ItemType Directory -Force -Path $r5EvidenceRoot | Out-Null
+    $r5OkContent = ''
+
+    # F1-1 正常写入：必须真实写入注入证据目录之内。
+    $r5OkPath = Join-Path $r5EvidenceRoot 'sub\ok-evidence.json'
+    try {
+        $r5Written = Write-T103EvidenceFile -Path $r5OkPath -Content '{"round5":"ok"}' -EvidenceRoot $r5EvidenceRoot
+        $r5OkContent = if (Test-Path -LiteralPath $r5OkPath -PathType Leaf) { (Get-Content -LiteralPath $r5OkPath -Raw -Encoding UTF8).Trim() } else { '' }
+        $r5Ok = ($r5OkContent -eq '{"round5":"ok"}') -and [bool](Test-T103FinalPathInside $r5Written $script:T103UatTestRoot)
+        Add-UatPathCheck -Name 'f1.evidenceWriteInsideRootSucceeds' -Pass $r5Ok -Detail ('written=' + (Format-EvidencePath $r5Written) + '; contentMatched=' + [bool]($r5OkContent -eq '{"round5":"ok"}'))
+    }
+    catch {
+        Add-UatPathCheck -Name 'f1.evidenceWriteInsideRootSucceeds' -Pass $false -Detail ('unexpected rejection: ' + (Format-EvidencePath $_.Exception.Message))
+    }
+
+    # F1-2 相对路径越界：相对仓库根目录解析后仍不在证据目录内。
+    $r5RelativePath = 'test-artifacts\round5-relative-escape.json'
+    $r5RelativeAbsolute = Join-Path $script:T103RepoRoot $r5RelativePath
+    $r5RelativeExistedBefore = Test-Path -LiteralPath $r5RelativeAbsolute
+    Test-EvidenceWriteRejected -Name 'f1.evidenceRelativeEscapeRejected' -Path $r5RelativePath -EvidenceRoot $r5EvidenceRoot -ExpectedKeyword '边界' -SideEffectDetail ('outsideFileCreated=' + [bool](Test-Path -LiteralPath $r5RelativeAbsolute))
+    if ((-not $r5RelativeExistedBefore) -and (Test-Path -LiteralPath $r5RelativeAbsolute)) {
+        Remove-Item -LiteralPath $r5RelativeAbsolute -Force -ErrorAction SilentlyContinue
+    }
+
+    # F1-3 “..” 路径遍历越界。
+    $r5DotDotPath = Join-Path $r5EvidenceRoot '..\business\dotdot-escape.json'
+    $r5DotDotAbsolute = Join-Path $r5BusinessDir 'dotdot-escape.json'
+    Test-EvidenceWriteRejected -Name 'f1.evidenceDotDotTraversalRejected' -Path $r5DotDotPath -EvidenceRoot $r5EvidenceRoot -ExpectedKeyword '边界' -SideEffectDetail ('outsideFileCreated=' + [bool](Test-Path -LiteralPath $r5DotDotAbsolute))
+
+    # F1-4 证据目录之外的绝对路径。
+    $r5AbsolutePath = Join-Path $r5BusinessDir 'absolute-escape.json'
+    Test-EvidenceWriteRejected -Name 'f1.evidenceAbsoluteOutsideRejected' -Path $r5AbsolutePath -EvidenceRoot $r5EvidenceRoot -ExpectedKeyword '边界' -SideEffectDetail ('outsideFileCreated=' + [bool](Test-Path -LiteralPath $r5AbsolutePath))
+
+    # F1-5 证据目录内 Junction 指向外部目录：必须拒绝且不触碰链接目标。
+    $r5JunctionTarget = Join-Path $r5Root 'junction-target'
+    New-Item -ItemType Directory -Force -Path $r5JunctionTarget | Out-Null
+    $r5JunctionCanary = Join-Path $r5JunctionTarget 'canary.txt'
+    Set-Content -LiteralPath $r5JunctionCanary -Value 'ROUND5-JUNCTION-TARGET-CANARY' -Encoding UTF8
+    $r5JunctionHashBefore = (Get-FileHash -LiteralPath $r5JunctionCanary -Algorithm SHA256).Hash
+    $r5Junction = Join-Path $r5EvidenceRoot 'j-link'
+    New-UntrackedTestJunction $r5Junction $r5JunctionTarget
+    Test-EvidenceWriteRejected -Name 'f1.evidenceJunctionBypassRejected' -Path (Join-Path $r5Junction 'out.json') -EvidenceRoot $r5EvidenceRoot -ExpectedKeyword '重解析点' -SideEffectDetail ('targetCanaryUnchanged=' + [bool]((Get-FileHash -LiteralPath $r5JunctionCanary -Algorithm SHA256).Hash -eq $r5JunctionHashBefore))
+    Remove-UntrackedTestLink $r5Junction
+
+    # F1-6 证据目录内悬空 Junction：必须识别链接本身并拒绝。
+    $r5DanglingTarget = Join-Path $r5Root 'dangling-target'
+    New-Item -ItemType Directory -Force -Path $r5DanglingTarget | Out-Null
+    $r5Dangling = Join-Path $r5EvidenceRoot 'j-dangling'
+    New-UntrackedTestJunction $r5Dangling $r5DanglingTarget
+    [System.IO.Directory]::Delete($r5DanglingTarget, $false)
+    $r5DanglingState = Get-T103EntryNativeState -Path $r5Dangling -Label '证据目录悬空 Junction'
+    Test-EvidenceWriteRejected -Name 'f1.evidenceDanglingJunctionRejected' -Path (Join-Path $r5Dangling 'out.json') -EvidenceRoot $r5EvidenceRoot -ExpectedKeyword '重解析点' -SideEffectDetail ('testPath=' + [bool](Test-Path -LiteralPath $r5Dangling) + '; nativeExists=' + [bool]$r5DanglingState.exists + '; reparseTag=' + [string]$r5DanglingState.reparseTag)
+    Remove-UntrackedTestLink $r5Dangling
+
+    # F1-7 已有目标文件是数据库文件的硬链接：必须拒绝且原文件不变。
+    $r5HardLink = Join-Path $r5EvidenceRoot 'hardlink-work-db.json'
+    New-Item -ItemType HardLink -Path $r5HardLink -Target $r5BusinessFile | Out-Null
+    Test-EvidenceWriteRejected -Name 'f1.evidenceUnsafeExistingTargetRejected' -Path $r5HardLink -EvidenceRoot $r5EvidenceRoot -ExpectedKeyword '硬链接' -SideEffectDetail ('businessHashUnchanged=' + [bool]((Get-FileHash -LiteralPath $r5BusinessFile -Algorithm SHA256).Hash -eq $r5BusinessHashBefore))
+    Remove-Item -LiteralPath $r5HardLink -Force
+
+    # F1-8 证据目录真实身份不一致：同一路径目录被替换（rename + 重建）后，文件 ID 变化必须拒绝。
+    $r5SwapRoot = Join-Path $r5Root 'evidence-root-swap'
+    New-Item -ItemType Directory -Force -Path $r5SwapRoot | Out-Null
+    Set-Content -LiteralPath (Join-Path $r5SwapRoot 'original-marker.txt') -Value 'ROUND5-ORIGINAL-EVIDENCE-ROOT' -Encoding UTF8
+    $r5SwapRecordBefore = Get-T103DirectoryIdentityRecord -Path $r5SwapRoot -Label '第五轮证据目录（替换前）'
+    Rename-Item -LiteralPath $r5SwapRoot -NewName 'evidence-root-swap-moved'
+    New-Item -ItemType Directory -Force -Path $r5SwapRoot | Out-Null
+    $r5SwapRecordAfter = Get-T103DirectoryIdentityRecord -Path $r5SwapRoot -Label '第五轮证据目录（替换后）'
+    $r5SwapFileIdChanged = -not [string]::Equals([string]$r5SwapRecordBefore.fileIdHex, [string]$r5SwapRecordAfter.fileIdHex, [System.StringComparison]::Ordinal)
+    $r5SwapRejected = $false
+    $r5SwapMessage = ''
+    try {
+        [void](Write-T103EvidenceFile -Path (Join-Path $r5SwapRoot 'after-swap.json') -Content 'x' -EvidenceRoot $r5SwapRoot -ExpectedRootIdentity $r5SwapRecordBefore)
+    }
+    catch {
+        $r5SwapRejected = $true
+        $r5SwapMessage = $_.Exception.Message
+    }
+    $r5SwapOk = $r5SwapRejected -and $r5SwapMessage.Contains('身份') -and $r5SwapFileIdChanged -and (-not (Test-Path -LiteralPath (Join-Path $r5SwapRoot 'after-swap.json')))
+    Add-UatPathCheck -Name 'f1.evidenceRootIdentityMismatchRejected' -Pass $r5SwapOk -Detail ('rejected=' + [bool]$r5SwapRejected + '; fileIdChanged=' + [bool]$r5SwapFileIdChanged + '; message=' + (Format-EvidencePath $r5SwapMessage))
+    Remove-TestTreeSafely $r5SwapRoot
+    Remove-TestTreeSafely (Join-Path $r5Root 'evidence-root-swap-moved')
+
+    # F1-9 正式数据库/正式目录作为写入目标：拒绝且正式目录状态不变。
+    $r5FormalBefore = Test-Path -LiteralPath $script:T103UatFormalRoot
+    Test-EvidenceWriteRejected -Name 'f1.evidenceFormalDatabaseTargetRejected' -Path ($script:T103UatFormalRoot + '\data\database\work.db') -EvidenceRoot $r5EvidenceRoot -ExpectedKeyword '正式应用目录' -SideEffectDetail ('formalRootExistsBefore=' + [bool]$r5FormalBefore + '; formalRootExistsAfter=' + [bool](Test-Path -LiteralPath $script:T103UatFormalRoot) + '; businessHashUnchanged=' + [bool]((Get-FileHash -LiteralPath $r5BusinessFile -Algorithm SHA256).Hash -eq $r5BusinessHashBefore))
+
+    # F1-10 原生路径检查失败（路径组件是文件而不是目录）：fail-closed。
+    $r5NotADirectory = Join-Path $r5EvidenceRoot 'not-a-directory.txt'
+    Set-Content -LiteralPath $r5NotADirectory -Value 'ROUND5-FILE-COMPONENT' -Encoding UTF8
+    Test-EvidenceWriteRejected -Name 'f1.evidenceNativeCheckFailureFailsClosed' -Path (Join-Path $r5NotADirectory 'out.json') -EvidenceRoot $r5EvidenceRoot -ExpectedKeyword '不是目录' -SideEffectDetail ('childWritten=' + [bool](Test-Path -LiteralPath (Join-Path $r5NotADirectory 'out.json')))
+
+    # F1-11 默认证据目录必须能通过同一守卫（只校验，不写入）。
+    $r5DefaultOk = $false
+    try {
+        $r5DefaultCandidate = Assert-T103EvidenceWritePath -Path (Join-Path $script:T103EvidenceRoot 'round5\t1-03-uat-path-evidence.json')
+        $r5DefaultOk = [bool](Test-T103FinalPathInside $r5DefaultCandidate $script:T103EvidenceRoot)
+    }
+    catch {
+        $r5DefaultOk = $false
+    }
+    Add-UatPathCheck -Name 'f1.evidenceDefaultRootTrusted' -Pass $r5DefaultOk -Detail ('repositoryEvidenceRoot=' + (Format-EvidencePath $script:T103EvidenceRoot) + '; candidateInsideRoot=' + [bool]$r5DefaultOk)
+
+    # F1-12 全部拒绝用例之后：业务数据库与守护 Canary 内容/哈希不变。
+    $r5BusinessHashAfter = (Get-FileHash -LiteralPath $r5BusinessFile -Algorithm SHA256).Hash
+    $r5CanaryHashAfter = (Get-FileHash -LiteralPath $r5CanaryFile -Algorithm SHA256).Hash
+    $r5JunctionCanaryHashAfter = (Get-FileHash -LiteralPath $r5JunctionCanary -Algorithm SHA256).Hash
+    $r5CanariesOk = ($r5BusinessHashAfter -eq $r5BusinessHashBefore) -and ($r5CanaryHashAfter -eq $r5CanaryHashBefore) -and ($r5JunctionCanaryHashAfter -eq $r5JunctionHashBefore)
+    Add-UatPathCheck -Name 'f1.canariesUnchangedAfterRejections' -Pass $r5CanariesOk -Detail ('businessDbUnchanged=' + [bool]($r5BusinessHashAfter -eq $r5BusinessHashBefore) + '; guardianCanaryUnchanged=' + [bool]($r5CanaryHashAfter -eq $r5CanaryHashBefore) + '; junctionTargetCanaryUnchanged=' + [bool]($r5JunctionCanaryHashAfter -eq $r5JunctionHashBefore))
+
+    # F2-1 入口确实不存在：原生检查确认后才按原有规则处理。
+    $r5F2AbsentRoot = New-F2EntryCaseRoot 'absent'
+    $r5AbsentPath = Join-Path $r5F2AbsentRoot 'sandbox'
+    $r5AbsentResult = Invoke-T103SandboxCleanupEntrypoint -SandboxPath $r5AbsentPath -TestRoot $script:T103UatTestRoot -TrustRecord ([pscustomobject]@{})
+    $r5AbsentOk = ($r5AbsentResult.safe -eq $true) -and
+        ($r5AbsentResult.stopCode -eq 'sandboxAlreadyAbsent') -and
+        ($r5AbsentResult.recursiveDeletePerformed -eq $false) -and
+        (@($r5AbsentResult.steps) -contains 'sandbox.entryAbsentConfirmedByNativeCheck') -and
+        (-not (Test-Path -LiteralPath $r5AbsentPath))
+    Add-UatPathCheck -Name 'f2.entryTrulyAbsentConfirmedByNativeCheck' -Pass $r5AbsentOk -Detail ('safe=' + [string]$r5AbsentResult.safe + '; stopCode=' + [string]$r5AbsentResult.stopCode + '; recursiveDelete=' + [string]$r5AbsentResult.recursiveDeletePerformed + '; steps=' + (@($r5AbsentResult.steps) -join ','))
+    Remove-TestTreeSafely $r5F2AbsentRoot
+
+    # F2-2 正常沙箱入口：原生身份检查通过并完成逐条目安全清理。
+    $r5F2NormalRoot = New-F2EntryCaseRoot 'normal'
+    $r5NormalSandbox = Join-Path $r5F2NormalRoot 'sandbox'
+    New-Item -ItemType Directory -Force -Path $r5NormalSandbox | Out-Null
+    Set-Content -LiteralPath (Join-Path $r5NormalSandbox 'sentinel.txt') -Value 'round5-sentinel' -Encoding UTF8
+    $r5NormalRecord = Get-T103DirectoryIdentityRecord -Path $r5NormalSandbox -Label '第五轮正常沙箱入口'
+    $r5NormalResult = Invoke-T103SandboxCleanupEntrypoint -SandboxPath $r5NormalSandbox -TestRoot $script:T103UatTestRoot -TrustRecord $r5NormalRecord
+    $r5NormalOk = ($r5NormalResult.safe -eq $true) -and
+        ($r5NormalResult.recursiveDeletePerformed -eq $true) -and
+        (@($r5NormalResult.steps) -contains 'sandbox.identityVerified') -and
+        (-not (Test-Path -LiteralPath $r5NormalSandbox))
+    Add-UatPathCheck -Name 'f2.entryNormalDirectoryNativeCheckPasses' -Pass $r5NormalOk -Detail ('safe=' + [string]$r5NormalResult.safe + '; recursiveDelete=' + [string]$r5NormalResult.recursiveDeletePerformed + '; steps=' + (@($r5NormalResult.steps) -join ','))
+    Remove-TestTreeSafely $r5F2NormalRoot
+
+    # F2-3 入口是正常 Junction：识别 ReparsePoint 并 fail closed，不递归、不触碰目标。
+    $r5F2JunctionRoot = New-F2EntryCaseRoot 'junction'
+    $r5EntryJunctionTarget = Join-Path $r5F2JunctionRoot 'target'
+    New-Item -ItemType Directory -Force -Path $r5EntryJunctionTarget | Out-Null
+    $r5EntryJunctionCanary = Join-Path $r5EntryJunctionTarget 'canary.txt'
+    Set-Content -LiteralPath $r5EntryJunctionCanary -Value 'ROUND5-ENTRY-JUNCTION-CANARY' -Encoding UTF8
+    $r5EntryJunctionHashBefore = (Get-FileHash -LiteralPath $r5EntryJunctionCanary -Algorithm SHA256).Hash
+    $r5EntryJunction = Join-Path $r5F2JunctionRoot 'entry-link'
+    New-UntrackedTestJunction $r5EntryJunction $r5EntryJunctionTarget
+    $r5EntryJunctionState = Get-T103EntryNativeState -Path $r5EntryJunction -Label '第五轮正常 Junction 入口'
+    $r5EntryJunctionResult = Invoke-T103SandboxCleanupEntrypoint -SandboxPath $r5EntryJunction -TestRoot $script:T103UatTestRoot -TrustRecord ([pscustomobject]@{})
+    $r5EntryJunctionOk = ($r5EntryJunctionResult.safe -eq $false) -and
+        ($r5EntryJunctionResult.stopCode -eq 'sandboxEntryIsReparsePoint') -and
+        ($r5EntryJunctionResult.recursiveDeletePerformed -eq $false) -and
+        $r5EntryJunctionState.exists -and $r5EntryJunctionState.isReparsePoint -and
+        ((Get-FileHash -LiteralPath $r5EntryJunctionCanary -Algorithm SHA256).Hash -eq $r5EntryJunctionHashBefore) -and
+        (Get-T103EntryNativeState -Path $r5EntryJunction -Label '第五轮正常 Junction 入口').exists
+    Add-UatPathCheck -Name 'f2.entryNormalJunctionDetected' -Pass $r5EntryJunctionOk -Detail ('safe=' + [string]$r5EntryJunctionResult.safe + '; stopCode=' + [string]$r5EntryJunctionResult.stopCode + '; reparseTag=' + [string]$r5EntryJunctionState.reparseTag + '; targetCanaryUnchanged=' + [bool]((Get-FileHash -LiteralPath $r5EntryJunctionCanary -Algorithm SHA256).Hash -eq $r5EntryJunctionHashBefore) + '; linkStillPresent=' + [bool](Get-T103EntryNativeState -Path $r5EntryJunction -Label '第五轮正常 Junction 入口').exists)
+    Remove-UntrackedTestLink $r5EntryJunction
+    Remove-TestTreeSafely $r5F2JunctionRoot
+
+    # F2-4 入口是悬空 Junction：原生检查识别链接本身并 fail closed。
+    $r5F2DanglingRoot = New-F2EntryCaseRoot 'dangling'
+    $r5EntryDanglingTarget = Join-Path $r5F2DanglingRoot 'gone-target'
+    New-Item -ItemType Directory -Force -Path $r5EntryDanglingTarget | Out-Null
+    $r5EntryDangling = Join-Path $r5F2DanglingRoot 'entry-dangling'
+    New-UntrackedTestJunction $r5EntryDangling $r5EntryDanglingTarget
+    [System.IO.Directory]::Delete($r5EntryDanglingTarget, $false)
+    $r5EntryDanglingState = Get-T103EntryNativeState -Path $r5EntryDangling -Label '第五轮悬空 Junction 入口'
+    $r5EntryDanglingResult = Invoke-T103SandboxCleanupEntrypoint -SandboxPath $r5EntryDangling -TestRoot $script:T103UatTestRoot -TrustRecord ([pscustomobject]@{})
+    $r5EntryDanglingOk = ($r5EntryDanglingResult.safe -eq $false) -and
+        ($r5EntryDanglingResult.stopCode -eq 'sandboxEntryIsReparsePoint') -and
+        ($r5EntryDanglingResult.recursiveDeletePerformed -eq $false) -and
+        $r5EntryDanglingState.exists -and $r5EntryDanglingState.isReparsePoint -and
+        ($r5EntryDanglingState.reparseTag -eq '0xA0000003') -and
+        (Get-T103EntryNativeState -Path $r5EntryDangling -Label '第五轮悬空 Junction 入口').exists
+    Add-UatPathCheck -Name 'f2.entryDanglingJunctionDetected' -Pass $r5EntryDanglingOk -Detail ('safe=' + [string]$r5EntryDanglingResult.safe + '; stopCode=' + [string]$r5EntryDanglingResult.stopCode + '; testPath=' + [bool](Test-Path -LiteralPath $r5EntryDangling) + '; nativeExists=' + [bool]$r5EntryDanglingState.exists + '; reparseTag=' + [string]$r5EntryDanglingState.reparseTag + '; linkStillPresent=' + [bool](Get-T103EntryNativeState -Path $r5EntryDangling -Label '第五轮悬空 Junction 入口').exists)
+    Remove-UntrackedTestLink $r5EntryDangling
+    Remove-TestTreeSafely $r5F2DanglingRoot
+
+    # F2-5 Test-Path=False 的悬空 Junction 路径：不得绕过原生检查（旧实现会当作“入口不存在”）。
+    $r5F2BypassRoot = New-F2EntryCaseRoot 'bypass'
+    $r5BypassTarget = Join-Path $r5F2BypassRoot 'gone-target'
+    New-Item -ItemType Directory -Force -Path $r5BypassTarget | Out-Null
+    $r5BypassLink = Join-Path $r5F2BypassRoot 'entry-dangling'
+    New-UntrackedTestJunction $r5BypassLink $r5BypassTarget
+    [System.IO.Directory]::Delete($r5BypassTarget, $false)
+    $r5BypassSandbox = Join-Path $r5BypassLink 'sandbox'
+    $r5BypassTestPath = Test-Path -LiteralPath $r5BypassSandbox
+    $r5BypassResult = Invoke-T103SandboxCleanupEntrypoint -SandboxPath $r5BypassSandbox -TestRoot $script:T103UatTestRoot -TrustRecord ([pscustomobject]@{})
+    $r5BypassStopOk = (@('sandboxParentIsReparsePoint', 'sandboxEntryNativeCheckFailed') -contains [string]$r5BypassResult.stopCode)
+    $r5BypassOk = ($r5BypassTestPath -eq $false) -and
+        ($r5BypassResult.safe -eq $false) -and
+        ($r5BypassResult.recursiveDeletePerformed -eq $false) -and
+        $r5BypassStopOk -and
+        (Get-T103EntryNativeState -Path $r5BypassLink -Label '第五轮悬空 Junction 父目录').exists
+    Add-UatPathCheck -Name 'f2.entryTestPathFalseDanglingJunctionNotBypassed' -Pass $r5BypassOk -Detail ('testPath=' + [bool]$r5BypassTestPath + '; legacyBranchWouldReturnAbsent=' + [bool](-not $r5BypassTestPath) + '; fixedSafe=' + [string]$r5BypassResult.safe + '; fixedStopCode=' + [string]$r5BypassResult.stopCode + '; recursiveDelete=' + [string]$r5BypassResult.recursiveDeletePerformed + '; danglingLinkStillPresent=' + [bool](Get-T103EntryNativeState -Path $r5BypassLink -Label '第五轮悬空 Junction 父目录').exists)
+    Remove-UntrackedTestLink $r5BypassLink
+    Remove-TestTreeSafely $r5F2BypassRoot
+
+    # F2-6 沙箱父目录是正常 Junction：入口不存在也不能按“不存在”处理。
+    $r5F2ParentRoot = New-F2EntryCaseRoot 'parent'
+    $r5ParentTarget = Join-Path $r5F2ParentRoot 'target'
+    New-Item -ItemType Directory -Force -Path $r5ParentTarget | Out-Null
+    $r5ParentJunction = Join-Path $r5F2ParentRoot 'parent-link'
+    New-UntrackedTestJunction $r5ParentJunction $r5ParentTarget
+    $r5ParentSandbox = Join-Path $r5ParentJunction 'sandbox'
+    $r5ParentResult = Invoke-T103SandboxCleanupEntrypoint -SandboxPath $r5ParentSandbox -TestRoot $script:T103UatTestRoot -TrustRecord ([pscustomobject]@{})
+    $r5ParentOk = ($r5ParentResult.safe -eq $false) -and
+        ($r5ParentResult.stopCode -eq 'sandboxParentIsReparsePoint') -and
+        ($r5ParentResult.recursiveDeletePerformed -eq $false) -and
+        (@(Get-ChildItem -LiteralPath $r5ParentTarget -Force).Count -eq 0) -and
+        (Get-T103EntryNativeState -Path $r5ParentJunction -Label '第五轮父目录 Junction').exists
+    Add-UatPathCheck -Name 'f2.entryParentReparsePointFailsClosed' -Pass $r5ParentOk -Detail ('safe=' + [string]$r5ParentResult.safe + '; stopCode=' + [string]$r5ParentResult.stopCode + '; targetEntries=' + @(Get-ChildItem -LiteralPath $r5ParentTarget -Force).Count + '; parentLinkStillPresent=' + [bool](Get-T103EntryNativeState -Path $r5ParentJunction -Label '第五轮父目录 Junction').exists)
+    Remove-UntrackedTestLink $r5ParentJunction
+    Remove-TestTreeSafely $r5F2ParentRoot
+
+    # F2-7 目录身份不明：与信任记录不一致时 fail closed 并保留现场。
+    $r5F2IdentityRoot = New-F2EntryCaseRoot 'identity'
+    $r5IdentitySandbox = Join-Path $r5F2IdentityRoot 'sandbox'
+    New-Item -ItemType Directory -Force -Path $r5IdentitySandbox | Out-Null
+    Set-Content -LiteralPath (Join-Path $r5IdentitySandbox 'sentinel.txt') -Value 'round5-identity-sentinel' -Encoding UTF8
+    $r5IdentityOther = Join-Path $r5F2IdentityRoot 'other'
+    New-Item -ItemType Directory -Force -Path $r5IdentityOther | Out-Null
+    $r5IdentityOtherRecord = Get-T103DirectoryIdentityRecord -Path $r5IdentityOther -Label '第五轮其他目录'
+    $r5IdentityResult = Invoke-T103SandboxCleanupEntrypoint -SandboxPath $r5IdentitySandbox -TestRoot $script:T103UatTestRoot -TrustRecord $r5IdentityOtherRecord
+    $r5IdentityOk = ($r5IdentityResult.safe -eq $false) -and
+        ($r5IdentityResult.stopCode -eq 'sandboxIdentityChanged') -and
+        ($r5IdentityResult.recursiveDeletePerformed -eq $false) -and
+        (Test-Path -LiteralPath (Join-Path $r5IdentitySandbox 'sentinel.txt'))
+    Add-UatPathCheck -Name 'f2.entryIdentityUnconfirmedFailsClosed' -Pass $r5IdentityOk -Detail ('safe=' + [string]$r5IdentityResult.safe + '; stopCode=' + [string]$r5IdentityResult.stopCode + '; sandboxPreserved=' + [bool](Test-Path -LiteralPath $r5IdentitySandbox) + '; sentinelPreserved=' + [bool](Test-Path -LiteralPath (Join-Path $r5IdentitySandbox 'sentinel.txt')))
+    Remove-TestTreeSafely $r5IdentitySandbox
+    Remove-TestTreeSafely $r5IdentityOther
+    Remove-TestTreeSafely $r5F2IdentityRoot
+
+    # F2-8 原生路径检查失败（路径组件是文件）：fail closed。
+    $r5F2BadRoot = New-F2EntryCaseRoot 'nativefail'
+    $r5BadComponent = Join-Path $r5F2BadRoot 'not-a-directory.txt'
+    Set-Content -LiteralPath $r5BadComponent -Value 'ROUND5-F2-FILE-COMPONENT' -Encoding UTF8
+    $r5BadResult = Invoke-T103SandboxCleanupEntrypoint -SandboxPath (Join-Path $r5BadComponent 'sandbox') -TestRoot $script:T103UatTestRoot -TrustRecord ([pscustomobject]@{})
+    $r5BadOk = ($r5BadResult.safe -eq $false) -and
+        ($r5BadResult.stopCode -eq 'sandboxEntryNativeCheckFailed') -and
+        ($r5BadResult.recursiveDeletePerformed -eq $false)
+    Add-UatPathCheck -Name 'f2.entryNativeCheckFailureFailsClosed' -Pass $r5BadOk -Detail ('safe=' + [string]$r5BadResult.safe + '; stopCode=' + [string]$r5BadResult.stopCode + '; reason=' + (Format-EvidencePath ([string]$r5BadResult.stopReason)))
+    Remove-TestTreeSafely $r5F2BadRoot
+
+    # F2-9 失败用例之后：外部 Canary 与业务数据库不变。
+    $r5CanaryHashAfterF2 = (Get-FileHash -LiteralPath $r5CanaryFile -Algorithm SHA256).Hash
+    $r5BusinessHashAfterF2 = (Get-FileHash -LiteralPath $r5BusinessFile -Algorithm SHA256).Hash
+    $r5F2CanariesOk = ($r5CanaryHashAfterF2 -eq $r5CanaryHashBefore) -and ($r5BusinessHashAfterF2 -eq $r5BusinessHashBefore)
+    Add-UatPathCheck -Name 'f2.canariesUnchangedAfterFailureCases' -Pass $r5F2CanariesOk -Detail ('guardianCanaryUnchanged=' + [bool]($r5CanaryHashAfterF2 -eq $r5CanaryHashBefore) + '; businessDbUnchanged=' + [bool]($r5BusinessHashAfterF2 -eq $r5BusinessHashBefore))
+
+    $r5FailureResults = @($r5EntryJunctionResult, $r5EntryDanglingResult, $r5BypassResult, $r5ParentResult, $r5IdentityResult, $r5BadResult)
+    $script:Round5F1Summary = [ordered]@{
+        evidenceRootInjected    = (Format-EvidencePath $r5EvidenceRoot)
+        normalWriteSucceeded    = [bool]($r5OkContent -eq '{"round5":"ok"}')
+        businessDbHashUnchanged = [bool]($r5BusinessHashAfter -eq $r5BusinessHashBefore)
+        guardianCanaryUnchanged = [bool]($r5CanaryHashAfter -eq $r5CanaryHashBefore)
+        junctionTargetUnchanged = [bool]($r5JunctionCanaryHashAfter -eq $r5JunctionHashBefore)
+        identitySwapTested      = [bool]$r5SwapOk
+        defaultRootTrusted      = [bool]$r5DefaultOk
+    }
+    $script:Round5F2Summary = [ordered]@{
+        trulyAbsentStopCode         = [string]$r5AbsentResult.stopCode
+        normalRecursiveDelete       = [string]$r5NormalResult.recursiveDeletePerformed
+        normalJunctionStopCode      = [string]$r5EntryJunctionResult.stopCode
+        danglingJunctionStopCode    = [string]$r5EntryDanglingResult.stopCode
+        testPathFalseBypassStopCode = [string]$r5BypassResult.stopCode
+        parentReparseStopCode       = [string]$r5ParentResult.stopCode
+        identityStopCode            = [string]$r5IdentityResult.stopCode
+        nativeFailureStopCode       = [string]$r5BadResult.stopCode
+        noRecursiveDeleteInFailures = [bool]((@($r5FailureResults | Where-Object { $_.recursiveDeletePerformed -eq $true }).Count -eq 0))
+        canariesUnchanged           = [bool]$r5F2CanariesOk
+    }
+
     $script:F2Summary = $f2CaseSummary
 }
 finally {
@@ -1025,20 +1399,9 @@ finally {
             sandboxPath              = $sandbox
         }
     }
-    elseif (-not (Test-Path -LiteralPath $sandbox)) {
-        $script:CleanupResult = [pscustomobject]@{
-            safe                     = $true
-            recursiveDeletePerformed = $false
-            stopCode                 = 'sandboxAlreadyAbsent'
-            stopReason               = ''
-            unsafePaths              = @()
-            steps                    = @()
-            sandboxPath              = $sandbox
-        }
-    }
     else {
         try {
-            $script:CleanupResult = Invoke-T103FailClosedSandboxCleanup -SandboxPath $sandbox -TestRoot $script:T103UatTestRoot -TrustRecord $script:SandboxTrustRecord -TrackedLinks @($script:Links)
+            $script:CleanupResult = Invoke-T103SandboxCleanupEntrypoint -SandboxPath $sandbox -TestRoot $script:T103UatTestRoot -TrustRecord $script:SandboxTrustRecord -TrackedLinks @($script:Links)
         }
         catch {
             $script:CleanupResult = [pscustomobject]@{
@@ -1092,6 +1455,12 @@ Add-UatPathCheck -Name 'evidence.round3ChecksPreserved' -Pass ($missingRound3.Co
 $missingRound4 = @($script:Round4ExpectedNewCheckNames | Where-Object { $checkNames -notcontains $_ })
 Add-UatPathCheck -Name 'evidence.round4NewChecksPresent' -Pass ($missingRound4.Count -eq 0) -Detail ('round4Expected=' + @($script:Round4ExpectedNewCheckNames).Count + '; missing=' + $missingRound4.Count + '; missingNames=' + ($missingRound4 -join ','))
 
+# 第五轮新增检查必须全部存在（SKIP 记入 Skipped，仍视为“已执行到”而不是缺失）。
+$round5NamesPresent = @($script:Checks | ForEach-Object { $_.name }) + @($script:Skipped | ForEach-Object { $_.name })
+$missingRound5 = @($script:Round5ExpectedNewCheckNames | Where-Object { $round5NamesPresent -notcontains $_ })
+$round5Skipped = @($script:Skipped | Where-Object { $script:Round5ExpectedNewCheckNames -contains $_.name })
+Add-UatPathCheck -Name 'evidence.round5NewChecksPresent' -Pass ($missingRound5.Count -eq 0) -Detail ('round5Expected=' + @($script:Round5ExpectedNewCheckNames).Count + '; missing=' + $missingRound5.Count + '; skippedButPresent=' + $round5Skipped.Count + '; missingNames=' + ($missingRound5 -join ','))
+
 $evidencePass = (@($script:Checks | Where-Object { -not $_.pass }).Count -eq 0)
 Add-UatPathCheck -Name 'evidence.passState' -Pass $evidencePass -Detail ('failed=' + (@($script:Checks | Where-Object { -not $_.pass }).Count))
 
@@ -1106,7 +1475,7 @@ $cleanupForEvidence = [ordered]@{
 }
 $evidence = [ordered]@{
     task                = 'T1-03'
-    fix                 = 'P3-02 + round-4 F1/F2 UAT path safety (test-root trust anchor + fail-closed sandbox cleanup)'
+    fix                 = 'P3-02 + round-4 F1/F2 UAT path safety (test-root trust anchor + fail-closed sandbox cleanup) + round-5 F1/F2 (evidence write boundary + sandbox entry native check)'
     generatedAt         = (Get-Date).ToUniversalTime().ToString('o')
     command             = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\test-t1-03-uat-path.ps1'
     environment         = [ordered]@{
@@ -1134,6 +1503,13 @@ $evidence = [ordered]@{
         f1 = $script:F1Summary
         f2 = $script:F2Summary
     }
+    round5              = [ordered]@{
+        fix                   = 'F1 evidence write boundary (native final path/identity/hardlink) + F2 sandbox entry native check (no Test-Path bypass)'
+        f1                    = $script:Round5F1Summary
+        f2                    = $script:Round5F2Summary
+        expectedNewCheckCount = @($script:Round5ExpectedNewCheckNames).Count
+    }
+    round5NewCheckTarget = @($script:Round5ExpectedNewCheckNames).Count
     round3CheckCountPreserved = @($script:Round3CheckNames).Count
     round4NewCheckTarget      = @($script:Round4ExpectedNewCheckNames).Count
     originalCheckCount  = @($script:OriginalCheckNames).Count
@@ -1160,11 +1536,7 @@ if ($finalLeak) {
     Write-Host 'T1_03_UAT_PATH_EVIDENCE_LEAK=FAIL（证据仍包含机器标识，拒绝写入）'
     exit 1
 }
-$evidenceDir = Split-Path -Parent $EvidencePath
-if (-not (Test-Path $evidenceDir)) {
-    New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
-}
-$evidenceJson | Set-Content -Path $EvidencePath -Encoding UTF8
+[void](Write-T103EvidenceFile -Path $EvidencePath -Content $evidenceJson -ExpectedRootIdentity $script:EvidenceRootIdentity)
 Write-Host ("UAT_PATH_EVIDENCE=" + $EvidencePath)
 Write-Host ("UAT_PATH_CHECK_TOTAL=" + $evidence.checkCount + " ORIGINAL=" + $evidence.originalCheckCount + " ROUND3_PRESERVED=" + $evidence.round3CheckCountPreserved + " ROUND4_NEW_TARGET=" + $evidence.round4NewCheckTarget + " SKIPPED=" + $evidence.skipCount + " FAILED=" + $failed.Count)
 Write-Host ("UAT_PATH_TRUST_ANCHOR=" + $(if ([bool]$evidence.trustAnchor.verified) { 'PASS' } else { 'FAIL' }) + " CLEANUP_SAFE=" + [string]$evidence.cleanup.safe + " CLEANUP_STOP_CODE=" + [string]$evidence.cleanup.stopCode)

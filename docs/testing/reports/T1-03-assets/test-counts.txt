@@ -1,4 +1,4 @@
-T1-03 工作事项快速创建和待安排区域 — 第四轮 F1/F2 定向修复测试数量与环境
+T1-03 工作事项快速创建和待安排区域 — 第四轮审计 F1/F2 最小修复测试数量与环境
 ================================================================================
 
 环境
@@ -9,17 +9,15 @@ rustc / cargo   : 1.100.0 / 1.100.0
 Node / npm      : v22.20.0 / 10.9.3
 Python          : 3.14.5（标准库 sqlite3，仅只读探针）
 分支            : task/T1-03-quick-create-pending
-第三轮审计基准   : 489d8689484c2cf744893bd3ee08dc7b25b5c8b8（第三轮审计未通过）
-第四轮修复基准   : d82bdd47ae7c3c27fb4383d72ee16a131c89036d（F1/F2 修复提交）
+第四轮审计基准   : e8205cae22e98afce6480f5a5a0695543a61dee3（PR #8 本轮前 HEAD）
+本轮修复提交     : 见 docs/testing/reports/T1-03-REPORT.md 第 10 节（提交后记录）
 main 基线       : 018e851e8daf5835391a7b61caf881bc57c2ad42
-提交数          : 扫描时 origin/main..HEAD = 22（第四轮修复提交 d82bdd4 + 本证据同步提交）；
-                  当前 HEAD 见 GitHub / PR #8
 UAT 测试根目录   : <uat-root>（专用测试根目录，脚本强制限定）
-                  第四轮运行目录 <uat-root>\t1-03-ui-r4-20261120-181549
-                  第三轮历史目录 <uat-root>\t1-03-ui-r3-20261120-081100（未被覆盖）
+                  本轮运行目录 <uat-root>\t1-03-ui-r5b-20261126-183147
+                  第三/四轮历史目录与证据未被覆盖
 测试数据         : 全部虚构；未使用真实工作数据；未触碰正式目录 D:\WorkManager
 
-质量门禁（第四轮，全部退出码 0）
+质量门禁（本轮，全部退出码 0）
 --------------------------------------------------------------------------------
 cargo fmt --all -- --check                 : exit 0
 cargo check --workspace --all-targets      : exit 0
@@ -30,105 +28,104 @@ npm run build                              : exit 0（167 modules）
 node --test scripts/quality/work-item-bridge.test.mjs : 17/17 passed
 git diff --check                           : exit 0
 
-F1/F2 UAT 路径安全专项（第四轮，真实 Windows 文件系统对象与故障注入）
+F1/F2 UAT 路径安全专项（本轮，真实 Windows 文件系统对象）
 --------------------------------------------------------------------------------
 命令：powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\test-t1-03-uat-path.ps1 `
-        -EvidencePath docs\testing\reports\T1-03-assets\evidence\round4\t1-03-uat-path-evidence.json
-结果：exit 0；TOTAL=93；ORIGINAL=23；ROUND3_PRESERVED=60；ROUND4_NEW_TARGET=31；
-      FAILED=0；SKIPPED=1
-方法：CreateFileW + GetFileInformationByHandleEx(FileAttributeTagInfo/FileIdInfo) +
+        -EvidencePath docs\testing\reports\T1-03-assets\evidence\round5\t1-03-uat-path-evidence.json
+结果：exit 0；TOTAL=115；ORIGINAL=23；ROUND3_PRESERVED=60；ROUND4_NEW_TARGET=31；
+      ROUND5_NEW=21；FAILED=0；SKIPPED=1
+方法：CreateFileW + GetFileInformationByHandleEx(FileAttributeTagInfo/FileIdInfo/FileStandardInfo) +
       GetFinalPathNameByHandleW；FILE_FLAG_BACKUP_SEMANTICS + FILE_FLAG_OPEN_REPARSE_POINT
-F1（测试根目录信任锚 / 真实入口顺序）：
-  - 入口在任何写操作前调用 Assert-T103UatTrustedTestRoot；缺失/重解析点/最终路径不一致/卷身份
-    不一致均 fail closed，且不自动创建测试根目录；
-  - 真实 Junction 把测试根替换为外部 Canary 目录后启动真实入口子进程：exit=2、拒绝执行、
-    Canary 内容与目录结构不变、不创建沙箱、默认测试根目录未被触碰、未写默认证据；
-  - 测试根缺失场景：exit=2、未自动创建；
-  - -TestRootOverride 注入到合法普通目录也不会执行完整套件/不创建沙箱（默认路径不受影响）。
-F2（清理 fail closed / 受控删除失败注入 + 真实文件系统对象场景）：
-  - 正常：真实 Junction 删除成功、沙箱安全删除、外部 Canary 不变；
-  - 受控删除失败注入：FaultHook 在 beforeLinkDelete 阶段抛出确定性异常，stopCode=trackedLinkDeleteFailed，
-    未执行递归删除，沙箱与 sentinel 保留，外部 Canary 不变，失败路径可定位；
-    此项未修改 Windows ACL，也未实际执行 ACL 拒绝/Access Denied 测试；
-  - 删除后链接重建：stopCode=trackedLinkStillExists，沙箱保留；
-  - 未跟踪 Reparse Point：stopCode=unexpectedReparsePoint，沙箱与两个外部目标 Canary 均保留；
-  - 清理前身份替换：stopCode=sandboxIdentityChanged，沙箱保留、替换目标 Canary 不变；
-  - 失败后重新检查 5 个外部 Canary 全部不变；4 个失败用例均未执行递归删除。
-原有回归：第三轮 60 项检查全部保留（evidence.round3ChecksPreserved 通过）；
-          第二/三轮 7 类真实 Junction 场景与无副作用检查继续通过。
-SKIP 原因：当前进程无 SeCreateSymbolicLinkPrivilege（非管理员、未启用开发者模式），
-          mklink /D 退出码 1；Symbolic Link 场景未执行，明确记录 SKIP，不计为 PASS。
-清理安全检查：主套件沙箱清理 SAFE（11 个步骤，身份复验 + 链接复验 + 无未预期 reparse point +
-          逐条目校验后递归删除）；无遗留沙箱目录。
 
-Release E2E（第四轮，scripts/verify/verify-t1-03-ui.ps1，UAT: t1-03-ui-r4-20261120-181549）
+F1（证据写入边界/身份，本轮新增 12 项，全部 PASS）：
+  - f1.evidenceWriteInsideRootSucceeds：正常写入注入证据目录（含新建子目录）并回读内容一致
+  - f1.evidenceRelativeEscapeRejected：相对路径按仓库根解析后越界，拒绝且未创建文件
+  - f1.evidenceDotDotTraversalRejected：真实 `..` 穿越到证据目录外，拒绝且未创建文件
+  - f1.evidenceAbsoluteOutsideRejected：证据目录外绝对路径，拒绝且未创建文件
+  - f1.evidenceJunctionBypassRejected：证据目录内真实 Junction 指向外部，拒绝；目标 Canary 不变
+  - f1.evidenceDanglingJunctionRejected：证据目录内真实悬空 Junction（tag 0xA0000003），拒绝
+  - f1.evidenceUnsafeExistingTargetRejected：业务数据库的真实硬链接目标（NumberOfLinks=2），拒绝；
+    业务文件 SHA-256 不变
+  - f1.evidenceRootIdentityMismatchRejected：证据目录被 rename + 重建（真实 File ID 变化），按启动时
+    身份记录拒绝
+  - f1.evidenceFormalDatabaseTargetRejected：`D:\WorkManager\data\database\work.db` 目标拒绝；
+    正式目录前后均不存在
+  - f1.evidenceNativeCheckFailureFailsClosed：请求路径组件是文件（真实原生路径检查失败），fail closed
+  - f1.evidenceDefaultRootTrusted：仓库默认证据目录通过同一守卫（只校验，不写入）
+  - f1.canariesUnchangedAfterRejections：全部拒绝用例后业务数据库与守护 Canary 哈希不变
+  修复前 Red（真实文件系统）：旧写入逻辑把证据写到仓库证据目录之外
+  （test-artifacts\f1f2\baseline-evidence.json，34,904 字节），覆盖业务 Canary（SHA-256 改变），
+  并自动创建越界父目录。
+
+F2（沙箱入口原生检查，本轮新增 8 项，全部 PASS）：
+  - f2.entryTrulyAbsentConfirmedByNativeCheck：原生确认不存在 → sandboxAlreadyAbsent（原业务规则）
+  - f2.entryNormalDirectoryNativeCheckPasses：正常入口身份验证（sandbox.identityVerified /
+    tree.noUnexpectedReparsePoint / sandbox.identityReVerified）后逐条目安全递归删除
+  - f2.entryNormalJunctionDetected：正常 Junction → sandboxEntryIsReparsePoint（tag 0xA0000003），
+    不递归、目标 Canary 不变、链接保留
+  - f2.entryDanglingJunctionDetected：真实悬空 Junction（入口本身）→ sandboxEntryIsReparsePoint，
+    不递归、链接保留
+  - f2.entryTestPathFalseDanglingJunctionNotBypassed：悬空 Junction 之下路径 `Test-Path=False`；
+    旧分支表达式本会 sandboxAlreadyAbsent；修复后 sandboxParentIsReparsePoint、
+    recursiveDeletePerformed=false、悬空链接保留
+  - f2.entryParentReparsePointFailsClosed：父目录是 Junction → sandboxParentIsReparsePoint，
+    目标未创建子目录、链接保留
+  - f2.entryIdentityUnconfirmedFailsClosed：身份与信任记录不一致 → sandboxIdentityChanged，沙箱与
+    sentinel 保留
+  - f2.entryNativeCheckFailureFailsClosed：路径组件是文件（原生检查失败）→
+    sandboxEntryNativeCheckFailed，不递归
+  另有 f2.canariesUnchangedAfterFailureCases：失败用例后外部 Canary 与业务数据库不变。
+
+原有回归：第三轮 60 项 + 第四轮 31 项检查名称全部保留（evidence.round3ChecksPreserved /
+          evidence.round4NewChecksPresent 通过）；第三/四轮真实 Junction、信任锚、fail-closed 清理
+          场景继续通过。
+清理安全检查：主套件沙箱清理 SAFE（11 个步骤：身份复验 + 链接复验 + 无未预期 reparse point +
+          身份再复验 + 逐条目校验递归删除）；无遗留沙箱目录。
+
+SKIP（不计 PASS）
 --------------------------------------------------------------------------------
-Release EXE      : target\release\workmanager.exe（产品代码未变，与第二/三轮一致）
+native.symbolicLinkToExternalRejected：当前进程无 SeCreateSymbolicLinkPrivilege（非管理员、
+未启用开发者模式），`mklink /D` 退出码 1；该场景未执行，明确记录 SKIP。
+
+Red / Green 说明
+--------------------------------------------------------------------------------
+- F1：修复前用**真实脚本入口**跑出证据写到证据目录之外（见上）；修复后用同一写入入口和真实
+  文件系统对象验证 12 项。
+- F2：Windows PowerShell 5.1 对悬空 Junction **本身**的 `Test-Path` 返回 True，对**其下路径**返回
+  False；旧 `finally` 分支表达式 `-not (Test-Path -LiteralPath $sandbox)` 对真实悬空 Junction 下的
+  沙箱路径返回 True（本会 sandboxAlreadyAbsent 并跳过原生检查）。修复后同一对象返回 fail-closed。
+  不声称“悬空 Junction 本身 Test-Path 必为 False”。
+
+Release E2E（本轮，scripts/verify/verify-t1-03-ui.ps1，UAT: t1-03-ui-r5b-20261126-183147）
+--------------------------------------------------------------------------------
+Release EXE      : target\release\workmanager.exe（本轮按本分支重建；产品代码未变）
 EXE 大小          : 10,352,128 字节
-EXE SHA-256      : 3f12bbce1c8abb2244d65e814264662f56a982caf1875103a821cb17e8bfa9e3
+EXE SHA-256      : f46c9b0cb3c9d094475cab6abd8276276126f2ea0d2e5b38b6d6a4fbf92b2b68
+说明              : 工作区原有二进制为 schema 4（T1-04）构建（user_version=4、migrations 1-4），
+                    与 T1-03 schema 3 期望不符，首次 E2E 失败（exit 1）；重建后重跑通过。
 主 UI/IPC 检查    : 84 / 84（exit 0）
 最小窗口 860x640  : 12 / 12（exit 0；关闭按钮后进程退出码 0）
 重启持久化阶段    : 17 / 17（exit 0；关闭按钮后进程退出码 0）
 数据库只读探针    : 25 / 25（关闭后 + 重启后）
 CSP 违规          : 0
 页面未捕获异常    : 0
-E2E/数据库总断言  : 84 + 12 + 17 + 25 = 138（另路径安全 93 项）
-证据：docs/testing/reports/T1-03-assets/evidence/round4/（7 个脱敏 JSON + 19 张实测截图）
-机器可读汇总：docs/testing/reports/T1-03-assets/evidence/round4/round4-verification-summary.json
+两次关闭退出码    : 0 / 0
+截图              : 19 张（未复制入仓；产品 UI 未修改，第四轮截图仍有效）
+证据：docs/testing/reports/T1-03-assets/evidence/round5/（7 个脱敏 JSON）
+机器可读汇总：docs/testing/reports/T1-03-assets/evidence/round5/round5-verification-summary.json
 
-继承 Release 回归（第四轮重新执行，全部 exit 0）
+P2-01（本轮未关闭）
 --------------------------------------------------------------------------------
-verify-release-portable.ps1                 : TOTAL=106 PASS=90 FAIL=0 WARN=1 INFO=15（PASS；既有 WARN 保留）
-verify-release-faults.ps1                   : TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9（PASS）
-verify-t1-02-ui.ps1                         : 主 73/73；最小窗口 12/12；关闭退出码 0（PASS）
-说明：T1-02 UI E2E 首次执行出现窗口尺寸/加载超时的环境性失败，在无并发负载下单独重跑通过；
-      产品代码与 T1-02 验证脚本均未修改。
-
-数据库探针关键事实（第四轮，与第三轮一致）
---------------------------------------------------------------------------------
-第一次关闭后
-  user_version              : 3
-  integrity_check           : ok
-  journal_mode              : wal
-  schema_migrations         : 1, 2, 3
-  work_items_total          : 5
-  work_items_pending        : 5
-  work_items_other_status   : 0
-  work_items_null_project   : 4
-  work_items_linked_archived: 1
-  projects_total            : 2
-  projects_archived         : 2
-  foreign_key_violations    : 0
-重启并再次创建后关闭
-  work_items_total          : 6
-  work_items_pending        : 6
-  work_items_other_status   : 0
-  work_items_null_project   : 5
-  work_items_linked_archived: 1
-  foreign_key_violations    : 0
-
-P2-01 第四轮脱敏/历史对象复核
---------------------------------------------------------------------------------
-当前 T1-03-assets 敏感值扫描                 : 62 文件（38 PNG、21 JSON、3 文本）；具体机器标识命中 0
-PNG 文本块扫描                               : 命中 0
-分支增量历史深度扫描（018e851..HEAD）        : 22 提交 / 7269 次文件树扫描 / 449 个唯一 blob；
-                                              新增具体机器标识命中 0；第三轮口径可比原始命中 17 条
-                                              （全部为文档分类描述/占位符/通用路径文本）
-远程 refs / tags                            : 18 refs / tags 0；无远程 ref 指向旧提交 2342828
-PR #8 文本                                   : body 3,957 字符 / SHA-256 725d5df3…0ae0；4 条 issue 评论、
-                                              0 review comment、0 review；具体机器标识 0；
-                                              旧日志文件名 1（仅第三轮审计结论评论中的旧对象说明引用）；
-                                              旧提交 SHA 引用 3（公开 SHA，非机器标识）
-旧提交服务端可达性                           : 旧提交 2342828 commit API HTTP 200；旧 SHA 的 9 个原始日志
-                                              contents API HTTP 200（合计 147,009 字节）
-                                            -> 服务端清理未完成；P2-01 未关闭
-本地 backup/bundle                          : backup/t1-03-r1-audit-baseline 与 gitignored bundle 仅本地，未推送
-main 基线既有同类信息                       : 属 main 既有内容、非本 PR 新增（T1-02 证据 1 处仓库路径与 origin/main 同 blob）
-GitHub Support 工单                         : 材料已整理（SANITIZATION.md 第 4 节）；尚未提交/未获确认
+旧提交服务端可达性 : 旧提交 2342828 commit API 仍 HTTP 200；9 个原始日志仍可列出/下载
+                     -> GitHub Support 服务端清理未完成；P2-01 未关闭
+本轮未重写历史、未强制推送、未删除备份分支/bundle
 
 遗留风险
 --------------------------------------------------------------------------------
-- P2-01 未关闭：旧提交与 9 个原始日志仍可经 GitHub 读取，需仓库所有者提交 GitHub Support 清理并事后用旧 SHA 复验。
-- TOCTOU 剩余风险未消除（DEC-029 / Issue #2）：信任锚/路径校验与后续创建/复制/启动之间仍存在并发替换窗口。
+- P2-01 未关闭：旧提交与 9 个原始日志仍可经 GitHub 读取，需仓库所有者提交 GitHub Support 清理。
+- 未执行 Windows ACL `Access Denied` 测试；F1/F2 的“原生检查失败”用例是“路径组件是文件”的真实
+  Win32 失败，不得表述为 ACL 拒绝。
+- TOCTOU 剩余风险未消除（DEC-029 / Issue #2）：证据写入检查与 Set-Content、清理检查与递归删除之间
+  仍存在并发替换窗口。
 - main 基线既有 T1-01/T1-02 机器信息未修改（需单独授权）。
 - 普通 SQLite 未加密（DEC-028）。

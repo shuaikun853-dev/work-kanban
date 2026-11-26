@@ -1,0 +1,460 @@
+{
+  "generatedAt": "2026-11-26T10:32:01.190Z",
+  "task": "T1-03",
+  "method": "CDP against real Release WebView2: shell/nav assertions, real pending-view loading/empty/list states, real UI quick-create flows (unassigned + unarchived project), create/refresh success-failure notice timing (P3-01), duplicate-submit double click, archived-project race error, direct typed IPC bypass checks, strict 10-field WorkItem DTO contract validation (P2-02), CDP transport-level fault injection for load failure/retry and bridge contract violation, long title layout, screenshots, CSP collection",
+  "port": 9371,
+  "bootMarker": "wm-t1-03-1795689115570-4ca7f3cbb0402",
+  "deterministicWaits": [
+    "page.reloadNewDocumentBootMarker",
+    "appShell.renderedWithTauriInternals",
+    "ipc.databaseHealthReadySchema3",
+    "pendingView.loadingSettled"
+  ],
+  "target": {
+    "id": "D696BFCE2BF2F4EA271208AE576FF1E6",
+    "title": "工作总览 · WorkManager",
+    "url": "http://tauri.localhost/",
+    "type": "page"
+  },
+  "screenshots": [
+    "create-dialog-projects.png",
+    "create-dialog.png",
+    "create-error-project-archived.png",
+    "pending-archived-project.png",
+    "pending-contract-violation.png",
+    "pending-create-refresh-failure.png",
+    "pending-create-refresh-recovered.png",
+    "pending-empty.png",
+    "pending-linked-project.png",
+    "pending-load-error.png",
+    "pending-loading.png",
+    "pending-long-title.png",
+    "pending-unassigned.png",
+    "today-entry.png"
+  ],
+  "pageErrors": [],
+  "checks": [
+    {
+      "name": "shell.rendered",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "shell.titlebarAppName",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "shell.sidebarNavigationUnchanged",
+      "pass": true,
+      "detail": "工作总览 / 今日工作 / 未来 7 天 / 历史记录 / 报告 / 设置"
+    },
+    {
+      "name": "shell.noNewPrimaryNavigationForPending",
+      "pass": true,
+      "detail": "待安排不得成为一级导航"
+    },
+    {
+      "name": "shell.noHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[]}"
+    },
+    {
+      "name": "nav.todayClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "today.secondarySwitcherRendered",
+      "pass": true,
+      "detail": "{\"labels\":[\"今日工作\",\"待安排\"],\"pressed\":[\"今日工作\"]}"
+    },
+    {
+      "name": "today.defaultViewIsToday",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "today.executionPlaceholderHonest",
+      "pass": true,
+      "detail": "今日工作执行记录未接入时不得展示虚构数据"
+    },
+    {
+      "name": "pending.entryClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "pending.loadingStateVisible",
+      "pass": true,
+      "detail": "{\"clicked\":true,\"heading\":\"待安排\",\"loading\":true,\"statusCount\":2}"
+    },
+    {
+      "name": "pending.emptyStateRendered",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":true,\"rows\":0,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "pending.emptyStateCreateAction",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "pending.emptyNoHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[]}"
+    },
+    {
+      "name": "ipc.listPendingEmpty",
+      "pass": true,
+      "detail": "{\"ok\":true,\"value\":[]}"
+    },
+    {
+      "name": "create.openFromToolbar",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.onlyTitleAndProjectFields",
+      "pass": true,
+      "detail": "{\"title\":\"快速创建工作\",\"hasTitleInput\":true,\"hasProjectSelect\":true,\"textInputs\":1,\"labels\":[\"工作标题\",\"所属项目（可选）\"]}"
+    },
+    {
+      "name": "create.onlyUnassignedOptionWithoutProjects",
+      "pass": true,
+      "detail": "[{\"value\":\"\",\"label\":\"未归属项目\"}]"
+    },
+    {
+      "name": "create.titleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.refreshDelayInjected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.saved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.refreshTransientNoticeShownBeforeRefreshCompletes",
+      "pass": true,
+      "detail": "{\"kind\":\"success\",\"text\":\"工作已创建，正在从数据库刷新待安排列表…\"}"
+    },
+    {
+      "name": "create.refreshSuccessNoticeOnlyAfterRefresh",
+      "pass": true,
+      "detail": "{\"kind\":\"success\",\"text\":\"工作已创建，待安排列表已从数据库更新。\"}"
+    },
+    {
+      "name": "create.unassignedRowVisible",
+      "pass": true,
+      "detail": "[{\"id\":\"53b4a797-2232-4c09-ad5b-bcc84375fa12\",\"title\":\"整理中核商品数据\",\"titleAttr\":\"整理中核商品数据\",\"meta\":\"未归属项目\",\"hasArchivedBadge\":false}]"
+    },
+    {
+      "name": "ipc.unassignedPersisted",
+      "pass": true,
+      "detail": "[{\"id\":\"53b4a797-2232-4c09-ad5b-bcc84375fa12\",\"projectId\":null,\"projectName\":null,\"projectIsArchived\":false,\"title\":\"整理中核商品数据\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-26T10:31:58.103Z\",\"updatedAt\":\"2026-11-26T10:31:58.103Z\"}]"
+    },
+    {
+      "name": "pending.unassignedNoHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[]}"
+    },
+    {
+      "name": "create.reopenForDoubleSubmit",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.doubleSubmitTitleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.doubleClickDispatched",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.doubleSubmitCreatesSingleRecord",
+      "pass": true,
+      "detail": "匹配记录数=1"
+    },
+    {
+      "name": "setup.projectsCreated",
+      "pass": true,
+      "detail": "{\"a\":true,\"b\":true}"
+    },
+    {
+      "name": "setup.projectArchived",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.reopenForProjectSelection",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.selectorOnlyUnarchivedProjects",
+      "pass": true,
+      "detail": "[{\"value\":\"\",\"label\":\"未归属项目\"},{\"value\":\"eef55b8e-81ce-43ee-a52c-29f7ebcdedc8\",\"label\":\"T1-03 虚构未归档项目\"}]"
+    },
+    {
+      "name": "create.projectSelected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.linkedTitleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.linkedSaved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "create.linkedRowShowsProjectName",
+      "pass": true,
+      "detail": "{\"id\":\"392154dd-d5e5-4932-8e45-a54cee5d8bfd\",\"title\":\"关联未归档项目的待安排工作\",\"titleAttr\":\"关联未归档项目的待安排工作\",\"meta\":\"T1-03 虚构未归档项目\",\"hasArchivedBadge\":false}"
+    },
+    {
+      "name": "ipc.linkedWorkItemPersisted",
+      "pass": true,
+      "detail": "{\"id\":\"392154dd-d5e5-4932-8e45-a54cee5d8bfd\",\"projectId\":\"eef55b8e-81ce-43ee-a52c-29f7ebcdedc8\",\"projectName\":\"T1-03 虚构未归档项目\",\"projectIsArchived\":false,\"title\":\"关联未归档项目的待安排工作\",\"lifecycleStatus\":\"pending\",\"createdAt\":\"2026-11-26T10:31:59.739Z\",\"updatedAt\":\"2026-11-26T10:31:59.739Z\"}"
+    },
+    {
+      "name": "race.openDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "race.projectSelected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "race.titleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "race.projectArchivedBehindDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "race.saveClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "race.projectArchivedErrorShown",
+      "pass": true,
+      "detail": "{\"message\":\"所选项目已归档，不能再关联新工作。请选择其他项目或不选择项目。 错误码：project-archived\",\"code\":\"错误码：project-archived\",\"dialogStillOpen\":true}"
+    },
+    {
+      "name": "race.archivedProjectRemovedFromSelector",
+      "pass": true,
+      "detail": "[{\"value\":\"\",\"label\":\"未归属项目\"}]"
+    },
+    {
+      "name": "race.cancelDialog",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "race.noRecordCreatedForArchivedProject",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":3,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "archivedProject.historyLinkStillListed",
+      "pass": true,
+      "detail": "{\"id\":\"392154dd-d5e5-4932-8e45-a54cee5d8bfd\",\"title\":\"关联未归档项目的待安排工作\",\"titleAttr\":\"关联未归档项目的待安排工作\",\"meta\":\"T1-03 虚构未归档项目 项目已归档\",\"hasArchivedBadge\":true}"
+    },
+    {
+      "name": "ipc.archivedProjectRejectedEvenWithoutUiFilter",
+      "pass": true,
+      "detail": "{\"code\":\"project-archived\",\"message\":\"所选项目已归档，不能再关联新工作。请选择其他项目或不选择项目。\"}"
+    },
+    {
+      "name": "ipc.missingProjectRejected",
+      "pass": true,
+      "detail": "{\"code\":\"project-not-found\",\"message\":\"所选项目不存在或已被删除。请刷新项目列表后重试。\"}"
+    },
+    {
+      "name": "ipc.emptyTitleRejected",
+      "pass": true,
+      "detail": "{\"code\":\"work-item-title-empty\",\"message\":\"工作标题不能为空，请填写工作标题。\"}"
+    },
+    {
+      "name": "ipc.unknownFieldRejected",
+      "pass": true,
+      "detail": "invalid args `input` for command `create_work_item`: unknown field `extraField`, expected `title` or `projectId`"
+    },
+    {
+      "name": "ipc.snakeCaseProjectIdRejected",
+      "pass": true,
+      "detail": "invalid args `input` for command `create_work_item`: unknown field `project_id`, expected `title` or `projectId`"
+    },
+    {
+      "name": "ipc.noArbitrarySqlCommand",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "ipc.rejectedRequestsCreatedNoRows",
+      "pass": true,
+      "detail": "3"
+    },
+    {
+      "name": "fault.loadFailureInjected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.loadErrorStateShown",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":0,\"error\":true,\"errorText\":\"待安排工作加载失败 模拟待安排列表加载失败 错误码：ipc-command-failed 重新加载\"}"
+    },
+    {
+      "name": "fault.transportRestored",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.retryClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.retryRecoversList",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":3,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "fault.contractViolationInjected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.bridgeRuntimeValidationRejectsMalformedPayload",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":0,\"error\":true,\"errorText\":\"待安排工作加载失败 工作事项 IPC 返回值不符合契约：待安排工作列表[0].id 应为 字符串，实际为 number。请检查前后端版本是否一致。 错误码：ipc-contract-violation 重新加载\"}"
+    },
+    {
+      "name": "fault.retryAfterContractViolation",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fault.recoveredAfterContractViolation",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":3,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "refreshFailure.openCreate",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "refreshFailure.titleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "refreshFailure.faultInjected",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "refreshFailure.saved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "refreshFailure.warningNoticeShown",
+      "pass": true,
+      "detail": "{\"kind\":\"warning\",\"text\":\"工作已创建，但待安排列表刷新失败；请使用“重新加载”确认最新状态。\"}"
+    },
+    {
+      "name": "refreshFailure.loadErrorPanelShown",
+      "pass": true,
+      "detail": "\"待安排工作加载失败 模拟待安排列表加载失败 错误码：ipc-command-failed 重新加载\""
+    },
+    {
+      "name": "refreshFailure.createdExactlyOnce",
+      "pass": true,
+      "detail": "记录数=4, 同标题=1"
+    },
+    {
+      "name": "refreshFailure.retryClicked",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "refreshFailure.retryRecoversList",
+      "pass": true,
+      "detail": "{\"mounted\":true,\"ready\":true,\"heading\":\"待安排\",\"loading\":false,\"refreshing\":false,\"empty\":false,\"rows\":4,\"error\":false,\"errorText\":null}"
+    },
+    {
+      "name": "refreshFailure.noticeUpdatedAfterRetrySuccess",
+      "pass": true,
+      "detail": "{\"kind\":\"success\",\"text\":\"待安排列表已从数据库重新读取。\"}"
+    },
+    {
+      "name": "refreshFailure.noDuplicateAfterRetry",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "long.openCreate",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "long.titleFilled",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "long.saved",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "long.titleFullTextAvailable",
+      "pass": true,
+      "detail": "titleAttr=超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——…"
+    },
+    {
+      "name": "long.noHorizontalOverflow",
+      "pass": true,
+      "detail": "{\"innerWidth\":1100,\"docScrollWidth\":1100,\"clientWidth\":1100,\"bodyScrollWidth\":1100,\"offenders\":[{\"tag\":\"P\",\"cls\":\"work-item-title svelte-k3ghdt\",\"text\":\"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是\",\"left\":245,\"right\":1051,\"width\":806,\"scrollWidth\":1365,\"clientWidth\":806}]}"
+    },
+    {
+      "name": "csp.noViolations",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "page.noUncaughtErrors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "persistence.prerequisiteState",
+      "pass": true,
+      "detail": "{\"workItems\":5,\"projects\":2}"
+    }
+  ],
+  "failed": [],
+  "pass": true
+}

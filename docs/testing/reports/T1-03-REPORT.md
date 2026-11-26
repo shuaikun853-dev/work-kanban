@@ -2,22 +2,39 @@
 
 **任务 ID：** T1-03
 **任务名称：** 工作事项快速创建和待安排区域
-**当前状态：** **第三轮独立审计未通过；第四轮 F1/F2 定向修复完成，等待第四轮独立审计；P2-01 服务端清理未完成、保持 OPEN**（PR #8 保持 Open，未合并；main 未修改）
+**当前状态：** **第四轮独立审计未通过（F1 EvidencePath 证据写入边界、F2 沙箱入口 `Test-Path` 绕过）；本轮 F1/F2 最小修复完成，等待第四轮独立审计复核；P2-01 服务端清理未完成、保持 OPEN**（PR #8 保持 Open，未合并；main 未修改）
 **开发分支：** `task/T1-03-quick-create-pending`
 **目标分支：** `main`
 **开发基线：** `018e851e8daf5835391a7b61caf881bc57c2ad42`（T1-02 已验收合并后的 main）
 **第一轮审计基准 HEAD：** `2342828852abee43ab56610e7d1fa91a02310bfe`
 **第二轮审计基准 HEAD：** `bad0688ee9de5e07f769d64d7fc44e3f182a960d`
-**第三轮审计基准 HEAD：** `489d8689484c2cf744893bd3ee08dc7b25b5c8b8`（第三轮独立审计未通过，仅审计 P2-01/P3-02）
-**第四轮修复提交：** `d82bdd47ae7c3c27fb4383d72ee16a131c89036d`（F1/F2，验证脚本）；随后为第四轮证据/文档同步提交（PR #8 时间线可见）
-**Pull Request：** [PR #8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（指向 main，保持 Open，等待第四轮独立审计）
-**报告生成时间：** 2026-11-19（第二轮）；2026-11-20 第三轮更新；2026-11-20 第四轮更新（Asia/Shanghai）
+**第三轮审计基准 HEAD：** `489d8689484c2cf744893bd3ee08dc7b25b5c8b8`
+**第四轮审计基准 HEAD：** `e8205cae22e98afce6480f5a5a0695543a61dee3`（本轮修复前 PR #8 HEAD）
+**第四轮修复提交：** `d82bdd47ae7c3c27fb4383d72ee16a131c89036d`（第三轮审计 F1/F2，验证脚本）；本轮 F1/F2 最小修复提交见第 10 节
+**Pull Request：** [PR #8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（指向 main，保持 Open，等待第四轮独立审计复核）
+**报告生成时间：** 2026-11-19（第二轮）；2026-11-20 第三/四轮更新；2026-11-26 本轮 F1/F2 最小修复更新（Asia/Shanghai）
 **测试环境：** Windows 10 家庭中文版 10.0.19045；Windows PowerShell 5.1.19041.6456；rustc 1.100.0 / cargo 1.100.0；Node.js v22.20.0 / npm 10.9.3；Python 3.14.5
-**测试数据：** 全部为虚构内容；UAT 使用专用测试根目录下的一次性新目录（第四轮 `<uat-root>\t1-03-ui-r4-20261120-181549`；第三轮 `<uat-root>\t1-03-ui-r3-20261120-081100`），未触碰正式运行目录 `D:\WorkManager`，未使用真实用户工作数据
+**测试数据：** 全部为虚构内容；UAT 使用专用测试根目录下的一次性新目录（本轮 `<uat-root>\t1-03-ui-r5-<timestamp>`；第四轮 `<uat-root>\t1-03-ui-r4-20261120-181549`；第三轮 `<uat-root>\t1-03-ui-r3-20261120-081100`），未触碰正式运行目录 `D:\WorkManager`，未使用真实用户工作数据
 
 ---
 
-## 0. 第四轮 F1/F2 定向修复摘要（2026-11-20，本轮变更）
+## 本轮修复摘要（2026-11-26，第四轮独立审计 F1/F2 最小修复）
+
+第四轮独立审计发现两项问题：**F1 EvidencePath 证据文件写入缺少边界与身份保护**、**F2 沙箱入口使用 `Test-Path` 判断存在性，悬空 Junction 场景会绕过后续 Windows 原生路径身份检查**。本轮只做这两项最小修复：未重新开发 T1-03、未修改产品代码（Rust/前端/迁移/业务 UI 未变）、未修改 PRD/技术设计/决策记录、未新增依赖、未重写历史、未强制推送。
+
+| 问题 | 根因 | 本轮修复 | 关键证据 |
+|---|---|---|---|
+| **F1** `-EvidencePath` 可写到证据目录之外并覆盖业务文件 | 证据 JSON 直接 `Set-Content -Path $EvidencePath`；父目录不存在时 `New-Item -Force` 自动创建；没有规范化、边界、真实最终路径、目录身份、重解析点或目标文件身份检查；相对路径按当前目录解析 | `T1-03UatPath.ps1` 新增 `Assert-T103EvidenceWritePath` / `Write-T103EvidenceFile`：相对路径按仓库根目录解析并拒绝 UNC/设备路径；证据目录必须存在、是真实目录、真实最终路径与字面一致、卷身份一致；请求路径每个已存在组件必须是普通目录（拒绝 Junction / Symbolic Link / 悬空链接）；真实最终路径必须严格位于证据目录内（非字符串前缀）；已存在目标文件必须是普通文件且只有 1 个硬链接；启动时记录证据目录身份（卷序列号 + File ID + 真实最终路径），写入时比对；任一检查失败 fail closed，不创建、不覆盖 | 路径安全专项 **115 项（FAILED=0、SKIPPED=1）**；F1 新增 12 项：正常写入、相对越界、`..` 遍历、绝对越界、Junction 绕过、悬空 Junction、硬链接数据库别名、证据目录身份替换、正式数据库目标、原生检查失败、默认证据目录、Canary 完整性；修复前 Red 实测：证据曾写到仓库证据目录之外的 `test-artifacts\f1f2\baseline-evidence.json`（34,904 字节），并覆盖业务 Canary 文件（SHA-256 改变）、自动创建越界目录 |
+| **F2** 悬空 Junction 可绕过沙箱入口原生检查 | 清理 `finally` 分支用 `elseif (-not (Test-Path -LiteralPath $sandbox))` 直接判定“入口不存在”，返回 `safe=true / sandboxAlreadyAbsent`，完全跳过后续原生身份检查。Windows PowerShell 5.1 对悬空 Junction **本身**的 `Test-Path` 返回 True，但对**悬空 Junction 之下的路径**返回 False；沙箱路径的祖先为悬空 Junction 时即可绕过 | 新增 `Get-T103EntryNativeState`（入口本身 + 父目录的 `FILE_FLAG_OPEN_REPARSE_POINT` 原生状态：存在性、ReparsePoint、Tag、目录属性、卷序列号、File ID）与 `Invoke-T103SandboxCleanupEntrypoint`：不再使用 `Test-Path`；先检查入口本身与父目录，再用 `Get-T103NativePathChain` 检查全部已存在祖先；仅当原生检查确认入口确实不存在时才按原有业务规则返回 `sandboxAlreadyAbsent`；入口是 Junction / 悬空 Junction、父目录是重解析点、身份不明、原生检查失败一律 fail closed 且不执行递归删除；测试脚本的链接存在性辅助函数同步改为原生检查 | F2 新增 8 项：正常入口身份检查通过、真实不存在、正常 Junction、悬空 Junction（tag `0xA0000003`）、`Test-Path=False` 的悬空 Junction 路径、父目录重解析点、身份不明、原生检查失败；失败场景 `recursiveDeletePerformed=false`；`Test-Path=False` 场景修复后 `stopCode=sandboxParentIsReparsePoint`；外部 Canary 内容/哈希不变；无递归删除 |
+| **证据/文档** | 第四轮审计后状态未同步 | 新增 `evidence/round5/`（不覆盖 round3/round4）；更新本报告、STATUS、DEVELOPMENT_PLAN、证据索引与测试数量 | 第三轮 60 项 + 第四轮 31 项检查名称仍硬校验保留；本轮 21 项新检查硬校验存在 |
+
+**本轮结论：** F1/F2 最小修复完成，真实 Windows 文件系统对象回归通过（真实目录、真实 Junction、真实悬空 Junction、真实硬链接、真实文件哈希与 Canary）。符号链接场景仍因权限限制如实 SKIP；**未执行 Windows ACL `Access Denied` 测试**，F1/F2 的“原生检查失败”用例使用“路径组件是文件”的真实 Win32 失败（不是 ACL 拒绝），不得混写。**DEC-029 / Issue #2 的并发替换 TOCTOU 风险未消除**，本轮不作任何已消除声明。
+
+**Red/Green 与 Skill：** 修复前用真实文件系统与真实脚本入口证明 F1 越界写入；F2 用真实悬空 Junction 证明旧分支表达式 `-not (Test-Path ...)` 会返回 `sandboxAlreadyAbsent`（跳过原生检查），修复后同一对象返回 fail-closed。实现遵循 Ponytail（最小改动、复用既有原生句柄与路径链、不新增依赖）与 Matt Pocock Implement/TDD（先证明问题 → 最小实现 → 同一 seam 回归测试）。
+
+---
+
+## 0. 第四轮 F1/F2 定向修复摘要（2026-11-20，历史）
 
 第三轮独立审计结论为**未通过**，阻塞项为 F1（测试根目录未验证就创建测试沙箱）与 F2（Junction 清理失败后仍递归删除），并要求同步修复证据/文档一致性。第四轮只修复这两项及证据一致性：**未修改产品代码**、未新增业务功能、未修改 PRD/TECHNICAL_DESIGN/DECISIONS 业务决策、未重写历史、未强制推送。
 
@@ -160,6 +177,18 @@ CREATE INDEX idx_work_items_project_status
 ---
 
 ## 3. 文件清单（本轮与 T1-03 相关）
+
+### 本轮（第五轮）修复新增/修改（相对第四轮审计基准 `e8205ca`）
+
+| 文件 | 变更 |
+|---|---|
+| `scripts/verify/T1-03UatPath.ps1` | F1：新增 `Assert-T103EvidenceWritePath` / `Write-T103EvidenceFile`（证据目录真实身份、真实最终路径、祖先链、重解析点、硬链接、边界，fail closed）；F2：新增 `Get-T103EntryNativeState`、`New-T103CleanupStopResult`、`Invoke-T103SandboxCleanupEntrypoint`（原生入口检查，替代 `Test-Path` 分支）；原生读取 `FileStandardInfo.NumberOfLinks`；`Get-T103NativePathChain` 增加 `-AllowFinalFile`（仅证据文件最终组件允许普通文件，中间组件仍必须是目录） |
+| `scripts/verify/test-t1-03-uat-path.ps1` | 入口在任何写操作前记录证据目录身份；证据写入改为 `Write-T103EvidenceFile` 并比对身份；新增 21 项真实文件系统 F1/F2 回归（相对/`..`/绝对越界、Junction、悬空 Junction、硬链接、身份替换、正式数据库、原生检查失败；正常入口、真实不存在、正常/悬空 Junction、父目录重解析点、身份不明、原生检查失败）；链接存在性辅助函数改为原生检查；第三/四轮 91 项检查名称继续硬校验，新增 `evidence.round5NewChecksPresent` |
+| `docs/testing/reports/T1-03-assets/evidence/round5/` | **新增**本轮证据（不覆盖 round3/round4）：115 项路径安全证据、`round5-verification-summary.json` |
+| `docs/testing/reports/T1-03-assets/README.md`、`test-counts.txt` | 本轮证据索引、复现命令、测试数量与环境 |
+| `docs/testing/reports/T1-03-REPORT.md`、`docs/STATUS.md`、`docs/development/DEVELOPMENT_PLAN.md` | 本轮最小修复状态、测试结果、证据与遗留风险 |
+
+本轮**未修改产品代码**（Rust/前端/迁移/业务 UI 均未改动）。工作区原有 `target\release\workmanager.exe` 是 schema 4（T1-04）构建，与本分支 schema 3 期望不符，因此按本分支重新构建后用于原有 T1-03 Release E2E 回归；构建产物不入库。
 
 ### 第四轮修复新增/修改（相对第三轮审计基准 `489d868`）
 
@@ -355,6 +384,51 @@ F1/F2 第四轮专项证据摘要（详见 `evidence/round4/t1-03-uat-path-evide
 
 脱敏策略、扫描细节、旧提交暴露与 GitHub Support 清理材料见 [`T1-03-assets/SANITIZATION.md`](T1-03-assets/SANITIZATION.md)。
 
+### 4.9 本轮（2026-11-26）执行结果（F1/F2 最小修复，全部真实执行）
+
+| 命令/测试 | 退出码 | 结果 |
+|---|---|---|
+| `cargo fmt --all -- --check` | 0 | 无差异 |
+| `cargo check --workspace --all-targets` | 0 | 通过 |
+| `cargo test --workspace` | 0 | **124 passed / 0 failed**（18 个测试二进制） |
+| `npm run check` | 0 | svelte-check 0 errors / 0 warnings；Bridge 17/17；Design Token 22 文件 0 违规、49/49 |
+| `npm run build` | 0 | 构建成功（167 modules） |
+| `node --test scripts/quality/work-item-bridge.test.mjs` | 0 | 17/17 passed |
+| `git diff --check` | 0 | 无空白错误 |
+| `scripts/verify/test-t1-03-uat-path.ps1 -EvidencePath docs\testing\reports\T1-03-assets\evidence\round5\t1-03-uat-path-evidence.json` | 0 | **115 项：FAILED=0，SKIPPED=1（Symbolic Link 权限限制，明确记录、不计 PASS）**；第三轮 60 项 + 第四轮 31 项全部保留；本轮 21 项全部存在；信任锚 PASS；沙箱清理 SAFE（11 步、无遗留） |
+| `scripts/verify/verify-t1-03-ui.ps1 -OutputDir <uat-root>\t1-03-ui-r5b-20261126-183147 -Port 9371` | 0 | 主 84/84、最小窗口 12/12、持久化 17/17、数据库探针 25/25；两次真实关闭退出码 0/0；CSP 0；页面异常 0；19 张截图（未复制入仓，见下） |
+
+**本轮 F1（证据写入边界）实测（详见 `evidence/round5/t1-03-uat-path-evidence.json`）：**
+
+- 正常写入注入证据目录（含新建子目录）成功并回读内容一致；
+- 相对路径越界（相对仓库根解析后仍在证据目录外）、`..` 穿越、证据目录外绝对路径全部拒绝，且未创建文件；
+- 证据目录内真实 Junction、真实悬空 Junction（tag `0xA0000003`）全部拒绝，链接目标 Canary 未变；
+- 已存在目标文件是业务数据库的**真实硬链接**（`NumberOfLinks=2`）时拒绝，业务文件 SHA-256 不变；
+- 证据目录被替换（rename + 重建，真实 File ID 变化）后按启动时身份记录拒绝；
+- 正式数据库目标 `D:\WorkManager\data\database\work.db` 拒绝，`D:\WorkManager` 前后均不存在；
+- 请求路径组件是文件（真实原生路径检查失败）时 fail closed，未写入子路径；
+- 全部拒绝用例后业务数据库与守护 Canary 内容/哈希不变。
+
+**本轮 F2（沙箱入口原生检查）实测：**
+
+- 正常入口：原生身份检查通过（`sandbox.identityVerified`、`tree.noUnexpectedReparsePoint`、`sandbox.identityReVerified`），逐条目安全递归删除；
+- 真实不存在：原生检查确认后按原规则返回 `sandboxAlreadyAbsent`，不创建目录；
+- 正常 Junction：`sandboxEntryIsReparsePoint`（tag `0xA0000003`），不递归、目标 Canary 不变、链接保留；
+- 悬空 Junction（入口本身）：原生识别链接本身，`sandboxEntryIsReparsePoint`，不递归、链接保留；
+- 悬空 Junction 之下的路径（`Test-Path=False`）：旧表达式本会返回 `sandboxAlreadyAbsent`；修复后 `sandboxParentIsReparsePoint`，`recursiveDeletePerformed=false`，悬空链接仍存在；
+- 父目录是 Junction：`sandboxParentIsReparsePoint`，不创建目标子目录、链接保留；
+- 身份不明：`sandboxIdentityChanged`，沙箱与 sentinel 保留；
+- 原生路径检查失败（组件是文件）：`sandboxEntryNativeCheckFailed`，不递归。
+
+**Red 证据（修复前，真实文件系统）：**
+
+- F1：直接调用旧写入逻辑把证据写到仓库证据目录之外成功（`test-artifacts\f1f2\baseline-evidence.json`，34,904 字节，SHA-256 `570142DD…33A`），并覆盖业务 Canary 文件（SHA-256 `34C1181F…180` → `66347408…568`）、自动创建越界父目录；
+- F2：真实悬空 Junction 之下路径 `Test-Path=False`；旧分支表达式 `-not (Test-Path -LiteralPath $sandbox)` 返回 True（本会 `sandboxAlreadyAbsent`），修复后同一对象返回 `sandboxParentIsReparsePoint`。Windows PowerShell 5.1 对悬空 Junction **本身**的 `Test-Path` 返 True，因此本轮不声称“悬空 Junction 本身 Test-Path 必为 False”；绕过成立的是**其下路径**。
+
+**Release EXE 与首次 E2E 失败说明：** 工作区原有 `target\release\workmanager.exe` 是 schema 4（T1-04）构建（`user_version=4`、migrations 1–4），与 T1-03 schema 3 期望不符，首次 E2E 因此失败（exit 1）；本轮按本分支重新构建（**10,352,128 字节**，SHA-256 `f46c9b0cb3c9d094475cab6abd8276276126f2ea0d2e5b38b6d6a4fbf92b2b68`）后重跑通过。构建产物不入库；首次失败尝试保留在机器本地 UAT 目录，不计为本轮结果。
+
+**证据：** 本轮 7 个 E2E JSON 已脱敏复制到 `evidence/round5/`（`<uat-root>` / `<repo-root>` 占位）；19 张截图未复制入仓（产品 UI 未修改，第四轮截图仍有效，截图保留在机器本地 UAT 目录）。本轮未执行 Windows ACL `Access Denied` 测试；Symbolic Link 场景仍 SKIP。
+
 ---
 
 ## 5. Windows Release 实测步骤与结果（第二轮步骤；第三、四轮已重新执行并通过）
@@ -465,7 +539,9 @@ SANITIZATION.md                               # 第四轮脱敏扫描、旧提�
 5. **待安排排序固定**为 `created_at DESC, id DESC`；不提供手动排序/优先级（后续任务）。
 6. **F1/F2（第四轮）**：测试脚本在任何写操作前验证真实测试根目录信任锚，缺失/身份无法确认时 fail closed 且不自动创建；清理在任何链接删除失败、链接仍存在、未预期 reparse point、身份变化时停止整个沙箱递归删除并保留现场；其中删除失败分支仅由受控 FaultHook 模拟，未修改 Windows ACL、未实际测试 ACL `Access Denied`。但信任锚/路径校验与后续写操作之间仍存在 **TOCTOU 剩余窗口**，未消除，按 DEC-029 / Issue #2 记录，不得宣称已消除并发替换风险。
 7. **刷新失败测试**通过 CDP 传输层故障注入实现（不修改产品代码）；真实磁盘/数据库故障路径仍由 Rust/数据库错误处理与异常注入回归覆盖。
-8. 继承验证脚本的 schema 版本断言已改为 3；历史 T1-01/T1-02 报告中的数字为当时历史结果，本报告记录第四轮重新执行结果（产品代码未变，Release EXE 与第二/三轮一致）。
+8. 继承验证脚本的 schema 版本断言已改为 3；历史 T1-01/T1-02 报告中的数字为当时历史结果，本报告记录本轮重新执行结果（产品代码未变）。
+9. **F1（本轮）**：证据写入的“检查”与 `Set-Content` 写入之间仍存在并发替换窗口（DEC-029 / Issue #2），本轮用“启动时记录证据目录身份 + 写入时原生复验 + 最终路径/边界检查”缩小窗口，但**未消除**，不得宣称已消除并发替换风险。
+10. **F2（本轮）**：`Test-Path` 判断已从沙箱清理入口移除；F1/F2 的“原生检查失败”用例是“路径组件是文件”的真实 Win32 失败，**未执行 Windows ACL `Access Denied` 测试**；Symbolic Link 场景因当前进程无 `SeCreateSymbolicLinkPrivilege` 仍记录 SKIP、不计 PASS。
 
 ---
 
@@ -482,17 +558,21 @@ SANITIZATION.md                               # 第四轮脱敏扫描、旧提�
   - P3-01 + P3-02 `2d91c92301713597ccfc1c0ddc2d83a479f572d4`（提示时机、UAT 路径安全、E2E）
 - 第三轮 P2-01/P3-02 修复提交：`b6a54591b783049142cbbffecd107ec9086723eb`；第三轮文档复核提交：`489d8689484c2cf744893bd3ee08dc7b25b5c8b8`（第三轮审计基准 HEAD，**第三轮未重写历史、未强制推送**）
 - 第四轮 F1/F2 修复提交：`d82bdd47ae7c3c27fb4383d72ee16a131c89036d`（仅验证脚本/测试脚本 + UI 编排信任锚；**未修改产品代码、未重写历史、未强制推送**）
-- 第四轮证据/文档同步提交：本分支最新提交（`origin/main..HEAD` = **22** 个提交；与修复提交合计 2 个第四轮提交；PR #8 时间线可见）
-- PR：[#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) → `main`，保持 Open（`headRefOid` 见 GitHub；扫描时点 main..HEAD=21）
+- 第四轮证据/文档同步提交：`5ab1f49ac16705126d6c27dcaf091990d38a8b3f` 及其后的元数据修正提交（`origin/main..HEAD` 本轮前 = **22** 个提交）
+- 本轮第四轮审计基准 HEAD：`e8205cae22e98afce6480f5a5a0695543a61dee3`
+- 本轮 F1/F2 最小修复提交：`PENDING_COMMIT_SHA`（仅验证脚本/测试脚本 + 本轮证据/文档；**未修改产品代码、未重写历史、未强制推送**）
+- 本轮文档同步提交：紧随修复提交之后的证据/状态文档同步提交（PR #8 时间线可见；其自身 SHA 无法在本文件内自引用）
+- 推送：`git push origin HEAD:task/T1-03-quick-create-pending`（快进推送，未使用强制推送）
+- PR：[#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) → `main`，保持 Open（未合并）
 - main：未修改（`018e851e8daf5835391a7b61caf881bc57c2ad42`）；PR 未合并
 
 ---
 
 ## 11. 当前状态与停止条件
 
-**T1-03 第三轮独立审计未通过；第四轮 F1/F2 定向修复完成，等待第四轮独立审计。**
+**T1-03 第四轮独立审计未通过（F1 EvidencePath 写入边界、F2 沙箱入口 `Test-Path` 绕过）；本轮 F1/F2 最小修复完成，等待第四轮独立审计复核。**
 
-- 已完成：F1 测试根目录信任锚 + 真实入口无副作用测试；F2 清理 fail-closed + 真实故障注入测试；第三轮 60 项路径安全检查全部保留；质量门禁、T1-03 Release E2E、T1-02 UI 回归、便携回归、异常注入回归全部通过；第四轮证据与文档按本轮实测同步，并修正第三轮遗留的 UAT 目录/资产数/提交数/PR 评论数不一致。
-- 未完成且不得由开发代理自行宣布：**P2-01 服务端历史对象清理（GitHub Support 未处理，P2-01 保持未关闭）**、第四轮独立审计通过、用户验收完成、PR 合并。
-- 剩余风险：TOCTOU 未消除（DEC-029 / Issue #2）；main 基线既有 T1-01/T1-02 机器信息未修改（需单独授权）；普通 SQLite 未加密（DEC-028）。
+- 已完成：F1 证据写入边界/真实身份/祖先链/重解析点/硬链接检查；F2 原生入口检查（移除 `Test-Path` 判断，悬空 Junction fail closed）；第三轮 60 项 + 第四轮 31 项路径检查全部保留，新增 21 项真实文件系统回归（路径安全专项 115 项、FAILED=0、SKIPPED=1）；质量门禁（cargo 124/124、npm check/build、Bridge 17/17）与 T1-03 Release E2E（84/12/17/25，关闭 0/0）通过。
+- 未完成且不得由开发代理自行宣布：**P2-01 服务端历史对象清理（GitHub Support 未处理，P2-01 保持未关闭）**、第四轮独立审计复核通过、用户验收完成、PR 合并。
+- 剩余风险：TOCTOU 未消除（DEC-029 / Issue #2）；未执行 Windows ACL `Access Denied` 测试；Symbolic Link 场景 SKIP；main 基线既有 T1-01/T1-02 机器信息未修改（需单独授权）；普通 SQLite 未加密（DEC-028）。
 - 按任务要求停止：不合并 PR #8、不修改 main、不开始 T1-04/T1-05、未获授权不再次执行全仓库历史重写或强制推送。

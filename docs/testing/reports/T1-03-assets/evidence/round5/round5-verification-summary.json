@@ -1,0 +1,199 @@
+{
+  "task": "T1-03",
+  "round": 5,
+  "scope": [
+    "F1: EvidencePath write boundary and path-identity validation (native final path, ancestor chain, reparse points, hardlink aliases, fail closed)",
+    "F2: sandbox entry native check; removal of the Test-Path 'entry absent' bypass; real dangling junction detection",
+    "round-5 evidence and status documentation only; product code unchanged"
+  ],
+  "generatedAt": "2026-11-26T10:20:23Z",
+  "auditBaselineHead": "e8205cae22e98afce6480f5a5a0695543a61dee3",
+  "round4AuditResult": "FAILED (blocking F1 EvidencePath write boundary and F2 Test-Path bypass; P2-01 still OPEN)",
+  "branch": "task/T1-03-quick-create-pending",
+  "localBranch": "task/T1-03-quick-create-pending-r4",
+  "branchNote": "目标分支已在另一个既有 git worktree 中检出；本轮未删除、未移动该 worktree，也未丢弃其工作。本工作区以同一基线创建本地分支开发，并通过 HEAD:task/T1-03-quick-create-pending 推送。",
+  "mainBaseline": "018e851e8daf5835391a7b61caf881bc57c2ad42",
+  "fixCommit": "",
+  "upstreamSkills": {
+    "ponytail": {
+      "repo": "https://github.com/DietrichGebert/ponytail",
+      "commit": "ebd8654c2c627f721eb8f9c0d1bd4090a29f9e10",
+      "level": "full"
+    },
+    "mattPocockImplement": {
+      "repo": "https://github.com/mattpocock/skills",
+      "commit": "6f7f7831a625f040a8e06a0e7954826b87ce775a",
+      "skill": "skills/engineering/implement/SKILL.md"
+    },
+    "tdd": {
+      "source": "session skill catalog",
+      "use": "red-green at the sandbox-cleanup-entry and evidence-write seams"
+    }
+  },
+  "qualityGates": [
+    {
+      "command": "cargo fmt --all -- --check",
+      "exitCode": 0
+    },
+    {
+      "command": "cargo check --workspace --all-targets",
+      "exitCode": 0
+    },
+    {
+      "command": "cargo test --workspace",
+      "exitCode": 0,
+      "passed": 124,
+      "failed": 0,
+      "testSuites": 18
+    },
+    {
+      "command": "npm run check",
+      "exitCode": 0,
+      "svelteCheckErrors": 0,
+      "svelteCheckWarnings": 0,
+      "bridgeTestsPassed": 17,
+      "designTokenCheckFiles": 22,
+      "designTokenViolations": 0,
+      "designTokenTestsPassed": 49
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "modulesTransformed": 167
+    },
+    {
+      "command": "node --test scripts/quality/work-item-bridge.test.mjs",
+      "exitCode": 0,
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "pathSafety": {
+    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\test-t1-03-uat-path.ps1 -EvidencePath docs\\testing\\reports\\T1-03-assets\\evidence\\round5\\t1-03-uat-path-evidence.json",
+    "exitCode": 0,
+    "verdict": "PASS",
+    "originalChecks": 23,
+    "round3ChecksPreserved": true,
+    "round4ChecksPreserved": true,
+    "round5AddedChecks": 21,
+    "totalChecks": 115,
+    "failedChecks": 0,
+    "skippedChecks": 1,
+    "skipReason": "当前进程无法创建 Windows Symbolic Link（非管理员且未启用开发者模式，缺少 SeCreateSymbolicLinkPrivilege；mklink /D 退出码 1）。该场景记录 SKIP，不计为 PASS。",
+    "method": "CreateFileW + GetFileInformationByHandleEx(FileAttributeTagInfo/FileIdInfo/FileStandardInfo) + GetFinalPathNameByHandleW; FILE_FLAG_BACKUP_SEMANTICS + FILE_FLAG_OPEN_REPARSE_POINT",
+    "trustAnchor": {
+      "verified": true,
+      "components": 2,
+      "finalPathMatchesExpected": true,
+      "volumeSerialRecorded": true,
+      "fileIdRecorded": true,
+      "fileIdLength": 32,
+      "sandboxIdentityVerified": true
+    },
+    "cleanup": {
+      "safe": true,
+      "recursiveDeletePerformed": true,
+      "steps": 11,
+      "unexpectedReparsePointCount": 0,
+      "leftoverSandboxCount": 0
+    },
+    "f1EvidenceBoundary": {
+      "normalWriteInsideInjectedRoot": true,
+      "relativeEscapeRejected": true,
+      "dotDotTraversalRejected": true,
+      "absoluteOutsideRejected": true,
+      "junctionBypassRejected": true,
+      "danglingJunctionRejected": true,
+      "hardlinkAliasRejected": true,
+      "evidenceRootIdentitySwapRejected": true,
+      "formalDatabaseTargetRejected": true,
+      "nativeCheckFailureFailsClosed": true,
+      "defaultRepositoryEvidenceRootTrusted": true,
+      "businessDbAndCanariesUnchanged": true
+    },
+    "f2SandboxEntry": {
+      "normalEntryIdentityVerified": true,
+      "trulyAbsentStopCode": "sandboxAlreadyAbsent",
+      "normalJunctionStopCode": "sandboxEntryIsReparsePoint",
+      "danglingJunctionStopCode": "sandboxEntryIsReparsePoint",
+      "danglingJunctionReparseTag": "0xA0000003",
+      "testPathFalseAncestorStopCode": "sandboxParentIsReparsePoint",
+      "testPathFalseAncestorTestPathResult": false,
+      "parentReparsePointStopCode": "sandboxParentIsReparsePoint",
+      "identityUnconfirmedStopCode": "sandboxIdentityChanged",
+      "nativeCheckFailureStopCode": "sandboxEntryNativeCheckFailed",
+      "recursiveDeleteInFailureCases": false,
+      "canariesUnchanged": true
+    },
+    "evidence": "docs/testing/reports/T1-03-assets/evidence/round5/t1-03-uat-path-evidence.json"
+  },
+  "redEvidence": {
+    "note": "修复前在真实 Windows 文件系统与真实脚本入口上复现；不是 Mock 或字符串比较。",
+    "f1BeforeFix": [
+      "证据写到仓库证据目录之外成功：test-artifacts\\f1f2\\baseline-evidence.json，34,904 字节，SHA-256 570142DD8997D6ADBAAEBBED77C2F0AE81A4399270104C6E2FB32B867E14E33A；原实现还自动创建了越界父目录",
+      "同一写入函数覆盖了证据目录之外的业务 Canary 文件：SHA-256 34C1181FF20C753E561276B850DFD2B9A012EF3C8B5CD618033A4C61E45CF180 -> 663474088B3007B9C1E9AB29D42886EFF7A5C6B4D60196325CD749B3FD8D3568"
+    ],
+    "f2BeforeFix": [
+      "Windows PowerShell 5.1 对悬空 Junction 本身 Test-Path=True；对悬空 Junction 之下的路径 Test-Path=False",
+      "旧 finally 分支表达式 (-not (Test-Path -LiteralPath $sandbox)) 对真实悬空 Junction 下的沙箱路径返回 True，本会直接返回 safe=true / sandboxAlreadyAbsent 并跳过原生身份检查",
+      "修复后对同一真实对象返回 safe=false / stopCode=sandboxParentIsReparsePoint，且 recursiveDeletePerformed=false、悬空链接仍存在"
+    ]
+  },
+  "releaseExe": {
+    "path": "<repo-root>\\target\\release\\workmanager.exe",
+    "sizeBytes": 10352128,
+    "sha256": "f46c9b0cb3c9d094475cab6abd8276276126f2ea0d2e5b38b6d6a4fbf92b2b68",
+    "note": "工作区既有 Release 二进制是 schema 4（T1-04）构建（user_version=4、migrations 1-4），与 T1-03 schema 3 期望不符；本次按本分支重新构建后用于 E2E。产品代码未修改，构建产物不入库。"
+  },
+  "releaseE2E": {
+    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\verify-t1-03-ui.ps1 -OutputDir <uat-root>\\t1-03-ui-r5b-20261126-183147 -Port 9371",
+    "exitCode": 0,
+    "verdict": "PASS",
+    "outputDir": "<uat-root>\\t1-03-ui-r5b-20261126-183147",
+    "mainUiIpcChecks": {
+      "passed": 84,
+      "failed": 0
+    },
+    "minWindowChecks": {
+      "passed": 12,
+      "failed": 0
+    },
+    "persistenceChecks": {
+      "passed": 17,
+      "failed": 0
+    },
+    "databaseProbeChecks": {
+      "passed": 25,
+      "failed": 0
+    },
+    "closeExitCodes": [
+      0,
+      0
+    ],
+    "cspViolations": 0,
+    "uncaughtPageExceptions": 0,
+    "screenshotCount": 19,
+    "evidence": [
+      "docs/testing/reports/T1-03-assets/evidence/round5/t1-03-ui-evidence.json",
+      "docs/testing/reports/T1-03-assets/evidence/round5/t1-03-min-window-evidence.json",
+      "docs/testing/reports/T1-03-assets/evidence/round5/t1-03-persistence-evidence.json",
+      "docs/testing/reports/T1-03-assets/evidence/round5/t1-03-ui-orchestration.json",
+      "docs/testing/reports/T1-03-assets/evidence/round5/t1-03-prerequisite.json",
+      "docs/testing/reports/T1-03-assets/evidence/round5/t1-03-db-after-main.json",
+      "docs/testing/reports/T1-03-assets/evidence/round5/t1-03-db-after-restart.json"
+    ],
+    "screenshotsNote": "本轮未把 19 张截图复制进仓库：产品 UI 未修改，第四轮截图仍有效；截图保留在机器本地 UAT 目录，未入库。",
+    "firstAttemptNote": "首次执行使用工作区既有 Release 二进制（schema 4 / T1-04 构建，user_version=4、migrations 1-4），与 T1-03 schema 3 期望不符而失败（exit 1）；该失败尝试保留在机器本地 UAT 目录，不计为本轮结果。随后按本分支重新构建二进制并重跑通过。"
+  },
+  "limitations": [
+    "未执行 Windows ACL Access Denied 测试；F1/F2 的原生检查失败用例使用“路径组件是文件”的真实 Win32 失败，不是 ACL 拒绝，不得混写。",
+    "Symbolic Link 场景因当前进程无 SeCreateSymbolicLinkPrivilege 记录 SKIP，不计为 PASS。",
+    "DEC-029 / Issue #2 的并发替换 TOCTOU 风险未消除；本轮只缩小检查与写入/清理之间的窗口，不作任何已消除声明。",
+    "P2-01 仍未关闭：旧提交 2342828852abee43ab56610e7d1fa91a02310bfe 与 9 个原始日志仍可经 GitHub API 读取，GitHub Support 服务端清理未完成。",
+    "普通 SQLite 未加密（DEC-028）；main 基线既有 T1-01/T1-02 机器信息未修改（需单独授权）。"
+  ]
+}

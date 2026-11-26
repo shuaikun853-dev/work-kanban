@@ -43,6 +43,9 @@
 
 $script:T103UatTestRoot = 'D:\WorkManager-test-data'
 $script:T103UatFormalRoot = 'D:\WorkManager'
+# 仓库证据目录：T1-03 证据文件唯一允许写入的根目录（第五轮 F1 写入边界）。
+$script:T103RepoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$script:T103EvidenceRoot = Join-Path $script:T103RepoRoot 'docs\testing\reports\T1-03-assets\evidence'
 $script:T103UatApprovedReparsePoints = @() # 当前未批准任何重解析点（显式白名单为空）。
 $script:T103NativeGuardSummary = $null
 $script:T103UatTrustedRootRecord = $null  # 信任锚验证成功后的根目录身份记录（第四轮 F1）。
@@ -66,6 +69,7 @@ namespace WorkManager
         public string FinalPath;
         public ulong VolumeSerialNumber;
         public string FileIdHex;
+        public uint NumberOfLinks;
         public int Win32Error;
     }
 
@@ -82,6 +86,7 @@ namespace WorkManager
         private const uint FILE_ATTRIBUTE_DIRECTORY = 0x10;
         private const int FileAttributeTagInfo = 9;
         private const int FileIdInfo = 18;
+        private const int FileStandardInfo = 1;
         private const uint VOLUME_NAME_DOS = 0x0;
         private static readonly IntPtr InvalidHandleValue = new IntPtr(-1);
 
@@ -180,6 +185,23 @@ namespace WorkManager
                     fileIdHex.Append(fileId[index].ToString("x2"));
                 }
                 info.FileIdHex = fileIdHex.ToString();
+
+                // FILE_STANDARD_INFO：NumberOfLinks 位于偏移 16（AllocationSize 8 + EndOfFile 8）。
+                IntPtr standardBuffer = Marshal.AllocHGlobal(24);
+                try
+                {
+                    if (!GetFileInformationByHandleEx(handle, FileStandardInfo, standardBuffer, 24))
+                    {
+                        throw new Win32Exception(
+                            Marshal.GetLastWin32Error(),
+                            "GetFileInformationByHandleEx(FileStandardInfo) failed for " + path);
+                    }
+                    info.NumberOfLinks = (uint)Marshal.ReadInt32(standardBuffer, 16);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(standardBuffer);
+                }
 
                 // 需要真实最终路径时打开“跟随重解析点”的句柄；仅检测重解析属性时不调用，
                 // 因为 OPEN_REPARSE_POINT 句柄的最终路径语义不适合作为目标身份证据。
@@ -333,7 +355,9 @@ function Get-T103NativePathChain {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
         [Parameter(Mandatory = $true)][string]$Label,
-        [bool]$RejectReparsePoint = $true
+        [bool]$RejectReparsePoint = $true,
+        # 允许“最后一个组件”是已存在的普通文件（证据文件写入用；中间组件仍必须是目录）。
+        [switch]$AllowFinalFile
     )
     $normalized = Get-T103UatNormalizedPath $Path
     if (-not ($normalized -match '^[A-Za-z]:\\')) {
@@ -357,7 +381,8 @@ function Get-T103NativePathChain {
 
     $current = $driveRoot
     $inMissingSuffix = $false
-    foreach ($segment in $segments) {
+    for ($segmentIndex = 0; $segmentIndex -lt @($segments).Count; $segmentIndex++) {
+        $segment = $segments[$segmentIndex]
         $current = Join-Path $current $segment
         if ($inMissingSuffix) {
             [void]$missing.Add($segment)
@@ -380,7 +405,10 @@ function Get-T103NativePathChain {
             throw ("{0}路径检查失败：路径组件在两次句柄检查之间指向发生变化（可能是并发重解析点替换）：{1}。已按 fail-closed 拒绝。" -f $Label, $current)
         }
         if (-not $followInfo.IsDirectory) {
-            throw ("{0}路径检查失败：路径组件已存在但不是目录：{1}。已按 fail-closed 拒绝。" -f $Label, $current)
+            $finalFileAllowed = $AllowFinalFile -and ($segmentIndex -eq (@($segments).Count - 1)) -and ($missing.Count -eq 0)
+            if (-not $finalFileAllowed) {
+                throw ("{0}路径检查失败：路径组件已存在但不是目录：{1}。已按 fail-closed 拒绝。" -f $Label, $current)
+            }
         }
         [void]$existing.Add($followInfo)
     }
@@ -1058,6 +1086,232 @@ function Invoke-T103FailClosedSandboxCleanup {
             sandboxPath             = $sandboxLiteral
         }
     }
+}
+
+# 读取入口本身与父目录的原生状态（不跟随重解析点，不依赖 Test-Path）。
+# Test-Path 对悬空 Junction 之下的路径返回 False，不能用来判断“入口不存在”。
+function Get-T103EntryNativeState {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [string]$Label = '入口'
+    )
+    $normalized = Get-T103UatNormalizedPath $Path
+    $entry = Get-T103NativePathInfo -Path $normalized -OpenReparsePoint $true
+    $parentPath = Split-Path -Parent $normalized
+    $parent = $null
+    if (-not [string]::IsNullOrWhiteSpace($parentPath) -and
+        -not (Test-T103FinalPathEquals $parentPath $normalized)) {
+        $parent = Get-T103NativePathInfo -Path $parentPath -OpenReparsePoint $true
+    }
+    return [pscustomobject]@{
+        label                = $Label
+        path                 = $normalized
+        exists               = [bool]$entry.Exists
+        isReparsePoint       = [bool]$entry.IsReparsePoint
+        reparseTag           = ('0x{0:X8}' -f $entry.ReparseTag)
+        isDirectory          = [bool]$entry.IsDirectory
+        volumeSerialNumber   = [string]$entry.VolumeSerialNumber
+        fileIdHex            = [string]$entry.FileIdHex
+        parentPath           = [string]$parentPath
+        parentExists         = [bool]($null -ne $parent -and $parent.Exists)
+        parentIsReparsePoint = [bool]($null -ne $parent -and $parent.IsReparsePoint)
+        parentReparseTag     = $(if ($null -ne $parent) { '0x{0:X8}' -f $parent.ReparseTag } else { '' })
+        parentIsDirectory    = [bool]($null -ne $parent -and $parent.IsDirectory)
+    }
+}
+
+function New-T103CleanupStopResult {
+    param(
+        [string]$StopCode,
+        [string]$StopReason,
+        [string[]]$UnsafePaths = @(),
+        [string[]]$Steps = @(),
+        [string]$SandboxPath = ''
+    )
+    return [pscustomobject]@{
+        safe                     = $false
+        recursiveDeletePerformed = $false
+        stopCode                 = $StopCode
+        stopReason               = $StopReason
+        unsafePaths              = @($UnsafePaths)
+        steps                    = @($Steps)
+        sandboxPath              = $SandboxPath
+    }
+}
+
+# 沙箱清理入口：不再用 Test-Path 判断入口是否存在。先取得入口本身与父目录的原生状态，
+# 再用原生路径链检查全部已存在祖先；只有原生检查确认入口确实不存在时，才按原有业务规则
+# 视为“已不存在”。入口是 Junction / 悬空 Junction / 父目录是重解析点 / 身份不明 /
+# 原生检查失败，一律 fail closed，不执行递归删除。
+function Invoke-T103SandboxCleanupEntrypoint {
+    param(
+        [Parameter(Mandatory = $true)][string]$SandboxPath,
+        [Parameter(Mandatory = $true)][string]$TestRoot,
+        [Parameter(Mandatory = $true)]$TrustRecord,
+        [string[]]$TrackedLinks = @(),
+        [scriptblock]$FaultHook = $null
+    )
+    try {
+        $sandboxLiteral = Get-T103UatNormalizedPath $SandboxPath
+        $testRootLiteral = Get-T103UatNormalizedPath $TestRoot
+    }
+    catch {
+        return New-T103CleanupStopResult -StopCode 'sandboxEntryNativeCheckFailed' `
+            -StopReason ('沙箱入口路径无法规范化，无法执行原生检查：' + $_.Exception.Message) `
+            -UnsafePaths @($SandboxPath) -SandboxPath $SandboxPath
+    }
+    if (-not (Test-T103UatPathInside $sandboxLiteral $testRootLiteral)) {
+        return New-T103CleanupStopResult -StopCode 'sandboxOutsideTestRoot' `
+            -StopReason ('测试沙箱不在专用测试根目录内：' + $sandboxLiteral) `
+            -UnsafePaths @($sandboxLiteral) -SandboxPath $sandboxLiteral
+    }
+    $entryState = $null
+    try {
+        $entryState = Get-T103EntryNativeState -Path $sandboxLiteral -Label '测试沙箱入口'
+    }
+    catch {
+        return New-T103CleanupStopResult -StopCode 'sandboxEntryNativeCheckFailed' `
+            -StopReason ('沙箱入口原生路径检查失败：' + $_.Exception.Message) `
+            -UnsafePaths @($sandboxLiteral) -SandboxPath $sandboxLiteral
+    }
+    if ($entryState.exists -and $entryState.isReparsePoint) {
+        return New-T103CleanupStopResult -StopCode 'sandboxEntryIsReparsePoint' `
+            -StopReason ('沙箱入口本身是重解析点（Junction / Symbolic Link / 悬空链接，tag=' + $entryState.reparseTag + '），无法确认其真实目标：' + $sandboxLiteral) `
+            -UnsafePaths @($sandboxLiteral) -SandboxPath $sandboxLiteral
+    }
+    if ($entryState.exists -and (-not $entryState.isDirectory)) {
+        return New-T103CleanupStopResult -StopCode 'sandboxEntryNotDirectory' `
+            -StopReason ('沙箱入口已存在但不是目录：' + $sandboxLiteral) `
+            -UnsafePaths @($sandboxLiteral) -SandboxPath $sandboxLiteral
+    }
+    if ($entryState.parentIsReparsePoint) {
+        return New-T103CleanupStopResult -StopCode 'sandboxParentIsReparsePoint' `
+            -StopReason ('沙箱父目录是重解析点（tag=' + $entryState.parentReparseTag + '），无法确认入口不存在：' + $entryState.parentPath) `
+            -UnsafePaths @($entryState.parentPath, $sandboxLiteral) -SandboxPath $sandboxLiteral
+    }
+    try {
+        $chain = Get-T103NativePathChain -Path $sandboxLiteral -Label '测试沙箱入口'
+    }
+    catch {
+        return New-T103CleanupStopResult -StopCode 'sandboxEntryNativeCheckFailed' `
+            -StopReason ('沙箱入口原生路径链检查失败（可能是悬空链接或身份不明）：' + $_.Exception.Message) `
+            -UnsafePaths @($sandboxLiteral) -SandboxPath $sandboxLiteral
+    }
+    if (@($chain.Missing).Count -gt 0) {
+        return [pscustomobject]@{
+            safe                     = $true
+            recursiveDeletePerformed = $false
+            stopCode                 = 'sandboxAlreadyAbsent'
+            stopReason               = ''
+            unsafePaths              = @()
+            steps                    = @('sandbox.entryAbsentConfirmedByNativeCheck')
+            sandboxPath              = $sandboxLiteral
+        }
+    }
+    return Invoke-T103FailClosedSandboxCleanup `
+        -SandboxPath $sandboxLiteral `
+        -TestRoot $TestRoot `
+        -TrustRecord $TrustRecord `
+        -TrackedLinks $TrackedLinks `
+        -FaultHook $FaultHook
+}
+
+# 证据文件写入边界（第五轮 F1）：写入前必须用 Windows 原生句柄确认
+# 1. 证据目录存在、是真实目录、真实最终路径与字面路径一致（固定身份）；
+# 2. 请求路径的每个已存在组件都是普通目录（拒绝 Junction / Symbolic Link / 悬空链接）；
+# 3. 请求路径真实最终路径严格位于证据目录内（不是字符串前缀比较）；
+# 4. 已存在的目标文件是普通文件且只有 1 个硬链接（防止覆盖数据库/业务文件的硬链接别名）。
+# 相对路径按仓库根目录解析；任何身份无法确认的情况 fail closed。
+function Assert-T103EvidenceWritePath {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [string]$EvidenceRoot = $script:T103EvidenceRoot,
+        # 可选：启动时记录的证据目录身份（卷序列号 + 文件 ID + 真实最终路径）；提供时必须一致。
+        [object]$ExpectedRootIdentity = $null
+    )
+    if ([string]::IsNullOrWhiteSpace($Path)) {
+        throw '证据输出路径不能为空。'
+    }
+    $trimmed = $Path.Trim()
+    if ($trimmed.StartsWith('\\', [System.StringComparison]::Ordinal) -or
+        $trimmed.StartsWith('//', [System.StringComparison]::Ordinal) -or
+        $trimmed.StartsWith('\', [System.StringComparison]::Ordinal) -or
+        $trimmed.StartsWith('/', [System.StringComparison]::Ordinal)) {
+        throw ("证据输出路径不能使用 UNC、设备路径（\\?\ / \\.\ / \??\）或根相对路径：{0}。已按 fail-closed 拒绝。" -f $Path)
+    }
+    if (-not [System.IO.Path]::IsPathRooted($trimmed)) {
+        $trimmed = Join-Path $script:T103RepoRoot $trimmed
+    }
+    $normalized = Get-T103UatNormalizedPath $trimmed
+    if (-not ($normalized -match '^[A-Za-z]:\\')) {
+        throw ("证据输出路径必须是本地盘符绝对路径（相对路径按仓库根目录解析）：{0}。已按 fail-closed 拒绝。" -f $normalized)
+    }
+    Assert-T103UatSafePathSegments $normalized
+
+    if ((Test-T103UatPathEquals $normalized $script:T103UatFormalRoot) -or
+        (Test-T103UatPathInside $normalized $script:T103UatFormalRoot)) {
+        throw ("证据输出路径不得指向正式应用目录：{0}。已按 fail-closed 拒绝。" -f $normalized)
+    }
+
+    $rootPath = Get-T103UatNormalizedPath $EvidenceRoot
+    $rootChain = Get-T103NativePathChain -Path $rootPath -Label '证据目录'
+    if (@($rootChain.Missing).Count -gt 0) {
+        throw ("证据目录不存在或路径组件缺失，无法确认其真实身份：{0}。已按 fail-closed 拒绝。" -f $rootPath)
+    }
+    $rootDriveInfo = @($rootChain.Existing)[0]
+    $rootInfo = @($rootChain.Existing)[@($rootChain.Existing).Count - 1]
+    if (-not $rootInfo.IsDirectory) {
+        throw ("证据目录不是目录：{0}。已按 fail-closed 拒绝。" -f $rootPath)
+    }
+    Assert-T103NativeVolumeIdentity -ReferenceInfo $rootDriveInfo -CandidateInfo $rootInfo -Context '证据目录'
+    $rootFinalPath = Get-T103NativeChainFinalPath $rootChain
+    if (-not (Test-T103FinalPathEquals $rootFinalPath $rootPath)) {
+        throw ("证据目录的真实最终路径与预期不一致（可能是短名/别名/被替换）：预期={0}，真实={1}。已按 fail-closed 拒绝。" -f $rootPath, $rootFinalPath)
+    }
+    if ($null -ne $ExpectedRootIdentity) {
+        $currentRootIdentity = Get-T103DirectoryIdentityRecord -Path $rootPath -Label '证据目录'
+        Compare-T103DirectoryIdentity -Expected $ExpectedRootIdentity -Current $currentRootIdentity
+    }
+
+    $chain = Get-T103NativePathChain -Path $normalized -Label '证据输出' -AllowFinalFile
+    $missing = @($chain.Missing)
+    if ($missing.Count -eq 0) {
+        $anchorFinalPath = Get-T103NativeChainFinalPath $chain
+        $targetInfo = @($chain.Existing)[@($chain.Existing).Count - 1]
+        if ($targetInfo.IsDirectory) {
+            throw ("证据输出路径已存在且是目录，不是可写文件：{0}。已按 fail-closed 拒绝。" -f $normalized)
+        }
+        if ([uint32]$targetInfo.NumberOfLinks -ne 1) {
+            throw ("证据输出路径已存在且不是单一硬链接文件（可能是数据库/业务文件的硬链接别名）：{0}。已按 fail-closed 拒绝。" -f $normalized)
+        }
+    }
+    else {
+        $anchorFinalPath = (Get-T103NativeChainFinalPath $chain).TrimEnd('\') + '\' + ($missing -join '\')
+    }
+    if (-not (Test-T103FinalPathInside $anchorFinalPath $rootFinalPath)) {
+        throw ("证据输出路径越过证据目录边界：请求={0}，真实={1}，证据目录={2}。已按 fail-closed 拒绝。" -f $normalized, $anchorFinalPath, $rootFinalPath)
+    }
+    if (-not (Test-T103FinalPathEquals $anchorFinalPath $normalized)) {
+        throw ("证据输出路径与 Windows 文件系统解析出的真实路径不一致（可能是短名/别名）：请求={0}，真实={1}。已按 fail-closed 拒绝。" -f $normalized, $anchorFinalPath)
+    }
+    return $normalized
+}
+
+# 证据文件写入（发现的最小 seam）：写之前必须先通过证据目录写入边界校验（第五轮 F1）。
+function Write-T103EvidenceFile {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Content,
+        [string]$EvidenceRoot = $script:T103EvidenceRoot,
+        [object]$ExpectedRootIdentity = $null
+    )
+    $normalized = Assert-T103EvidenceWritePath -Path $Path -EvidenceRoot $EvidenceRoot -ExpectedRootIdentity $ExpectedRootIdentity
+    $evidenceDir = Split-Path -Parent $normalized
+    if (-not (Test-Path -LiteralPath $evidenceDir)) {
+        New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
+    }
+    Set-Content -LiteralPath $normalized -Value $Content -Encoding UTF8
+    return $normalized
 }
 
 # 受控故障注入（仅专项测试使用，不参与产品路径校验）：由测试传入 FaultHook，在真实
