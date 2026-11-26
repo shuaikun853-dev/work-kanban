@@ -1,4 +1,4 @@
-﻿{
+{
     "task":  "T1-03",
     "fix":  "P3-02 + round-4 F1/F2 UAT path safety (test-root trust anchor + fail-closed sandbox cleanup) + round-5 F1/F2 (evidence write boundary + sandbox entry native check)",
     "generatedAt":  "2026-11-26T10:20:23.6531600Z",
@@ -33,7 +33,7 @@
                 },
     "faultInjection":  {
                            "f1":  {
-                                      "trustAnchorPath":  "D:\\WorkManager-test-data",
+                                      "trustAnchorPath":  "<uat-root>",
                                       "trustAnchorComponents":  2,
                                       "rootJunctionChildExitCode":  2,
                                       "rootJunctionCanaryUnchanged":  true,
@@ -132,7 +132,7 @@
                    {
                        "name":  "unit.caseInsensitiveRootAllowed",
                        "pass":  true,
-                       "detail":  "allowed: \u003cdrive-root\u003e\\workmanager-test-data\\t1-03-path-safety-20261126-181947-35608\\fresh-20261126-181947"
+                       "detail":  "allowed: <uat-root>\\t1-03-path-safety-20261126-181947-35608\\fresh-20261126-181947"
                    },
                    {
                        "name":  "unit.normalizedDotDotInsideAllowed",
@@ -142,7 +142,7 @@
                    {
                        "name":  "unit.cDriveRejected",
                        "pass":  true,
-                       "detail":  "rejected: 输出目录必须位于专用测试根目录 \u003cuat-root\u003e 之下（实际：\u003cdrive-root\u003e\\WorkManager-test-data\\t1-03-ui-reject）。请使用新的 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
+                       "detail":  "rejected: 输出目录必须位于专用测试根目录 \u003cuat-root\u003e 之下（实际：<uat-root>\\t1-03-ui-reject）。请使用新的 UAT 目录，例如 \u003cuat-root\u003e\\t1-03-ui-\u003ctimestamp\u003e。"
                    },
                    {
                        "name":  "unit.formalRootRejected",

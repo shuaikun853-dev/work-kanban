@@ -1,0 +1,46 @@
+{
+  "task": "T1-03",
+  "stage": "after-main",
+  "database_path": "<uat-root>\\t1-03-ui-r6f-20261127-071753\\app\\data\\database\\work.db",
+  "exists": true,
+  "user_version": 3,
+  "integrity_check": "ok",
+  "journal_mode": "wal",
+  "foreign_keys": 1,
+  "tables": [
+    "projects",
+    "schema_migrations",
+    "settings",
+    "work_items"
+  ],
+  "schema_migrations": [
+    {
+      "version": 1,
+      "name": "0001_initial_foundation"
+    },
+    {
+      "version": 2,
+      "name": "0002_projects"
+    },
+    {
+      "version": 3,
+      "name": "0003_work_items"
+    }
+  ],
+  "projects_total": 2,
+  "projects_archived": 2,
+  "work_items_total": 5,
+  "work_items_pending": 5,
+  "work_items_other_status": 0,
+  "work_items_null_project": 4,
+  "work_items_linked_archived": 1,
+  "work_items_linked_active": 0,
+  "pending_titles": [
+    "超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "创建成功但刷新失败验证",
+    "关联未归档项目的待安排工作",
+    "重复提交保护验证",
+    "整理中核商品数据"
+  ],
+  "foreign_key_violations": 0
+}

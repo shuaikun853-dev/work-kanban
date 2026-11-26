@@ -1,0 +1,359 @@
+{
+    "task":  "T1-03",
+    "round":  6,
+    "scope":  [
+                  "P1/F2: validate all TrackedLinks before deletion, direct children of the confirmed sandbox only, scan the whole sandbox before deleting links, delete only the exact registered link objects, rescan after deletion, re-verify sandbox identity, then verified recursive delete",
+                  "P2/F1: evidence writes require the startup-recorded evidence-root identity; isolated EvidenceRoot injection is test-only and must pass the captured identity",
+                  "P3: final UI orchestration summary write goes through a native path check + output-directory identity re-verification guard",
+                  "P4: distinguish recursive-delete started / completed / partial from recursiveDeletePerformed",
+                  "B1-B5 delivery evidence corrections: PR body/comment, round5 summary timestamp semantics, reproducible red evidence at e8205ca, commit counts, \u003cuat-root\u003e sanitization",
+                  "no T1-03 product code, T1-04, PRD/TECHNICAL_DESIGN or business decisions changed; no history rewrite; no force push"
+              ],
+    "generatedAt":  "2026-11-26T23:26:38.0913485Z",
+    "auditBaselineHead":  "6ddae47dd0721d58d5cb11f55e527fc162cedbe9",
+    "previousFixCommit":  "af2421e9207f7b9ac185b0d29c3a98f80b5eb11a",
+    "fixCommit":  "e3bb86b30772159219a8eb16b90e55f3c69f4d59",
+    "branch":  "task/T1-03-quick-create-pending",
+    "localBranch":  "task/T1-03-quick-create-pending-r4",
+    "branchNote":  "目标分支已在另一个既有 git worktree 中检出；本轮未删除、未移动该 worktree，也未丢弃其工作。本工作区以同一基线创建本地分支开发，并通过 HEAD:task/T1-03-quick-create-pending 非强制快进推送。",
+    "mainBaseline":  "9171fe35a7e080097991f547efe37ff5a504257c",
+    "pr":  {
+               "number":  8,
+               "state":  "OPEN",
+               "url":  "https://github.com/shuaikun853-dev/work-kanban/pull/8",
+               "note":  "保持 OPEN，不合并；PR base 落后于 main 的问题本轮不处理"
+           },
+    "commitCounts":  {
+                         "originMain":  "9171fe35a7e080097991f547efe37ff5a504257c",
+                         "originMainToE8205ca":  25,
+                         "originMainToAuditBaseline6ddae47":  27,
+                         "originMainToFixCommitE3bb86b":  28,
+                         "originMainToRound6FinalHead":  30,
+                         "note":  "旧报告 22 个提交的记录已过时；历史轮次数字保留为当时事实，不作为当前状态引用"
+                     },
+    "upstreamSkills":  {
+                           "ponytail":  {
+                                            "repo":  "https://github.com/DietrichGebert/ponytail",
+                                            "commit":  "ebd8654c2c627f721eb8f9c0d1bd4090a29f9e10",
+                                            "level":  "full",
+                                            "file":  "skills/ponytail/SKILL.md"
+                                        },
+                           "mattPocockImplement":  {
+                                                       "repo":  "https://github.com/mattpocock/skills",
+                                                       "commit":  "6f7f7831a625f040a8e06a0e7954826b87ce775a",
+                                                       "file":  "skills/engineering/implement/SKILL.md"
+                                                   },
+                           "tdd":  {
+                                       "source":  "session skill catalog (aligned with mattpocock skills/engineering/tdd/SKILL.md)",
+                                       "use":  "red -\u003e green at the F2 cleanup, F1 evidence-write, P3 summary-write and P4 recursive-delete seams"
+                                   }
+                       },
+    "qualityGates":  [
+                         {
+                             "command":  "cargo fmt --all -- --check",
+                             "exitCode":  0,
+                             "elapsedSeconds":  0.53
+                         },
+                         {
+                             "command":  "cargo check --workspace --all-targets",
+                             "exitCode":  0,
+                             "elapsedSeconds":  1.53
+                         },
+                         {
+                             "command":  "cargo test --workspace",
+                             "exitCode":  0,
+                             "elapsedSeconds":  6.69,
+                             "passed":  124,
+                             "failed":  0,
+                             "testBinaries":  18
+                         },
+                         {
+                             "command":  "npm.cmd run check",
+                             "exitCode":  0,
+                             "elapsedSeconds":  136.82,
+                             "svelteCheckErrors":  0,
+                             "svelteCheckWarnings":  0,
+                             "bridgeTestsPassed":  17,
+                             "designTokenCheckFiles":  22,
+                             "designTokenViolations":  0,
+                             "designTokenTestsPassed":  49
+                         },
+                         {
+                             "command":  "npm.cmd run build",
+                             "exitCode":  0,
+                             "elapsedSeconds":  5.21,
+                             "modulesTransformed":  167
+                         },
+                         {
+                             "command":  "node --test scripts/quality/work-item-bridge.test.mjs",
+                             "exitCode":  0,
+                             "elapsedSeconds":  0.26,
+                             "passed":  17,
+                             "failed":  0
+                         },
+                         {
+                             "command":  "git diff --check",
+                             "exitCode":  0,
+                             "elapsedSeconds":  0.1
+                         }
+                     ],
+    "pathSafety":  {
+                       "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\test-t1-03-uat-path.ps1 -EvidencePath docs\\testing\\reports\\T1-03-assets\\evidence\\round6-remediation\\green\\t1-03-uat-path-evidence.json",
+                       "exitCode":  0,
+                       "verdict":  "PASS",
+                       "originalChecks":  23,
+                       "round3ChecksPreserved":  60,
+                       "round4NewTarget":  31,
+                       "round5NewTarget":  21,
+                       "round6NewTarget":  12,
+                       "totalChecks":  128,
+                       "failedChecks":  0,
+                       "skippedChecks":  1,
+                       "skipReason":  "Symbolic Link 场景：当前非管理员进程无 SeCreateSymbolicLinkPrivilege（mklink /D 退出码 1），明确记录 SKIP，不计 PASS。",
+                       "method":  "CreateFileW + GetFileInformationByHandleEx(FileAttributeTagInfo/FileIdInfo/FileStandardInfo) + GetFinalPathNameByHandleW; FILE_FLAG_BACKUP_SEMANTICS + FILE_FLAG_OPEN_REPARSE_POINT",
+                       "round6NewChecks":  [
+                                               {
+                                                   "name":  "f2.trackedLinkThroughJunctionRejectedBeforeDelete",
+                                                   "pass":  true
+                                               },
+                                               {
+                                                   "name":  "f2.trackedLinkThroughJunctionExternalTargetIntact",
+                                                   "pass":  true
+                                               },
+                                               {
+                                                   "name":  "f2.trackedLinkThroughJunctionSandboxPreserved",
+                                                   "pass":  true
+                                               },
+                                               {
+                                                   "name":  "f2.recursiveDeletePartialFailureReported",
+                                                   "pass":  true
+                                               },
+                                               {
+                                                   "name":  "f2.recursiveDeletePartialFailureRealDeletionsObserved",
+                                                   "pass":  true
+                                               },
+                                               {
+                                                   "name":  "f1.evidenceWriteMissingRootIdentityRejected",
+                                                   "pass":  true
+                                               },
+                                               {
+                                                   "name":  "f1.evidenceDefaultRootWriteMissingRootIdentityRejected",
+                                                   "pass":  true
+                                               },
+                                               {
+                                                   "name":  "f1.evidenceWriteWithPinnedRootIdentitySucceeds",
+                                                   "pass":  true
+                                               },
+                                               {
+                                                   "name":  "f3.outputSummaryGuardNormalWriteSucceeds",
+                                                   "pass":  true
+                                               },
+                                               {
+                                                   "name":  "f3.outputSummaryGuardRejectsJunctionSwap",
+                                                   "pass":  true
+                                               },
+                                               {
+                                                   "name":  "f3.outputSummaryGuardRejectsIdentityChange",
+                                                   "pass":  true
+                                               },
+                                               {
+                                                   "name":  "evidence.uatRootPlaceholderUnified",
+                                                   "pass":  true
+                                               }
+                                           ],
+                       "round6Outcomes":  {
+                                              "f2":  {
+                                                         "f2TrackedLinkThroughJunctionRejected":  true,
+                                                         "f2TrackedLinkThroughJunctionTargetIntact":  true,
+                                                         "f2TrackedLinkThroughJunctionSandboxPreserved":  true,
+                                                         "f2RecursiveDeletePartialFailureReported":  true,
+                                                         "f2RecursiveDeletePartialRealDeletions":  true,
+                                                         "f1EvidenceWriteMissingRootIdentityRejected":  true,
+                                                         "f1EvidenceDefaultRootWriteMissingRootIdentityRejected":  true,
+                                                         "f1EvidenceWriteWithPinnedRootIdentitySucceeds":  true,
+                                                         "f3UiSummaryNormalWriteSucceeds":  true,
+                                                         "f3UiSummaryJunctionSwapRejected":  true,
+                                                         "f3UiSummaryIdentityChangeRejected":  true
+                                                     },
+                                              "cleanup":  {
+                                                              "safe":  true,
+                                                              "recursiveDeletePerformed":  true,
+                                                              "recursiveDeleteStarted":  true,
+                                                              "recursiveDeleteCompleted":  true,
+                                                              "recursiveDeletePartial":  false,
+                                                              "stopCode":  "",
+                                                              "stopReason":  "",
+                                                              "unsafePathCount":  0,
+                                                              "stepsCount":  15
+                                                          }
+                                          },
+                       "evidence":  "docs/testing/reports/T1-03-assets/evidence/round6-remediation/green/t1-03-uat-path-evidence.json"
+                   },
+    "redEvidence":  {
+                        "baselineCommit":  "e8205cae22e98afce6480f5a5a0695543a61dee3",
+                        "baselineCommitDate":  "2026-11-23T10:06:14+08:00",
+                        "baselinePathScriptBlobSha":  "fafd320753ae1efd39055bd53e95f221b4b50be6",
+                        "extractedPathScriptBlobSha":  "fafd320753ae1efd39055bd53e95f221b4b50be6",
+                        "probeScript":  "scripts/verify/probe-round6-red.ps1",
+                        "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\probe-round6-red.ps1",
+                        "method":  "git archive \u003cbaseline\u003e extracted to a dedicated test directory; extracted T1-03UatPath.ps1 blob SHA verified against git; baseline test entry and baseline cleanup function executed with real Windows filesystem objects; no fixed function used as the old implementation",
+                        "f1OldEvidenceWrite":  {
+                                                   "oldSuiteExitCode":  0,
+                                                   "oldSuiteElapsedSeconds":  20.21,
+                                                   "evidencePathArgument":  "\u003cred-case-root\u003e\\outside-evidence\\guardian-business-canary.json",
+                                                   "evidenceWrittenOutsideRepoEvidenceRoot":  true,
+                                                   "guardCanaryOverwritten":  true,
+                                                   "guardCanarySha256Before":  "6E340FD4AA027538169A5FA059345D24214E883EF6865D3D6D8B1E94092A1191",
+                                                   "guardCanarySha256After":  "1609F66D3197D8FD50B0F846D465D8DA58ED38E8F2022517C1DAB0787252EF22",
+                                                   "escapedEvidenceFileSize":  34904,
+                                                   "escapedEvidenceTask":  "T1-03",
+                                                   "oldSuiteOutputExcerpt":  [
+                                                                                 "TRUST_ANCHOR=PASS path=\u003cuat-root\u003e components=2 volumeIdentity=verified finalPath=verified UAT_PATH_CHECK_TOTAL=93 ORIGINAL=23 ROUND3_PRESERVED=60 ROUND4_NEW_TARGET=31 SKIPPED=1 FAILED=0 UAT_PATH_TRUST_ANCHOR=PASS CLEANUP_SAFE=True CLEANUP_STOP_CODE= T1_03_UAT_PATH_SECURITY=PASS"
+                                                                             ]
+                                               },
+                        "f2OldTrackedLinkDelete":  {
+                                                       "sandboxPath":  "\u003cred-case-root\u003e\\f2\\sandbox",
+                                                       "trackedLinkArgument":  "\u003cred-case-root\u003e\\f2\\sandbox\\evil\\victim-link",
+                                                       "victimLinkExistedBefore":  true,
+                                                       "victimLinkDeletedByOldCleanup":  true,
+                                                       "oldResultSafe":  false,
+                                                       "oldResultStopCode":  "unexpectedReparsePoint",
+                                                       "oldResultRecursiveDeletePerformed":  false,
+                                                       "oldResultStopReason":  "测试沙箱中仍存在 1 个未预期重解析点，拒绝执行递归删除",
+                                                       "oldResultSteps":  [
+                                                                              "sandbox.identityVerified",
+                                                                              "link.removed"
+                                                                          ],
+                                                       "victimTargetCanaryContent":  "ROUND6-RED-VICTIM-CANARY",
+                                                       "victimTargetCanarySha256Before":  "ABA0EB44A6FAA26EC795F5896B6389BFE10A1E5CB78EB01218E58A735FC9EB15",
+                                                       "victimTargetCanarySha256After":  "ABA0EB44A6FAA26EC795F5896B6389BFE10A1E5CB78EB01218E58A735FC9EB15",
+                                                       "sandboxPreservedByOldCleanup":  true,
+                                                       "untrackedEvilJunctionPreserved":  true
+                                                   },
+                        "p4OldPartialDelete":  {
+                                                   "sandboxPath":  "\u003cred-case-root\u003e\\p4\\sandbox",
+                                                   "failureInjection":  "real sharing violation: a file inside the sandbox subdirectory is opened with FileShare.None",
+                                                   "entriesBefore":  7,
+                                                   "entriesAfter":  1,
+                                                   "partialDeletionObserved":  true,
+                                                   "oldResultSafe":  false,
+                                                   "oldResultStopCode":  "unexpectedCleanupError",
+                                                   "oldResultRecursiveDeletePerformed":  false,
+                                                   "oldResultHasRecursiveDeleteStartedField":  false,
+                                                   "oldResultStopReason":  "Exception calling \"Delete\" with \"1\" argument(s): \"The process cannot access the file \u0027\u003cred-case-root\u003e\\p4\\sandbox\\zz-subdir\\locked.txt\u0027 because it is being used by another process.\""
+                                               },
+                        "redConfirmed":  true,
+                        "evidence":  "docs/testing/reports/T1-03-assets/evidence/round6-remediation/red/round6-red-evidence.json",
+                        "sanitizedCommandOutput":  "docs/testing/reports/T1-03-assets/evidence/round6-remediation/red/round6-red-command-output.sanitized.log.txt"
+                    },
+    "releaseE2E":  {
+                       "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\verify-t1-03-ui.ps1 -OutputDir \u003cuat-root\u003e\\t1-03-ui-r6f-20261127-071753 -Port 9395",
+                       "exitCode":  0,
+                       "verdict":  "PASS",
+                       "outputDir":  "\u003cuat-root\u003e\\t1-03-ui-r6f-20261127-071753",
+                       "mainUiIpcChecks":  {
+                                               "passed":  84,
+                                               "failed":  0
+                                           },
+                       "minWindowChecks":  {
+                                               "passed":  12,
+                                               "failed":  0
+                                           },
+                       "persistenceChecks":  {
+                                                 "passed":  17,
+                                                 "failed":  0
+                                             },
+                       "databaseProbeChecks":  {
+                                                   "passed":  25,
+                                                   "failed":  0
+                                               },
+                       "closeExitCodes":  [
+                                              0,
+                                              0
+                                          ],
+                       "finalSummaryWriteGuard":  "PASS summary.writeGuard (native path check + output-dir identity re-verification; DEC-029 TOCTOU remains accepted)",
+                       "cspViolations":  0,
+                       "uncaughtPageExceptions":  0,
+                       "screenshotCount":  19,
+                       "screenshotsNote":  "19 张截图未复制入仓（产品 UI 未修改）；保留在机器本地 UAT 目录。",
+                       "releaseExe":  {
+                                          "path":  "\u003crepo-root\u003e\\target\\release\\workmanager.exe",
+                                          "sizeBytes":  10352128,
+                                          "sha256":  "f46c9b0cb3c9d094475cab6abd8276276126f2ea0d2e5b38b6d6a4fbf92b2b68"
+                                      },
+                       "attempts":  [
+                                        {
+                                            "outputDir":  "\u003cuat-root\u003e\\t1-03-ui-r6-20261127-071251",
+                                            "exitCode":  1,
+                                            "verdict":  "FAIL (environmental: app shell render timeout while red probe/baseline suite ran concurrently; not counted as result)"
+                                        },
+                                        {
+                                            "outputDir":  "\u003cuat-root\u003e\\t1-03-ui-r6c-20261127-071613",
+                                            "exitCode":  1,
+                                            "verdict":  "FAIL (minWindow.sizeNear860x640 window-resize timing race; harness bounded retry added; not counted as result)"
+                                        },
+                                        {
+                                            "outputDir":  "\u003cuat-root\u003e\\t1-03-ui-r6d-20261127-071634",
+                                            "exitCode":  1,
+                                            "verdict":  "FAIL (same window-resize timing race; not counted as result)"
+                                        },
+                                        {
+                                            "outputDir":  "\u003cuat-root\u003e\\t1-03-ui-r6e-20261127-071732",
+                                            "exitCode":  0,
+                                            "verdict":  "PASS"
+                                        },
+                                        {
+                                            "outputDir":  "\u003cuat-root\u003e\\t1-03-ui-r6f-20261127-071753",
+                                            "exitCode":  0,
+                                            "verdict":  "PASS (final evidence)"
+                                        }
+                                    ],
+                       "evidence":  [
+                                        "docs/testing/reports/T1-03-assets/evidence/round6-remediation/green/t1-03-ui-evidence.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/round6-remediation/green/t1-03-min-window-evidence.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/round6-remediation/green/t1-03-persistence-evidence.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/round6-remediation/green/t1-03-ui-orchestration.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/round6-remediation/green/t1-03-prerequisite.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/round6-remediation/green/t1-03-db-after-main.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/round6-remediation/green/t1-03-db-after-restart.json",
+                                        "docs/testing/reports/T1-03-assets/evidence/round6-remediation/green/round6-e2e-command-output.sanitized.log.txt"
+                                    ]
+                   },
+    "sanitization":  {
+                         "rule":  "fixed test-root paths use \u003cuat-root\u003e; machine-identifier scanning unchanged and not relaxed",
+                         "suiteCheck":  "evidence.uatRootPlaceholderUnified = PASS; leak patterns still include computer name / USERPROFILE / repo root / C:\\Users\\ / old log dir, plus fixed test-root raw name",
+                         "historicalEvidenceCorrections":  [
+                                                               "evidence/t1-03-uat-path-evidence.json: 2 fixed-test-root literals replaced with \u003cuat-root\u003e",
+                                                               "evidence/round4/t1-03-uat-path-evidence.json: 3 fixed-test-root literals replaced with \u003cuat-root\u003e",
+                                                               "evidence/round5/t1-03-uat-path-evidence.json: 3 fixed-test-root literals replaced with \u003cuat-root\u003e"
+                                                           ],
+                         "currentScan":  {
+                                             "fixedTestRootNameHits":  0,
+                                             "machineIdentifierHits":  0,
+                                             "note":  "T1-03 证据目录与当前文档复核；main 基线既有 T1-01/T1-02 机器信息未修改（非本 PR 新增）"
+                                         },
+                         "documentedIn":  "docs/testing/reports/T1-03-assets/SANITIZATION.md"
+                     },
+    "corrections":  {
+                        "b2Round5Timestamp":  {
+                                                  "file":  "docs/testing/reports/T1-03-assets/evidence/round5/round5-verification-summary.json",
+                                                  "historicalGeneratedAt":  "2026-11-26T10:20:23Z",
+                                                  "pathEvidenceGeneratedAt":  "2026-11-26T10:20:23.6531600Z",
+                                                  "releaseE2EEvidenceGeneratedAt":  "2026-11-26T10:32:09.2478282Z",
+                                                  "fixCommitCommittedAt":  "2026-11-26T18:37:26+08:00",
+                                                  "note":  "old generatedAt was not a real assembly time (predates contained evidence and fix commit); split into real evidence times + real assembly time; historical value preserved; historical evidence files not overwritten"
+                                              },
+                        "b4CommitCounts":  "origin/main..e8205ca=25, ..6ddae47=27, ..e3bb86b=28, ..final HEAD=30; stale 22 no longer used for current state",
+                        "b5Sanitization":  "fixed test-root placeholders unified to \u003cuat-root\u003e; scan rule/test strengthened, machine-identifier scanning not relaxed"
+                    },
+    "limitations":  [
+                        "P2-01 仍未关闭：GitHub Support 服务端历史清理未完成；旧提交 2342828852abee43ab56610e7d1fa91a02310bfe 与 9 个原始日志仍可经 GitHub API 读取；本轮未重写历史、未强制推送、未删除备份分支/bundle",
+                        "DEC-029 / Issue #2 的 TOCTOU 风险仍存在：本轮只缩小检查与写入/清理之间的窗口，不作已消除声明；不开发 SQLite VFS、不重构全部 Windows 文件访问、不擅自关闭 Issue #2",
+                        "未执行 Windows ACL Access Denied 测试；F1/F2 原生检查失败用例是“路径组件是文件”等真实 Win32 失败，不得混写为 ACL 拒绝",
+                        "Symbolic Link 场景因当前进程无 SeCreateSymbolicLinkPrivilege 记录 SKIP，不计 PASS",
+                        "普通 SQLite 未加密（DEC-028）；备份策略未确认",
+                        "PR #8 base 落后于 main；本轮未 rebase、未改历史、未强制推送；合并基线问题留待后续统一处理（T1-04 依赖 T1-03 堆叠分支）",
+                        "main 基线既有 T1-01/T1-02 历史证据仍含同类机器信息（属 main 既有内容、非本 PR 新增，需单独授权）"
+                    ],
+    "finalState":  "待独立审计（开发代理不自行宣布审计通过或用户验收完成）；PR #8 保持 OPEN，不合并"
+}

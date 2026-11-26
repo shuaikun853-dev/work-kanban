@@ -1,0 +1,97 @@
+{
+  "generatedAt": "2026-11-26T23:18:02.978Z",
+  "task": "T1-03",
+  "workItems": [
+    {
+      "id": "221ca42d-8901-43b4-809e-b96a3f9acf9b",
+      "projectId": null,
+      "projectName": null,
+      "projectIsArchived": false,
+      "title": "超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      "lifecycleStatus": "pending",
+      "createdAt": "2026-11-26T23:18:02.775Z",
+      "updatedAt": "2026-11-26T23:18:02.775Z"
+    },
+    {
+      "id": "de6e478c-9c8f-4c46-8b25-fd6f48ab093f",
+      "projectId": null,
+      "projectName": null,
+      "projectIsArchived": false,
+      "title": "创建成功但刷新失败验证",
+      "lifecycleStatus": "pending",
+      "createdAt": "2026-11-26T23:18:02.379Z",
+      "updatedAt": "2026-11-26T23:18:02.379Z"
+    },
+    {
+      "id": "bb0c32c2-7bab-4f6b-ac63-0a6aecdadd28",
+      "projectId": "5820764c-cdc5-48a9-80cf-33cefe817805",
+      "projectName": "T1-03 虚构未归档项目",
+      "projectIsArchived": true,
+      "title": "关联未归档项目的待安排工作",
+      "lifecycleStatus": "pending",
+      "createdAt": "2026-11-26T23:18:01.517Z",
+      "updatedAt": "2026-11-26T23:18:01.517Z"
+    },
+    {
+      "id": "a331d674-251b-486c-87e4-1f621c8a1cc8",
+      "projectId": null,
+      "projectName": null,
+      "projectIsArchived": false,
+      "title": "重复提交保护验证",
+      "lifecycleStatus": "pending",
+      "createdAt": "2026-11-26T23:18:00.674Z",
+      "updatedAt": "2026-11-26T23:18:00.674Z"
+    },
+    {
+      "id": "0fc0ab6c-6124-4814-a224-f0b0ff0811a5",
+      "projectId": null,
+      "projectName": null,
+      "projectIsArchived": false,
+      "title": "整理中核商品数据",
+      "lifecycleStatus": "pending",
+      "createdAt": "2026-11-26T23:17:59.935Z",
+      "updatedAt": "2026-11-26T23:17:59.935Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "528aeb9f-5e8f-45f3-82bd-8835c0366365",
+      "name": "T1-03 虚构归档项目",
+      "isArchived": true,
+      "createdAt": "2026-11-26T23:18:01.425Z",
+      "updatedAt": "2026-11-26T23:18:01.431Z"
+    },
+    {
+      "id": "5820764c-cdc5-48a9-80cf-33cefe817805",
+      "name": "T1-03 虚构未归档项目",
+      "isArchived": true,
+      "createdAt": "2026-11-26T23:18:01.419Z",
+      "updatedAt": "2026-11-26T23:18:01.714Z"
+    }
+  ],
+  "currentProject": {
+    "id": "5820764c-cdc5-48a9-80cf-33cefe817805",
+    "name": "T1-03 虚构未归档项目",
+    "isArchived": false,
+    "createdAt": "2026-11-26T23:18:01.419Z",
+    "updatedAt": "2026-11-26T23:18:01.419Z"
+  },
+  "archivedProject": {
+    "id": "528aeb9f-5e8f-45f3-82bd-8835c0366365",
+    "name": "T1-03 虚构归档项目",
+    "isArchived": false,
+    "createdAt": "2026-11-26T23:18:01.425Z",
+    "updatedAt": "2026-11-26T23:18:01.425Z"
+  },
+  "unassignedWorkItem": {
+    "id": "0fc0ab6c-6124-4814-a224-f0b0ff0811a5",
+    "projectId": null,
+    "projectName": null,
+    "projectIsArchived": false,
+    "title": "整理中核商品数据",
+    "lifecycleStatus": "pending",
+    "createdAt": "2026-11-26T23:17:59.935Z",
+    "updatedAt": "2026-11-26T23:17:59.935Z"
+  },
+  "longTitle": "超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}

@@ -1,0 +1,215 @@
+# T1-03 第六轮 Red 探针 — 脱敏后的原始命令输出
+# 生成时间（UTC）：2026-11-26T23:15:39.2472831Z
+# 基线提交：e8205cae22e98afce6480f5a5a0695543a61dee3（2026-11-23T10:06:14+08:00）
+# 命令：powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\probe-round6-red.ps1
+# 说明：F1 为基线测试脚本入口子进程的真实输出；F2/P4 为探针在基线 T1-03UatPath.ps1 上执行的诊断输出。
+COMMAND: powershell -NoProfile -ExecutionPolicy Bypass -File <baseline-extract>\scripts\verify\test-t1-03-uat-path.ps1 -EvidencePath <red-case-root>\outside-evidence\guardian-business-canary.json
+
+TRUST_ANCHOR=PASS path=<uat-root> components=2 volumeIdentity=verified finalPath=verified
+PASS unit.freshNewUatDirectoryAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\fresh-20261127-071519
+PASS unit.emptyExistingDirectoryAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\empty-existing
+PASS unit.caseInsensitiveRootAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\fresh-20261127-071519
+PASS unit.normalizedDotDotInsideAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\fresh-normalized
+PASS unit.cDriveRejected — rejected: 输出目录必须位于专用测试根目录 <uat-root> 之下（实际：<uat-root>\t1-03-ui-reject）。请使用新的 UAT 目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.formalRootRejected — rejected: 禁止使用正式应用目录 <formal-root> 作为 UAT 输出目录（实际：<formal-root>）。请使用新的测试目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.formalRootSubdirectoryRejected — rejected: 禁止使用正式应用目录 <formal-root> 作为 UAT 输出目录（实际：<formal-root>\data\uat）。请使用新的测试目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.outsideTestRootDDriveRejected — rejected: 输出目录必须位于专用测试根目录 <uat-root> 之下（实际：<drive-root>\OtherWorkManagerDir\t1-03-ui）。请使用新的 UAT 目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.dotDotEscapeToFormalRejected — rejected: 禁止使用正式应用目录 <formal-root> 作为 UAT 输出目录（实际：<formal-root>）。请使用新的测试目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.dotDotEscapeOutsideRejected — rejected: 输出目录必须位于专用测试根目录 <uat-root> 之下（实际：<drive-root>\OtherWorkManagerDir）。请使用新的 UAT 目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.testRootItselfRejected — rejected: 输出目录不能是专用测试根目录本身：<uat-root>。请使用该根目录下的新 UAT 目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.testRootWithTrailingSlashRejected — rejected: 输出目录不能是专用测试根目录本身：<uat-root>。请使用该根目录下的新 UAT 目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.relativePathRejected — rejected: 输出目录必须是本地盘符绝对路径，拒绝相对路径：t1-03-ui-relative-dir。必须位于专用测试根目录 <uat-root> 之下。
+PASS unit.nonEmptyUnknownDirectoryRejected — rejected: 目标 UAT 目录已存在且非空（1 个条目），拒绝覆盖或删除未知内容。请使用新的测试目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.existingDatabaseDirectoryRejected — rejected: 目标 UAT 目录已包含数据库文件（1 个），默认拒绝复用旧数据库。请使用新的测试目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS integration.cDriveRejected — exit=2; keyword=PRECONDITION_FAILED
+PASS integration.formalRootRejected — exit=2; keyword=正式应用目录
+PASS integration.outsideTestRootRejected — exit=2; keyword=专用测试根目录
+PASS integration.dotDotEscapeRejected — exit=2; keyword=正式应用目录
+PASS integration.nonEmptyUnknownDirectoryRejected — exit=2; keyword=非空
+PASS integration.existingDatabaseDirectoryRejected — exit=2; keyword=数据库
+PASS integration.nonEmptyDirectoryNotDeletedOrModified — marker=must-not-be-deleted
+PASS integration.existingDatabaseNotOverwritten — database content preserved=True
+PASS native.newDirectoryUnderRealRootAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\native-fresh-20261127-071519
+PASS native.newDirectoryNotCreatedByValidation — existsAfterValidation=False
+PASS native.nestedNewDirectoryUnderRealRootAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\nested-plain-parent\deep\native-nested
+PASS native.nestedDirectoryNotCreatedByValidation — existsAfterValidation=False
+PASS native.missingParentAllowedWithSafetyRules — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\missing-parent-not-exist\child-output
+PASS native.missingParentNotCreatedByValidation — missing parent still absent
+PASS native.testRootIsJunctionRejected — rejected: 专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\synth\root-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.testRootPathContainsJunctionRejected — rejected: 专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\synth\root-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.middleComponentJunctionRejected — rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\junction-mid-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.outputDirectoryJunctionRejected — rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\output-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.junctionToFormalRootRejected — rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\junction-formal-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.junctionToCDriveRejected — rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\junction-c-drive-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.reparsePointInsideTestRootRejected — rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\junction-inside-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.uncPathRejected — rejected: 输出目录不能使用 UNC、设备路径（\\?\ / \\.\ / \??\）或根相对路径：\\server\share\t1-03-ui。必须位于专用测试根目录 <uat-root> 之下并使用普通本地盘符绝对路径。
+PASS native.devicePathRejected — rejected: 输出目录不能使用 UNC、设备路径（\\?\ / \\.\ / \??\）或根相对路径：\\?\<uat-root>\t1-03-ui。必须位于专用测试根目录 <uat-root> 之下并使用普通本地盘符绝对路径。
+PASS native.wildcardPathRejected — rejected: 输出目录路径包含 Windows 文件名非法字符（<>:"|?*）：<uat-root>\t1-03-path-safety-20261127-071519-20324\bad*name。已按 fail-closed 拒绝。
+PASS native.trailingDotComponentRejected — rejected: 输出目录路径组件以点或空白结尾（Windows 会归一化名称，可能造成路径别名）：<uat-root>\t1-03-path-safety-20261127-071519-20324\dot-suffix.（组件：dot-suffix.）。已按 fail-closed 拒绝。
+PASS native.trailingSpaceComponentRejected — rejected: 输出目录路径组件以点或空白结尾（Windows 会归一化名称，可能造成路径别名）：<uat-root>\t1-03-path-safety-20261127-071519-20324\space suffix \child（组件：space suffix ）。已按 fail-closed 拒绝。
+PASS native.reservedCom0Rejected — rejected: 输出目录路径组件是 Windows 保留设备名：<uat-root>\t1-03-path-safety-20261127-071519-20324\COM0（组件：COM0）。已按 fail-closed 拒绝。
+PASS native.reservedConinRejected — rejected: 输出目录路径组件是 Windows 保留设备名：<uat-root>\t1-03-path-safety-20261127-071519-20324\CONIN$（组件：CONIN$）。已按 fail-closed 拒绝。
+PASS native.missingTestRootRejected — rejected: 无法确认专用测试根目录的真实文件系统身份：目录不存在或路径组件缺失：<uat-root>\t1-03-path-safety-20261127-071519-20324\missing-test-root。已按 fail-closed 拒绝。
+PASS native.guardSummaryVolumeAndFinalPathChecks — volumeIdentityMatch=True; finalPathInsideRoot=True; checkedComponents=5
+SKIP native.symbolicLinkToExternalRejected — 当前进程无法创建 Windows Symbolic Link（mklink /D 退出码=1；SeCreateSymbolicLinkPrivilege 未启用/未以管理员运行）。该场景未执行，不计为 PASS。
+PASS integration.junctionOutputRejected — exit=2
+PASS integration.junctionOutputRejectedByReparsePoint — keyword=重解析点; exit=2
+PASS integration.sideEffectSnapshotUnchanged — removed=0; added=0; changed=0
+PASS integration.sideEffectCanaryUnchanged — canaryPreserved=True
+PASS integration.sideEffectExistingDatabaseUnchanged — databasePreserved=True
+PASS integration.sideEffectNoExeCopied — exeCount=0
+PASS integration.sideEffectNoDatabaseWriteArtifacts — orchestrationOrWalArtifacts=0; existingDatabasePreserved=True
+PASS integration.sideEffectJunctionStillPresent — junction link preserved after rejection
+PASS integration.sideEffectNoChildDirectoryCreated — no child directory created in junction target
+PASS integration.formalRootRejectedWithoutCreation — exit=2; formalRootExistedBefore=False; formalRootExistsAfter=False
+PASS cleanup.junctionLinkRemovedWithoutTouchingTarget — linkRemoved=True; targetCanaryAlive=True
+PASS cleanup.junctionTargetCanaryIntact — canaryPreserved=True
+PASS f1.trustAnchorDefaultRootVerified — pathMatches=True; components=2
+PASS f1.trustAnchorIdentityRecorded — fileIdLength=32; volumeSerialRecorded=True
+PASS f1.defaultTestRootConstantUnchanged — defaultRoot=<uat-root>; overrideActive=False
+PASS f1.mainRunUsesDefaultTrustedRoot — sandboxInsideDefaultRoot=True
+PASS f1.rootJunctionChildExitCode2 — exit=2
+PASS f1.rootJunctionRejectedBeforeAnyWrite — exit=2; rejectedByTrustAnchor=True; reparseKeyword=True
+PASS f1.rootJunctionCanaryUnchanged — filesRemoved=0; filesAdded=0; filesChanged=0; dirsBefore=1; dirsAfter=1
+PASS f1.rootJunctionNoSandboxCreated — sandboxDirsCreated=0; childEvidenceWritten=False
+PASS f1.rootJunctionDefaultRootUntouched — added=0; removed=0
+PASS f1.missingRootChildExitCode2 — exit=2
+PASS f1.missingRootNotAutoCreated — missingParentCreated=False; keywordMissing=True
+PASS f1.missingRootNoWriteSideEffects — childEvidenceWritten=False
+PASS f1.validOverrideChildExitCode2 — exit=2
+PASS f1.validOverrideNoSandboxCreated — entriesInOverrideRoot=0
+PASS f1.canaryIntactAfterLinkCleanup — linkStillPresent=False; canaryChanged=0
+PASS f1.childDidNotWriteDefaultEvidence — defaultEvidenceChanged=False
+PASS f2.normalJunctionRemovalSucceeds — safe=True; stopCode=; sandboxGone=True
+PASS f2.normalCleanupTargetCanaryIntact — canaryPreserved=True
+PASS f2.trackedDeleteFailureStopsRecursiveDelete — safe=False; recursiveDeletePerformed=False; stopCode=trackedLinkDeleteFailed
+PASS f2.trackedDeleteFailurePreservesSandbox — sandboxPreserved=True; linkPreserved=True; sentinelPreserved=True
+PASS f2.trackedDeleteFailureTargetCanaryIntact — canaryPreserved=True
+PASS f2.trackedDeleteFailureReportsLocatablePath — unsafePathCount=1; stopReasonPresent=True
+PASS f2.linkReappearsAfterDeleteDetected — safe=False; stopCode=trackedLinkStillExists
+PASS f2.linkReappearsSandboxPreserved — sandboxPreserved=True; sentinelPreserved=True
+PASS f2.untrackedReparsePointDetected — safe=False; stopCode=unexpectedReparsePoint; sandboxPreserved=True; untrackedPathReported=True
+PASS f2.untrackedReparsePointTargetCanaryIntact — trackedTargetCanaryPreserved=True; untrackedTargetCanaryPreserved=True
+PASS f2.identityChangeBeforeCleanupDetected — safe=False; stopCode=sandboxIdentityChanged; sandboxPreserved=True
+PASS f2.identityChangeTargetCanaryIntact — swappedTargetCanaryPreserved=True
+PASS f2.failureCasesRecheckCanaryUnchanged — canariesChecked=5; unchanged=True
+PASS f2.noRecursiveDeleteInFailureCases — failureCases=4; allStoppedBeforeRecursiveDelete=True
+PASS cleanup.sandboxRemovedSafely — steps=11; recursiveDeletePerformed=True
+PASS evidence.original23ChecksPreserved — originalExpected=23; missing=0
+PASS evidence.machineIdentifiersRedacted — sensitivePatternsFound=False; patternsChecked=5
+PASS evidence.round3ChecksPreserved — round3Expected=60; missing=0; selfReferentialExcluded=evidence.passState
+PASS evidence.round4NewChecksPresent — round4Expected=31; missing=0; missingNames=
+PASS evidence.passState — failed=0
+UAT_PATH_EVIDENCE=<red-case-root>\outside-evidence\guardian-business-canary.json
+UAT_PATH_CHECK_TOTAL=93 ORIGINAL=23 ROUND3_PRESERVED=60 ROUND4_NEW_TARGET=31 SKIPPED=1 FAILED=0
+UAT_PATH_TRUST_ANCHOR=PASS CLEANUP_SAFE=True CLEANUP_STOP_CODE=
+T1_03_UAT_PATH_SECURITY=PASS
+
+=== 第六轮 Red 探针：基线 e8205cae22e98afce6480f5a5a0695543a61dee3（2026-11-23T10:06:14+08:00），当前 HEAD 6ddae47dd0721d58d5cb11f55e527fc162cedbe9 ===
+BASELINE_PATHS_SCRIPT_BLOB=fafd320753ae1efd39055bd53e95f221b4b50be6 (extracted matches git object)
+--- F1-RED: 基线脚本入口以 -EvidencePath 越界写入并覆盖守卫 Canary ---
+F1_RED_CONFIRMED=True oldSuiteExit=0 escapedEvidence=True canaryOverwritten=True
+TRUST_ANCHOR=PASS path=<uat-root> components=2 volumeIdentity=verified finalPath=verified
+PASS unit.freshNewUatDirectoryAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\fresh-20261127-071519
+PASS unit.emptyExistingDirectoryAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\empty-existing
+PASS unit.caseInsensitiveRootAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\fresh-20261127-071519
+PASS unit.normalizedDotDotInsideAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\fresh-normalized
+PASS unit.cDriveRejected — rejected: 输出目录必须位于专用测试根目录 <uat-root> 之下（实际：<uat-root>\t1-03-ui-reject）。请使用新的 UAT 目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.formalRootRejected — rejected: 禁止使用正式应用目录 <formal-root> 作为 UAT 输出目录（实际：<formal-root>）。请使用新的测试目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.formalRootSubdirectoryRejected — rejected: 禁止使用正式应用目录 <formal-root> 作为 UAT 输出目录（实际：<formal-root>\data\uat）。请使用新的测试目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.outsideTestRootDDriveRejected — rejected: 输出目录必须位于专用测试根目录 <uat-root> 之下（实际：<drive-root>\OtherWorkManagerDir\t1-03-ui）。请使用新的 UAT 目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.dotDotEscapeToFormalRejected — rejected: 禁止使用正式应用目录 <formal-root> 作为 UAT 输出目录（实际：<formal-root>）。请使用新的测试目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.dotDotEscapeOutsideRejected — rejected: 输出目录必须位于专用测试根目录 <uat-root> 之下（实际：<drive-root>\OtherWorkManagerDir）。请使用新的 UAT 目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.testRootItselfRejected — rejected: 输出目录不能是专用测试根目录本身：<uat-root>。请使用该根目录下的新 UAT 目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.testRootWithTrailingSlashRejected — rejected: 输出目录不能是专用测试根目录本身：<uat-root>。请使用该根目录下的新 UAT 目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.relativePathRejected — rejected: 输出目录必须是本地盘符绝对路径，拒绝相对路径：t1-03-ui-relative-dir。必须位于专用测试根目录 <uat-root> 之下。
+PASS unit.nonEmptyUnknownDirectoryRejected — rejected: 目标 UAT 目录已存在且非空（1 个条目），拒绝覆盖或删除未知内容。请使用新的测试目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS unit.existingDatabaseDirectoryRejected — rejected: 目标 UAT 目录已包含数据库文件（1 个），默认拒绝复用旧数据库。请使用新的测试目录，例如 <uat-root>\t1-03-ui-<timestamp>。
+PASS integration.cDriveRejected — exit=2; keyword=PRECONDITION_FAILED
+PASS integration.formalRootRejected — exit=2; keyword=正式应用目录
+PASS integration.outsideTestRootRejected — exit=2; keyword=专用测试根目录
+PASS integration.dotDotEscapeRejected — exit=2; keyword=正式应用目录
+PASS integration.nonEmptyUnknownDirectoryRejected — exit=2; keyword=非空
+PASS integration.existingDatabaseDirectoryRejected — exit=2; keyword=数据库
+PASS integration.nonEmptyDirectoryNotDeletedOrModified — marker=must-not-be-deleted
+PASS integration.existingDatabaseNotOverwritten — database content preserved=True
+PASS native.newDirectoryUnderRealRootAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\native-fresh-20261127-071519
+PASS native.newDirectoryNotCreatedByValidation — existsAfterValidation=False
+PASS native.nestedNewDirectoryUnderRealRootAllowed — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\nested-plain-parent\deep\native-nested
+PASS native.nestedDirectoryNotCreatedByValidation — existsAfterValidation=False
+PASS native.missingParentAllowedWithSafetyRules — allowed: <uat-root>\t1-03-path-safety-20261127-071519-20324\missing-parent-not-exist\child-output
+PASS native.missingParentNotCreatedByValidation — missing parent still absent
+PASS native.testRootIsJunctionRejected — rejected: 专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\synth\root-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.testRootPathContainsJunctionRejected — rejected: 专用测试根目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\synth\root-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.middleComponentJunctionRejected — rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\junction-mid-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.outputDirectoryJunctionRejected — rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\output-junction。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.junctionToFormalRootRejected — rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\junction-formal-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.junctionToCDriveRejected — rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\junction-c-drive-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.reparsePointInsideTestRootRejected — rejected: 输出目录路径检查失败：路径组件是未获批准的 Windows 重解析点（Junction / Symbolic Link / 其他 reparse point），重解析标签=0xA0000003：<uat-root>\t1-03-path-safety-20261127-071519-20324\junction-inside-link。本任务未批准任何重解析点，已按 fail-closed 拒绝；请改用专用测试根目录内的普通新目录。
+PASS native.uncPathRejected — rejected: 输出目录不能使用 UNC、设备路径（\\?\ / \\.\ / \??\）或根相对路径：\\server\share\t1-03-ui。必须位于专用测试根目录 <uat-root> 之下并使用普通本地盘符绝对路径。
+PASS native.devicePathRejected — rejected: 输出目录不能使用 UNC、设备路径（\\?\ / \\.\ / \??\）或根相对路径：\\?\<uat-root>\t1-03-ui。必须位于专用测试根目录 <uat-root> 之下并使用普通本地盘符绝对路径。
+PASS native.wildcardPathRejected — rejected: 输出目录路径包含 Windows 文件名非法字符（<>:"|?*）：<uat-root>\t1-03-path-safety-20261127-071519-20324\bad*name。已按 fail-closed 拒绝。
+PASS native.trailingDotComponentRejected — rejected: 输出目录路径组件以点或空白结尾（Windows 会归一化名称，可能造成路径别名）：<uat-root>\t1-03-path-safety-20261127-071519-20324\dot-suffix.（组件：dot-suffix.）。已按 fail-closed 拒绝。
+PASS native.trailingSpaceComponentRejected — rejected: 输出目录路径组件以点或空白结尾（Windows 会归一化名称，可能造成路径别名）：<uat-root>\t1-03-path-safety-20261127-071519-20324\space suffix \child（组件：space suffix ）。已按 fail-closed 拒绝。
+PASS native.reservedCom0Rejected — rejected: 输出目录路径组件是 Windows 保留设备名：<uat-root>\t1-03-path-safety-20261127-071519-20324\COM0（组件：COM0）。已按 fail-closed 拒绝。
+PASS native.reservedConinRejected — rejected: 输出目录路径组件是 Windows 保留设备名：<uat-root>\t1-03-path-safety-20261127-071519-20324\CONIN$（组件：CONIN$）。已按 fail-closed 拒绝。
+PASS native.missingTestRootRejected — rejected: 无法确认专用测试根目录的真实文件系统身份：目录不存在或路径组件缺失：<uat-root>\t1-03-path-safety-20261127-071519-20324\missing-test-root。已按 fail-closed 拒绝。
+PASS native.guardSummaryVolumeAndFinalPathChecks — volumeIdentityMatch=True; finalPathInsideRoot=True; checkedComponents=5
+SKIP native.symbolicLinkToExternalRejected — 当前进程无法创建 Windows Symbolic Link（mklink /D 退出码=1；SeCreateSymbolicLinkPrivilege 未启用/未以管理员运行）。该场景未执行，不计为 PASS。
+PASS integration.junctionOutputRejected — exit=2
+PASS integration.junctionOutputRejectedByReparsePoint — keyword=重解析点; exit=2
+PASS integration.sideEffectSnapshotUnchanged — removed=0; added=0; changed=0
+PASS integration.sideEffectCanaryUnchanged — canaryPreserved=True
+PASS integration.sideEffectExistingDatabaseUnchanged — databasePreserved=True
+PASS integration.sideEffectNoExeCopied — exeCount=0
+PASS integration.sideEffectNoDatabaseWriteArtifacts — orchestrationOrWalArtifacts=0; existingDatabasePreserved=True
+PASS integration.sideEffectJunctionStillPresent — junction link preserved after rejection
+PASS integration.sideEffectNoChildDirectoryCreated — no child directory created in junction target
+PASS integration.formalRootRejectedWithoutCreation — exit=2; formalRootExistedBefore=False; formalRootExistsAfter=False
+PASS cleanup.junctionLinkRemovedWithoutTouchingTarget — linkRemoved=True; targetCanaryAlive=True
+PASS cleanup.junctionTargetCanaryIntact — canaryPreserved=True
+PASS f1.trustAnchorDefaultRootVerified — pathMatches=True; components=2
+PASS f1.trustAnchorIdentityRecorded — fileIdLength=32; volumeSerialRecorded=True
+PASS f1.defaultTestRootConstantUnchanged — defaultRoot=<uat-root>; overrideActive=False
+PASS f1.mainRunUsesDefaultTrustedRoot — sandboxInsideDefaultRoot=True
+PASS f1.rootJunctionChildExitCode2 — exit=2
+PASS f1.rootJunctionRejectedBeforeAnyWrite — exit=2; rejectedByTrustAnchor=True; reparseKeyword=True
+PASS f1.rootJunctionCanaryUnchanged — filesRemoved=0; filesAdded=0; filesChanged=0; dirsBefore=1; dirsAfter=1
+PASS f1.rootJunctionNoSandboxCreated — sandboxDirsCreated=0; childEvidenceWritten=False
+PASS f1.rootJunctionDefaultRootUntouched — added=0; removed=0
+PASS f1.missingRootChildExitCode2 — exit=2
+PASS f1.missingRootNotAutoCreated — missingParentCreated=False; keywordMissing=True
+PASS f1.missingRootNoWriteSideEffects — childEvidenceWritten=False
+PASS f1.validOverrideChildExitCode2 — exit=2
+PASS f1.validOverrideNoSandboxCreated — entriesInOverrideRoot=0
+PASS f1.canaryIntactAfterLinkCleanup — linkStillPresent=False; canaryChanged=0
+PASS f1.childDidNotWriteDefaultEvidence — defaultEvidenceChanged=False
+PASS f2.normalJunctionRemovalSucceeds — safe=True; stopCode=; sandboxGone=True
+PASS f2.normalCleanupTargetCanaryIntact — canaryPreserved=True
+PASS f2.trackedDeleteFailureStopsRecursiveDelete — safe=False; recursiveDeletePerformed=False; stopCode=trackedLinkDeleteFailed
+PASS f2.trackedDeleteFailurePreservesSandbox — sandboxPreserved=True; linkPreserved=True; sentinelPreserved=True
+PASS f2.trackedDeleteFailureTargetCanaryIntact — canaryPreserved=True
+PASS f2.trackedDeleteFailureReportsLocatablePath — unsafePathCount=1; stopReasonPresent=True
+PASS f2.linkReappearsAfterDeleteDetected — safe=False; stopCode=trackedLinkStillExists
+PASS f2.linkReappearsSandboxPreserved — sandboxPreserved=True; sentinelPreserved=True
+PASS f2.untrackedReparsePointDetected — safe=False; stopCode=unexpectedReparsePoint; sandboxPreserved=True; untrackedPathReported=True
+PASS f2.untrackedReparsePointTargetCanaryIntact — trackedTargetCanaryPreserved=True; untrackedTargetCanaryPreserved=True
+PASS f2.identityChangeBeforeCleanupDetected — safe=False; stopCode=sandboxIdentityChanged; sandboxPreserved=True
+PASS f2.identityChangeTargetCanaryIntact — swappedTargetCanaryPreserved=True
+PASS f2.failureCasesRecheckCanaryUnchanged — canariesChecked=5; unchanged=True
+PASS f2.noRecursiveDeleteInFailureCases — failureCases=4; allStoppedBeforeRecursiveDelete=True
+PASS cleanup.sandboxRemovedSafely — steps=11; recursiveDeletePerformed=True
+PASS evidence.original23ChecksPreserved — originalExpected=23; missing=0
+PASS evidence.machineIdentifiersRedacted — sensitivePatternsFound=False; patternsChecked=5
+PASS evidence.round3ChecksPreserved — round3Expected=60; missing=0; selfReferentialExcluded=evidence.passState
+PASS evidence.round4NewChecksPresent — round4Expected=31; missing=0; missingNames=
+PASS evidence.passState — failed=0
+UAT_PATH_EVIDENCE=<red-case-root>\outside-evidence\guardian-business-canary.json
+UAT_PATH_CHECK_TOTAL=93 ORIGINAL=23 ROUND3_PRESERVED=60 ROUND4_NEW_TARGET=31 SKIPPED=1 FAILED=0
+UAT_PATH_TRUST_ANCHOR=PASS CLEANUP_SAFE=True CLEANUP_STOP_CODE=
+T1_03_UAT_PATH_SECURITY=PASS
+--- F2-RED: 基线清理函数穿过未跟踪 Junction 删除外部跟踪链接 ---
+F2_BEFORE victimLinkExists=True victimLinkIsReparse=True tag=0xA0000003
+F2_RED_CONFIRMED=True victimLinkDeleted=True oldStopCode=unexpectedReparsePoint canaryUnchanged=True
+--- P4-RED: 基线递归删除中途真实失败后的结果语义 ---
+P4_RED_CONFIRMED=True entriesBefore=7 entriesAfter=1 oldPerformed=False oldStopCode=unexpectedCleanupError hasStartedField=False

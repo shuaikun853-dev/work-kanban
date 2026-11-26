@@ -1,0 +1,70 @@
+{
+    "task":  "T1-03",
+    "round":  6,
+    "kind":  "red-baseline-behavior-probe",
+    "note":  "使用修复前基线提交的真实脚本与真实 Windows 文件系统对象复现问题；未使用修复后的函数冒充修复前实现。",
+    "baselineCommit":  "e8205cae22e98afce6480f5a5a0695543a61dee3",
+    "baselineCommitDate":  "2026-11-23T10:06:14+08:00",
+    "baselinePathScriptBlobSha":  "fafd320753ae1efd39055bd53e95f221b4b50be6",
+    "extractedPathScriptBlobSha":  "fafd320753ae1efd39055bd53e95f221b4b50be6",
+    "currentHead":  "6ddae47dd0721d58d5cb11f55e527fc162cedbe9",
+    "branch":  "task/T1-03-quick-create-pending-r4",
+    "workingTreeDirty":  true,
+    "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify\\probe-round6-red.ps1",
+    "generatedAt":  "2026-11-26T23:15:16.4404370Z",
+    "environment":  {
+                        "os":  "Microsoft Windows NT 10.0.19045.0",
+                        "powershell":  "5.1.19041.6456",
+                        "isAdmin":  false,
+                        "testRoot":  "\u003cuat-root\u003e",
+                        "caseRoot":  "\u003cred-case-root\u003e",
+                        "baselineExtract":  "\u003cbaseline-extract\u003e"
+                    },
+    "f1OldEvidenceWrite":  {
+                               "oldSuiteExitCode":  0,
+                               "oldSuiteElapsedSeconds":  20.21,
+                               "evidencePathArgument":  "\u003cred-case-root\u003e\\outside-evidence\\guardian-business-canary.json",
+                               "evidenceWrittenOutsideRepoEvidenceRoot":  true,
+                               "guardCanaryOverwritten":  true,
+                               "guardCanarySha256Before":  "6E340FD4AA027538169A5FA059345D24214E883EF6865D3D6D8B1E94092A1191",
+                               "guardCanarySha256After":  "1609F66D3197D8FD50B0F846D465D8DA58ED38E8F2022517C1DAB0787252EF22",
+                               "escapedEvidenceFileSize":  34904,
+                               "escapedEvidenceTask":  "T1-03",
+                               "oldSuiteOutputExcerpt":  [
+                                                             "TRUST_ANCHOR=PASS path=\u003cuat-root\u003e components=2 volumeIdentity=verified finalPath=verified UAT_PATH_CHECK_TOTAL=93 ORIGINAL=23 ROUND3_PRESERVED=60 ROUND4_NEW_TARGET=31 SKIPPED=1 FAILED=0 UAT_PATH_TRUST_ANCHOR=PASS CLEANUP_SAFE=True CLEANUP_STOP_CODE= T1_03_UAT_PATH_SECURITY=PASS"
+                                                         ]
+                           },
+    "f2OldTrackedLinkDelete":  {
+                                   "sandboxPath":  "\u003cred-case-root\u003e\\f2\\sandbox",
+                                   "trackedLinkArgument":  "\u003cred-case-root\u003e\\f2\\sandbox\\evil\\victim-link",
+                                   "victimLinkExistedBefore":  true,
+                                   "victimLinkDeletedByOldCleanup":  true,
+                                   "oldResultSafe":  false,
+                                   "oldResultStopCode":  "unexpectedReparsePoint",
+                                   "oldResultRecursiveDeletePerformed":  false,
+                                   "oldResultStopReason":  "测试沙箱中仍存在 1 个未预期重解析点，拒绝执行递归删除",
+                                   "oldResultSteps":  [
+                                                          "sandbox.identityVerified",
+                                                          "link.removed"
+                                                      ],
+                                   "victimTargetCanaryContent":  "ROUND6-RED-VICTIM-CANARY",
+                                   "victimTargetCanarySha256Before":  "ABA0EB44A6FAA26EC795F5896B6389BFE10A1E5CB78EB01218E58A735FC9EB15",
+                                   "victimTargetCanarySha256After":  "ABA0EB44A6FAA26EC795F5896B6389BFE10A1E5CB78EB01218E58A735FC9EB15",
+                                   "sandboxPreservedByOldCleanup":  true,
+                                   "untrackedEvilJunctionPreserved":  true
+                               },
+    "p4OldPartialDelete":  {
+                               "sandboxPath":  "\u003cred-case-root\u003e\\p4\\sandbox",
+                               "failureInjection":  "real sharing violation: a file inside the sandbox subdirectory is opened with FileShare.None",
+                               "entriesBefore":  7,
+                               "entriesAfter":  1,
+                               "partialDeletionObserved":  true,
+                               "oldResultSafe":  false,
+                               "oldResultStopCode":  "unexpectedCleanupError",
+                               "oldResultRecursiveDeletePerformed":  false,
+                               "oldResultHasRecursiveDeleteStartedField":  false,
+                               "oldResultStopReason":  "Exception calling \"Delete\" with \"1\" argument(s): \"The process cannot access the file \u0027\u003cred-case-root\u003e\\p4\\sandbox\\zz-subdir\\locked.txt\u0027 because it is being used by another process.\""
+                           },
+    "redConfirmed":  true,
+    "sanitizedLog":  "docs/testing/reports/T1-03-assets/evidence/round6-remediation/red/round6-red-command-output.sanitized.log.txt"
+}

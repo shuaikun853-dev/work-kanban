@@ -1,0 +1,376 @@
+P3-02/F1 测试根目录信任锚验证通过：components=2 volumeIdentity=verified finalPath=verified
+P3-02 原生路径检查通过：components=4 reparsePointAllowed=False volumeIdentityMatch=True finalPathInsideRoot=True
+P3-02 原生路径重校验通过（创建 UAT 根目录后）：components=5 volumeIdentityMatch=True finalPathInsideRoot=True
+P3-02 原生路径重校验通过（创建 app 目录后）：components=6 volumeIdentityMatch=True finalPathInsideRoot=True
+P3-02 原生路径重校验通过（复制 EXE 前）：components=6 volumeIdentityMatch=True finalPathInsideRoot=True
+P3-02 原生路径重校验通过（复制 EXE 后（启动应用前））：components=6 volumeIdentityMatch=True finalPathInsideRoot=True
+T1-03 UI 验证：exe=<repo-root>\target\release\workmanager.exe sha256=f46c9b0cb3c9d094475cab6abd8276276126f2ea0d2e5b38b6d6a4fbf92b2b68 size=10352128 output=<uat-root>\t1-03-ui-r6f-20261127-071753 port=9395
+--- 运行 T1-03 主 UI/IPC 检查 ---
+PASS shell.rendered
+PASS shell.titlebarAppName
+PASS shell.sidebarNavigationUnchanged — 工作总览 / 今日工作 / 未来 7 天 / 历史记录 / 报告 / 设置
+PASS shell.noNewPrimaryNavigationForPending — 待安排不得成为一级导航
+PASS shell.noHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[]}
+PASS nav.todayClicked
+PASS today.secondarySwitcherRendered — {"labels":["今日工作","待安排"],"pressed":["今日工作"]}
+PASS today.defaultViewIsToday
+PASS today.executionPlaceholderHonest — 今日工作执行记录未接入时不得展示虚构数据
+PASS pending.entryClicked
+PASS pending.loadingStateVisible — {"clicked":true,"heading":"待安排","loading":true,"statusCount":2}
+PASS pending.emptyStateRendered — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":true,"rows":0,"error":false,"errorText":null}
+PASS pending.emptyStateCreateAction
+PASS pending.emptyNoHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[]}
+PASS ipc.listPendingEmpty — {"ok":true,"value":[]}
+PASS create.openFromToolbar
+PASS create.onlyTitleAndProjectFields — {"title":"快速创建工作","hasTitleInput":true,"hasProjectSelect":true,"textInputs":1,"labels":["工作标题","所属项目（可选）"]}
+PASS create.onlyUnassignedOptionWithoutProjects — [{"value":"","label":"未归属项目"}]
+PASS create.titleFilled
+PASS create.refreshDelayInjected
+PASS create.saved
+PASS create.refreshTransientNoticeShownBeforeRefreshCompletes — {"kind":"success","text":"工作已创建，正在从数据库刷新待安排列表…"}
+PASS create.refreshSuccessNoticeOnlyAfterRefresh — {"kind":"success","text":"工作已创建，待安排列表已从数据库更新。"}
+PASS create.unassignedRowVisible — [{"id":"0fc0ab6c-6124-4814-a224-f0b0ff0811a5","title":"整理中核商品数据","titleAttr":"整理中核商品数据","meta":"未归属项目","hasArchivedBadge":false}]
+PASS ipc.unassignedPersisted — [{"id":"0fc0ab6c-6124-4814-a224-f0b0ff0811a5","projectId":null,"projectName":null,"projectIsArchived":false,"title":"整理中核商品数据","lifecycleStatus":"pending","createdAt":"2026-11-26T23:17:59.935Z","updatedAt":"2026-11-26T23:17:59.935Z"}]
+PASS pending.unassignedNoHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[]}
+PASS create.reopenForDoubleSubmit
+PASS create.doubleSubmitTitleFilled
+PASS create.doubleClickDispatched
+PASS create.doubleSubmitCreatesSingleRecord — 匹配记录数=1
+PASS setup.projectsCreated — {"a":true,"b":true}
+PASS setup.projectArchived
+PASS create.reopenForProjectSelection
+PASS create.selectorOnlyUnarchivedProjects — [{"value":"","label":"未归属项目"},{"value":"5820764c-cdc5-48a9-80cf-33cefe817805","label":"T1-03 虚构未归档项目"}]
+PASS create.projectSelected
+PASS create.linkedTitleFilled
+PASS create.linkedSaved
+PASS create.linkedRowShowsProjectName — {"id":"bb0c32c2-7bab-4f6b-ac63-0a6aecdadd28","title":"关联未归档项目的待安排工作","titleAttr":"关联未归档项目的待安排工作","meta":"T1-03 虚构未归档项目","hasArchivedBadge":false}
+PASS ipc.linkedWorkItemPersisted — {"id":"bb0c32c2-7bab-4f6b-ac63-0a6aecdadd28","projectId":"5820764c-cdc5-48a9-80cf-33cefe817805","projectName":"T1-03 虚构未归档项目","projectIsArchived":false,"title":"关联未归档项目的待安排工作","lifecycleStatus":"pending","createdAt":"2026-11-26T23:18:01.517Z","updatedAt":"2026-11-26T23:18:01.517Z"}
+PASS race.openDialog
+PASS race.projectSelected
+PASS race.titleFilled
+PASS race.projectArchivedBehindDialog
+PASS race.saveClicked
+PASS race.projectArchivedErrorShown — {"message":"所选项目已归档，不能再关联新工作。请选择其他项目或不选择项目。 错误码：project-archived","code":"错误码：project-archived","dialogStillOpen":true}
+PASS race.archivedProjectRemovedFromSelector — [{"value":"","label":"未归属项目"}]
+PASS race.cancelDialog
+PASS race.noRecordCreatedForArchivedProject — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":3,"error":false,"errorText":null}
+PASS archivedProject.historyLinkStillListed — {"id":"bb0c32c2-7bab-4f6b-ac63-0a6aecdadd28","title":"关联未归档项目的待安排工作","titleAttr":"关联未归档项目的待安排工作","meta":"T1-03 虚构未归档项目 项目已归档","hasArchivedBadge":true}
+PASS ipc.archivedProjectRejectedEvenWithoutUiFilter — {"code":"project-archived","message":"所选项目已归档，不能再关联新工作。请选择其他项目或不选择项目。"}
+PASS ipc.missingProjectRejected — {"code":"project-not-found","message":"所选项目不存在或已被删除。请刷新项目列表后重试。"}
+PASS ipc.emptyTitleRejected — {"code":"work-item-title-empty","message":"工作标题不能为空，请填写工作标题。"}
+PASS ipc.unknownFieldRejected — invalid args `input` for command `create_work_item`: unknown field `extraField`, expected `title` or `projectId`
+PASS ipc.snakeCaseProjectIdRejected — invalid args `input` for command `create_work_item`: unknown field `project_id`, expected `title` or `projectId`
+PASS ipc.noArbitrarySqlCommand
+PASS ipc.rejectedRequestsCreatedNoRows — 3
+PASS fault.loadFailureInjected
+PASS fault.loadErrorStateShown — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":0,"error":true,"errorText":"待安排工作加载失败 模拟待安排列表加载失败 错误码：ipc-command-failed 重新加载"}
+PASS fault.transportRestored
+PASS fault.retryClicked
+PASS fault.retryRecoversList — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":3,"error":false,"errorText":null}
+PASS fault.contractViolationInjected
+PASS fault.bridgeRuntimeValidationRejectsMalformedPayload — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":0,"error":true,"errorText":"待安排工作加载失败 工作事项 IPC 返回值不符合契约：待安排工作列表[0].id 应为 字符串，实际为 number。请检查前后端版本是否一致。 错误码：ipc-contract-violation 重新加载"}
+PASS fault.retryAfterContractViolation
+PASS fault.recoveredAfterContractViolation — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":3,"error":false,"errorText":null}
+PASS refreshFailure.openCreate
+PASS refreshFailure.titleFilled
+PASS refreshFailure.faultInjected
+PASS refreshFailure.saved
+PASS refreshFailure.warningNoticeShown — {"kind":"warning","text":"工作已创建，但待安排列表刷新失败；请使用“重新加载”确认最新状态。"}
+PASS refreshFailure.loadErrorPanelShown — "待安排工作加载失败 模拟待安排列表加载失败 错误码：ipc-command-failed 重新加载"
+PASS refreshFailure.createdExactlyOnce — 记录数=4, 同标题=1
+PASS refreshFailure.retryClicked
+PASS refreshFailure.retryRecoversList — {"mounted":true,"ready":true,"heading":"待安排","loading":false,"refreshing":false,"empty":false,"rows":4,"error":false,"errorText":null}
+PASS refreshFailure.noticeUpdatedAfterRetrySuccess — {"kind":"success","text":"待安排列表已从数据库重新读取。"}
+PASS refreshFailure.noDuplicateAfterRetry
+PASS long.openCreate
+PASS long.titleFilled
+PASS long.saved
+PASS long.titleFullTextAvailable — titleAttr=超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——…
+PASS long.noHorizontalOverflow — {"innerWidth":1100,"docScrollWidth":1100,"clientWidth":1100,"bodyScrollWidth":1100,"offenders":[{"tag":"P","cls":"work-item-title svelte-k3ghdt","text":"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是","left":245,"right":1051,"width":806,"scrollWidth":1365,"clientWidth":806}]}
+PASS csp.noViolations — []
+PASS page.noUncaughtErrors
+PASS persistence.prerequisiteState — {"workItems":5,"projects":2}
+{
+  "evidencePath": "<uat-root>\\t1-03-ui-r6f-20261127-071753\\t1-03-ui-evidence.json",
+  "total": 84,
+  "failed": [],
+  "pass": true
+}
+T1_03_RELEASE_UI_CHECK=PASS
+--- 调整到最小支持窗口 860x640 ---
+最小窗口尺寸应用成功（第 1 次尝试）：client=844x632
+--- 运行最小窗口/关闭按钮检查 ---
+PASS minWindow.sizeNear860x640 — {"innerWidth":844,"innerHeight":632,"outerWidth":844,"outerHeight":632}
+PASS minWindow.navigateToday
+PASS minWindow.pendingEntryVisible
+PASS minWindow.pendingNoHorizontalOverflow — {"innerWidth":844,"innerHeight":632,"docScrollWidth":844,"clientWidth":844,"bodyScrollWidth":844,"overflow":false,"offenders":[{"tag":"P","cls":"work-item-title svelte-k3ghdt","text":"超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是","left":209,"right":796,"width":587,"scrollWidth":1365,"clientWidth":587}]}
+PASS minWindow.pendingRowsVisible — {"rowCount":5,"archivedBadgeCount":1,"createButtonVisible":true,"longRowVisible":true,"longTitleEllipsized":true,"longTitleFullAttribute":true,"firstRowRight":812}
+PASS minWindow.createButtonClickable
+PASS minWindow.longTitleEllipsizedWithoutClippingLayout — {"rowCount":5,"archivedBadgeCount":1,"createButtonVisible":true,"longRowVisible":true,"longTitleEllipsized":true,"longTitleFullAttribute":true,"firstRowRight":812}
+PASS minWindow.openCreateDialog
+PASS minWindow.dialogFullyVisible — {"top":151,"left":192,"right":652,"bottom":481,"innerWidth":844,"innerHeight":632,"fullyVisible":true,"titleInputVisible":true,"projectSelectVisible":true,"saveVisible":true,"cancelVisible":true}
+PASS minWindow.dialogControlsVisible — {"top":151,"left":192,"right":652,"bottom":481,"innerWidth":844,"innerHeight":632,"fullyVisible":true,"titleInputVisible":true,"projectSelectVisible":true,"saveVisible":true,"cancelVisible":true}
+PASS minWindow.cancelDialog
+PASS minWindow.closeButtonClicked
+{
+  "total": 12,
+  "failed": [],
+  "pass": true,
+  "evidencePath": "<uat-root>\\t1-03-ui-r6f-20261127-071753\\t1-03-min-window-evidence.json"
+}
+PASS dbProbe.afterMain.readable — <uat-root>\t1-03-ui-r6f-20261127-071753\t1-03-db-after-main.json
+PASS dbProbe.afterMain.portablePath — <uat-root>\t1-03-ui-r6f-20261127-071753\app\data\database\work.db
+PASS dbProbe.afterMain.userVersion3 — user_version=3
+PASS dbProbe.afterMain.integrityOk — ok
+PASS dbProbe.afterMain.journalModeWal — wal
+PASS dbProbe.afterMain.foreignKeysClean — violations=0
+PASS dbProbe.afterMain.migrations1To3 — migrations=1 2 3
+PASS dbProbe.afterMain.workItems5 — work_items=5
+PASS dbProbe.afterMain.pending5 — pending=5
+PASS dbProbe.afterMain.noOtherStatus — other_status=0
+PASS dbProbe.afterMain.unassigned4 — null_project=4
+PASS dbProbe.afterMain.archivedLink1 — linked_archived=1
+PASS dbProbe.afterMain.noActiveProjectLink — linked_active=0
+PASS dbProbe.afterMain.projects2Archived2 — projects=2 archived=2
+PASS dbProbe.afterMain.expectedTitlesPersisted — titles=超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ | 创建成功但刷新失败验证 | 关联未归档项目的待安排工作 | 重复提交保护验证 | 整理中核商品数据
+--- 重新启动 Release（端口 9396）验证持久化 ---
+P3-02 原生路径重校验通过（重新启动应用前（写数据库前））：components=6 volumeIdentityMatch=True finalPathInsideRoot=True
+PASS restart.databaseSchemaStillV3 — 3
+PASS restart.navigateToday
+PASS restart.pendingEntryVisible
+PASS restart.fivePendingWorkItemsPersisted — ["超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ","创建成功但刷新失败验证","关联未归档项目的待安排工作","重复提交保护验证","整理中核商品数据"]
+PASS restart.expectedTitlesStillPresent — ["超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ","创建成功但刷新失败验证","关联未归档项目的待安排工作","重复提交保护验证","整理中核商品数据"]
+PASS restart.archivedProjectLinkPreserved — {"id":"bb0c32c2-7bab-4f6b-ac63-0a6aecdadd28","title":"关联未归档项目的待安排工作","meta":"T1-03 虚构未归档项目 项目已归档","hasArchivedBadge":true}
+PASS restart.unassignedLabelPersisted — ["未归属项目","未归属项目","T1-03 虚构未归档项目 项目已归档","未归属项目","未归属项目"]
+PASS restart.ipcPendingListPersisted — 5
+PASS restart.ipcArchivedLinkFlags — {"id":"bb0c32c2-7bab-4f6b-ac63-0a6aecdadd28","projectId":"5820764c-cdc5-48a9-80cf-33cefe817805","projectName":"T1-03 虚构未归档项目","projectIsArchived":true,"title":"关联未归档项目的待安排工作","lifecycleStatus":"pending","createdAt":"2026-11-26T23:18:01.517Z","updatedAt":"2026-11-26T23:18:01.517Z"}
+PASS restart.openCreateDialog
+PASS restart.selectorExcludesArchivedProjects — [{"value":"","label":"未归属项目"}]
+PASS restart.newTitleFilled
+PASS restart.newWorkSaved
+PASS restart.newWorkItemPersistedToDatabase — 6
+PASS restart.newWorkItemVisibleWithUnassignedLabel — {"id":"54a29d63-1705-4ce8-be49-6c255457759e","title":"重启后新建的工作","meta":"未归属项目","hasArchivedBadge":false}
+PASS restart.noUncaughtErrors — []
+PASS restart.closeButtonClicked
+{
+  "evidencePath": "<uat-root>\\t1-03-ui-r6f-20261127-071753\\t1-03-persistence-evidence.json",
+  "total": 17,
+  "failed": [],
+  "pass": true
+}
+T1_03_RELEASE_PERSISTENCE_CHECK=PASS
+PASS dbProbe.afterRestart.readable — <uat-root>\t1-03-ui-r6f-20261127-071753\t1-03-db-after-restart.json
+PASS dbProbe.afterRestart.userVersion3 — user_version=3
+PASS dbProbe.afterRestart.integrityOk — ok
+PASS dbProbe.afterRestart.workItems6 — work_items=6
+PASS dbProbe.afterRestart.pending6 — pending=6
+PASS dbProbe.afterRestart.noOtherStatus — other_status=0
+PASS dbProbe.afterRestart.unassigned5 — null_project=5
+PASS dbProbe.afterRestart.archivedLink1 — linked_archived=1
+PASS dbProbe.afterRestart.foreignKeysClean — violations=0
+PASS dbProbe.afterRestart.newWorkPersisted — titles=重启后新建的工作 | 超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ | 创建成功但刷新失败验证 | 关联未归档项目的待安排工作 | 重复提交保护验证 | 整理中核商品数据
+T1-03 证据摘要：<uat-root>\t1-03-ui-r6f-20261127-071753\t1-03-ui-orchestration.json
+PASS summary.writeGuard — 最终摘要写入前原生路径检查与输出目录身份复验通过（TOCTOU 残余风险仍按 DEC-029 接受，未消除）
+{
+    "task":  "T1-03",
+    "generatedAt":  "2026-11-26T23:18:10.5216424Z",
+    "exePath":  "<repo-root>\\target\\release\\workmanager.exe",
+    "exeSha256":  "f46c9b0cb3c9d094475cab6abd8276276126f2ea0d2e5b38b6d6a4fbf92b2b68",
+    "exeSizeBytes":  10352128,
+    "outputDir":  "<uat-root>\\t1-03-ui-r6f-20261127-071753",
+    "appDir":  "<uat-root>\\t1-03-ui-r6f-20261127-071753\\app",
+    "databasePath":  "<uat-root>\\t1-03-ui-r6f-20261127-071753\\app\\data\\database\\work.db",
+    "remoteDebugPort":  9395,
+    "mainUiCheckExitCode":  0,
+    "mainUiCheckCount":  84,
+    "mainUiFailedCheckCount":  0,
+    "minWindowCheckExit":  0,
+    "minWindowCheckCount":  12,
+    "minWindowFailedCheckCount":  0,
+    "firstCloseExitCode":  0,
+    "persistenceCheckExitCode":  0,
+    "persistenceCheckCount":  17,
+    "persistenceFailedCheckCount":  0,
+    "secondCloseExitCode":  0,
+    "dbCheckCount":  25,
+    "dbFailedCheckCount":  0,
+    "dbChecks":  [
+                     {
+                         "name":  "dbProbe.afterMain.readable",
+                         "pass":  true,
+                         "detail":  "<uat-root>\\t1-03-ui-r6f-20261127-071753\\t1-03-db-after-main.json"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.portablePath",
+                         "pass":  true,
+                         "detail":  "<uat-root>\\t1-03-ui-r6f-20261127-071753\\app\\data\\database\\work.db"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.userVersion3",
+                         "pass":  true,
+                         "detail":  "user_version=3"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.integrityOk",
+                         "pass":  true,
+                         "detail":  "ok"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.journalModeWal",
+                         "pass":  true,
+                         "detail":  "wal"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.foreignKeysClean",
+                         "pass":  true,
+                         "detail":  "violations=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.migrations1To3",
+                         "pass":  true,
+                         "detail":  "migrations=1 2 3"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.workItems5",
+                         "pass":  true,
+                         "detail":  "work_items=5"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.pending5",
+                         "pass":  true,
+                         "detail":  "pending=5"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.noOtherStatus",
+                         "pass":  true,
+                         "detail":  "other_status=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.unassigned4",
+                         "pass":  true,
+                         "detail":  "null_project=4"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.archivedLink1",
+                         "pass":  true,
+                         "detail":  "linked_archived=1"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.noActiveProjectLink",
+                         "pass":  true,
+                         "detail":  "linked_active=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.projects2Archived2",
+                         "pass":  true,
+                         "detail":  "projects=2 archived=2"
+                     },
+                     {
+                         "name":  "dbProbe.afterMain.expectedTitlesPersisted",
+                         "pass":  true,
+                         "detail":  "titles=超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ | 创建成功但刷新失败验证 | 关联未归档项目的待安排工作 | 重复提交保护验证 | 整理中核商品数据"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.readable",
+                         "pass":  true,
+                         "detail":  "<uat-root>\\t1-03-ui-r6f-20261127-071753\\t1-03-db-after-restart.json"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.userVersion3",
+                         "pass":  true,
+                         "detail":  "user_version=3"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.integrityOk",
+                         "pass":  true,
+                         "detail":  "ok"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.workItems6",
+                         "pass":  true,
+                         "detail":  "work_items=6"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.pending6",
+                         "pass":  true,
+                         "detail":  "pending=6"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.noOtherStatus",
+                         "pass":  true,
+                         "detail":  "other_status=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.unassigned5",
+                         "pass":  true,
+                         "detail":  "null_project=5"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.archivedLink1",
+                         "pass":  true,
+                         "detail":  "linked_archived=1"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.foreignKeysClean",
+                         "pass":  true,
+                         "detail":  "violations=0"
+                     },
+                     {
+                         "name":  "dbProbe.afterRestart.newWorkPersisted",
+                         "pass":  true,
+                         "detail":  "titles=重启后新建的工作 | 超长工作标题用于验证待安排列表在最小窗口下不会横向溢出也不会裁切操作按钮——这是第二段用于增加长度的虚构工作标题内容——T1-03-LONG-TITLE-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ | 创建成功但刷新失败验证 | 关联未归档项目的待安排工作 | 重复提交保护验证 | 整理中核商品数据"
+                     }
+                 ],
+    "dbProbeAfterMain":  "<uat-root>\\t1-03-ui-r6f-20261127-071753\\t1-03-db-after-main.json",
+    "dbProbeAfterRestart":  "<uat-root>\\t1-03-ui-r6f-20261127-071753\\t1-03-db-after-restart.json",
+    "evidenceFiles":  [
+                          "create-dialog.png",
+                          "create-dialog-after-restart.png",
+                          "create-dialog-min.png",
+                          "create-dialog-projects.png",
+                          "create-error-project-archived.png",
+                          "pending-after-restart.png",
+                          "pending-after-restart-new-item.png",
+                          "pending-archived-project.png",
+                          "pending-contract-violation.png",
+                          "pending-create-refresh-failure.png",
+                          "pending-create-refresh-recovered.png",
+                          "pending-empty.png",
+                          "pending-linked-project.png",
+                          "pending-load-error.png",
+                          "pending-loading.png",
+                          "pending-long-title.png",
+                          "pending-min.png",
+                          "pending-unassigned.png",
+                          "t1-03-db-after-main.json",
+                          "t1-03-db-after-restart.json",
+                          "t1-03-min-window-evidence.json",
+                          "t1-03-persistence-evidence.json",
+                          "t1-03-prerequisite.json",
+                          "t1-03-ui-evidence.json",
+                          "today-entry.png"
+                      ],
+    "screenshots":  [
+                        "create-dialog.png",
+                        "create-dialog-after-restart.png",
+                        "create-dialog-min.png",
+                        "create-dialog-projects.png",
+                        "create-error-project-archived.png",
+                        "pending-after-restart.png",
+                        "pending-after-restart-new-item.png",
+                        "pending-archived-project.png",
+                        "pending-contract-violation.png",
+                        "pending-create-refresh-failure.png",
+                        "pending-create-refresh-recovered.png",
+                        "pending-empty.png",
+                        "pending-linked-project.png",
+                        "pending-load-error.png",
+                        "pending-loading.png",
+                        "pending-long-title.png",
+                        "pending-min.png",
+                        "pending-unassigned.png",
+                        "today-entry.png"
+                    ],
+    "pass":  true
+}
+T1_03_RELEASE_UI_E2E=PASS
