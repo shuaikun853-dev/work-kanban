@@ -10,7 +10,7 @@
 **设计方法：** Matt Pocock Skills（需求澄清、领域建模、Deep
 Modules、ADR、Research、TDD、Vertical Slices）
 
-> 本文是 WorkManager 当前开发设计基线。尚未确认的事项必须在对应功能开始实现前单独确认；不得因此阻塞已获授权的阶段开发。**V1 阶段划分、任务编号和合并门禁以 [DEVELOPMENT_PLAN.md](../development/DEVELOPMENT_PLAN.md)、[AGENTS.md](../../AGENTS.md) 和 [DEVELOPMENT_PHILOSOPHY.md](../development/DEVELOPMENT_PHILOSOPHY.md) 为准。** 本文只同步用户已经明确的功能约束和架构边界，不提前编造尚未确认的实现方案。
+> 本文是 WorkManager 当前开发设计基线。尚未确认的事项必须在对应功能开始实现前单独确认；不得因此阻塞已获授权的阶段开发。**V1 阶段划分、任务编号和合并门禁以 [DEVELOPMENT_PLAN.md](../development/DEVELOPMENT_PLAN.md)、[AGENTS.md](../../AGENTS.md) 和 [DEVELOPMENT_PHILOSOPHY.md](../development/DEVELOPMENT_PHILOSOPHY.md) 为准。** 本文只同步用户已经明确的功能约束和架构边界，不提前编造尚未确认的实现方案。实现时不要把简单的个人软件开发任务复杂化；优先复用现有架构，采用满足当前明确需求的最小方案，不增加无用抽象或无关组件，必要的数据安全和完整性约束不得省略。
 
 ------------------------------------------------------------------------
 

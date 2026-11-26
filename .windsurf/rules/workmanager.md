@@ -8,6 +8,7 @@ Before every task, read and follow the repository root `AGENTS.md`,
 `docs/development/DEVELOPMENT_PHILOSOPHY.md` and
 `docs/development/DEVELOPMENT_PLAN.md` (the V1 M0–M6 stage, task IDs and
 dependencies).
+Do not complicate simple personal-software tasks or add unnecessary code, abstractions, workflows, or tests. Preserve necessary data integrity, security validation, error handling, and explicitly requested behavior.
 
 WorkManager is a personal-use Windows application. Implement only confirmed
 user requirements with the smallest complete solution. For every code task,
