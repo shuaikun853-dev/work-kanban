@@ -29,7 +29,8 @@
 | `inspect-t1-03-persistence.mjs` | T1-03 关闭重开持久化检查：同一 UAT 便携目录重启 Release，验证 5 条虚构待安排工作仍存在、归档项目历史关联保留且显示“项目已归档”、选择器仍只展示未归档项目、重启后仍可创建新工作，最后真实关闭。 |
 | `probe-t1-03-db.py` | T1-03 数据库只读探针（标准库 sqlite3）：`user_version`、完整性、journal_mode、`schema_migrations`、项目/工作事项行数、生命周期状态分布、`project_id` NULL/归档关联计数、`foreign_key_check`；不修改任何数据。 |
 | `T1-03UatPath.ps1` | T1-03 UAT 输出目录安全校验模块（P3-02 + 第四轮 F1/F2 + 本轮 F1/F2）：`GetFullPath` 规范化、限定 `D:\WorkManager-test-data\`、拒绝正式应用目录/根目录外/`..` 越界/已含数据库/非空未知目录；`Assert-T103UatTrustedTestRoot` 信任锚在任何写操作前用 Windows 原生句柄验证真实测试根目录；`Invoke-T103FailClosedSandboxCleanup` 清理前复验沙箱身份、逐个删除并复验链接、扫描未预期 reparse point、身份再复验，任一失败停止递归删除并保留现场；本轮新增 `Assert-T103EvidenceWritePath` / `Write-T103EvidenceFile`（证据写入真实身份/祖先链/严格边界/单硬链接校验）与 `Get-T103EntryNativeState` / `Invoke-T103SandboxCleanupEntrypoint`（沙箱入口原生检查，不再使用 `Test-Path` 判断存在性）。 |
-| `test-t1-03-uat-path.ps1` | T1-03 UAT 路径安全专项测试（本轮 115 项）：第三轮 60 项 + 第四轮 31 项全部保留，本轮新增 21 项 F1 证据写入边界（相对/`..`/绝对越界、Junction、悬空 Junction、硬链接、身份替换、正式数据库、原生检查失败）与 F2 沙箱入口原生检查（正常入口/真实不存在/正常 Junction/悬空 Junction/`Test-Path=False` 路径/父目录重解析点/身份不明/原生检查失败）；1 项 Symbolic Link 场景因权限限制明确记录 SKIP、不计 PASS。 |
+| `test-t1-03-uat-path.ps1` | T1-03 UAT 路径安全专项测试（第六轮 128 项）：原 115 项全部保留；第六轮新增 F2 外部跟踪链接（真实 `sandbox\evil(Junction)->external` + `external\victim-link(Junction)->victim-target`，必须删除前 fail closed、外部 Canary 不变）、P4 递归删除部分失败 started/completed/partial 语义、F1 证据写入启动身份必需、P3 最终摘要写入守卫（Junction 替换/目录身份变化拒绝）与 B5 `<uat-root>` 占位检查；1 项 Symbolic Link 场景因权限限制明确记录 SKIP、不计 PASS。 |
+| `probe-round6-red.ps1` | 第六轮可重复执行 Red 探针：`git archive e8205cae` 解压修复前基线并用 git blob SHA 校验后，在真实 Windows 文件系统对象上复现 F1 越界写入/覆盖 Canary、F2 穿过未跟踪 Junction 删除外部链接、P4 部分删除语义失真；输出机器可读 JSON + 脱敏原始命令输出；仅使用虚构文件与专用测试目录。 |
 
 ## 用法
 
@@ -94,7 +95,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify\verify-t1-03-
 （EXE 不存在、python 不可用、输出目录非法）。脚本不会伪造 PASS：无法执行的检查会
 如实记录为 FAIL/INFO，并保留可复核证据。
 
-## 当前验证结果（2026-11-20，T1-03 第四轮 F1/F2 定向修复后，等待第四轮独立审计）
+## 当前验证结果（2026-11-27，T1-03 第六轮 P1–P4/B1–B5 定向补正后，等待第六轮独立审计）
 
 Release 产物：`target\release\workmanager.exe`，10,352,128 字节，
 SHA-256 `f46c9b0cb3c9d094475cab6abd8276276126f2ea0d2e5b38b6d6a4fbf92b2b68`
@@ -102,8 +103,9 @@ SHA-256 `f46c9b0cb3c9d094475cab6abd8276276126f2ea0d2e5b38b6d6a4fbf92b2b68`
 
 | 脚本 | 退出码 | 结果 |
 |---|---|---|
-| `verify-t1-03-ui.ps1`（UAT `t1-03-ui-r5b-20261126-183147`） | 0 | 主 UI/IPC **84/84**；最小窗口 **12/12**；重启持久化 **17/17**；数据库探针 **25/25**；两次真实关闭退出码 **0/0**；CSP 0；未捕获异常 0 |
-| `test-t1-03-uat-path.ps1`（本轮 `evidence/round5/`） | 0 | UAT 路径安全 **115 项：FAILED=0、SKIPPED=1**（第三轮 60 项 + 第四轮 31 项全部保留；本轮新增 21 项全部通过；Symbolic Link 因权限限制 SKIP、不计 PASS）；主套件清理 SAFE、无遗留 |
+| `verify-t1-03-ui.ps1`（UAT `t1-03-ui-r6f-20261127-071753`） | 0 | 主 UI/IPC **84/84**；最小窗口 **12/12**；重启持久化 **17/17**；数据库探针 **25/25**；两次真实关闭退出码 **0/0**；CSP 0；未捕获异常 0；最终摘要 `PASS summary.writeGuard`。共 5 次真实尝试，1 次并发负载渲染超时 + 2 次窗口尺寸时序竞态如实记录、不计入通过；验证脚本有限重试加固后连续 2 次 PASS |
+| `test-t1-03-uat-path.ps1`（第六轮 `evidence/round6-remediation/green/`） | 0 | UAT 路径安全 **128 项：FAILED=0、SKIPPED=1**（原 115 项全部保留；第六轮 12 项目标检查 + 汇总自校验全部通过；Symbolic Link 因权限限制 SKIP、不计 PASS）；主套件清理 SAFE（15 步、无遗留） |
+| `probe-round6-red.ps1`（修复前基线 e8205ca） | 0 | `R6_RED_PROBE=PASS`、`redConfirmed=true`：F1 越界写入/覆盖 Canary、F2 穿过 Junction 删除外部链接、P4 部分删除语义失真全部真实复现；Red 证据与 Green 证据分开保存 |
 | `verify-t1-02-ui.ps1`（继承回归） | 0 | 主 UI/IPC **73/73**；最小窗口 **12/12**；关闭按钮后进程退出码 0；CSP 0；页面异常 0（首次执行环境性失败，无并发负载重跑通过） |
 | `verify-release-portable.ps1`（继承回归） | 0 | TOTAL=106 PASS=90 FAIL=0 **WARN=1（保留既有 WARN）** INFO=15 |
 | `verify-release-faults.ps1`（继承回归） | 0 | TOTAL=73 PASS=64 FAIL=0 WARN=0 INFO=9 |

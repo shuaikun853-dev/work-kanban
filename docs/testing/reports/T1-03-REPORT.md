@@ -2,23 +2,50 @@
 
 **任务 ID：** T1-03
 **任务名称：** 工作事项快速创建和待安排区域
-**当前状态：** **第四轮独立审计未通过（F1 EvidencePath 证据写入边界、F2 沙箱入口 `Test-Path` 绕过）；本轮 F1/F2 最小修复完成，等待第四轮独立审计复核；P2-01 服务端清理未完成、保持 OPEN**（PR #8 保持 Open，未合并；main 未修改）
-**开发分支：** `task/T1-03-quick-create-pending`
+**当前状态：** **第五轮独立审计未通过（P1/F2 跟踪链接穿过未跟踪 Junction、P2/F1 证据写入身份不完整、P3 最终摘要写入未走守卫、P4 递归删除部分失败语义）；本轮 P1–P4 与 B1–B5 定向补正完成，等待第六轮独立审计；P2-01 服务端清理未完成、保持 OPEN**（PR #8 保持 Open，未合并；main 未修改）
+**开发分支：** `task/T1-03-quick-create-pending`（本地开发工作区分支 `task/T1-03-quick-create-pending-r4`，与审计基准同 SHA）
 **目标分支：** `main`
-**开发基线：** `018e851e8daf5835391a7b61caf881bc57c2ad42`（T1-02 已验收合并后的 main）
+**开发基线：** `018e851e8daf5835391a7b61caf881bc57c2ad42`（T1-02 已验收合并后的 main）；当前远端 main 为 `9171fe35a7e080097991f547efe37ff5a504257c`（PR #8 base 落后于 main 的问题本轮不处理）
 **第一轮审计基准 HEAD：** `2342828852abee43ab56610e7d1fa91a02310bfe`
 **第二轮审计基准 HEAD：** `bad0688ee9de5e07f769d64d7fc44e3f182a960d`
 **第三轮审计基准 HEAD：** `489d8689484c2cf744893bd3ee08dc7b25b5c8b8`
-**第四轮审计基准 HEAD：** `e8205cae22e98afce6480f5a5a0695543a61dee3`（本轮修复前 PR #8 HEAD）
-**第四轮修复提交：** `d82bdd47ae7c3c27fb4383d72ee16a131c89036d`（第三轮审计 F1/F2，验证脚本）；本轮 F1/F2 最小修复提交见第 10 节
-**Pull Request：** [PR #8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（指向 main，保持 Open，等待第四轮独立审计复核）
-**报告生成时间：** 2026-11-19（第二轮）；2026-11-20 第三/四轮更新；2026-11-26 本轮 F1/F2 最小修复更新（Asia/Shanghai）
+**第四轮审计基准 HEAD：** `e8205cae22e98afce6480f5a5a0695543a61dee3`
+**第四轮修复提交：** `d82bdd47ae7c3c27fb4383d72ee16a131c89036d`
+**第五轮审计基准 HEAD：** `6ddae47dd0721d58d5cb11f55e527fc162cedbe9`（本轮开发前 PR #8 HEAD）
+**第五轮修复提交：** `af2421e9207f7b9ac185b0d29c3a98f80b5eb11a`
+**本轮（第六轮）修复提交：** `e3bb86b30772159219a8eb16b90e55f3c69f4d59`；随后为本轮证据/文档同步提交（最终 HEAD，`origin/main..HEAD` = **30** 个提交；本文件内的自身 SHA 无法自引用，见 PR #8 时间线）
+**Pull Request：** [PR #8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（指向 main，保持 Open，等待第六轮独立审计）
+**报告生成时间：** 2026-11-19（第二轮）；2026-11-20 第三/四轮更新；2026-11-26 第五轮更新；2026-11-27 第六轮定向补正更新（Asia/Shanghai）
 **测试环境：** Windows 10 家庭中文版 10.0.19045；Windows PowerShell 5.1.19041.6456；rustc 1.100.0 / cargo 1.100.0；Node.js v22.20.0 / npm 10.9.3；Python 3.14.5
-**测试数据：** 全部为虚构内容；UAT 使用专用测试根目录下的一次性新目录（本轮 `<uat-root>\t1-03-ui-r5-<timestamp>`；第四轮 `<uat-root>\t1-03-ui-r4-20261120-181549`；第三轮 `<uat-root>\t1-03-ui-r3-20261120-081100`），未触碰正式运行目录 `D:\WorkManager`，未使用真实用户工作数据
+**测试数据：** 全部为虚构内容；UAT 使用专用测试根目录下的一次性新目录（本轮 `<uat-root>\t1-03-ui-r6f-20261127-071753`；第五轮 `<uat-root>\t1-03-ui-r5b-20261126-183147`；第四轮 `<uat-root>\t1-03-ui-r4-20261120-181549`；第三轮 `<uat-root>\t1-03-ui-r3-20261120-081100`），未触碰正式运行目录，未使用真实用户工作数据
 
 ---
 
-## 本轮修复摘要（2026-11-26，第四轮独立审计 F1/F2 最小修复）
+## 本轮（第六轮）定向补正摘要（2026-11-27，按第五轮独立审计 P1–P4 + B1–B5）
+
+第五轮独立审计基准 HEAD `6ddae47`。本轮只做第五轮审计报告列出的最小范围补正：**未重新开发 T1-03、未修改产品业务代码（Rust/前端/迁移/业务 UI 未变）、未修改 T1-04/T1-02、未修改 PRD/TECHNICAL_DESIGN/DECISIONS 业务决策、未新增依赖、未重写历史、未强制推送**。
+
+| 问题 | 根因 | 本轮修复 | 关键证据 |
+|---|---|---|---|
+| **P1 / F2** 跟踪链接穿过未跟踪 Junction 删除外部链接 | 清理函数先删除 `TrackedLinks`、**之后**才扫描沙箱重解析点；且只做“字面路径在沙箱内”判断。`sandbox\evil` 为指向沙箱外 `external` 的真实 Junction 时，`sandbox\evil\victim-link` 字面在沙箱内、实际解析到沙箱外，删除发生在扫描之前 | 新顺序：①沙箱身份复验 + 沙箱到盘符根父目录链原生校验；②**先验证全部跟踪链接**（只允许沙箱直接子项；记录链接对象自身卷序列号 + File ID + reparse tag；嵌套/父链不明 → `trackedLinkNotDirectChild` fail closed）；③**删除任何对象前扫描整个沙箱**，除已登记链接外出现任何重解析点 → `unexpectedReparsePoint` 停止；④只删除身份精确匹配的已登记对象（删除前原生复核，删除后原生确认消失）；⑤删除后再次扫描，残余 → `residualReparsePoint`；⑥再次复验沙箱身份；⑦才执行逐条目安全递归删除并确认沙箱消失 | 新增 3 项真实故障注入（`sandbox\evil` 与 `external\victim-link` 均为真实 `mklink /J`）：修复前实测删除外部 victim-link 后 `safe=false/stopCode=unexpectedReparsePoint`；修复后 `trackedLinkNotDirectChild`、`recursiveDeleteStarted=false`，victim-link 仍存在、victim-target Canary 内容与 SHA-256 不变、沙箱/evil/sentinel 保留 |
+| **P2 / F1** 证据写入身份校验不完整 | `ExpectedRootIdentity` 为可选参数；实际写入缺少启动身份记录时仍可继续；`EvidenceRoot` 可通过内部参数指定任意目录，函数级不变量与注释不一致 | `Write-T103EvidenceFile` 强制要求启动时记录的证据根目录身份（缺失 → 拒绝写入）；`Assert-T103EvidenceWritePath` 新增 `-RequireRootIdentity`；目录身份变化 → 拒绝。隔离 `EvidenceRoot` 仅保留为专项测试内部注入能力，必须显式传入该目录身份记录，不是生产 CLI 参数 | 新增 3 项：注入目录缺身份拒绝（不写文件）、默认证据根缺身份拒绝（不写文件）、显式身份正常写入成功；原身份替换测试继续通过 |
+| **P3** `verify-t1-03-ui.ps1` 最终摘要写入未走安全守卫 | 原第 420–421 行直接 `Set-Content` 写 `t1-03-ui-orchestration.json`，写入前未复验输出目录身份 | 创建 UAT 输出目录后记录其身份（卷序列号 + File ID + 真实最终路径）；新增 `Write-T103VerifiedOutputFile`（原生路径安全检查 + 输出目录身份复验 + 目标普通单硬链接检查），最终摘要经该函数写入；输出目录被替换为 Junction 或身份变化时拒绝写入 | 新增 3 项：正常写入成功；输出目录被 rename + 真实 Junction 替换 → 拒绝且外部 Canary SHA-256 不变、未写入外部目录；输出目录 rename + 重建（File ID 变化）→ 按启动身份拒绝且不写文件。**DEC-029 TOCTOU 残余风险仍存在，未消除** |
+| **P4** 递归删除部分失败的结果语义 | 递归删除过程中抛异常时统一返回 `recursiveDeletePerformed=false`，无法区分“未开始”与“已开始但未完整结束”，可能掩盖已发生的部分删除 | 结果新增 `recursiveDeleteStarted` / `recursiveDeleteCompleted` / `recursiveDeletePartial`；异常发生在删除开始之后时 `safe=false`、`stopCode=recursiveDeleteFailed`、`started=true`、`completed=false`、`partial=true`，`stopReason` 明确“已开始但未完整结束、可能已部分删除”；`Remove-T103VerifiedDirectoryTree` 增加仅测试使用的 `FaultHook` | 新增 2 项真实目录树故障注入：第 2 个条目删除注入失败，结果 `recursiveDeleteStarted=true / recursiveDeletePartial=true / recursiveDeletePerformed=false`；真实条目已删除 1 个、沙箱保留。修复前基线（e8205ca）真实 sharing violation 复现：7 条删到 1 条但旧结果仍 `recursiveDeletePerformed=false` 且无 started 字段 |
+| **B1–B5** 交付证据问题 | PR #8 正文停在第四轮；round5 汇总 `generatedAt` 早于其包含的证据/修复提交；Red 证据被 Git 忽略且旧探针调用修复后函数；旧报告 22 个提交过时；证据残留固定测试根原始名称 | 本轮更新 PR #8 正文 + 新增进度评论（保留历史评论）；round5 汇总拆分为真实 `pathEvidenceGeneratedAt` / `releaseE2EEvidenceGeneratedAt` / `fixCommitCommittedAt` / 真实汇总组装时间并保留 `historicalGeneratedAt`；提交可重复执行的 `scripts/verify/probe-round6-red.ps1`（git archive e8205ca + blob SHA 校验 + 真实文件系统对象）与脱敏 Red/Green 证据；按最终 HEAD 重算提交数（25/27/28/30）；固定测试根统一 `<uat-root>` 并加强扫描检查 | 见第 4.10 节与 `evidence/round6-remediation/`（`round6-verification-summary.json`、`round6-remediation-notes.md`、`red/`、`green/`） |
+
+**新增测试：** 12 项目标检查 + 1 项汇总自校验；路径安全专项 **128 项（原 115 项全部保留：原 23 + 第三轮 60 + 第四轮 31 + 第五轮 21 硬校验继续通过），FAILED=0，SKIPPED=1（Symbolic Link 权限限制）**，退出码 0；第 4.10 节列明细。
+
+**Release E2E：** 最终通过轮次 `<uat-root>\t1-03-ui-r6f-20261127-071753`：主 UI/IPC **84/84**、最小窗口 **12/12**、重启持久化 **17/17**、数据库只读探针 **25/25**；两次真实关闭退出码 **0/0**；CSP 0、页面未捕获异常 0；最终摘要写入 `PASS summary.writeGuard`。共 5 次真实尝试：1 次并发负载下应用壳渲染超时、2 次最小窗口尺寸时序竞态（其余断言均通过）、补丁后 2 次连续 PASS；失败尝试如实记录、不计入通过结果。**说明：** 为消除已验证的验证脚本时序竞态，本轮只在 `verify-t1-03-ui.ps1` 中对 `Set-WindowSize` 做有限重试 + 真实客户区尺寸核对（测试脚本加固，非产品代码；产品 UI 未修改）。
+
+**Red 证据（可复核）：** 新探针以 `git archive e8205cae22e98afce6480f5a5a0695543a61dee3` 解压修复前完整文件树，并用 git blob SHA（`fafd3207…be6`）校验后才执行基线脚本，**不使用修复后函数冒充修复前实现**。真实复现：F1 基线脚本把 34,904 字节证据写到仓库证据目录之外并覆盖守卫 Canary；F2 基线清理穿过未跟踪 Junction 删除外部 victim-link；P4 基线递归删除真实部分失败后仍报告 `recursiveDeletePerformed=false`。证据：`evidence/round6-remediation/red/round6-red-evidence.json` 与脱敏原始输出 `round6-red-command-output.sanitized.log.txt`；Green 证据单独保存在 `green/`。
+
+**Red/Green 与 Skill：** 按 TDD 先写失败测试并真实运行确认 Red（P1/P2/P3 在修复前实现上失败；P4 修复前基线由探针复现），再最小实现，再运行同一套件确认 Green。实现遵循 **Ponytail**（最小完整改动、复用既有原生句柄/路径链/递归删除原语，不新增通用嵌套链接机制）与 **Matt Pocock Implement**（按审计清单控制范围、调用 TDD、完成后 review）；实际使用的 Skill 文件、版本与应用位置见 `evidence/round6-remediation/round6-remediation-notes.md` 第 9 节。
+
+**本轮结论：** P1–P4 修复与 B1–B5 证据修正完成，真实 Windows 文件系统对象/真实故障注入回归通过；质量门禁全部退出码 0（cargo 124/124、npm check svelte-check 0/0 + Bridge 17/17 + Design Token 49/49、npm build 167 modules、Bridge 17/17、git diff --check）。**P2-01 仍未关闭；DEC-029 / Issue #2 的 TOCTOU 风险仍存在；未执行 Windows ACL `Access Denied` 测试；Symbolic Link 场景 SKIP。状态：待第六轮独立审计，不自行宣布审计/验收通过。**
+
+---
+
+## 第五轮 F1/F2 最小修复摘要（2026-11-26，历史）
 
 第四轮独立审计发现两项问题：**F1 EvidencePath 证据文件写入缺少边界与身份保护**、**F2 沙箱入口使用 `Test-Path` 判断存在性，悬空 Junction 场景会绕过后续 Windows 原生路径身份检查**。本轮只做这两项最小修复：未重新开发 T1-03、未修改产品代码（Rust/前端/迁移/业务 UI 未变）、未修改 PRD/技术设计/决策记录、未新增依赖、未重写历史、未强制推送。
 
@@ -178,7 +205,22 @@ CREATE INDEX idx_work_items_project_status
 
 ## 3. 文件清单（本轮与 T1-03 相关）
 
-### 本轮（第五轮）修复新增/修改（相对第四轮审计基准 `e8205ca`）
+### 本轮（第六轮）修复新增/修改（相对第五轮审计基准 `6ddae47`）
+
+| 文件 | 变更 |
+|---|---|
+| `scripts/verify/T1-03UatPath.ps1` | P1/F2：新增 `Get-T103ValidatedTrackedLinkRecords`（删除前全量验证跟踪链接：只允许沙箱直接子项，记录链接对象卷序列号 + File ID + reparse tag）；重写 `Invoke-T103FailClosedSandboxCleanup`（父目录链原生校验 → 先验证全部链接 → 删除前全沙箱扫描 → 精确对象删除 + 逐链接原生复验 → 残余扫描 → 身份复验 → 安全递归删除）；`Remove-T103VerifiedDirectoryTree` 增加仅测试 `-FaultHook`。P2/F1：`Assert-T103EvidenceWritePath` 增加 `-RequireRootIdentity`，`Write-T103EvidenceFile` 强制要求启动时证据根身份。P3：新增 `Write-T103VerifiedOutputFile`（原生路径检查 + 输出目录身份复验 + 普通单硬链接检查）。P4：结果新增 `recursiveDeleteStarted` / `recursiveDeleteCompleted` / `recursiveDeletePartial`（失败在删除开始后返回 `recursiveDeleteFailed` 并说明部分删除） |
+| `scripts/verify/test-t1-03-uat-path.ps1` | 新增 12 项目标检查 + `evidence.round6NewChecksPresent` 汇总硬校验（F2 外部跟踪链接 3 项、P4 部分删除 2 项、F1 身份必需 3 项、P3 摘要守卫 3 项、B5 占位 1 项）；`Test-EvidenceWriteRejected` 显式传入注入证据目录身份；合成测试根 Junction 不再登记为跟踪链接；未跟踪重解析点用例在 fail-closed 停止后显式清理仍存在的跟踪链接；`Format-EvidencePath` 统一 `<uat-root>`；新增 B5 扫描模式与 `evidence.uatRootPlaceholderUnified` |
+| `scripts/verify/verify-t1-03-ui.ps1` | 创建 UAT 输出目录后记录身份（失败 fail closed）；最终摘要改为经 `Write-T103VerifiedOutputFile` 写入（原生路径复验 + 目录身份复验），成功打印 `PASS summary.writeGuard`；验证脚本时序加固：`Set-WindowSize` 有限重试 + `GetClientRect` 真实客户区核对（仅测试脚本，产品 UI 未修改） |
+| `scripts/verify/probe-round6-red.ps1` | **新增**：可重复执行的第六轮 Red 探针。`git archive` 修复前基线 + git blob SHA 校验；基线测试脚本入口与基线清理函数在真实 Windows 文件系统对象上复现 F1 越界写入/覆盖 Canary、F2 穿过 Junction 删除外部链接、P4 真实部分删除后语义失真；输出机器可读 JSON + 脱敏原始命令输出；仅使用虚构文件与专用测试目录 |
+| `docs/testing/reports/T1-03-assets/evidence/round6-remediation/` | **新增**（不覆盖 round5）：`red/`（Red 证据 JSON + 脱敏原始输出）、`green/`（128 项路径安全证据 + 最终通过轮次 7 个脱敏 E2E JSON + E2E 脱敏命令输出）、`round6-verification-summary.json` 机器可读汇总、`round6-remediation-notes.md`（根因/修复/Red-Green/B1–B5/尝试记录/遗留风险） |
+| `docs/testing/reports/T1-03-assets/evidence/round5/round5-verification-summary.json` | B2：修正时间戳语义（真实 `generatedAt` 组装时间 + `pathEvidenceGeneratedAt` / `releaseE2EEvidenceGeneratedAt` / `fixCommitCommittedAt`，旧值保留 `historicalGeneratedAt`）；证据文件内容未覆盖 |
+| 历史证据脱敏补正（B5） | `evidence/t1-03-uat-path-evidence.json`（2 处）、`evidence/round4/t1-03-uat-path-evidence.json`（3 处）、`evidence/round5/t1-03-uat-path-evidence.json`（3 处）固定测试根原始名称替换为 `<uat-root>`；只改路径占位，检查结果/计数不变 |
+| `docs/testing/reports/T1-03-REPORT.md`、`T1-03-assets/test-counts.txt`、`T1-03-assets/SANITIZATION.md`、`T1-03-assets/README.md`、`docs/STATUS.md`、`docs/development/DEVELOPMENT_PLAN.md`、`docs/development/tasks/T1-03-Quick-Work-Item-Creation.md` | 第六轮状态、测试结果、Red/Green 证据、提交数（B4）、脱敏口径（B5）与遗留风险同步（不覆盖历史轮次记录） |
+
+本轮**未修改产品业务代码**（Rust/前端/迁移/业务 UI 均未改动）；Release EXE 沿用第五轮按本分支 schema 3 重建的构建（10,352,128 字节，SHA-256 `f46c9b0c…2b68`），本轮只重新执行 E2E 回归；构建产物不入库。
+
+### 第五轮修复新增/修改（相对第四轮审计基准 `e8205ca`，历史）
 
 | 文件 | 变更 |
 |---|---|
@@ -239,7 +281,7 @@ T1-03 主体文件（migration、Rust Core、IPC、Bridge、UI、E2E 脚本等�
 
 ---
 
-## 4. 测试执行结果（第三轮 2026-11-20，全部真实执行）
+## 4. 测试执行结果（第三～六轮，全部真实执行）
 
 ### 4.0 第三轮质量门禁与关键结果
 
@@ -429,9 +471,64 @@ F1/F2 第四轮专项证据摘要（详见 `evidence/round4/t1-03-uat-path-evide
 
 **证据：** 本轮 7 个 E2E JSON 已脱敏复制到 `evidence/round5/`（`<uat-root>` / `<repo-root>` 占位）；19 张截图未复制入仓（产品 UI 未修改，第四轮截图仍有效，截图保留在机器本地 UAT 目录）。本轮未执行 Windows ACL `Access Denied` 测试；Symbolic Link 场景仍 SKIP。
 
+### 4.10 本轮（第六轮，2026-11-27）执行结果（P1–P4 + B1–B5，全部真实执行）
+
+| 命令/测试 | 退出码 | 结果 |
+|---|---|---|
+| `cargo fmt --all -- --check` | 0 | 无差异 |
+| `cargo check --workspace --all-targets` | 0 | 通过 |
+| `cargo test --workspace` | 0 | **124 passed / 0 failed**（18 个测试二进制） |
+| `npm.cmd run check` | 0 | svelte-check 0 errors / 0 warnings；Bridge 17/17；Design Token 22 文件 0 违规、49/49 |
+| `npm.cmd run build` | 0 | 构建成功（167 modules） |
+| `node --test scripts/quality/work-item-bridge.test.mjs` | 0 | 17/17 passed |
+| `git diff --check` | 0 | 无空白错误 |
+| `scripts/verify/test-t1-03-uat-path.ps1 -EvidencePath docs\testing\reports\T1-03-assets\evidence\round6-remediation\green\t1-03-uat-path-evidence.json` | 0 | **128 项：FAILED=0，SKIPPED=1（Symbolic Link 权限限制，明确记录、不计 PASS）**；原 115 项全部保留；第六轮 12 项目标检查 + 汇总自校验全部存在；信任锚 PASS；沙箱清理 SAFE（15 步：身份 + 父链 + 链接全量验证 + 删除前扫描 + 精确删除 + 残余扫描 + 身份复验 + 递归删除 started/completed） |
+| `scripts/verify/verify-t1-03-ui.ps1 -OutputDir <uat-root>\t1-03-ui-r6f-20261127-071753 -Port 9395` | 0 | 主 UI/IPC 84/84、最小窗口 12/12、持久化 17/17、数据库探针 25/25；两次真实关闭退出码 0/0；CSP 0；页面未捕获异常 0；19 张截图（未复制入仓）；`PASS summary.writeGuard` |
+| `scripts/verify/probe-round6-red.ps1` | 0 | `R6_RED_PROBE=PASS`、`redConfirmed=true`：修复前基线 F1 越界写入/覆盖 Canary、F2 穿过 Junction 删除外部链接、P4 部分删除语义失真均真实复现（详见 `red/round6-red-evidence.json`） |
+
+**P1 / F2 实测（`evidence/round6-remediation/green/t1-03-uat-path-evidence.json`）：**
+
+- `f2.trackedLinkThroughJunctionRejectedBeforeDelete`：真实 `sandbox\evil(Junction)->external` + `external\victim-link(Junction)->victim-target`，把 `sandbox\evil\victim-link` 传入 `TrackedLinks` → `safe=false`、`stopCode=trackedLinkNotDirectChild`、`recursiveDeleteStarted=false`、`recursiveDeletePerformed=false`；**在删除任何对象之前失败**；
+- `f2.trackedLinkThroughJunctionExternalTargetIntact`：victim-link 仍存在，victim-target Canary 内容与 SHA-256 不变；
+- `f2.trackedLinkThroughJunctionSandboxPreserved`：沙箱、evil Junction、sentinel 均保留；
+- 原有 F2 回归（正常清理、删除失败注入、链接重建、未跟踪重解析点、身份替换、入口/父目录/悬空 Junction）全部继续 PASS；跟踪链接只允许沙箱直接子项的收紧已同步修正测试自身对“合成测试根 Junction”的登记方式和未跟踪重解析点用例的自清理顺序。
+
+**P2 / F1 实测：**
+
+- `f1.evidenceWriteMissingRootIdentityRejected`：注入隔离证据目录 + 不提供启动身份 → 拒绝（消息含“身份”），未创建文件；
+- `f1.evidenceDefaultRootWriteMissingRootIdentityRejected`：默认证据根 + 不提供启动身份 → 拒绝，未创建文件；
+- `f1.evidenceWriteWithPinnedRootIdentitySucceeds`：显式传入该隔离目录身份 → 正常写入并回读一致（保留独立测试隔离 EvidenceRoot 的能力）；
+- 原有相对/`..`/绝对越界、Junction、悬空 Junction、硬链接、目录身份替换、正式目录、原生检查失败等拒绝用例继续 PASS。
+
+**P3 实测：**
+
+- `f3.outputSummaryGuardNormalWriteSucceeds`：正常 UAT 输出目录经守卫写入摘要成功；
+- `f3.outputSummaryGuardRejectsJunctionSwap`：输出目录 rename 后替换为真实 Junction 指向外部目录 → 拒绝（关键词“重解析点/身份”），外部目录未出现摘要文件、外部 Canary SHA-256 不变；
+- `f3.outputSummaryGuardRejectsIdentityChange`：输出目录 rename + 重建（真实 File ID 变化）→ 按启动身份拒绝且不写文件；
+- Release E2E 中 `PASS summary.writeGuard` 证明生产编排路径确实经过该守卫。**DEC-029：检查与写入之间的并发替换窗口仍存在，未消除。**
+
+**P4 实测：**
+
+- `f2.recursiveDeletePartialFailureReported`：第 2 个真实条目删除时受控异常 → `safe=false`、`stopCode=recursiveDeleteFailed`、`recursiveDeleteStarted=true`、`recursiveDeleteCompleted=false`、`recursiveDeletePerformed=false`、`recursiveDeletePartial=true`、`stopReason` 含“部分删除”；
+- `f2.recursiveDeletePartialFailureRealDeletionsObserved`：真实删除至少 1 个条目、沙箱保留；
+- 修复前基线复现（探针）：真实 sharing violation 下 7 个条目删到剩 1 个，旧结果仍 `recursiveDeletePerformed=false` 且无 `recursiveDeleteStarted` 字段。
+
+**Release E2E 尝试记录（失败尝试不计入通过结果，全部真实执行）：**
+
+1. `t1-03-ui-r6-20261127-071251`：exit 1。与 Red 探针/基线套件并发执行时应用壳渲染超时（`hasAppShell=false`）、首次关闭进程未退出；判定为并发负载环境性失败。
+2. `t1-03-ui-r6c-20261127-071613`、`t1-03-ui-r6d-20261127-071634`：exit 1。主 UI 84/84、持久化 17/17、数据库 25/25、关闭 0/0 均通过，仅 `minWindow.sizeNear860x640` 失败（窗口保持默认 1100×780）；同轮最小窗口其余 11 项布局断言全部通过，确认是应用启动后回写初始窗口尺寸与单次 `SetWindowPos` 的时序竞态，属验证脚本环境问题。
+3. 验证脚本加固（仅 `scripts/verify/verify-t1-03-ui.ps1`）：`Set-WindowSize` 有限重试 + `GetClientRect` 真实客户区核对；不涉及产品代码/UI 修改。
+4. `t1-03-ui-r6e-20261127-071732`、`t1-03-ui-r6f-20261127-071753`：连续两次 exit 0、`T1_03_RELEASE_UI_E2E=PASS`；最终采用 r6f 证据（已脱敏复制到 `green/`）。
+
+**B2 / B4 / B5 修正：**
+
+- B2：`evidence/round5/round5-verification-summary.json` 原 `generatedAt=2026-11-26T10:20:23Z` 早于其包含的路径证据（`10:20:23.6531600Z`）、E2E 证据（`10:32:09.2478282Z`）与修复提交（`18:37:26+08:00`），已拆分为真实 evidence 时间 + 真实汇总组装时间，旧值保留在 `historicalGeneratedAt`；历史证据文件内容未覆盖。
+- B4：`origin/main..e8205ca=25`、`..6ddae47=27`、`..e3bb86b=28`、`..最终 HEAD=30`；旧报告 22 个提交不再作为当前状态引用。
+- B5：固定测试根统一 `<uat-root>`；新增 `evidence.uatRootPlaceholderUnified` 检查；历史证据 3 个文件共 8 处占位修正（只改路径、不改结果）；机器标识扫描规则未放宽；T1-03 证据目录固定测试根原始名称命中 0。
+
 ---
 
-## 5. Windows Release 实测步骤与结果（第二轮步骤；第三、四轮已重新执行并通过）
+## 5. Windows Release 实测步骤与结果（第二轮步骤；第三、四、五、六轮已重新执行并通过）
 
 在专用测试根目录下的全新 UAT 目录（虚构数据）实际执行：
 
@@ -478,7 +575,7 @@ F1/F2 第四轮专项证据摘要（详见 `evidence/round4/t1-03-uat-path-evide
 | `pending-after-restart-new-item.png` | 重启后仍可创建新工作并立即出现 |
 
 第四轮重新执行 Release E2E 时在 `<uat-root>\t1-03-ui-r4-20261120-181549` 生成同名场景的 19 张实测截图，已存入
-`evidence/round4/screenshots/`（不覆盖第三轮截图）；产品 UI/代码未变。
+`evidence/round4/screenshots/`（不覆盖第三轮截图）；产品 UI/代码未变。第五轮、第六轮重新执行 E2E 生成的 19 张同名场景截图未复制入仓（产品 UI 未修改，第三/四轮截图仍有效），截图保留在机器本地 UAT 目录；第六轮最终通过的 UAT 目录为 `<uat-root>\t1-03-ui-r6f-20261127-071753`。
 
 ---
 
@@ -508,14 +605,32 @@ evidence/
   round4/t1-03-db-after-restart.json          # 第四轮重启后数据库只读探针
   round4/round4-verification-summary.json     # 第四轮机器可读汇总（F1/F2/门禁/E2E/回归/扫描/P2-01）
   round4/screenshots/                         # 第四轮 19 张真实 Release WebView2 截图
-test-counts.txt                               # 第四轮测试数量/环境/数据库探针关键事实速查
-SANITIZATION.md                               # 第四轮脱敏扫描、旧提交服务端暴露与 GitHub Support 清理材料
+  round5/t1-03-uat-path-evidence.json         # 第五轮路径安全 115 项（F1 证据写入边界 + F2 沙箱入口原生检查；SKIP=1）
+  round5/t1-03-ui-evidence.json               # 第五轮主 UI/IPC 84 项断言（脱敏）
+  round5/t1-03-min-window-evidence.json       # 第五轮最小窗口 12 项断言（脱敏）
+  round5/t1-03-persistence-evidence.json      # 第五轮重启持久化 17 项断言（脱敏）
+  round5/t1-03-ui-orchestration.json          # 第五轮编排汇总（两次关闭退出码 0/0、84/12/17/25；脱敏）
+  round5/t1-03-prerequisite.json              # 第五轮重启前 IPC 数据快照（虚构；脱敏）
+  round5/t1-03-db-after-main.json             # 第五轮关闭后数据库只读探针（脱敏）
+  round5/t1-03-db-after-restart.json          # 第五轮重启后数据库只读探针（脱敏）
+  round5/round5-verification-summary.json     # 第五轮机器可读汇总（B2 已修正时间戳语义；历史证据内容未覆盖）
+  round6-remediation/round6-verification-summary.json  # 第六轮机器可读汇总（P1–P4 修复、128 项路径安全、Red/Green、门禁、E2E、B1–B5、遗留风险）
+  round6-remediation/round6-remediation-notes.md       # 第六轮修复/证据说明（根因、TDD Red-Green、Skill 使用、E2E 尝试记录、范围与限制）
+  round6-remediation/red/round6-red-evidence.json      # 第六轮 Red 证据（修复前基线 e8205ca 真实复现：F1/F2/P4）
+  round6-remediation/red/round6-red-command-output.sanitized.log.txt  # Red 探针脱敏原始命令输出
+  round6-remediation/green/t1-03-uat-path-evidence.json               # 第六轮路径安全 128 项绿色证据
+  round6-remediation/green/t1-03-ui-evidence.json、t1-03-min-window-evidence.json、t1-03-persistence-evidence.json  # 第六轮最终通过轮次 E2E 实测断言（脱敏）
+  round6-remediation/green/t1-03-ui-orchestration.json、t1-03-prerequisite.json、t1-03-db-after-main.json、t1-03-db-after-restart.json  # 第六轮 E2E 编排汇总/快照/数据库探针（脱敏）
+  round6-remediation/green/round6-e2e-command-output.sanitized.log.txt # 第六轮最终通过轮次 E2E 脱敏命令输出
+test-counts.txt                               # 第六轮测试数量/环境/数据库探针关键事实速查
+SANITIZATION.md                               # 脱敏扫描（含第六轮 B5 补正）、旧提交服务端暴露与 GitHub Support 清理材料
 ```
 
 说明：原始命令日志（包含计算机名/账户名/本地绝对路径）已按 P2-01 要求从仓库删除，当前证据 JSON/文本已脱敏；
-第四轮复核确认旧提交 `2342828` 及 9 个原始日志仍可经 GitHub 服务端读取，**P2-01 未关闭**，需 GitHub Support
-处理（材料见 `T1-03-assets/SANITIZATION.md` 第 4 节）。第三、四轮均未修改产品 UI/代码，第二/三轮同名场景截图保留；
-第四轮重新执行 E2E 生成的截图位于 `evidence/round4/screenshots/`，未覆盖第三轮截图。
+第五轮复核与第六轮补正确认旧提交 `2342828` 及 9 个原始日志仍可经 GitHub 服务端读取，**P2-01 未关闭**，需 GitHub Support
+处理（材料见 `T1-03-assets/SANITIZATION.md` 第 4 节）。第三、四、五、六轮均未修改产品 UI/业务代码，第二/三轮同名场景截图保留；
+第四轮重新执行 E2E 生成的截图位于 `evidence/round4/screenshots/`，未覆盖第三轮截图；第五/六轮截图未复制入仓。
+第六轮 B5 补正只把历史证据中的固定测试根原始名称替换为 `<uat-root>`（不改任何检查结果/计数），并加强脱敏扫描规则与专项检查。
 
 ---
 
@@ -532,7 +647,7 @@ SANITIZATION.md                               # 第四轮脱敏扫描、旧提�
 
 ## 9. 遗留风险与已知限制
 
-1. **尚未经过第四轮独立审计与用户验收**：第三轮独立审计结论为未通过（F1/F2）；本报告只是第四轮开发自测证据，不等于审计/验收结论。
+1. **尚未经过第六轮独立审计与用户验收**：第五轮独立审计结论为未通过（P1–P4）；本报告只是第六轮定向补正的开发自测证据，不等于审计/验收结论。
 2. **普通 SQLite 未加密**（DEC-028 已接受）：拥有文件访问权限的人可读取数据库内容。
 3. **TOCTOU 残余风险**：按 DEC-029 接受并延期至 [Issue #2](https://github.com/shuaikun853-dev/work-kanban/issues/2)，未修复；不得宣称任何情况下不会写入 C 盘。
 4. **P2-01 未关闭（服务端清理未完成）**：当前分支增量历史、工作区证据与 PR #8 文本脱敏复核具体机器标识 0 命中；但旧提交 `2342828852abee43ab56610e7d1fa91a02310bfe` 及其 9 个原始日志仍可经 GitHub API 读取（HTTP 200），GitHub Support 服务端清理尚未完成（工单材料见 `T1-03-assets/SANITIZATION.md` 第 4 节，需仓库所有者提交）；不得宣称 P2-01 已完成。仓库基线 main 中既有 T1-01/T1-02 同类机器信息（属 main 既有内容，非本 PR 新增）未修改，作为遗留风险。
@@ -542,12 +657,15 @@ SANITIZATION.md                               # 第四轮脱敏扫描、旧提�
 8. 继承验证脚本的 schema 版本断言已改为 3；历史 T1-01/T1-02 报告中的数字为当时历史结果，本报告记录本轮重新执行结果（产品代码未变）。
 9. **F1（本轮）**：证据写入的“检查”与 `Set-Content` 写入之间仍存在并发替换窗口（DEC-029 / Issue #2），本轮用“启动时记录证据目录身份 + 写入时原生复验 + 最终路径/边界检查”缩小窗口，但**未消除**，不得宣称已消除并发替换风险。
 10. **F2（本轮）**：`Test-Path` 判断已从沙箱清理入口移除；F1/F2 的“原生检查失败”用例是“路径组件是文件”的真实 Win32 失败，**未执行 Windows ACL `Access Denied` 测试**；Symbolic Link 场景因当前进程无 `SeCreateSymbolicLinkPrivilege` 仍记录 SKIP、不计 PASS。
+11. **F2（第六轮）**：跟踪链接现在只允许“已确认沙箱的直接子项”，不支持任意嵌套；无法确认安全的嵌套路径一律 fail closed（这是按本轮审计要求采取的最小实现，非通用嵌套链接机制）。删除前全沙箱扫描、删除后残余扫描与身份复验均已实现，但扫描与删除之间仍存在 **DEC-029 接受的并发替换窗口**，未消除。
+12. **P3（第六轮）**：`verify-t1-03-ui.ps1` 最终摘要写入前的原生路径检查/目录身份复验与随后 `Set-Content` 之间仍存在并发替换窗口（DEC-029 / Issue #2），未消除；本轮只缩小窗口并增加真实故障注入回归，不宣称已消除。
+13. **E2E 环境性失败已如实记录**：第六轮共 5 次真实 E2E 尝试，1 次并发负载下应用壳渲染超时、2 次最小窗口尺寸时序竞态（其余断言通过）；验证脚本增加有限重试与真实客户区核对后连续 2 次通过。失败尝试不计入通过结果；该加固只改验证脚本，不改产品 UI/业务代码。
 
 ---
 
 ## 10. Git / PR 交付信息
 
-- 分支：`task/T1-03-quick-create-pending`（PR #8 原分支）
+- 分支：`task/T1-03-quick-create-pending`（PR #8 原分支；本轮本地开发工作区分支 `task/T1-03-quick-create-pending-r4`，与第五轮审计基准同 SHA）
 - 基线：`018e851e8daf5835391a7b61caf881bc57c2ad42`
 - 预编码设计提交：`9c091567351c4290b9f6ec1cea59f1e0d5f7bf6b`
 - 第一轮实现提交：`be8d9c2e9c78710690de189936d6ee65f48ed8df`
@@ -558,21 +676,22 @@ SANITIZATION.md                               # 第四轮脱敏扫描、旧提�
   - P3-01 + P3-02 `2d91c92301713597ccfc1c0ddc2d83a479f572d4`（提示时机、UAT 路径安全、E2E）
 - 第三轮 P2-01/P3-02 修复提交：`b6a54591b783049142cbbffecd107ec9086723eb`；第三轮文档复核提交：`489d8689484c2cf744893bd3ee08dc7b25b5c8b8`（第三轮审计基准 HEAD，**第三轮未重写历史、未强制推送**）
 - 第四轮 F1/F2 修复提交：`d82bdd47ae7c3c27fb4383d72ee16a131c89036d`（仅验证脚本/测试脚本 + UI 编排信任锚；**未修改产品代码、未重写历史、未强制推送**）
-- 第四轮证据/文档同步提交：`5ab1f49ac16705126d6c27dcaf091990d38a8b3f` 及其后的元数据修正提交（`origin/main..HEAD` 本轮前 = **22** 个提交）
-- 本轮第四轮审计基准 HEAD：`e8205cae22e98afce6480f5a5a0695543a61dee3`
-- 本轮 F1/F2 最小修复提交：`af2421e9207f7b9ac185b0d29c3a98f80b5eb11a`（仅验证脚本/测试脚本 + 本轮证据/文档；**未修改产品代码、未重写历史、未强制推送**）
-- 本轮文档同步提交：紧随修复提交之后的证据/状态文档同步提交（PR #8 时间线可见；其自身 SHA 无法在本文件内自引用）
-- 推送：`git push origin HEAD:task/T1-03-quick-create-pending`（快进推送，未使用强制推送）
-- PR：[#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) → `main`，保持 Open（未合并）
-- main：未修改（`018e851e8daf5835391a7b61caf881bc57c2ad42`）；PR 未合并
+- 第四轮证据/文档同步提交：`5ab1f49ac16705126d6c27dcaf091990d38a8b3f` 及其后的元数据修正提交
+- 第五轮审计基准 HEAD：`6ddae47dd0721d58d5cb11f55e527fc162cedbe9`；第五轮修复提交：`af2421e9207f7b9ac185b0d29c3a98f80b5eb11a`
+- **第六轮修复提交：** `e3bb86b30772159219a8eb16b90e55f3c69f4d59`（P1–P4 + B5 代码/测试/验证脚本；**未修改产品代码、未重写历史、未强制推送**）
+- **第六轮证据/文档同步提交：** 紧随修复提交之后（PR #8 时间线可见；其自身 SHA 无法在本文件内自引用）
+- **提交数（B4，最终 HEAD 上重算）：** `origin/main..e8205ca` = **25**；`origin/main..6ddae47` = **27**；`origin/main..e3bb86b` = **28**；`origin/main..最终 HEAD` = **30**。22 等旧记录保留为历史事实，不再作为当前状态引用
+- 推送：`git push origin HEAD:task/T1-03-quick-create-pending`（非强制快进推送，未使用 force push）
+- PR：[#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) → `main`，保持 Open（未合并）；正文已更新为第六轮状态并新增进度评论，历史评论保留
+- main：未修改（当前远端 main `9171fe35a7e080097991f547efe37ff5a504257c`；PR base 落后于 main 的问题本轮不处理，未 rebase、未改历史）
 
 ---
 
 ## 11. 当前状态与停止条件
 
-**T1-03 第四轮独立审计未通过（F1 EvidencePath 写入边界、F2 沙箱入口 `Test-Path` 绕过）；本轮 F1/F2 最小修复完成，等待第四轮独立审计复核。**
+**T1-03 第五轮独立审计未通过（P1/F2 跟踪链接穿过未跟踪 Junction、P2/F1 证据写入身份、P3 摘要写入守卫、P4 部分删除语义）；本轮 P1–P4 + B1–B5 定向补正完成，状态：待第六轮独立审计。**
 
-- 已完成：F1 证据写入边界/真实身份/祖先链/重解析点/硬链接检查；F2 原生入口检查（移除 `Test-Path` 判断，悬空 Junction fail closed）；第三轮 60 项 + 第四轮 31 项路径检查全部保留，新增 21 项真实文件系统回归（路径安全专项 115 项、FAILED=0、SKIPPED=1）；质量门禁（cargo 124/124、npm check/build、Bridge 17/17）与 T1-03 Release E2E（84/12/17/25，关闭 0/0）通过。
-- 未完成且不得由开发代理自行宣布：**P2-01 服务端历史对象清理（GitHub Support 未处理，P2-01 保持未关闭）**、第四轮独立审计复核通过、用户验收完成、PR 合并。
+- 已完成：F2 跟踪链接先全量验证/只允许沙箱直接子项、删除前全沙箱扫描、精确对象删除 + 原生复验、删除后残余扫描与身份复验、递归删除 started/completed/partial 语义；F1 证据写入强制启动身份记录（隔离 EvidenceRoot 仅内部测试注入）；P3 最终摘要写入原生路径检查 + 输出目录身份复验守卫；B1–B5 证据/文档修正（PR、时间戳、可复核 Red 证据、提交数、`<uat-root>` 脱敏）。路径安全专项 **128 项、FAILED=0、SKIPPED=1**；质量门禁全部退出码 0；T1-03 Release E2E 84/12/17/25、关闭 0/0、Guards PASS。
+- 未完成且不得由开发代理自行宣布：**P2-01 服务端历史对象清理（GitHub Support 未处理，保持 OPEN）**、第六轮独立审计复核通过、用户验收完成、PR 合并。
 - 剩余风险：TOCTOU 未消除（DEC-029 / Issue #2）；未执行 Windows ACL `Access Denied` 测试；Symbolic Link 场景 SKIP；main 基线既有 T1-01/T1-02 机器信息未修改（需单独授权）；普通 SQLite 未加密（DEC-028）。
-- 按任务要求停止：不合并 PR #8、不修改 main、不开始 T1-04/T1-05、未获授权不再次执行全仓库历史重写或强制推送。
+- 按任务要求停止：不合并 PR #8、不修改 main、不开始 T1-04/T1-05、未获授权不再次执行全仓库历史重写或强制推送；不自行宣布审计/验收通过。

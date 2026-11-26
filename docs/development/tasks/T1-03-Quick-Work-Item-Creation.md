@@ -1,6 +1,6 @@
 # T1-03：工作事项快速创建和待安排区域
 
-**任务状态：** 第四轮独立审计未通过（F1 EvidencePath 证据写入边界、F2 沙箱入口 `Test-Path` 绕过）；本轮 F1/F2 最小修复完成，等待第四轮独立审计复核（真实目录/Junction/悬空 Junction/硬链接与 Canary 验证通过，未修改 Windows ACL、未执行实际 `Access Denied` 测试；P2-01 仍开放，待 GitHub Support 服务端清理；PR #8 保持 Open，未合并）
+**任务状态：** 第五轮独立审计未通过（P1/F2 跟踪链接穿过未跟踪 Junction、P2/F1 证据写入身份、P3 摘要写入守卫、P4 部分删除语义）；本轮 P1–P4 + B1–B5 定向补正完成，等待第六轮独立审计复核（真实目录/Junction/悬空 Junction/硬链接与 Canary 验证通过，未修改 Windows ACL、未执行实际 `Access Denied` 测试；可复现 Red 证据 + 分开的 Green 证据；P2-01 仍开放，待 GitHub Support 服务端清理；PR #8 保持 Open，未合并）
 **启动日期：** 2026-11-19  
 **所属阶段：** 阶段 1：基础架构与工作事项  
 **前置任务：** T1-01、T1-02 已验收完成并合并到 main  
@@ -10,8 +10,10 @@
 **第一轮实现提交：** `be8d9c2e9c78710690de189936d6ee65f48ed8df`
 **第二轮修复提交：** P2-02 `12b1bdf026f01688c79ba438165a97a652e086a1`；P3-01/P3-02 `2d91c92301713597ccfc1c0ddc2d83a479f572d4`；P2-01 历史清理 `b6cf344abc1693e7031427f8963c27474c0b59f9`
 **第三轮修复提交：** `b6a54591b783049142cbbffecd107ec9086723eb`；第三轮审计基准 HEAD `489d8689484c2cf744893bd3ee08dc7b25b5c8b8`
-**第四轮修复提交：** `d82bdd47ae7c3c27fb4383d72ee16a131c89036d`（F1/F2；随后为第四轮证据/文档同步提交，分支相对 main 共 22 个提交）
-**Pull Request：** [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（指向 main，保持 Open，等待第四轮独立审计）
+**第四轮修复提交：** `d82bdd47ae7c3c27fb4383d72ee16a131c89036d`（F1/F2；随后为第四轮证据/文档同步提交）
+**第五轮审计基准 HEAD：** `6ddae47dd0721d58d5cb11f55e527fc162cedbe9`；**第五轮修复提交：** `af2421e9207f7b9ac185b0d29c3a98f80b5eb11a`
+**第六轮修复提交：** `e3bb86b30772159219a8eb16b90e55f3c69f4d59`（P1–P4 + B5 代码/测试/验证脚本；随后为证据/文档同步提交；`origin/main..最终 HEAD` = **30** 个提交）
+**Pull Request：** [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8)（指向 main，保持 Open，等待第六轮独立审计）
 **测试报告：** `docs/testing/reports/T1-03-REPORT.md`
 **截图与证据：** `docs/testing/reports/T1-03-assets/`
 **开发设计：** `docs/development/tasks/T1-03-Implementation-Design.md`
@@ -319,4 +321,19 @@
 
 **限制：** 未执行 Windows ACL `Access Denied` 测试；“原生检查失败”用例是“路径组件是文件”的真实 Win32 失败；Symbolic Link 场景 SKIP；DEC-029 / Issue #2 的 TOCTOU 风险未消除；P2-01 仍未关闭。
 
-**停止条件：** 已停止，等待第四轮独立审计复核；未合并 PR #8、未修改 main（基线 `018e851e8daf5835391a7b61caf881bc57c2ad42`）、未开始 T1-04/T1-05；不自行宣布审计/验收通过。
+**停止条件：** 已停止，等待第六轮独立审计复核；未合并 PR #8、未修改 main（当前远端 main `9171fe35a7e080097991f547efe37ff5a504257c`）、未开始 T1-04/T1-05；不自行宣布审计/验收通过。
+
+## 16. 第六轮定向补正结果（2026-11-27，等待第六轮独立审计）
+
+**状态：** 第五轮独立审计未通过，阻塞项为 P1/F2（跟踪链接穿过未跟踪 Junction 在删除前误删沙箱外链接）、P2/F1（证据写入缺少启动身份强制）、P3（UI 最终摘要写入未走安全守卫）、P4（递归删除部分失败语义失实）及 B1–B5 交付证据问题。本轮只修复这些项，仅修改验证脚本/测试脚本/证据/状态文档，**未修改产品业务代码**、未改 T1-04/T1-02、未新增依赖、未重写历史、未强制推送。PR #8 保持 Open，等待第六轮独立审计。
+
+- **P1 / F2：** 清理顺序改为“沙箱身份 + 父目录链原生校验 → 先验证全部跟踪链接（只允许沙箱直接子项，记录对象卷序列号/File ID/tag）→ 删除任何对象前全沙箱扫描（非登记重解析点立即停止）→ 只删除精确匹配的登记对象并原生复验 → 删除后残余扫描 → 身份复验 → 安全递归删除”。真实故障注入：`sandbox\evil(Junction)->external`、`external\victim-link(Junction)->victim-target`，修复前外部 victim-link 被删除，修复后在删除前 `trackedLinkNotDirectChild` fail closed，victim-link、victim-target Canary 内容/SHA-256、沙箱均保留。
+- **P2 / F1：** `Write-T103EvidenceFile` 强制要求启动时记录的证据根目录身份；`Assert-T103EvidenceWritePath` 增加 `-RequireRootIdentity`；缺少身份/目录身份变化均拒绝写入；隔离 EvidenceRoot 仅保留为专项测试内部注入能力（需显式身份），不是生产 CLI 参数。
+- **P3：** `verify-t1-03-ui.ps1` 创建输出目录后记录身份；最终摘要经 `Write-T103VerifiedOutputFile`（原生路径检查 + 目录身份复验 + 普通单硬链接检查）写入；Junction 替换/身份变化拒绝写入；E2E 输出 `PASS summary.writeGuard`。DEC-029 TOCTOU 残余风险未消除。
+- **P4：** 结果新增 `recursiveDeleteStarted/Completed/Partial`；删除开始后异常返回 `recursiveDeleteFailed` 并如实说明部分删除；真实故障注入验证已删除部分条目。
+- **B1–B5：** PR 正文/新增评论更新；round5 汇总时间戳拆分修正；新增可重复执行 Red 探针 `scripts/verify/probe-round6-red.ps1`（修复前基线 e8205ca + blob SHA 校验 + 真实文件系统对象，F1/F2/P4 全部真实复现）；提交数重算（25/27/28/30）；固定测试根统一 `<uat-root>`（历史证据 3 文件 8 处占位修正，扫描规则不放宽）。
+- **验证结果：** 路径安全专项 **128 项，FAILED=0，SKIPPED=1**（原 115 项全部保留）；质量门禁全部退出码 0：`cargo fmt`、`cargo check`、`cargo test --workspace` **124 passed / 0 failed**、`npm.cmd run check`（svelte-check 0/0、Bridge 17/17、Design Token 49/49）、`npm.cmd run build`（167 modules）、`node --test` 17/17、`git diff --check`；T1-03 Release E2E 最终通过轮次 `<uat-root>\t1-03-ui-r6f-20261127-071753`：主 84/84、最小窗口 12/12、持久化 17/17、数据库探针 25/25、两次关闭 0/0、CSP 0、页面异常 0。
+- **E2E 尝试记录：** 共 5 次真实尝试，1 次并发负载下应用壳渲染超时 + 2 次最小窗口尺寸时序竞态（其余断言通过）如实记录、不计入通过；验证脚本 `Set-WindowSize` 有限重试 + 真实客户区核对加固（仅测试脚本）后连续 2 次 PASS。
+- **证据：** `docs/testing/reports/T1-03-assets/evidence/round6-remediation/`（Red `red/`、Green `green/` 分开保存；`round6-verification-summary.json`；`round6-remediation-notes.md`）。Release EXE 沿用第五轮按本分支 schema 3 重建的构建（10,352,128 字节，SHA-256 `f46c9b0cb3c9d094475cab6abd8276276126f2ea0d2e5b38b6d6a4fbf92b2b68`），本轮未改产品代码。
+- **遗留风险：** P2-01 仍未关闭；DEC-029 / Issue #2 TOCTOU 未消除；未执行 Windows ACL `Access Denied` 测试；Symbolic Link 场景 SKIP；普通 SQLite 未加密（DEC-028）；PR #8 base 落后于 main 的问题本轮不处理。
+- **停止条件：** 已停止，等待第六轮独立审计；未合并 PR #8、未修改 main、未开始 T1-04/T1-05；不自行宣布审计/验收通过。
