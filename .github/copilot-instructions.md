@@ -8,6 +8,7 @@ Before every task, read and follow the repository root `AGENTS.md`,
 M0–M6 stage, task IDs, dependencies and delivery order. The project is a
 personal-use Windows application, not a commercial SaaS product. Implement only
 the user's confirmed requirements using the smallest complete solution.
+Do not complicate simple personal-software tasks or add unnecessary code, abstractions, workflows, or tests. Preserve necessary data integrity, security validation, error handling, and explicitly requested behavior.
 
 Never merge any pull request. PR #8 is blocked by the P2-01 merge gate: it must
 stay OPEN until independent audit, user acceptance, and verified GitHub Support

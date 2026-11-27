@@ -6,8 +6,10 @@ Read and obey `AGENTS.md`,
 `docs/development/DEVELOPMENT_PHILOSOPHY.md` and
 `docs/development/DEVELOPMENT_PLAN.md` (the V1 M0–M6 stage, task IDs and
 dependencies) before starting. WorkManager is a personal-use Windows
-application, not a commercial product. Build only the smallest complete
-solution for the user's confirmed needs.
+application, not a commercial product. Do not complicate simple personal-software tasks;
+build only the smallest complete solution for confirmed needs, without unnecessary
+code, abstractions, workflows, or tests. Preserve necessary data integrity, security,
+error handling, and explicitly requested behavior.
 
 For every code task, actually read and follow:
 - Ponytail: https://github.com/DietrichGebert/ponytail/blob/main/skills/ponytail/SKILL.md

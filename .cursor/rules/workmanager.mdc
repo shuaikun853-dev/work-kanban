@@ -3,6 +3,8 @@ description: Mandatory WorkManager project instructions for all tasks
 alwaysApply: true
 ---
 
+不要把简单的个人软件开发任务复杂化：优先复用现有实现并做最小必要修改，不增加无用代码、过度抽象或无关流程/测试；必要的数据安全和完整性要求不得省略。
+
 @AGENTS.md
 @docs/development/DEVELOPMENT_PHILOSOPHY.md
 @docs/development/DEVELOPMENT_PLAN.md

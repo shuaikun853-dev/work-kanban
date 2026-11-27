@@ -1,6 +1,6 @@
 # WorkManager
 
-Windows 本地工作管理软件（绿色便携版）。当前处于 **M0 现有代码收口** 阶段：T1-01、T1-02 已通过独立审计和用户验收并合并到 main；T1-03 的开发与自测已完成，PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 OPEN，等待第四轮独立审计、用户验收和 P2-01 服务端历史清理验证（P2-01 是合并硬门禁）；T1-04 等待第六轮补正后的独立审计，PR #8 未合并前不得通过堆叠分支提前进入 main。V1 正式开发路线（M0～M6）、开发理念和 AI 合并门禁分别见 [开发计划书](docs/development/DEVELOPMENT_PLAN.md)、[开发理念](docs/development/DEVELOPMENT_PHILOSOPHY.md) 和 [AGENTS.md](AGENTS.md)。M1～M6 业务功能尚未开始；本仓库不表示这些功能已经可用。
+Windows 本地工作管理软件（绿色便携版）。当前处于 **M0 现有代码收口** 阶段：T1-01、T1-02 已通过独立审计和用户验收并合并到 main；T1-03 的开发与自测已完成，PR [#8](https://github.com/shuaikun853-dev/work-kanban/pull/8) 保持 OPEN，等待第四轮独立审计、用户验收和 P2-01 服务端历史清理验证（P2-01 是合并硬门禁）；T1-04 等待第六轮补正后的独立审计，PR #8 未合并前不得通过堆叠分支提前进入 main。开发执行原则：不要把简单的个人软件开发任务复杂化，只做当前明确需求的最小完整实现，不增加无用代码或无关流程；必要的数据安全和完整性要求不省略。V1 正式开发路线（M0～M6）、开发理念和 AI 合并门禁分别见 [开发计划书](docs/development/DEVELOPMENT_PLAN.md)、[开发理念](docs/development/DEVELOPMENT_PHILOSOPHY.md) 和 [AGENTS.md](AGENTS.md)。M1～M6 业务功能尚未开始；本仓库不表示这些功能已经可用。
 
 ## 文档
 
